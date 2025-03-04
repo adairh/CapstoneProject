@@ -50,6 +50,7 @@ public abstract class Shape
     protected void RegisterEvents()
     {
         GO.AddComponent<ShapeClickHandler>().SetShape(this); // Link to this shape
+        GO.AddComponent<HoverableShape>(); // Link to this shape
     }
     
     // 🔥 Abstract method: Each shape defines its own settings

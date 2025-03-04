@@ -80,7 +80,9 @@ public class Plane : Shape, IDrawable3D
         meshCollider.sharedMesh = mesh;
 
         // **Step 5: Set Transparent Material**
-        Material transparentMaterial = new Material(Shader.Find("Ciconia Studio/CS_Standard/Builtin/Standard (Specular setup)/Opaque"));
+        DefaultMaterial = new Material(Shader.Find("Ciconia Studio/CS_Standard/Builtin/Standard (Specular setup)/Opaque"));
+        Material transparentMaterial = DefaultMaterial;
+        
 
 // Enable transparency
         transparentMaterial.SetFloat("_Mode", 3);

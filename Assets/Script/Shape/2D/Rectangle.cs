@@ -29,14 +29,20 @@ public class Rectangle : PolygonalShape, IDrawable2D
 
     private void InitializeCorners()
     {
+        Quaternion rotation = GO.transform.rotation;  // Get the GameObject's rotation
+
+        Vector3 right = rotation * Vector3.right;  // Rotated X-axis
+        Vector3 up = rotation * Vector3.up;  // Rotated Y-axis
+
         Corners = new Point[]
         {
             new Point(bottomLeft, GO),
-            new Point(bottomLeft + new Vector3(Width, 0, 0), GO),
-            new Point(bottomLeft + new Vector3(Width, Height, 0), GO),
-            new Point(bottomLeft + new Vector3(0, Height, 0), GO)
+            new Point(bottomLeft + right * Width, GO),
+            new Point(bottomLeft + right * Width + up * Height, GO),
+            new Point(bottomLeft + up * Height, GO)
         };
     }
+
 
     private void InitializeEdges()
     {
@@ -66,25 +72,28 @@ public class Rectangle : PolygonalShape, IDrawable2D
 
     public override void Draw()
     {
-        // ✅ Update corners dynamically
+        Quaternion rotation = GO.transform.rotation;  // Get current rotation
+        Vector3 right = rotation * Vector3.right;
+        Vector3 up = rotation * Vector3.up;
+
         for (int i = 0; i < Corners.Length; i++)
         {
-            Corners[i].Position = bottomLeft + new Vector3(
-                (i == 1 || i == 2) ? Width : 0,
-                (i >= 2) ? Height : 0,
-                0
-            );
+            Corners[i].Position = bottomLeft + 
+                                  ((i == 1 || i == 2) ? right * Width : Vector3.zero) + 
+                                  ((i >= 2) ? up * Height : Vector3.zero);
+            
             Corners[i].Draw();
         }
 
-        // ✅ Update edges dynamically
+        // ✅ Update edges to connect rotated corners
         for (int i = 0; i < edges.Length; i++)
         {
             edges[i].Start = Corners[i];
-            edges[i].End = Corners[(i + 1) % Corners.Length]; // Loop back to the first point
+            edges[i].End = Corners[(i + 1) % Corners.Length]; // Loop back to first corner
             edges[i].Draw();
         }
     }
+
 
     protected override void InitializeSettings()
     {

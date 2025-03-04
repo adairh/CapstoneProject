@@ -47,7 +47,13 @@ public class Circle : CircularShape, IDrawable2D
     private Vector3 GetPointOnCircle(float angleDegrees)
     {
         float rad = Mathf.Deg2Rad * angleDegrees;
-        return new Vector3(Position.x + Radius * Mathf.Cos(rad), Position.y + Radius * Mathf.Sin(rad), Position.z);
+    
+        // Get the camera-aligned plane
+        Vector3 forward = Camera.main.transform.forward;  // Camera looking direction
+        Vector3 right = Camera.main.transform.right;  // Horizontal axis
+        Vector3 up = Vector3.Cross(forward, right);  // Vertical axis
+
+        return Position + (right * Radius * Mathf.Cos(rad)) + (up * Radius * Mathf.Sin(rad));
     }
 
     private void CreateEdge(int index, Vector3 start, Vector3 end)

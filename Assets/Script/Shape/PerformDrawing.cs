@@ -49,6 +49,7 @@ public class PerformDrawing : MonoBehaviour
                 if (!Mathf.Approximately(circle.Radius, newRadius)) // Prevent redundant updates
                 {
                     circle.Radius = newRadius;
+                    circle.GO.transform.rotation = GetAlignedRotation(); // Rotate based on camera
                     circle.Draw();
                 }
             }
@@ -58,6 +59,7 @@ public class PerformDrawing : MonoBehaviour
             drawing = false;
         }
     }
+
 
     private void HandleRectangleDrawing(Vector3 hitPoint)
     {
@@ -75,18 +77,18 @@ public class PerformDrawing : MonoBehaviour
             Vector3 size = hitPoint - startPoint;
             if (_shape is Rectangle rect)
             {
-                float newWidth = Mathf.Abs(size.x);
-                float newHeight = Mathf.Abs(size.z);
-                
+                float newWidth = size.x;
+                float newHeight = size.z;
+            
                 if (!Mathf.Approximately(rect.Width, newWidth) || !Mathf.Approximately(rect.Height, newHeight))
                 {
                     rect.Width = newWidth;
                     rect.Height = newHeight;
-                    
-                    // Adjust position to keep the first point as one corner
+                
                     Vector3 newPos = startPoint + new Vector3(size.x / 2, 0, size.z / 2);
                     rect.Position = newPos;
-
+                
+                    rect.GO.transform.rotation = GetAlignedRotation(); // Rotate based on camera
                     rect.Draw();
                 }
             }
@@ -96,4 +98,15 @@ public class PerformDrawing : MonoBehaviour
             drawing = false;
         }
     }
+
+    private Quaternion GetAlignedRotation()
+    {
+        Vector3 forward = mainCamera.transform.forward;
+        forward.y = 0; // Remove vertical tilt to keep it on the XZ plane
+        if (forward == Vector3.zero) forward = Vector3.forward; // Fallback
+
+        return Quaternion.LookRotation(forward, Vector3.up);
+    }
+
+    
 }
