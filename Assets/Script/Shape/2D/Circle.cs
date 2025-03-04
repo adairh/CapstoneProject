@@ -1,0 +1,104 @@
+﻿using UnityEngine;
+
+public class Circle : CircularShape, IDrawable2D
+{
+    public float Radius { get; set; }
+    private const int SEGMENTS = 36; 
+    private GameObject[] edges;
+
+    public Circle(Vector3 center, float radius) : base(center, "Circle")
+    {
+        Radius = radius;
+        SetupGameObject();
+    }
+
+    private void SetupGameObject()
+    {
+        GO = new GameObject(Name);
+        GO.transform.position = Position;
+
+        // ✅ Add interactive components
+        /*GO.AddComponent<DraggableShape>();
+        GO.AddComponent<HoverableShape>().SetMaterials(DefaultMaterial, HighlightMaterial);
+        GO.AddComponent<ScalableShape>();
+        GO.AddComponent<RotatableShape>();*/
+        
+        // ✅ Add a Collider (for interactions)
+        CircleCollider2D collider = GO.AddComponent<CircleCollider2D>();
+        collider.radius = Radius; 
+        collider.offset = Vector2.zero;
+        edges = new GameObject[SEGMENTS];
+        Draw2D();
+    }
+
+    public void Draw2D()
+    {
+        float angleStep = 360f / SEGMENTS;
+        Vector3 prevPoint = GetPointOnCircle(0);
+
+        for (int i = 1; i <= SEGMENTS; i++)
+        {
+            Vector3 nextPoint = GetPointOnCircle(i * angleStep);
+            CreateEdge(i - 1, prevPoint, nextPoint);
+            prevPoint = nextPoint;
+        }
+    }
+
+    private Vector3 GetPointOnCircle(float angleDegrees)
+    {
+        float rad = Mathf.Deg2Rad * angleDegrees;
+        return new Vector3(Position.x + Radius * Mathf.Cos(rad), Position.y + Radius * Mathf.Sin(rad), Position.z);
+    }
+
+    private void CreateEdge(int index, Vector3 start, Vector3 end)
+    {
+        if (edges[index] == null)
+        {
+            edges[index] = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            edges[index].transform.SetParent(GO.transform);
+            edges[index].GetComponent<Renderer>().material = DefaultMaterial;
+        }
+
+        Vector3 midPoint = (start + end) / 2;
+        float length = Vector3.Distance(start, end);
+
+        edges[index].transform.position = midPoint;
+        edges[index].transform.localScale = new Vector3(0.05f, length / 2, 0.05f);
+        edges[index].transform.rotation = Quaternion.FromToRotation(Vector3.up, end - start);
+    }
+
+
+    public override void Draw()
+    {
+        // ✅ Add a Collider (for interactions)
+        CircleCollider2D collider = GO.GetComponent<CircleCollider2D>();
+        collider.radius = Radius; 
+        collider.offset = Vector2.zero;
+        
+        float angleStep = 360f / SEGMENTS;
+        Vector3 prevPoint = GetPointOnCircle(0);
+
+        for (int i = 1; i <= SEGMENTS; i++)
+        {
+            Vector3 nextPoint = GetPointOnCircle(i * angleStep);
+            
+            Vector3 midPoint = (prevPoint + nextPoint) / 2; 
+            float length = Vector3.Distance(prevPoint, nextPoint);
+
+            edges[i - 1].transform.position = midPoint;
+            edges[i - 1].transform.localScale = new Vector3(0.05f, length / 2, 0.05f);
+            edges[i - 1].transform.rotation = Quaternion.FromToRotation(Vector3.up, nextPoint - prevPoint);  
+                
+            prevPoint = nextPoint;
+        } 
+    }
+    protected override void InitializeSettings()
+    {
+        //throw new System.NotImplementedException();
+    }
+
+    public override void OpenConfigPanel()
+    {
+        //throw new System.NotImplementedException();
+    }
+}
