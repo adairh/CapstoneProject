@@ -41,4 +41,9 @@ public class Cube : PolygonalShape, IDrawable3D
     {
         //throw new System.NotImplementedException();
     }
+
+    public void Sketch(Vector3 vector3, Camera mainCamera)
+    {
+        
+    }
 }

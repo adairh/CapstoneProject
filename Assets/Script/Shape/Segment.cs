@@ -73,4 +73,9 @@ public class Segment : Shape, IDrawable2D
     {
         Debug.LogWarning($"{Name}: OpenConfigPanel() not implemented.");
     }
+
+    public void Sketch(Vector3 vector3, Camera mainCamera)
+    {
+        
+    }
 }

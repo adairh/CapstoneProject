@@ -70,4 +70,9 @@ public class Sphere : CircularShape, IDrawable3D
         Debug.Log("Opening Sphere Config Panel...");
         //UIManager.Instance.ShowConfigPanel(this);
     }
+
+    public void Sketch(Vector3 vector3, Camera mainCamera)
+    {
+        
+    }
 }

@@ -107,4 +107,37 @@ public class Circle : CircularShape, IDrawable2D
     {
         //throw new System.NotImplementedException();
     }
+
+    private static bool drawing = false;
+    private static Vector3 startPoint;
+    private static Circle circle;
+    private static Vector3 startScreenPoint;
+    public static void Sketch(Vector3 vector3, Vector3 screenPoint, Camera mainCamera)
+    {
+        
+        if (Input.GetMouseButtonDown(0)) // Click to start
+        {
+            if (!drawing)
+            { 
+                startPoint = vector3;
+                startScreenPoint = screenPoint;
+                circle = new Circle(startPoint, 0);
+                drawing = true;
+            }
+        }
+        else if (drawing && Input.GetMouseButton(0)) // Hold to resize
+        { 
+            float newRadius = Vector3.Distance(startScreenPoint, screenPoint)/100;
+            if (!Mathf.Approximately(circle.Radius, newRadius)) // Prevent redundant updates
+            {
+                circle.Radius = newRadius;
+                circle.GO.transform.rotation = GetAlignedRotation(mainCamera); // Rotate based on camera
+                circle.Draw();
+            }
+        }
+        else if (Input.GetMouseButtonUp(0)) // Release to finalize
+        {
+            drawing = false;
+        }
+    }
 }

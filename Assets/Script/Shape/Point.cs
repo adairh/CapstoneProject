@@ -20,19 +20,13 @@ public class Point : Shape, IDrawable2D
 
         if (parent != null)
         {
-            GO.transform.SetParent(parent.transform, false);
-            GO.transform.localPosition = Position;
+            GO.transform.SetParent(parent.transform, true); // Preserve world position
+            GO.transform.position = Position; // Ensure world position is correct
         }
         else
         {
             GO.transform.position = Position;
         }
-
-        // ✅ Add interactivity scripts
-        /*var draggable = GO.AddComponent<DraggableShape>();
-        var hover = GO.AddComponent<HoverableShape>();
-        hover.SetMaterials(DefaultMaterial, HighlightMaterial);
-        */
 
         // ✅ Replace SphereCollider with BoxCollider for accuracy
         if (GO.GetComponent<SphereCollider>() != null)
@@ -54,15 +48,14 @@ public class Point : Shape, IDrawable2D
 
         if (parent != null)
         {
-            GO.transform.SetParent(parent.transform, false);
-            GO.transform.localPosition = Position;
+            GO.transform.SetParent(parent.transform, true); // Preserve world position
+            GO.transform.position = Position; // Ensure world position is correct
         }
         else
         {
             GO.transform.position = Position;
         }
     }
-
     protected override void InitializeSettings()
     {
         Debug.LogWarning($"{Name}: InitializeSettings() not implemented.");
@@ -81,5 +74,10 @@ public class Point : Shape, IDrawable2D
     public void Draw2D()
     {
         Debug.Log($"{Name} is being drawn in 2D.");
+    }
+
+    public void Sketch(Vector3 vector3, Camera mainCamera)
+    {
+        
     }
 }

@@ -16,6 +16,7 @@ public abstract class Shape
 
     private GameObject go; // Private backing field
     public int id;
+    public Shape shape;
 
     public GameObject GO
     {
@@ -44,7 +45,7 @@ public abstract class Shape
         HighlightMaterial = new Material(Shader.Find("Custom/GlowingShader")) { color = ShapeColor };
 
         InitializeSettings(); // Initialize settings on creation
-        
+        shape = this;
     }
 
     protected void RegisterEvents()
@@ -90,12 +91,23 @@ public abstract class Shape
     }
 
     public abstract void Draw(); // General draw function
+    // General sketch function
 
     // ✅ Return settings list
     public List<ISetting> GetSettings()
     {
         return settings;
     }
+    
+    protected static Quaternion GetAlignedRotation(Camera mainCamera)
+    {
+        Vector3 forward = mainCamera.transform.forward;
+        //forward.y = 0; // Remove vertical tilt to keep it on the XZ plane
+        if (forward == Vector3.zero) forward = Vector3.forward; // Fallback
+
+        return Quaternion.LookRotation(forward, Vector3.up);
+    }
+    
 }
 
 

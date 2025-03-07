@@ -72,6 +72,11 @@ public class Rectangle : PolygonalShape, IDrawable2D
 
     public override void Draw()
     {
+        
+        BoxCollider2D collider = GO.GetComponent<BoxCollider2D>();
+        collider.size = new Vector2(Width, Height);
+        collider.offset = Vector2.zero;
+        
         Quaternion rotation = GO.transform.rotation;  // Get current rotation
         Vector3 right = rotation * Vector3.right;
         Vector3 up = rotation * Vector3.up;
@@ -79,9 +84,10 @@ public class Rectangle : PolygonalShape, IDrawable2D
         for (int i = 0; i < Corners.Length; i++)
         {
             Corners[i].Position = bottomLeft + 
-                                  ((i == 1 || i == 2) ? right * Width : Vector3.zero) + 
-                                  ((i >= 2) ? up * Height : Vector3.zero);
-            
+                                  ((i == 1 || i == 2) ? 
+                                      right * Width : Vector3.zero) + 
+                                  ((i >= 2) ? 
+                                      up * Height : Vector3.zero);
             Corners[i].Draw();
         }
 
@@ -103,5 +109,48 @@ public class Rectangle : PolygonalShape, IDrawable2D
     public override void OpenConfigPanel()
     {
         // Placeholder for UI configuration
+    }
+
+    private static bool drawing = false;
+    private static Vector3 startPoint;  
+    private static Rectangle rect;
+    private static Vector3 startScreenPoint;
+    public static void Sketch(Vector3 hitPoint, Vector3 screenPoint, Camera mainCamera)
+    {
+        if (Input.GetMouseButtonDown(0)) // Click to start
+        {
+            if (!drawing)
+            {
+                startPoint = hitPoint;
+                startScreenPoint = screenPoint;
+                rect = new Rectangle(startPoint, 0, 0);
+                drawing = true;
+            }
+        }
+        else if (drawing && Input.GetMouseButton(0)) // Hold to resize
+        {
+            Vector3 size = (screenPoint - startScreenPoint)/100;
+            
+            float newWidth = size.x;
+            float newHeight = size.y;
+ 
+            
+            if (!Mathf.Approximately(rect.Width, newWidth) || !Mathf.Approximately(rect.Height, newHeight))
+            {
+                rect.Width = newWidth;
+                rect.Height = newHeight;
+            
+                Vector3 newPos = startPoint + new Vector3(size.x / 2, 0, size.z / 2);
+                rect.Position = newPos;
+            
+                rect.GO.transform.rotation = GetAlignedRotation(mainCamera); // Rotate based on camera
+                rect.Draw();
+            }
+            
+        }
+        else if (Input.GetMouseButtonUp(0)) // Release to finalize
+        {
+            drawing = false;
+        }
     }
 }

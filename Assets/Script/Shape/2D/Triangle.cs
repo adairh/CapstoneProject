@@ -91,4 +91,9 @@ public class Triangle : PolygonalShape, IDrawable2D
     {
         //throw new System.NotImplementedException();
     }
+
+    public void Sketch(Vector3 vector3, Camera mainCamera)
+    {
+        
+    }
 }

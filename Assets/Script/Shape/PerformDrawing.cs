@@ -2,111 +2,49 @@
 
 public class PerformDrawing : MonoBehaviour
 {
-    public Camera mainCamera; // Assign the camera in the Inspector
+    public Camera mainCamera; // Assign in Inspector
+    private IShapeButton.ShapeType currentShape = IShapeButton.ShapeType.None; // Track active shape
 
-    public enum Type
+    void Start()
     {
-        Circle,
-        Rectangle
+        ShapeButtonManager.OnShapeChanged += HandleShapeChange;
     }
 
-    public Type type;
+    void OnDestroy()
+    {
+        // Unsubscribe to prevent memory leaks
+        ShapeButtonManager.OnShapeChanged -= HandleShapeChange;
+    }
 
-    private bool drawing = false;
-    private Vector3 startPoint; 
-    private Shape _shape;
+    void HandleShapeChange(IShapeButton.ShapeType newShape)
+    {
+        Debug.Log($"[PerformDrawing] Shape changed to: {newShape}");
+        currentShape = newShape; // Update the active shape
+    }
 
     void Update()
     {
         if (mainCamera == null) return;
+        if (currentShape == IShapeButton.ShapeType.None) return; // Do nothing if no shape selected
+        DrawShape();
+    }
 
+    private void DrawShape()
+    {
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+        Vector3 v = Input.mousePosition;
+
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            if (type == Type.Circle)
-                HandleCircleDrawing(hit.point);
-            else if (type == Type.Rectangle)
-                HandleRectangleDrawing(hit.point);
-        }
-    }
-
-    private void HandleCircleDrawing(Vector3 hitPoint)
-    {
-        if (Input.GetMouseButtonDown(0)) // Click to start
-        {
-            if (!drawing)
+            switch (currentShape)
             {
-                startPoint = hitPoint;
-                _shape = new Circle(startPoint, 0);
-                drawing = true;
+                case IShapeButton.ShapeType.Circle:
+                    Circle.Sketch(hit.point, v, mainCamera);
+                    break;
+                case IShapeButton.ShapeType.Rectangle:
+                    Rectangle.Sketch(hit.point, v, mainCamera);
+                    break;
             }
         }
-        else if (drawing && Input.GetMouseButton(0)) // Hold to resize
-        {
-            if (_shape is Circle circle)
-            {
-                float newRadius = Vector3.Distance(startPoint, hitPoint);
-                if (!Mathf.Approximately(circle.Radius, newRadius)) // Prevent redundant updates
-                {
-                    circle.Radius = newRadius;
-                    circle.GO.transform.rotation = GetAlignedRotation(); // Rotate based on camera
-                    circle.Draw();
-                }
-            }
-        }
-        else if (Input.GetMouseButtonUp(0)) // Release to finalize
-        {
-            drawing = false;
-        }
     }
-
-
-    private void HandleRectangleDrawing(Vector3 hitPoint)
-    {
-        if (Input.GetMouseButtonDown(0)) // Click to start
-        {
-            if (!drawing)
-            {
-                startPoint = hitPoint;
-                _shape = new Rectangle(startPoint, 0, 0);
-                drawing = true;
-            }
-        }
-        else if (drawing && Input.GetMouseButton(0)) // Hold to resize
-        {
-            Vector3 size = hitPoint - startPoint;
-            if (_shape is Rectangle rect)
-            {
-                float newWidth = size.x;
-                float newHeight = size.z;
-            
-                if (!Mathf.Approximately(rect.Width, newWidth) || !Mathf.Approximately(rect.Height, newHeight))
-                {
-                    rect.Width = newWidth;
-                    rect.Height = newHeight;
-                
-                    Vector3 newPos = startPoint + new Vector3(size.x / 2, 0, size.z / 2);
-                    rect.Position = newPos;
-                
-                    rect.GO.transform.rotation = GetAlignedRotation(); // Rotate based on camera
-                    rect.Draw();
-                }
-            }
-        }
-        else if (Input.GetMouseButtonUp(0)) // Release to finalize
-        {
-            drawing = false;
-        }
-    }
-
-    private Quaternion GetAlignedRotation()
-    {
-        Vector3 forward = mainCamera.transform.forward;
-        forward.y = 0; // Remove vertical tilt to keep it on the XZ plane
-        if (forward == Vector3.zero) forward = Vector3.forward; // Fallback
-
-        return Quaternion.LookRotation(forward, Vector3.up);
-    }
-
-    
 }
