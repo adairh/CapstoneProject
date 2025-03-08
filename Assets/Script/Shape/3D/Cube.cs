@@ -2,9 +2,13 @@
 
 public class Cube : PolygonalShape, IDrawable3D
 {
-    public float Size { get; set; } 
+    public float Size { get; set; }
 
-    public Cube(Vector3 position, float size) : base(position, "Cube")
+    public Cube(Vector3 position, float size) : this(position, size, null)
+    {
+    }
+
+    public Cube(Vector3 position, float size, Shape parent) : base(position, "Cube", parent)
     {
         Size = size;
         Draw3D();

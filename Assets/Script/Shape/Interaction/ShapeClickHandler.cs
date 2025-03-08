@@ -1,59 +1,84 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class ShapeClickHandler : MonoBehaviour
 {
-    private Shape shape; // Reference to the shape (if applicable)
+    private Shape shape; // Reference to the shape
+    private GameObject spawnedPanel;
+    private RectTransform canvasRect;
+    private Canvas canvas;
 
     public void SetShape(Shape shape)
     {
         this.shape = shape;
-    }
-
-    private void OnMouseEnter()
-    {
-        Debug.Log($"[Mouse Enter] {gameObject.name}");
-    }
-
-    private void OnMouseExit()
-    {
-        Debug.Log($"[Mouse Exit] {gameObject.name}");
-    }
-
-    private void OnMouseDown()
-    {
-        if (Input.GetMouseButtonDown(0)) // Left-click
-            Debug.Log($"[Left Click Down] {gameObject.name}");
-        if (Input.GetMouseButtonDown(1)) // Right-click
-            Debug.Log($"[Right Click Down] {gameObject.name}");
-        if (Input.GetMouseButtonDown(2)) // Middle-click
-            Debug.Log($"[Middle Click Down] {gameObject.name}");
-    }
-
-    private void OnMouseUp()
-    {
-        if (Input.GetMouseButtonUp(0)) // Left-click
-            Debug.Log($"[Left Click Up] {gameObject.name}");
-        if (Input.GetMouseButtonUp(1))
+        while (this.shape.Parent != null)
         {
-            // Right-click
-            Debug.Log($"[Right Click Up] {gameObject.name}");
+            this.shape = this.shape.Parent;
         }
+    }
 
-        if (Input.GetMouseButtonUp(2)) // Middle-click
-            Debug.Log($"[Middle Click Up] {gameObject.name}");
+    private void Start()
+    {
+        // Get Canvas from the scene
+        canvas = FindObjectOfType<Canvas>();
+        if (canvas != null)
+        {
+            canvasRect = canvas.GetComponent<RectTransform>();
+        }
+        else
+        {
+            Debug.LogError("No Canvas found in the scene!");
+        }
     }
 
     private void OnMouseOver()
     {
-        if (Input.GetMouseButtonDown(0))
-            Debug.Log($"[Left Click Held] {gameObject.name}");
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(1)) // Right-click
         {
-            Debug.Log($"[Right Click Held] {gameObject.name}");
-            shape?.OpenConfigPanel();
+            SpawnAtMousePosition();
+        }
+    }
+
+    private void SpawnAtMousePosition()
+    {
+        if (canvasRect == null) return;
+
+        // Get the clicked shape
+        Shape clickedShape = ShapeStorage.GetShapeByID(shape.GO.name);
+        if (clickedShape == null) return;
+
+        
+        
+        // Get panelPrefab from UIManager
+        Dictionary<string, GameObject> uis = UIManager.Instance.UIPrefabs;
+        
+        GameObject panelPrefab = uis["Panel"];
+
+        
+        if (panelPrefab == null)
+        {
+            Debug.LogError("Panel Prefab is missing in UIManager!");
+            return;
         }
 
-        if (Input.GetMouseButtonDown(2))
-            Debug.Log($"[Middle Click Held] {gameObject.name}");
+        if (spawnedPanel != null) Destroy(spawnedPanel);
+
+        // Generate UI settings panel from shape settings
+        List<ISetting> settings = clickedShape.GetSettings();
+        GameObject settingsPanel = UIBuilder.BuildSettingsPanel(settings);
+
+        // Instantiate UI panel
+        spawnedPanel = Instantiate(panelPrefab, canvas.transform);
+        RectTransform panelRect = spawnedPanel.GetComponent<RectTransform>();
+
+        // Set panel position to mouse position
+        Vector2 anchoredPos;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Input.mousePosition, canvas.worldCamera, out anchoredPos);
+        panelRect.anchoredPosition = anchoredPos;
+
+        // Attach settings UI to the spawned panel
+        // UIManager.Instance.ShowSettingsPanel(settingsPanel);
+        // Debug.LogWarning(clickedShape);
+
     }
 }

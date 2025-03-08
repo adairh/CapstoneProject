@@ -2335,7 +2335,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1929378517
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2348,9 +2348,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8712c88be5c2450e9caa06453c5e7561, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  settingsPanel: {fileID: 2047898064}
-  settingsContent: {fileID: 1293180893}
-  closeButton: {fileID: 1332495826}
+  uiPrefabsList:
+  - {fileID: 2319519329222963400, guid: f138a42fd3c25864d8296fe888b4b331, type: 3}
 --- !u!4 &1929378518
 Transform:
   m_ObjectHideFlags: 0
@@ -2366,11 +2365,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2047898064 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2319519329222963400, guid: f138a42fd3c25864d8296fe888b4b331, type: 3}
-  m_PrefabInstance: {fileID: 2319519327980405016}
-  m_PrefabAsset: {fileID: 0}
 --- !u!224 &2047898065 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2319519329222963401, guid: f138a42fd3c25864d8296fe888b4b331, type: 3}

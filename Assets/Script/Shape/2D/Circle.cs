@@ -6,13 +6,16 @@ public class Circle : CircularShape, IDrawable2D
     private const int SEGMENTS = 36; 
     private GameObject[] edges;
 
-    public Circle(Vector3 center, float radius) : base(center, "Circle")
+    public Circle(Vector3 center, float radius, Shape parent) : base(center, "Circle", parent)
     {
         Radius = radius;
         SetupGameObject();
     }
+    
+    public Circle(Vector3 center, float radius) : this(center, radius, null){
+    }
 
-    private void SetupGameObject()
+    protected override  void SetupGameObject()
     {
         GO = new GameObject(Name);
         GO.transform.position = Position;
@@ -29,6 +32,8 @@ public class Circle : CircularShape, IDrawable2D
         collider.offset = Vector2.zero;
         edges = new GameObject[SEGMENTS];
         Draw2D();
+        
+        base.SetupGameObject();
     }
 
     public void Draw2D()
@@ -100,7 +105,7 @@ public class Circle : CircularShape, IDrawable2D
     }
     protected override void InitializeSettings()
     {
-        //throw new System.NotImplementedException();
+      settings.Add(new RadiusSetting(Radius));
     }
 
     public override void OpenConfigPanel()

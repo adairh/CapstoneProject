@@ -3,24 +3,24 @@
 public class Segment : Shape, IDrawable2D
 {
     public Point Start { get; set; }
-    public Point End { get; set; }
-    private GameObject parent;
+    public Point End { get; set; } 
 
-    public Segment(Point start, Point end, GameObject parent) : base(start.Position, "Segment")
+    public Segment(Point start, Point end, Shape parent) : base(start.Position, "Segment", parent)
     {
         Start = start;
-        End = end;
-        this.parent = parent;
+        End = end; 
         SetupGameObject();
     }
+
+    public Segment(Point start, Point end) : this(start, end, null) { }
 
     private void SetupGameObject()
     {
         GO = new GameObject(Name);
 
-        if (parent != null)
+        if (Parent != null)
         {
-            GO.transform.SetParent(parent.transform, false);
+            GO.transform.SetParent(Parent.GO.transform, false);
         }
 
         Draw2D();
@@ -34,9 +34,9 @@ public class Segment : Shape, IDrawable2D
         GO = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         GO.name = Name;
 
-        if (parent != null)
+        if (Parent != null)
         {
-            GO.transform.SetParent(parent.transform, false);
+            GO.transform.SetParent(Parent.GO.transform, false);
         }
 
         UpdateTransform();

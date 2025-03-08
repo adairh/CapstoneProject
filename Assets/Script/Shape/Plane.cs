@@ -2,14 +2,16 @@
 
 public class Plane : Shape, IDrawable3D
 {
-    public Point[] points; // 3 points defining the plane
-    private GameObject parent;
+    public Point[] points; // 3 points defining the plane 
     private float planeSizeLimit; // Limit size
+    private System.Numerics.Plane sysPlane;
 
-    public Plane(Point[] points, float limit, GameObject parent) : base(points[0].Position, "Plane")
+    public Plane(Point[] points, float limit) : this(points, limit, null)
+    { }
+    public Plane(Point[] points, float limit, Shape parent) : base(points[0].Position, "Plane", null)
     {
         planeSizeLimit = limit*2;
-        this.parent = parent;
+        sysPlane = new System.Numerics.Plane(); 
         if (points.Length != 3)
         {
             Debug.LogError("Plane needs exactly 3 points!");
@@ -25,10 +27,10 @@ public class Plane : Shape, IDrawable3D
         GO = new GameObject("GeneratedPlane");
         GO.transform.position = GetMiddlePoint(points);
 
-        if (parent != null)
+        if (Parent != null)
         {
-            parent.name = Name + " " + id;
-            GO.transform.SetParent(parent.transform, false);
+            Parent.GO.name = Name + " " + id;
+            GO.transform.SetParent(Parent.GO.transform, false);
         }
 
         Draw3D();

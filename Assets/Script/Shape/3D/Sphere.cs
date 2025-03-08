@@ -4,7 +4,12 @@ public class Sphere : CircularShape, IDrawable3D
 {
     public float Radius { get; set; } // Radius should only be set via settings
 
-    public Sphere(Vector3 position, float radius) : base(position, "Sphere")
+    public Sphere(Vector3 position, float radius) : this(position, radius, null)
+    {
+    }
+
+
+    public Sphere(Vector3 position, float radius, Shape parent) : base(position, "Sphere", parent)
     {
         Radius = radius;
         Draw3D();

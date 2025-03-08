@@ -5,7 +5,11 @@ public class Triangle : PolygonalShape, IDrawable2D
     public Point[] Corners { get; private set; } 
     private GameObject[] edges;
 
-    public Triangle(Vector3 p1, Vector3 p2, Vector3 p3) : base(p1, "Triangle")
+    public Triangle(Vector3 p1, Vector3 p2, Vector3 p3) : this(p1, p2, p3, null)
+    {
+    }
+
+    public Triangle(Vector3 p1, Vector3 p2, Vector3 p3, Shape parent) : base(p1, "Triangle", parent)
     {
         GO = new GameObject(Name);
 
@@ -17,9 +21,9 @@ public class Triangle : PolygonalShape, IDrawable2D
         // ✅ Initialize points as children of the triangle GOect
         Corners = new Point[]
         {
-            new Point(p1, GO),
-            new Point(p2, GO),
-            new Point(p3, GO)
+            new Point(p1, this),
+            new Point(p2, this),
+            new Point(p3, this)
         };
 
         SetupGameObject();
@@ -59,9 +63,9 @@ public class Triangle : PolygonalShape, IDrawable2D
         CreateEdge(2, Corners[2].GetGameObject().transform.localPosition, Corners[0].GetGameObject().transform.localPosition);
     */
         
-        new Segment(Corners[0], Corners[1], GO);
-        new Segment(Corners[1], Corners[2], GO);
-        new Segment(Corners[2], Corners[0], GO);
+        new Segment(Corners[0], Corners[1], this);
+        new Segment(Corners[1], Corners[2], this);
+        new Segment(Corners[2], Corners[0], this);
     }
 
     private void CreateEdge(int index, Vector3 localStart, Vector3 localEnd)

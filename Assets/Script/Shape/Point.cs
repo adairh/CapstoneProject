@@ -1,14 +1,15 @@
 ﻿using UnityEngine;
 
 public class Point : Shape, IDrawable2D
-{
-    private GameObject parent;
+{ 
     private int pointNO;
 
-    public Point(Vector3 position, GameObject parent) : base(position, parent.name + " Pivot " + AlphabetCounter.Next())
+    public Point(Vector3 position) : this(position, null){
+    }
+
+    public Point(Vector3 position, Shape parent) : base(position, "Pivot " + AlphabetCounter.Next(), parent)
     {
-        this.pointNO = AlphabetCounter.CurrentValue();
-        this.parent = parent;
+        this.pointNO = AlphabetCounter.CurrentValue(); 
         SetupGameObject();
     }
 
@@ -18,9 +19,9 @@ public class Point : Shape, IDrawable2D
         GO.name = Name;
         GO.transform.localScale = Vector3.one * 0.1f; // Small size for a point
 
-        if (parent != null)
+        if (Parent != null)
         {
-            GO.transform.SetParent(parent.transform, true); // Preserve world position
+            GO.transform.SetParent(Parent.GO.transform, true); // Preserve world position
             GO.transform.position = Position; // Ensure world position is correct
         }
         else
@@ -46,9 +47,9 @@ public class Point : Shape, IDrawable2D
     {
         if (GO == null) return;
 
-        if (parent != null)
+        if (Parent != null)
         {
-            GO.transform.SetParent(parent.transform, true); // Preserve world position
+            GO.transform.SetParent(Parent.GO.transform, true); // Preserve world position
             GO.transform.position = Position; // Ensure world position is correct
         }
         else

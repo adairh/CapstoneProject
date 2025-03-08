@@ -9,8 +9,12 @@ public class Rectangle : PolygonalShape, IDrawable2D
 
     private Vector3 bottomLeft;
 
-    public Rectangle(Vector3 bottomLeft, float width, float height)
-        : base(bottomLeft, "Rectangle")
+    public Rectangle(Vector3 bottomLeft, float width, float height) : this(bottomLeft, width, height, null)
+    {
+    }
+
+    public Rectangle(Vector3 bottomLeft, float width, float height, Shape parent)
+        : base(bottomLeft, "Rectangle", parent)
     {
         GO = new GameObject(Name);
 
@@ -36,10 +40,10 @@ public class Rectangle : PolygonalShape, IDrawable2D
 
         Corners = new Point[]
         {
-            new Point(bottomLeft, GO),
-            new Point(bottomLeft + right * Width, GO),
-            new Point(bottomLeft + right * Width + up * Height, GO),
-            new Point(bottomLeft + up * Height, GO)
+            new Point(bottomLeft, this),
+            new Point(bottomLeft + right * Width, this),
+            new Point(bottomLeft + right * Width + up * Height, this),
+            new Point(bottomLeft + up * Height, this)
         };
     }
 
@@ -48,14 +52,14 @@ public class Rectangle : PolygonalShape, IDrawable2D
     {
         edges = new Segment[]
         {
-            new Segment(Corners[0], Corners[1], GO),
-            new Segment(Corners[1], Corners[2], GO),
-            new Segment(Corners[2], Corners[3], GO),
-            new Segment(Corners[3], Corners[0], GO)
+            new Segment(Corners[0], Corners[1], this),
+            new Segment(Corners[1], Corners[2], this),
+            new Segment(Corners[2], Corners[3], this),
+            new Segment(Corners[3], Corners[0], this)
         };
     }
 
-    private void SetupGameObject()
+    protected override void SetupGameObject()
     {
         // ✅ Add BoxCollider2D and ensure correct size
         BoxCollider2D collider = GO.AddComponent<BoxCollider2D>();
@@ -63,6 +67,7 @@ public class Rectangle : PolygonalShape, IDrawable2D
         collider.offset = Vector2.zero;
 
         Draw2D();
+        base.SetupGameObject();
     }
 
     public void Draw2D()

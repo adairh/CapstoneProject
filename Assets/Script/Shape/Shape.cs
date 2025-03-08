@@ -2,6 +2,16 @@
 using System.Collections.Generic;
 
 // Base abstract class for all shapes
+
+public static class ShapeStorage
+{
+    public static Dictionary<string, Shape> shapes = new Dictionary<string, Shape>();
+
+    public static Shape GetShapeByID(string id)
+    {
+        return shapes[id];
+    }
+}
 public abstract class Shape
 {
     public Vector3 Position { get; set; }
@@ -17,13 +27,14 @@ public abstract class Shape
     private GameObject go; // Private backing field
     public int id;
     public Shape shape;
+    public Shape Parent { get; set; }
 
     public GameObject GO
     {
         get { return go; }
         set
         {
-            go = value;
+            go = value; 
             RegisterEvents();
             go.name = Name + " " + ObjectCounter.Next();
             id = ObjectCounter.Current();
@@ -34,7 +45,7 @@ public abstract class Shape
     // 🔥 List of settings for the shape
     protected List<ISetting> settings = new List<ISetting>();
 
-    public Shape(Vector3 position, string name)
+    public Shape(Vector3 position, string name, Shape parent)
     {
         Position = position;
         ShapeColor = Color.red;
@@ -44,8 +55,9 @@ public abstract class Shape
         DefaultMaterial = new Material(Shader.Find("Custom/SolidShader")) { color = ShapeColor };
         HighlightMaterial = new Material(Shader.Find("Custom/GlowingShader")) { color = ShapeColor };
 
-        InitializeSettings(); // Initialize settings on creation
+        Parent = parent;
         shape = this;
+        InitializeSettings(); // Initialize settings on creation
     }
 
     protected void RegisterEvents()
@@ -56,6 +68,11 @@ public abstract class Shape
     
     // 🔥 Abstract method: Each shape defines its own settings
     protected abstract void InitializeSettings();
+
+    protected virtual void SetupGameObject()
+    {
+        ShapeStorage.shapes.Add(go.name, this);
+    }
 
     // 🔥 Allows child classes to append new settings
     public void AppendSettings(params ISetting[] newSettings)
@@ -126,11 +143,11 @@ public interface IDrawable3D
 // Polygonal base class (Square, Triangle, Cube, etc.)
 public abstract class PolygonalShape : Shape
 {
-    public PolygonalShape(Vector3 position, string name) : base(position, name) { }
+    public PolygonalShape(Vector3 position, string name, Shape parent) : base(position, name, parent) { }
 }
 
 // Circular base class (Circle, Sphere, etc.)
 public abstract class CircularShape : Shape
 {
-    public CircularShape(Vector3 position, string name) : base(position, name) { }
+    public CircularShape(Vector3 position, string name, Shape parent) : base(position, name, parent) { }
 }

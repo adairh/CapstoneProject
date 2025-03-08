@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEditor;  // Required for Handles
 
@@ -88,13 +89,14 @@ public class GridAndAxisSystem : MonoBehaviour
 
         foreach (var points in planePoints)
         {
-            GameObject go = new GameObject();
-            new Plane(new Point[]
+            GroupShape gs = new GroupShape();
+            Plane plane = new Plane(new Point[]
             {
-                new Point(points[0], go),
-                new Point(points[1], go),
-                new Point(points[2], go)
-            }, gridSize, go);
+                new Point(points[0], gs),
+                new Point(points[1], gs),
+                new Point(points[2], gs)
+            }, gridSize, gs);
+            plane.GO.AddComponent<WorldComponents>();
         }
     }
     

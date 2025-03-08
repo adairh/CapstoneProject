@@ -1,9 +1,13 @@
 ﻿using UnityEngine;
 
 public class Pyramid : PolygonalShape, IDrawable3D
-{ 
+{
 
-    public Pyramid(Vector3 position) : base(position, "Pyramid")
+    public Pyramid(Vector3 position) : this(position, null)
+    {
+    }
+
+    public Pyramid(Vector3 position, Shape parent) : base(position, "Pyramid", parent)
     {
         Draw3D();
     }
