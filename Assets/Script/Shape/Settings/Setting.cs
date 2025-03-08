@@ -9,6 +9,7 @@ public abstract class Setting<T> : ISetting
 
     public ISetting.SettingType Type { get; }
     public abstract void Apply(Shape obj);
+    public abstract float Height();
 
     protected Setting(T data, ISetting.SettingType settingType, System.Type targetShape)
     {
@@ -43,4 +44,6 @@ public interface ISetting
     SettingType Type { get; }
     
     void Apply(Shape obj);
+
+    float Height();
 }

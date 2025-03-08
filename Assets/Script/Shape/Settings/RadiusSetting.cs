@@ -1,70 +1,76 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // Use TextMeshPro for better UI
+using TMPro;
 
 public class RadiusSetting : Setting<float>
 {
-    public RadiusSetting(float radius) : base(radius, ISetting.SettingType.NUMERIC, typeof(CircularShape)) { }
-    
+    private const float ELEMENT_HEIGHT = 40f; 
+    private const float SPACING = 10f; 
+
+    private Shape targetShape; // Reference to the shape
+
+    public RadiusSetting(float radius, Shape shape) 
+        : base(radius, ISetting.SettingType.NUMERIC, typeof(CircularShape)) 
+    { 
+        targetShape = shape;
+    }
+
     public override GameObject GetUI()
     {
-        // Create a parent object for the setting UI
-        GameObject parentGO = new GameObject("RadiusSettingUI");
-        RectTransform parentTransform = parentGO.AddComponent<RectTransform>();
-
-        Debug.Log(Resources.LoadAll("Assets"));
-        
-        // Load Label Prefab
-        GameObject labelPrefab = Resources.Load<GameObject>("UI/TextLabelPrefab");
-        if (labelPrefab == null)
+        if (UIManager.Instance == null)
         {
-            Debug.LogError("TextLabelPrefab not found in Resources/UI!");
+            Debug.LogError("UIManager instance not found in the scene!");
             return null;
         }
 
-        // Load Input Field Prefab
-        GameObject inputPrefab = Resources.Load<GameObject>("UI/InputFieldPrefab");
-        if (inputPrefab == null)
+        GameObject prefab = UIManager.Instance.GetUIComponent("RadiusSettingPrefab");
+
+        if (prefab == null)
         {
-            Debug.LogError("InputFieldPrefab not found in Resources/UI!");
+            Debug.LogError("RadiusSettingPrefab not found in UIManager!");
             return null;
         }
 
-        // Instantiate Label
-        GameObject labelGO = Object.Instantiate(labelPrefab, parentTransform);
-        TextMeshProUGUI labelText = labelGO.GetComponent<TextMeshProUGUI>();
-        if (labelText != null) labelText.text = "Radius:";
+        GameObject uiInstance = Object.Instantiate(prefab);
 
-        // Instantiate Input Field
-        GameObject inputGO = Object.Instantiate(inputPrefab, parentTransform);
-        TMP_InputField inputField = inputGO.GetComponent<TMP_InputField>();
+        TMP_InputField inputField = uiInstance.GetComponentInChildren<TMP_InputField>();
         if (inputField != null)
         {
             inputField.text = Value.ToString();
             inputField.onEndEdit.AddListener(value =>
             {
-                if (float.TryParse(value, out float result) && result > 0) // Ensure positive radius
+                if (float.TryParse(value, out float result) && result > 0)
                 {
                     SetValue(result);
+                    Apply(targetShape); // 🔥 Apply changes in real-time!
                 }
                 else
                 {
-                    inputField.text = Value.ToString(); // Reset if invalid
+                    inputField.text = Value.ToString();
                 }
             });
         }
 
-        return parentGO; // ✅ Return the grouped UI components
+        return uiInstance;
     }
-
-
-
 
     public override void Apply(Shape obj)
     {
-        if (obj is Sphere)
+        if (obj is Sphere sphere)
         {
-            ((Sphere)obj).Radius = Value;
+            sphere.Radius = Value;
+            Debug.Log($"Applied new radius: {Value}");
+            sphere.Draw();
+        } else if (obj is Circle circle)
+        {
+            circle.Radius = Value;
+            Debug.Log($"Applied new radius: {Value}");
+            circle.Draw();
         }
+    }
+
+    public override float Height()
+    {
+        return (ELEMENT_HEIGHT * 2) + SPACING;
     }
 }

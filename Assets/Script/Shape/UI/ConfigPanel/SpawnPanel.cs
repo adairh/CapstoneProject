@@ -1,17 +1,15 @@
 ﻿using UnityEngine;
-using UnityEngine.EventSystems;
 using System.Collections.Generic;
 
-public class SpawnPanel : MonoBehaviour
+public class SpawnPanel
 {
-    public GameObject panelPrefab;
     private GameObject spawnedPanel;
     private RectTransform canvasRect;
     private Canvas canvas;
 
-    void Start()
+    public SpawnPanel()
     {
-        canvas = FindObjectOfType<Canvas>();
+        canvas = Object.FindObjectOfType<Canvas>();
         if (canvas != null)
         {
             canvasRect = canvas.GetComponent<RectTransform>();
@@ -22,75 +20,52 @@ public class SpawnPanel : MonoBehaviour
         }
     }
 
-    void Update()
+    public void SpawnPanelAtTop(Shape shape)
     {
-        if (Input.GetMouseButtonDown(1)) 
+        if (canvasRect == null || UIManager.Instance == null) return;
+
+        // Destroy existing panel before spawning new one
+        if (spawnedPanel != null)
         {
-            SpawnAtMousePosition();
+            Object.Destroy(spawnedPanel);
         }
 
-        if (spawnedPanel != null && Input.GetMouseButtonDown(0))
+        // Get settings for the shape
+        List<ISetting> settings = shape.GetSettings();
+        if (settings == null || settings.Count == 0) return;
+
+        // Get panel prefab from UIManager
+        if (!UIManager.Instance.UIPrefabs.TryGetValue("Panel", out GameObject panelPrefab) || panelPrefab == null)
         {
-            if (!IsPointerOverUI(spawnedPanel))
-            {
-                Destroy(spawnedPanel);
-            }
+            Debug.LogError("Panel Prefab is missing in UIManager!");
+            return;
         }
-    }
 
-    void SpawnAtMousePosition()
-    {
-        if (panelPrefab == null || canvasRect == null) return;
-
-        if (spawnedPanel != null) Destroy(spawnedPanel);
-
-        // Example settings list (this should be obtained dynamically)
-        List<ISetting> settings = GetSettingsForShape();
-
-        // Build UI panel from settings
-        GameObject settingsPanel = UIBuilder.BuildSettingsPanel(settings);
-
-        spawnedPanel = Instantiate(panelPrefab, canvas.transform);
+        // Instantiate UI panel at the top of canvas
+        spawnedPanel = Object.Instantiate(panelPrefab, canvas.transform);
         RectTransform panelRect = spawnedPanel.GetComponent<RectTransform>();
 
-        Vector2 anchoredPos;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Input.mousePosition, canvas.worldCamera, out anchoredPos);
+        panelRect.anchorMin = new Vector2(0.5f, 1f); // Top center
+        panelRect.anchorMax = new Vector2(0.5f, 1f);
+        panelRect.pivot = new Vector2(0.5f, 1f);
+        panelRect.anchoredPosition = new Vector2(0, -50); // Slightly below the top
 
-        panelRect.anchoredPosition = anchoredPos;
+        // Attach settings UI dynamically
+        GameObject settingsPanel = UIBuilder.BuildSettingsPanel(settings, shape);
+        settingsPanel.transform.SetParent(spawnedPanel.transform, false);
 
-        // Attach UI to the settings panel
-        // UIManager.Instance.ShowSettingsPanel(settingsPanel);
+        // Adjust panel size dynamically
+        AdjustPanelSize(panelRect, settings.Count);
 
-        //Shape clickedShape = ShapeStorage.GetShapeByID(gameObject.name);
-        //Debug.Log("Clicked " + clickedShape);
+        // Add close-on-click-outside behavior
+        spawnedPanel.AddComponent<PanelCloser>();
     }
 
-    bool IsPointerOverUI(GameObject uiElement)
+    private void AdjustPanelSize(RectTransform panelRect, int settingCount)
     {
-        PointerEventData eventData = new PointerEventData(EventSystem.current)
-        {
-            position = Input.mousePosition
-        };
-        List<RaycastResult> results = new List<RaycastResult>();
-        EventSystem.current.RaycastAll(eventData, results);
+        float panelWidth = 300f;
+        float panelHeight = 50f + (settingCount * 60f); // Ensure proper stacking
 
-        foreach (RaycastResult result in results)
-        {
-            if (result.gameObject == uiElement || result.gameObject.transform.IsChildOf(uiElement.transform))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private List<ISetting> GetSettingsForShape()
-    {
-        // Example: Replace with actual logic to fetch settings
-        return new List<ISetting>
-        {
-            new RadiusSetting(5f),
-            // Add more settings dynamically
-        };
+        panelRect.sizeDelta = new Vector2(panelWidth, panelHeight);
     }
 }

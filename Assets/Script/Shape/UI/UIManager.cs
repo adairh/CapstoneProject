@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
+    public Transform canvas;
 
     [SerializeField] private List<GameObject> uiPrefabsList; // List of UI prefabs set via editor
 
@@ -15,6 +16,13 @@ public class UIManager : MonoBehaviour
     {
         get { return uiPrefabs;}
     }
+
+
+    public Transform GetCanvasTransform()
+    {
+        return canvas;
+    }
+    
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -46,11 +54,12 @@ public class UIManager : MonoBehaviour
     {
         if (uiPrefabs.TryGetValue(key, out GameObject prefab))
         {
-            return Instantiate(prefab);
+            return prefab; // Return the original prefab, not an instantiated one
         }
         Debug.LogWarning($"UI component with key {key} not found.");
         return null;
     }
+
 
     /// <summary>
     /// Loads UI components from the assigned list in the editor.

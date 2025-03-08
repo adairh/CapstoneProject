@@ -13,4 +13,8 @@ public class PositionSetting : Setting<Vector3>
     {
         //throw new System.NotImplementedException();
     }
+    public override float Height()
+    {
+        return 0f;
+    }
 }

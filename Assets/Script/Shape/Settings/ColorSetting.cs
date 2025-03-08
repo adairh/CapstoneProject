@@ -21,4 +21,8 @@ public class ColorSetting : Setting<Color>
     }
     
     
+    public override float Height()
+    {
+        return 0f;
+    }
 }

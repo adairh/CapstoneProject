@@ -44,7 +44,7 @@ public class Sphere : CircularShape, IDrawable3D
     {
         AppendSettings(
             new ColorSetting(ShapeColor),
-            new RadiusSetting(10f),
+            new RadiusSetting(10f, this),
             new PositionSetting(Position)
         );
     }

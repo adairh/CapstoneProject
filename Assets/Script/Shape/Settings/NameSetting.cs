@@ -14,4 +14,8 @@ public class NameSetting : Setting<string>
     {
         //throw new System.NotImplementedException();
     }
+    public override float Height()
+    {
+        return 0f;
+    }
 }

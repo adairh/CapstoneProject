@@ -14,4 +14,8 @@ public class RotationSetting : Setting<Quaternion>
     {
         //throw new System.NotImplementedException();
     }
+    public override float Height()
+    {
+        return 0f;
+    }
 }

@@ -105,7 +105,7 @@ public class Circle : CircularShape, IDrawable2D
     }
     protected override void InitializeSettings()
     {
-      settings.Add(new RadiusSetting(Radius));
+      settings.Add(new RadiusSetting(Radius, this)); 
     }
 
     public override void OpenConfigPanel()
