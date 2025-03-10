@@ -15,8 +15,11 @@ public class AngleSetting : Setting<float>
         //throw new System.NotImplementedException();
     }
 
+
     public override float Height()
     {
         return 0f;
     }
+    
+    
 }

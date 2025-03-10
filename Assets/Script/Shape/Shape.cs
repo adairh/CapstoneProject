@@ -56,8 +56,9 @@ public abstract class Shape
         HighlightMaterial = new Material(Shader.Find("Custom/GlowingShader")) { color = ShapeColor };
 
         Parent = parent;
-        shape = this;
-        InitializeSettings(); // Initialize settings on creation
+        shape = this; 
+        InitializeSettings();
+        // Initialize settings on creation
     }
 
     protected void RegisterEvents()
@@ -81,7 +82,7 @@ public abstract class Shape
     }
 
     // 🔥 Opens the settings panel
-    public abstract void OpenConfigPanel();
+    public abstract void UpdateConfigData();
 
     // 🔥 Applies the settings to the shape
     public virtual void ApplySettings()
@@ -101,13 +102,42 @@ public abstract class Shape
         }
     }
 
+    public void UpdateSettings(ISetting setting)
+    {
+        for (int i = 0; i < settings.Count; i++)
+        {
+            if (settings[i].GetType() == setting.GetType())
+            {
+                settings[i] = setting; // Replace with the new setting
+                return; // Exit early after updating
+            }
+        }
+    
+        // If not found, add the new setting
+        settings.Add(setting);
+    }
+
+
     // 🔥 Updates shape when a setting is changed (for real-time updates)
     public virtual void OnSettingChanged(ISetting setting)
     {
         ApplySettings();
     }
 
-    public abstract void Draw(); // General draw function
+    public abstract void ModifySetting<T>(ISetting setting, T value);
+    
+    public abstract void Drawing(); // General draw function
+
+    public void Draw()
+    {
+        Drawing();
+    } // General draw function
+
+    public void CompleteDraw()
+    {
+        PerformDrawing.ResetShape();
+        UpdateConfigData();
+    }
     // General sketch function
 
     // ✅ Return settings list

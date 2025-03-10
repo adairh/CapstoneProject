@@ -66,13 +66,16 @@ public class Pyramid : PolygonalShape, IDrawable3D
         return mesh;
     }
 
-    public override void Draw() => Draw3D();
+    public override void Drawing() => Draw3D();
     protected override void InitializeSettings()
     {
         //throw new System.NotImplementedException();
     }
  
-    public override void OpenConfigPanel()
+    public override void ModifySetting<T>(ISetting setting, T value)
+    { 
+    }
+    public override void UpdateConfigData()
     {
         //throw new System.NotImplementedException();
     }

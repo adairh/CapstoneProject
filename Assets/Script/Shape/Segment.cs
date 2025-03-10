@@ -42,7 +42,7 @@ public class Segment : Shape, IDrawable2D
         UpdateTransform();
     }
 
-    public override void Draw()
+    public override void Drawing()
     {
         UpdateTransform();
     }
@@ -69,7 +69,7 @@ public class Segment : Shape, IDrawable2D
         Debug.LogWarning($"{Name}: InitializeSettings() not implemented.");
     }
 
-    public override void OpenConfigPanel()
+    public override void UpdateConfigData()
     {
         Debug.LogWarning($"{Name}: OpenConfigPanel() not implemented.");
     }
@@ -77,5 +77,8 @@ public class Segment : Shape, IDrawable2D
     public void Sketch(Vector3 vector3, Camera mainCamera)
     {
         
+    }
+    public override void ModifySetting<T>(ISetting setting, T value)
+    { 
     }
 }

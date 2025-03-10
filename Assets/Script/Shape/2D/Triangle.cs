@@ -84,14 +84,17 @@ public class Triangle : PolygonalShape, IDrawable2D
         edges[index].GetComponent<Renderer>().material = DefaultMaterial;
     }
 
-    public override void Draw() => Draw2D();
+    public override void Drawing() => Draw2D();
     protected override void InitializeSettings()
     {
         //throw new System.NotImplementedException();
     }
  
 
-    public override void OpenConfigPanel()
+    public override void ModifySetting<T>(ISetting setting, T value)
+    { 
+    }
+    public override void UpdateConfigData()
     {
         //throw new System.NotImplementedException();
     }

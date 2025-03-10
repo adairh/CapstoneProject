@@ -3,7 +3,7 @@
 public class PerformDrawing : MonoBehaviour
 {
     public Camera mainCamera; // Assign in Inspector
-    private IShapeButton.ShapeType currentShape = IShapeButton.ShapeType.None; // Track active shape
+    private static IShapeButton.ShapeType currentShape = IShapeButton.ShapeType.None; // Track active shape
 
     void Start()
     {
@@ -29,6 +29,11 @@ public class PerformDrawing : MonoBehaviour
         DrawShape();
     }
 
+    public static void ResetShape()
+    {
+        currentShape = IShapeButton.ShapeType.None;
+    }
+    
     private void DrawShape()
     {
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
@@ -47,4 +52,5 @@ public class PerformDrawing : MonoBehaviour
             }
         }
     }
+    
 }

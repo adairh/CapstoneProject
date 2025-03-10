@@ -37,7 +37,7 @@ public class Sphere : CircularShape, IDrawable3D
         }
     }
 
-    public override void Draw() => Draw3D();
+    public override void Drawing() => Draw3D();
 
     // 🔥 Define shape-specific settings (overrides abstract method in Shape)
     protected override void InitializeSettings()
@@ -70,12 +70,15 @@ public class Sphere : CircularShape, IDrawable3D
     }
 
     // 🔥 Open the right-click settings panel
-    public override void OpenConfigPanel()
+    public override void UpdateConfigData()
     {
         Debug.Log("Opening Sphere Config Panel...");
         //UIManager.Instance.ShowConfigPanel(this);
     }
 
+    public override void ModifySetting<T>(ISetting setting, T value)
+    { 
+    }
     public void Sketch(Vector3 vector3, Camera mainCamera)
     {
         

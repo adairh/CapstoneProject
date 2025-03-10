@@ -109,15 +109,18 @@ public class Plane : Shape, IDrawable3D
         
     }
 
-    public override void OpenConfigPanel()
+    public override void UpdateConfigData()
     {
         
     }
 
-    public override void Draw() => Draw3D();
+    public override void Drawing() => Draw3D();
 
     public void Sketch(Vector3 vector3, Camera mainCamera)
     {
         
+    }
+    public override void ModifySetting<T>(ISetting setting, T value)
+    { 
     }
 }

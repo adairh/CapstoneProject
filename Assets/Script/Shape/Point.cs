@@ -38,7 +38,7 @@ public class Point : Shape, IDrawable2D
         collider.size = Vector3.one * 0.1f;
     }
 
-    public override void Draw()
+    public override void Drawing()
     {
         UpdateTransform();
     }
@@ -59,12 +59,12 @@ public class Point : Shape, IDrawable2D
     }
     protected override void InitializeSettings()
     {
-        Debug.LogWarning($"{Name}: InitializeSettings() not implemented.");
+        //.LogWarning($"{Name}: InitializeSettings() not implemented.");
     }
 
-    public override void OpenConfigPanel()
+    public override void UpdateConfigData()
     {
-        Debug.LogWarning($"{Name}: OpenConfigPanel() not implemented.");
+        //Debug.LogWarning($"{Name}: OpenConfigPanel() not implemented.");
     }
 
     public GameObject GetGameObject()
@@ -80,5 +80,8 @@ public class Point : Shape, IDrawable2D
     public void Sketch(Vector3 vector3, Camera mainCamera)
     {
         
+    }
+    public override void ModifySetting<T>(ISetting setting, T value)
+    { 
     }
 }

@@ -24,7 +24,7 @@ public class SpawnPanel
     {
         if (canvasRect == null || UIManager.Instance == null) return;
 
-        // Destroy existing panel before spawning new one
+        // Destroy existing panel before spawning a new one
         if (spawnedPanel != null)
         {
             Object.Destroy(spawnedPanel);
@@ -41,18 +41,21 @@ public class SpawnPanel
             return;
         }
 
-        // Instantiate UI panel at the top of canvas
+        // Instantiate UI panel at the top of the canvas
         spawnedPanel = Object.Instantiate(panelPrefab, canvas.transform);
         RectTransform panelRect = spawnedPanel.GetComponent<RectTransform>();
 
         panelRect.anchorMin = new Vector2(0.5f, 1f); // Top center
         panelRect.anchorMax = new Vector2(0.5f, 1f);
         panelRect.pivot = new Vector2(0.5f, 1f);
-        panelRect.anchoredPosition = new Vector2(0, -50); // Slightly below the top
+        panelRect.anchoredPosition = new Vector2(0, -20); // Slightly below the top
 
         // Attach settings UI dynamically
-        GameObject settingsPanel = UIBuilder.BuildSettingsPanel(settings, shape);
+        GameObject settingsPanel = UIBuilder.BuildSettingsPanel(shape);
         settingsPanel.transform.SetParent(spawnedPanel.transform, false);
+        settingsPanel.GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
+        settingsPanel.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
+        settingsPanel.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 1);
 
         // Adjust panel size dynamically
         AdjustPanelSize(panelRect, settings.Count);
@@ -63,9 +66,11 @@ public class SpawnPanel
 
     private void AdjustPanelSize(RectTransform panelRect, int settingCount)
     {
-        float panelWidth = 300f;
-        float panelHeight = 50f + (settingCount * 60f); // Ensure proper stacking
+        var pixelRect = canvas.pixelRect;
+        float panelWidth = pixelRect.width * 0.7f; // Increase to 75% of canvas width
+        float panelHeight = pixelRect.height * 0.1f + (settingCount * 80f); // Increase base height and per-setting height
 
         panelRect.sizeDelta = new Vector2(panelWidth, panelHeight);
     }
+
 }

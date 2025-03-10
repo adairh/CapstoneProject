@@ -9,10 +9,12 @@ public class RadiusSetting : Setting<float>
 
     private Shape targetShape; // Reference to the shape
 
+    private GameObject uiInstance;
+
     public RadiusSetting(float radius, Shape shape) 
-        : base(radius, ISetting.SettingType.NUMERIC, typeof(CircularShape)) 
-    { 
-        targetShape = shape;
+        : base(radius, ISetting.SettingType.NUMERIC, typeof(CircularShape))
+    {
+        targetShape = shape; 
     }
 
     public override GameObject GetUI()
@@ -31,43 +33,40 @@ public class RadiusSetting : Setting<float>
             return null;
         }
 
-        GameObject uiInstance = Object.Instantiate(prefab);
+        uiInstance = Object.Instantiate(prefab);
 
+
+        Debug.Log(Value);
+        
+        
         TMP_InputField inputField = uiInstance.GetComponentInChildren<TMP_InputField>();
+         
+
         if (inputField != null)
         {
-            inputField.text = Value.ToString();
+            inputField.text = Value + "";
             inputField.onEndEdit.AddListener(value =>
             {
                 if (float.TryParse(value, out float result) && result > 0)
                 {
-                    SetValue(result);
+                    SetValue(result); 
                     Apply(targetShape); // 🔥 Apply changes in real-time!
                 }
                 else
                 {
-                    inputField.text = Value.ToString();
+                    inputField.text = Value + "";
                 }
             });
         }
-
         return uiInstance;
     }
 
     public override void Apply(Shape obj)
     {
-        if (obj is Sphere sphere)
-        {
-            sphere.Radius = Value;
-            Debug.Log($"Applied new radius: {Value}");
-            sphere.Draw();
-        } else if (obj is Circle circle)
-        {
-            circle.Radius = Value;
-            Debug.Log($"Applied new radius: {Value}");
-            circle.Draw();
-        }
+        obj.ModifySetting(this, Value);
+        obj.Draw();
     }
+
 
     public override float Height()
     {

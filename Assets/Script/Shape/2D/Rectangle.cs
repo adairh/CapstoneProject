@@ -75,7 +75,11 @@ public class Rectangle : PolygonalShape, IDrawable2D
         Debug.Log($"✅ Drawing Rectangle with Cylinders at {Position}");
     }
 
-    public override void Draw()
+    public override void ModifySetting<T>(ISetting setting, T value)
+    { 
+    }
+
+    public override void Drawing()
     {
         
         BoxCollider2D collider = GO.GetComponent<BoxCollider2D>();
@@ -111,7 +115,7 @@ public class Rectangle : PolygonalShape, IDrawable2D
         // Placeholder for future settings
     }
 
-    public override void OpenConfigPanel()
+    public override void UpdateConfigData()
     {
         // Placeholder for UI configuration
     }
@@ -155,7 +159,11 @@ public class Rectangle : PolygonalShape, IDrawable2D
         }
         else if (Input.GetMouseButtonUp(0)) // Release to finalize
         {
-            drawing = false;
+            if (drawing)
+            {
+                drawing = false;
+                rect.CompleteDraw();
+            }
         }
     }
 }

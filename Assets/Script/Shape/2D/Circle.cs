@@ -15,7 +15,7 @@ public class Circle : CircularShape, IDrawable2D
     public Circle(Vector3 center, float radius) : this(center, radius, null){
     }
 
-    protected override  void SetupGameObject()
+    protected override void SetupGameObject()
     {
         GO = new GameObject(Name);
         GO.transform.position = Position;
@@ -79,7 +79,37 @@ public class Circle : CircularShape, IDrawable2D
     }
 
 
-    public override void Draw()
+    public override void ModifySetting<T>(ISetting setting, T value)
+    {
+        if (setting is RadiusSetting && value is float floatValue)
+        {
+            Debug.LogWarning("🔹 Before Updating: Settings List:");
+            foreach (var s in settings)
+            {
+                Debug.Log($" - {s.GetType().Name}: {s.GetValue()}");
+            }
+
+            setting.SetValue(floatValue);
+            UpdateSettings(setting);
+
+            Debug.LogWarning("🔹 After Updating: Settings List:");
+            foreach (var s in settings)
+            {
+                Debug.Log($" - {s.GetType().Name}: {s.GetValue()}");
+            }
+
+            this.Radius = floatValue;
+            
+            Debug.Log($"✅ Circle radius updated to: {this.Radius}");
+        }
+        else
+        {
+            Debug.LogError($"❌ ModifySetting failed: Incompatible type {typeof(T)} for {setting.GetType()}");
+        }
+    }
+ 
+
+    public override void Drawing()
     {
         // ✅ Add a Collider (for interactions)
         CircleCollider2D collider = GO.GetComponent<CircleCollider2D>();
@@ -104,14 +134,25 @@ public class Circle : CircularShape, IDrawable2D
         } 
     }
     protected override void InitializeSettings()
-    {
+    { 
+        Debug.LogWarning("Circle  " + Radius);
       settings.Add(new RadiusSetting(Radius, this)); 
     }
 
-    public override void OpenConfigPanel()
+    public override void UpdateConfigData()
     {
-        //throw new System.NotImplementedException();
+        ISetting radiusSetting = GetSettings().Find(s => s is RadiusSetting);
+    
+        if (radiusSetting != null)
+        {
+            ModifySetting(radiusSetting, Radius);
+        }
+        else
+        {
+            Debug.LogError("RadiusSetting not found in settings!");
+        }
     }
+
 
     private static bool drawing = false;
     private static Vector3 startPoint;
@@ -142,7 +183,11 @@ public class Circle : CircularShape, IDrawable2D
         }
         else if (Input.GetMouseButtonUp(0)) // Release to finalize
         {
-            drawing = false;
+            if (drawing)
+            {
+                drawing = false;
+                circle.CompleteDraw();
+            }
         }
     }
 }

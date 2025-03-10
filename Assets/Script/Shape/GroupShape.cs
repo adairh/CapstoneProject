@@ -18,11 +18,14 @@ public class GroupShape : Shape
     { 
     }
 
-    public override void OpenConfigPanel()
+    public override void UpdateConfigData()
     { 
     }
 
-    public override void Draw()
+    public override void Drawing()
+    { 
+    }
+    public override void ModifySetting<T>(ISetting setting, T value)
     { 
     }
 }
