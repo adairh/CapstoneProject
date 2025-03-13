@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Plane = System.Numerics.Plane;
 
 public class PerformDrawing : MonoBehaviour
 {
@@ -32,28 +33,46 @@ public class PerformDrawing : MonoBehaviour
     public static void ResetShape()
     {
         currentShape = IShapeButton.ShapeType.None;
+        ShapeButtonManager.SetActiveShape(IShapeButton.ShapeType.None);
     }
     
     private void DrawShape()
     {
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
         Vector3 v = Input.mousePosition;
+        Vector3 hitPoint;
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            switch (currentShape)
+            hitPoint = hit.point; // Snap to the object it hit
+        }
+        else
+        {
+            UnityEngine.Plane groundPlane = new UnityEngine.Plane(Vector3.up, Vector3.zero); // Assume Y=0 ground plane
+            if (groundPlane.Raycast(ray, out float enter))
             {
-                case IShapeButton.ShapeType.Circle:
-                    Circle.Sketch(hit.point, v, mainCamera);
-                    break;
-                case IShapeButton.ShapeType.Rectangle:
-                    Rectangle.Sketch(hit.point, v, mainCamera);
-                    break;
-                case IShapeButton.ShapeType.Triangle:
-                    Triangle.Sketch(hit.point, v, mainCamera);
-                    break;
+                hitPoint = ray.GetPoint(enter); // Use the ground plane intersection
+            }
+            else
+            {
+                return; // No valid placement point, exit early
             }
         }
+
+        switch (currentShape)
+        {
+            case IShapeButton.ShapeType.Circle:
+                Circle.Sketch(hitPoint, v, mainCamera);
+                break;
+            case IShapeButton.ShapeType.Rectangle:
+                Rectangle.Sketch(hitPoint, v, mainCamera);
+                break;
+            case IShapeButton.ShapeType.Triangle:
+                Triangle.Sketch(hitPoint, v, mainCamera);
+                break;
+        }
     }
+
+
     
 }

@@ -17,7 +17,7 @@ public class Point : Shape, IDrawable2D
     {
         GO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         GO.name = Name;
-        GO.transform.localScale = Vector3.one * 0.1f; // Small size for a point
+        GO.transform.localScale = Vector3.one * 0.1f; // Small point
 
         if (Parent != null)
         {
@@ -29,14 +29,12 @@ public class Point : Shape, IDrawable2D
             GO.transform.position = Position;
         }
 
-        // ✅ Replace SphereCollider with BoxCollider for accuracy
-        if (GO.GetComponent<SphereCollider>() != null)
-        {
-            GameObject.Destroy(GO.GetComponent<SphereCollider>());
-        }
-        var collider = GO.AddComponent<BoxCollider>();
-        collider.size = Vector3.one * 0.1f;
+        // ✅ Ensure precise SphereCollider
+        SphereCollider collider = GO.GetComponent<SphereCollider>();
+        if (collider == null) collider = GO.AddComponent<SphereCollider>();
+        collider.radius = 0.05f; // Half of the scale (0.1) for accuracy
     }
+
 
     public override void Drawing()
     {

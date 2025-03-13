@@ -66,11 +66,10 @@ public abstract class Shape
     protected void RegisterEvents()
     {
         GO.AddComponent<ShapeClickHandler>().SetShape(this); // Link to this shape
-        if (Parent == null)
-        {
-            HoverableShape hs = GO.AddComponent<HoverableShape>(); // Link to this shape
-            hs.SetMaterials(this);
-        }
+        
+        HoverableShape hs = GO.AddComponent<HoverableShape>(); // Link to this shape
+        hs.SetMaterials(this);
+        
     }
     
     // 🔥 Abstract method: Each shape defines its own settings
@@ -129,6 +128,7 @@ public abstract class Shape
 
     public void Draw()
     {
+        SetIgnoreRaycast(true);
         Drawing();
     } // General draw function
 
@@ -142,6 +142,7 @@ public abstract class Shape
         {
             hs.SetComponents();
         }
+        SetIgnoreRaycast(false);
     }
     public virtual void CompleteSettings()
     {
@@ -149,6 +150,26 @@ public abstract class Shape
     }
     // General sketch function
 
+    private const int IGNORE_RAYCAST_LAYER = 2; // Unity's built-in Ignore Raycast layer
+    private int defaultLayer = 0; // Store original layer
+
+    public void SetIgnoreRaycast(bool ignore)
+    {
+        if (GO == null) return;
+
+        int targetLayer = ignore ? IGNORE_RAYCAST_LAYER : defaultLayer;
+
+        // Change layer for the main object
+        GO.layer = targetLayer;
+
+        // Apply to all children recursively
+        foreach (Transform child in GO.transform)
+        {
+            child.gameObject.layer = targetLayer;
+        }
+    }
+    
+    
     // ✅ Return settings list
     public List<ISetting> GetSettings()
     {

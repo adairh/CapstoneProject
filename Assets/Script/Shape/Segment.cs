@@ -28,7 +28,7 @@ public class Segment : Shape, IDrawable2D
 
     public void Draw2D()
     {
-        if (GO != null) 
+        if (GO != null)
             GameObject.Destroy(GO);
 
         GO = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -40,7 +40,17 @@ public class Segment : Shape, IDrawable2D
         }
 
         UpdateTransform();
+    
+        // ✅ Replace the default collider with a CapsuleCollider
+        if (GO.GetComponent<CapsuleCollider>() != null)
+            GameObject.Destroy(GO.GetComponent<CapsuleCollider>());
+
+        CapsuleCollider capsule = GO.AddComponent<CapsuleCollider>();
+        capsule.direction = 1; // Align along the Y-axis
+        capsule.radius = 0.025f; // Half of the thickness (0.05)
+        capsule.height = Vector3.Distance(Start.Position, End.Position);
     }
+
 
     public override void Drawing()
     {
