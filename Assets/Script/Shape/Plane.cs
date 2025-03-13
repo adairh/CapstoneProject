@@ -101,26 +101,23 @@ public class Plane : Shape, IDrawable3D
 
     }
 
-
+    public override void UpdateHitbox()
+    {
+    }
 
 
     protected override void InitializeSettings()
     {
         
     }
-
-    public override void UpdateConfigData()
+    public override GameObject[] Components()
     {
-        
+        return new GameObject[]{}; // Use a List instead of an array
     }
-
     public override void Drawing() => Draw3D();
 
     public void Sketch(Vector3 vector3, Camera mainCamera)
     {
         
-    }
-    public override void ModifySetting<T>(ISetting setting, T value)
-    { 
-    }
+    } 
 }

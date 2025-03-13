@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using ThunderFireUnityEx;
+using UnityEngine;
 
 public class Rectangle : PolygonalShape, IDrawable2D
 {
@@ -7,7 +9,7 @@ public class Rectangle : PolygonalShape, IDrawable2D
     public float Height { get; set; }
     private Segment[] edges; // Use Segment instead of Shape for clarity
 
-    private Vector3 bottomLeft;
+    private Vector3 bottomLeft; 
 
     public Rectangle(Vector3 bottomLeft, float width, float height) : this(bottomLeft, width, height, null)
     {
@@ -18,7 +20,6 @@ public class Rectangle : PolygonalShape, IDrawable2D
     {
         GO = new GameObject(Name);
 
-        this.bottomLeft = bottomLeft;
         Width = width;
         Height = height;
 
@@ -26,6 +27,8 @@ public class Rectangle : PolygonalShape, IDrawable2D
         Position = bottomLeft + new Vector3(width / 2, height / 2, 0);
         GO.transform.position = Position;
 
+        this.bottomLeft = Position;
+        
         InitializeCorners();
         InitializeEdges();
         SetupGameObject();
@@ -61,12 +64,8 @@ public class Rectangle : PolygonalShape, IDrawable2D
 
     protected override void SetupGameObject()
     {
-        // ✅ Add BoxCollider2D and ensure correct size
-        BoxCollider2D collider = GO.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(Width, Height);
-        collider.offset = Vector2.zero;
-
         Draw2D();
+        UpdateHitbox();
         base.SetupGameObject();
     }
 
@@ -74,18 +73,10 @@ public class Rectangle : PolygonalShape, IDrawable2D
     {
         Debug.Log($"✅ Drawing Rectangle with Cylinders at {Position}");
     }
-
-    public override void ModifySetting<T>(ISetting setting, T value)
-    { 
-    }
+ 
 
     public override void Drawing()
     {
-        
-        BoxCollider2D collider = GO.GetComponent<BoxCollider2D>();
-        collider.size = new Vector2(Width, Height);
-        collider.offset = Vector2.zero;
-        
         Quaternion rotation = GO.transform.rotation;  // Get current rotation
         Vector3 right = rotation * Vector3.right;
         Vector3 up = rotation * Vector3.up;
@@ -112,12 +103,31 @@ public class Rectangle : PolygonalShape, IDrawable2D
 
     protected override void InitializeSettings()
     {
-        // Placeholder for future settings
+        AppendSettings(
+            new PositionSetting(Position, this)
+        );
     }
-
-    public override void UpdateConfigData()
+    public override GameObject[] Components()
     {
-        // Placeholder for UI configuration
+        List<GameObject> gos = new List<GameObject>(); // Use a List instead of an array
+
+        foreach (Shape s in edges)
+        {
+            if (s != null) // Ensure s is not null
+            {
+                gos.Add(s.GO); // Assuming Shape has a gameObject property
+            }
+        }
+        
+        foreach (Point p in Corners)
+        {
+            if (p != null) // Ensure s is not null
+            {
+                gos.Add(p.GO); // Assuming Shape has a gameObject property
+            }
+        }
+
+        return gos.ToArray(); // Convert the List to an array
     }
 
     private static bool drawing = false;
@@ -165,5 +175,33 @@ public class Rectangle : PolygonalShape, IDrawable2D
                 rect.CompleteDraw();
             }
         }
+    }
+    public override void UpdateHitbox()
+    {
+         
+        BoxCollider boxCollider = GO.GetComponent<BoxCollider>();
+        if (boxCollider == null)
+        {
+            boxCollider = GO.AddComponent<BoxCollider>();
+        }
+    
+        // ✅ Set correct size using width & height, assuming Z-depth is small
+        boxCollider.size = new Vector3(Width, Height, 0.1f); 
+    
+        // ✅ Offset to center the collider properly
+        boxCollider.center = new Vector3(Width / 2, Height / 2, 0);
+    }
+
+
+    public override void CompleteSettings()
+    {
+        bottomLeft = Corners[0].GO.transform.position;
+        base.CompleteSettings();
+    }
+
+    public override void CompleteDraw()
+    {
+        UpdateHitbox();
+        base.CompleteDraw();
     }
 }

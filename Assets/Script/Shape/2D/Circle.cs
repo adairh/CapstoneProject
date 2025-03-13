@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 
 public class Circle : CircularShape, IDrawable2D
-{
-    public float Radius { get; set; }
+{ 
     private const int SEGMENTS = 36; 
     private GameObject[] edges;
 
@@ -20,21 +19,13 @@ public class Circle : CircularShape, IDrawable2D
         GO = new GameObject(Name);
         GO.transform.position = Position;
 
-        // ✅ Add interactive components
-        /*GO.AddComponent<DraggableShape>();
-        GO.AddComponent<HoverableShape>().SetMaterials(DefaultMaterial, HighlightMaterial);
-        GO.AddComponent<ScalableShape>();
-        GO.AddComponent<RotatableShape>();*/
-        
-        // ✅ Add a Collider (for interactions)
-        CircleCollider2D collider = GO.AddComponent<CircleCollider2D>();
-        collider.radius = Radius; 
-        collider.offset = Vector2.zero;
-        edges = new GameObject[SEGMENTS];
-        Draw2D();
-        
+        edges = new GameObject[SEGMENTS]; // ✅ Initialize edges array before calling Draw2D()
+    
+        Draw2D(); // ✅ Call after initializing edges
+        UpdateHitbox();
         base.SetupGameObject();
     }
+
 
     public void Draw2D()
     {
@@ -52,14 +43,14 @@ public class Circle : CircularShape, IDrawable2D
     private Vector3 GetPointOnCircle(float angleDegrees)
     {
         float rad = Mathf.Deg2Rad * angleDegrees;
-    
-        // Get the camera-aligned plane
-        Vector3 forward = Camera.main.transform.forward;  // Camera looking direction
-        Vector3 right = Camera.main.transform.right;  // Horizontal axis
-        Vector3 up = Vector3.Cross(forward, right);  // Vertical axis
+
+        // ✅ Use the object's local right and up directions
+        Vector3 right = GO.transform.right; // Correctly rotated X-axis
+        Vector3 up = GO.transform.up; // Correctly rotated Y-axis
 
         return Position + (right * Radius * Mathf.Cos(rad)) + (up * Radius * Mathf.Sin(rad));
     }
+
 
     private void CreateEdge(int index, Vector3 start, Vector3 end)
     {
@@ -75,46 +66,18 @@ public class Circle : CircularShape, IDrawable2D
 
         edges[index].transform.position = midPoint;
         edges[index].transform.localScale = new Vector3(0.05f, length / 2, 0.05f);
-        edges[index].transform.rotation = Quaternion.FromToRotation(Vector3.up, end - start);
+
+        // ✅ Ensure correct rotation using local transform axes
+        edges[index].transform.rotation = Quaternion.LookRotation(GO.transform.forward, end - start);
     }
 
 
-    public override void ModifySetting<T>(ISetting setting, T value)
-    {
-        if (setting is RadiusSetting && value is float floatValue)
-        {
-            Debug.LogWarning("🔹 Before Updating: Settings List:");
-            foreach (var s in settings)
-            {
-                Debug.Log($" - {s.GetType().Name}: {s.GetValue()}");
-            }
 
-            setting.SetValue(floatValue);
-            UpdateSettings(setting);
-
-            Debug.LogWarning("🔹 After Updating: Settings List:");
-            foreach (var s in settings)
-            {
-                Debug.Log($" - {s.GetType().Name}: {s.GetValue()}");
-            }
-
-            this.Radius = floatValue;
-            
-            Debug.Log($"✅ Circle radius updated to: {this.Radius}");
-        }
-        else
-        {
-            Debug.LogError($"❌ ModifySetting failed: Incompatible type {typeof(T)} for {setting.GetType()}");
-        }
-    }
+ 
  
 
     public override void Drawing()
-    {
-        // ✅ Add a Collider (for interactions)
-        CircleCollider2D collider = GO.GetComponent<CircleCollider2D>();
-        collider.radius = Radius; 
-        collider.offset = Vector2.zero;
+    { 
         
         float angleStep = 360f / SEGMENTS;
         Vector3 prevPoint = GetPointOnCircle(0);
@@ -133,25 +96,20 @@ public class Circle : CircularShape, IDrawable2D
             prevPoint = nextPoint;
         } 
     }
-    protected override void InitializeSettings()
-    { 
-        Debug.LogWarning("Circle  " + Radius);
-      settings.Add(new RadiusSetting(Radius, this)); 
+
+    public override GameObject[] Components()
+    {
+        return edges;
     }
 
-    public override void UpdateConfigData()
-    {
-        ISetting radiusSetting = GetSettings().Find(s => s is RadiusSetting);
-    
-        if (radiusSetting != null)
-        {
-            ModifySetting(radiusSetting, Radius);
-        }
-        else
-        {
-            Debug.LogError("RadiusSetting not found in settings!");
-        }
+    protected override void InitializeSettings()
+    { 
+        AppendSettings(
+            new RadiusSetting(Radius, this),
+            new PositionSetting(Position, this)
+        );
     }
+ 
 
 
     private static bool drawing = false;
@@ -167,20 +125,22 @@ public class Circle : CircularShape, IDrawable2D
             { 
                 startPoint = vector3;
                 startScreenPoint = screenPoint;
-                circle = new Circle(startPoint, 0);
+                circle = new Circle(startPoint, 0); 
                 drawing = true;
             }
         }
         else if (drawing && Input.GetMouseButton(0)) // Hold to resize
-        { 
-            float newRadius = Vector3.Distance(startScreenPoint, screenPoint)/100;
-            if (!Mathf.Approximately(circle.Radius, newRadius)) // Prevent redundant updates
+        {
+            float newRadius = Vector3.Distance(startScreenPoint, screenPoint) / 100;
+            if (!Mathf.Approximately(circle.Radius, newRadius)) 
             {
                 circle.Radius = newRadius;
-                circle.GO.transform.rotation = GetAlignedRotation(mainCamera); // Rotate based on camera
+                circle.GO.transform.rotation = GetAlignedRotation(mainCamera);
+                //circle.UpdateHitbox(); // ✅ Ensure this is called after setting up the shape
                 circle.Draw();
             }
         }
+
         else if (Input.GetMouseButtonUp(0)) // Release to finalize
         {
             if (drawing)
@@ -189,5 +149,35 @@ public class Circle : CircularShape, IDrawable2D
                 circle.CompleteDraw();
             }
         }
+    }
+    public override void UpdateHitbox()
+    {
+        // ✅ Ensure GO is not null
+        if (GO == null)
+        {
+            Debug.LogError("❌ UpdateHitbox() called before GameObject was initialized.");
+            return;
+        }
+
+        // ✅ Ensure the collider exists
+        SphereCollider sphereCollider = GO.GetComponent<SphereCollider>();
+        if (sphereCollider == null)
+        {
+            sphereCollider = GO.AddComponent<SphereCollider>();
+        }
+
+        // ✅ Set the correct radius
+        sphereCollider.radius = Radius;
+
+        // ✅ Match the rotation of the shape
+        sphereCollider.transform.rotation = GO.transform.rotation;
+    }
+
+
+
+    public override void CompleteDraw()
+    {
+        UpdateHitbox();
+        base.CompleteDraw();
     }
 }

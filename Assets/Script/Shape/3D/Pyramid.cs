@@ -65,21 +65,18 @@ public class Pyramid : PolygonalShape, IDrawable3D
         mesh.RecalculateNormals();
         return mesh;
     }
-
+    public override void UpdateHitbox()
+    {
+    }
     public override void Drawing() => Draw3D();
     protected override void InitializeSettings()
     {
         //throw new System.NotImplementedException();
     }
- 
-    public override void ModifySetting<T>(ISetting setting, T value)
-    { 
-    }
-    public override void UpdateConfigData()
+    public override GameObject[] Components()
     {
-        //throw new System.NotImplementedException();
+        return new GameObject[]{}; // Use a List instead of an array
     }
-
     public void Sketch(Vector3 vector3, Camera mainCamera)
     {
         

@@ -7,5 +7,7 @@ public class WorldComponents : MonoBehaviour
     {
         if (gameObject.GetComponent<ShapeClickHandler>() != null)
             Destroy(gameObject.GetComponent<ShapeClickHandler>());
+        if (gameObject.GetComponent<HoverableShape>() != null)
+            Destroy(gameObject.GetComponent<HoverableShape>());
     }
 }

@@ -19,11 +19,11 @@ public class EditableShape : MonoBehaviour
     }
     
     
-    public void ApplySettings(Shape shape)
+    public void ApplySettings()
     {
         foreach (ISetting setting in Settings) // ✅ Corrected loop
         {
-            setting.Apply(shape); // ✅ Apply each setting to the GameObject
+            setting.Apply(); // ✅ Apply each setting to the GameObject
         }
     }
     

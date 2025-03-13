@@ -17,15 +17,16 @@ public class GroupShape : Shape
     protected override void InitializeSettings()
     { 
     }
-
-    public override void UpdateConfigData()
-    { 
+    public override GameObject[] Components()
+    {
+        return new GameObject[]{}; // Use a List instead of an array
     }
 
     public override void Drawing()
     { 
-    }
-    public override void ModifySetting<T>(ISetting setting, T value)
-    { 
+    } 
+    
+    public override void UpdateHitbox()
+    {
     }
 }

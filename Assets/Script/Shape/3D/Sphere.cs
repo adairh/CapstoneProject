@@ -45,7 +45,7 @@ public class Sphere : CircularShape, IDrawable3D
         AppendSettings(
             new ColorSetting(ShapeColor),
             new RadiusSetting(10f, this),
-            new PositionSetting(Position)
+            new PositionSetting(Position, this)
         );
     }
 
@@ -68,19 +68,17 @@ public class Sphere : CircularShape, IDrawable3D
             GO.transform.position = Position;
         }
     }
-
-    // 🔥 Open the right-click settings panel
-    public override void UpdateConfigData()
+    public override GameObject[] Components()
     {
-        Debug.Log("Opening Sphere Config Panel...");
-        //UIManager.Instance.ShowConfigPanel(this);
+        return new GameObject[]{}; // Use a List instead of an array
     }
-
-    public override void ModifySetting<T>(ISetting setting, T value)
-    { 
-    }
+ 
     public void Sketch(Vector3 vector3, Camera mainCamera)
     {
         
+    }
+    
+    public override void UpdateHitbox()
+    {
     }
 }

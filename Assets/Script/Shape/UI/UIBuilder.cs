@@ -38,6 +38,7 @@ public class UIBuilder
 
         foreach (ISetting setting in targetShape.GetSettings())
         {
+            setting.Update();
             GameObject settingUI = setting.GetUI();
             if (settingUI != null)
             {  

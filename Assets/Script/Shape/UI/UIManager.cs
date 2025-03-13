@@ -16,8 +16,7 @@ public class UIManager : MonoBehaviour
     {
         get { return uiPrefabs;}
     }
-
-
+    
     public Transform GetCanvasTransform()
     {
         return canvas;
@@ -43,7 +42,7 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"UI component with key {key} is already registered.");
+            //Debug.LogWarning($"UI component with key {key} is already registered.");
         }
     }
 
@@ -56,7 +55,7 @@ public class UIManager : MonoBehaviour
         {
             return prefab; // Return the original prefab, not an instantiated one
         }
-        Debug.LogWarning($"UI component with key {key} not found.");
+        //Debug.LogWarning($"UI component with key {key} not found.");
         return null;
     }
 
@@ -73,7 +72,5 @@ public class UIManager : MonoBehaviour
                 RegisterUIComponent(prefab.name, prefab);
             }
         }
-    }
-
-    
+    } 
 }

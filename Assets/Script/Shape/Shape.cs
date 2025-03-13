@@ -19,6 +19,8 @@ public abstract class Shape
     public string Name { get; set; }
     public bool IsSnappable { get; set; } = true; // Toggle Snap-to-Grid
 
+    public abstract GameObject[] Components();
+    
     public Material DefaultMaterial { get; set; }
     public Material HighlightMaterial { get; set; }
 
@@ -52,8 +54,8 @@ public abstract class Shape
         Name = name;
 
         // ✅ Setup materials for hover effect
-        DefaultMaterial = new Material(Shader.Find("Custom/SolidShader")) { color = ShapeColor };
-        HighlightMaterial = new Material(Shader.Find("Custom/GlowingShader")) { color = ShapeColor };
+        DefaultMaterial = new Material(Shader.Find("Custom/SolidShader")){ color = ShapeColor };
+        HighlightMaterial = new Material(Shader.Find("Custom/GlowingShader")){ color = Color.cyan };
 
         Parent = parent;
         shape = this; 
@@ -64,7 +66,11 @@ public abstract class Shape
     protected void RegisterEvents()
     {
         GO.AddComponent<ShapeClickHandler>().SetShape(this); // Link to this shape
-        GO.AddComponent<HoverableShape>(); // Link to this shape
+        if (Parent == null)
+        {
+            HoverableShape hs = GO.AddComponent<HoverableShape>(); // Link to this shape
+            hs.SetMaterials(this);
+        }
     }
     
     // 🔥 Abstract method: Each shape defines its own settings
@@ -82,24 +88,11 @@ public abstract class Shape
     }
 
     // 🔥 Opens the settings panel
-    public abstract void UpdateConfigData();
 
     // 🔥 Applies the settings to the shape
     public virtual void ApplySettings()
     {
-        foreach (ISetting setting in settings)
-        {
-            if (setting is ColorSetting colorSetting)
-            {
-                ShapeColor = colorSetting.Value;
-                DefaultMaterial.color = ShapeColor; // Apply color change
-            }
-            else if (setting is PositionSetting positionSetting)
-            {
-                Position = positionSetting.Value;
-                GO.transform.position = Position; // Move object
-            }
-        }
+        
     }
 
     public void UpdateSettings(ISetting setting)
@@ -124,8 +117,14 @@ public abstract class Shape
         ApplySettings();
     }
 
-    public abstract void ModifySetting<T>(ISetting setting, T value);
+    public void ModifySetting<T>(ISetting setting, T value)
+    {
+        setting.SetValue(value);
+        UpdateSettings(setting);
+        UpdateHitbox();
+    }
     
+    public abstract void UpdateHitbox(); // General draw function
     public abstract void Drawing(); // General draw function
 
     public void Draw()
@@ -133,10 +132,20 @@ public abstract class Shape
         Drawing();
     } // General draw function
 
-    public void CompleteDraw()
+    
+    
+    public virtual void CompleteDraw()
     {
-        PerformDrawing.ResetShape();
-        UpdateConfigData();
+        PerformDrawing.ResetShape(); 
+        HoverableShape hs = GO.GetComponent<HoverableShape>();
+        if (hs != null)
+        {
+            hs.SetComponents();
+        }
+    }
+    public virtual void CompleteSettings()
+    {
+        
     }
     // General sketch function
 
@@ -180,4 +189,5 @@ public abstract class PolygonalShape : Shape
 public abstract class CircularShape : Shape
 {
     public CircularShape(Vector3 position, string name, Shape parent) : base(position, name, parent) { }
+    public float Radius { get; set; }
 }

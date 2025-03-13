@@ -49,6 +49,9 @@ public class PerformDrawing : MonoBehaviour
                 case IShapeButton.ShapeType.Rectangle:
                     Rectangle.Sketch(hit.point, v, mainCamera);
                     break;
+                case IShapeButton.ShapeType.Triangle:
+                    Triangle.Sketch(hit.point, v, mainCamera);
+                    break;
             }
         }
     }

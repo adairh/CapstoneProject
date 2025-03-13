@@ -2,12 +2,10 @@
 
 public class Triangle : PolygonalShape, IDrawable2D
 {
-    public Point[] Corners { get; private set; } 
+    public Point[] Corners { get; private set; }
     private GameObject[] edges;
 
-    public Triangle(Vector3 p1, Vector3 p2, Vector3 p3) : this(p1, p2, p3, null)
-    {
-    }
+    public Triangle(Vector3 p1, Vector3 p2, Vector3 p3) : this(p1, p2, p3, null) { }
 
     public Triangle(Vector3 p1, Vector3 p2, Vector3 p3, Shape parent) : base(p1, "Triangle", parent)
     {
@@ -18,7 +16,7 @@ public class Triangle : PolygonalShape, IDrawable2D
         Position = center;
         GO.transform.position = center;
 
-        // ✅ Initialize points as children of the triangle GOect
+        // ✅ Initialize points as children of the triangle
         Corners = new Point[]
         {
             new Point(p1, this),
@@ -29,78 +27,106 @@ public class Triangle : PolygonalShape, IDrawable2D
         SetupGameObject();
     }
 
-    private void SetupGameObject()
+    public override void UpdateHitbox()
     {
-        // ✅ Add interactivity components
-        /*GO.AddComponent<DraggableShape>();
-        GO.AddComponent<ScalableShape>();
-        GO.AddComponent<RotatableShape>();
-        HoverableShape hover = GO.AddComponent<HoverableShape>();
-        hover.SetMaterials(DefaultMaterial, HighlightMaterial);*/
-
-        // ✅ Fix the PolygonCollider2D to match triangle shape
-        PolygonCollider2D collider = GO.AddComponent<PolygonCollider2D>();
-        collider.points = GetLocalPoints(); 
-
-        // ✅ Create edges
-        edges = new GameObject[3]; 
     }
 
-    private Vector2[] GetLocalPoints()
+    private void SetupGameObject()
     {
-        return new Vector2[]
+        // ✅ Add MeshCollider (Non-Convex Mode)
+        MeshCollider meshCollider = GO.AddComponent<MeshCollider>();
+        meshCollider.sharedMesh = CreateTriangleMesh();
+        meshCollider.convex = false; // ❌ Do NOT make it convex (Triangles are flat!)
+
+        // ✅ Create edges
+        edges = new GameObject[3];
+        Draw2D();
+    }
+
+
+    private Mesh CreateTriangleMesh()
+    {
+        Mesh mesh = new Mesh();
+
+        Vector3[] vertices = new Vector3[]
         {
             GO.transform.InverseTransformPoint(Corners[0].Position),
             GO.transform.InverseTransformPoint(Corners[1].Position),
             GO.transform.InverseTransformPoint(Corners[2].Position)
         };
+
+        int[] triangles = { 0, 1, 2 };
+
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.RecalculateNormals();
+        return mesh;
     }
 
     public void Draw2D()
     {
-        /*CreateEdge(0, Corners[0].GetGameObject().transform.localPosition, Corners[1].GetGameObject().transform.localPosition);
-        CreateEdge(1, Corners[1].GetGameObject().transform.localPosition, Corners[2].GetGameObject().transform.localPosition);
-        CreateEdge(2, Corners[2].GetGameObject().transform.localPosition, Corners[0].GetGameObject().transform.localPosition);
-    */
-        
-        new Segment(Corners[0], Corners[1], this);
-        new Segment(Corners[1], Corners[2], this);
-        new Segment(Corners[2], Corners[0], this);
+        CreateEdge(0, Corners[0].Position, Corners[1].Position);
+        CreateEdge(1, Corners[1].Position, Corners[2].Position);
+        CreateEdge(2, Corners[2].Position, Corners[0].Position);
     }
 
-    private void CreateEdge(int index, Vector3 localStart, Vector3 localEnd)
+    private void CreateEdge(int index, Vector3 start, Vector3 end)
     {
         if (edges[index] != null) GameObject.Destroy(edges[index]);
 
         edges[index] = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         edges[index].transform.SetParent(GO.transform, false);
 
-        Vector3 midPoint = (localStart + localEnd) / 2;
-        float length = Vector3.Distance(localStart, localEnd);
+        Vector3 midPoint = (start + end) / 2;
+        float length = Vector3.Distance(start, end);
 
-        edges[index].transform.localPosition = midPoint; // ✅ Now local space
-        edges[index].transform.localScale = new Vector3(0.05f, length / 2, 0.05f); // ✅ Thin cylinder
-        edges[index].transform.rotation = Quaternion.FromToRotation(Vector3.up, localEnd - localStart);
+        edges[index].transform.position = midPoint;
+        edges[index].transform.localScale = new Vector3(0.05f, length / 2, 0.05f);
+        edges[index].transform.rotation = Quaternion.FromToRotation(Vector3.up, end - start);
         edges[index].GetComponent<Renderer>().material = DefaultMaterial;
     }
 
     public override void Drawing() => Draw2D();
+
     protected override void InitializeSettings()
     {
-        //throw new System.NotImplementedException();
+        AppendSettings(
+            new PositionSetting(Position, this)
+        );
+    }
+
+    public override GameObject[] Components() => edges;
+
+    // 🎨 Dynamic Sketching Support
+    private static bool drawing = false;
+    private static Vector3[] points = new Vector3[3];
+    private static int pointCount = 0;
+    private static Triangle triangle;
+
+    public static void Sketch(Vector3 vector3, Vector3 screenPoint, Camera mainCamera)
+    {
+        if (Input.GetMouseButtonDown(0)) // Click to start
+        {
+            if (!drawing)
+            {
+                drawing = true;
+                pointCount = 0;
+            }
+
+            if (pointCount < 3)
+            {
+                points[pointCount] = vector3;
+                pointCount++;
+            }
+
+            if (pointCount == 3) // Complete triangle
+            {
+                triangle = new Triangle(points[0], points[1], points[2]);
+                triangle.GO.transform.rotation = GetAlignedRotation(mainCamera);
+                triangle.CompleteDraw();
+                drawing = false;
+            }
+        }
     }
  
-
-    public override void ModifySetting<T>(ISetting setting, T value)
-    { 
-    }
-    public override void UpdateConfigData()
-    {
-        //throw new System.NotImplementedException();
-    }
-
-    public void Sketch(Vector3 vector3, Camera mainCamera)
-    {
-        
-    }
 }

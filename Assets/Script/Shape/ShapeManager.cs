@@ -8,12 +8,12 @@ public class ShapeManager : MonoBehaviour
     void Start()
     {
         // Example Usage
-        AddShape(new Rectangle(new Vector3(2, 2, 2), 2f, 3f));
-        AddShape(new Triangle(new Vector3(2, 2,2),new Vector3(3, 3, 3),new Vector3(4, 2,2)));
-        AddShape(new Circle(new Vector3(2, 2, 2), 3f));
-        AddShape(new Cube(new Vector3(0, 0, 0), 1f));
-        AddShape(new Sphere(new Vector3(4, 0, 5), 2f));
-        AddShape(new Pyramid(new Vector3(4, 0, 5)));
+        // AddShape(new Rectangle(new Vector3(2, 2, 2), 2f, 3f));
+        // AddShape(new Triangle(new Vector3(2, 2,2),new Vector3(3, 3, 3),new Vector3(4, 2,2)));
+        // AddShape(new Circle(new Vector3(2, 2, 2), 3f));
+        // AddShape(new Cube(new Vector3(0, 0, 0), 1f));
+        // AddShape(new Sphere(new Vector3(4, 0, 5), 2f));
+        // AddShape(new Pyramid(new Vector3(4, 0, 5)));
 
         DrawAllShapes();
     }

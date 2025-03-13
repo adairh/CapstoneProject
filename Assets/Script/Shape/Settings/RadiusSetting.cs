@@ -3,42 +3,26 @@ using UnityEngine.UI;
 using TMPro;
 
 public class RadiusSetting : Setting<float>
-{
-    private const float ELEMENT_HEIGHT = 40f; 
-    private const float SPACING = 10f; 
+{ 
 
-    private Shape targetShape; // Reference to the shape
 
-    private GameObject uiInstance;
 
     public RadiusSetting(float radius, Shape shape) 
         : base(radius, ISetting.SettingType.NUMERIC, typeof(CircularShape))
     {
         targetShape = shape; 
+        prefab = UIManager.Instance.GetUIComponent("RadiusSettingPrefab");
     }
 
     public override GameObject GetUI()
     {
+        uiInstance = Object.Instantiate(prefab);
         if (UIManager.Instance == null)
         {
             Debug.LogError("UIManager instance not found in the scene!");
             return null;
         }
 
-        GameObject prefab = UIManager.Instance.GetUIComponent("RadiusSettingPrefab");
-
-        if (prefab == null)
-        {
-            Debug.LogError("RadiusSettingPrefab not found in UIManager!");
-            return null;
-        }
-
-        uiInstance = Object.Instantiate(prefab);
-
-
-        Debug.Log(Value);
-        
-        
         TMP_InputField inputField = uiInstance.GetComponentInChildren<TMP_InputField>();
          
 
@@ -50,7 +34,7 @@ public class RadiusSetting : Setting<float>
                 if (float.TryParse(value, out float result) && result > 0)
                 {
                     SetValue(result); 
-                    Apply(targetShape); // 🔥 Apply changes in real-time!
+                    Apply(); // 🔥 Apply changes in real-time!
                 }
                 else
                 {
@@ -61,15 +45,28 @@ public class RadiusSetting : Setting<float>
         return uiInstance;
     }
 
-    public override void Apply(Shape obj)
+    public override void Apply()
     {
-        obj.ModifySetting(this, Value);
-        obj.Draw();
+        targetShape.ModifySetting(this, Value);
+        ((CircularShape)targetShape).Radius = Value;
+        targetShape.CompleteSettings();
+        targetShape.Draw();
+        targetShape.UpdateHitbox();
     }
 
+    public override void Update()
+    {
+        Value = ((CircularShape)targetShape).Radius;
+    }
 
     public override float Height()
     {
-        return (ELEMENT_HEIGHT * 2) + SPACING;
+        if (prefab.TryGetComponent<RectTransform>(out var rectTransform))
+        {
+            return rectTransform.rect.height; // Get height of UI panel
+        }
+        return 0f; // Default if no RectTransform is found
     }
+
+
 }

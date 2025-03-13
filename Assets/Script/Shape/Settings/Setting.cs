@@ -13,7 +13,8 @@ public interface ISetting
     GameObject GetUI();
     SettingType Type { get; }
     
-    void Apply(Shape obj);
+    void Apply();
+    void Update();
     void SetValue(object value);
     float Height();
 }
@@ -22,6 +23,12 @@ public interface ISetting
 public abstract class Setting<T> : ISetting
 {
     public T Value { get; protected set; }
+    
+    public Shape targetShape { get; set; }
+    public GameObject uiInstance { get; protected set; }
+    public GameObject prefab { get; protected set; }
+    
+    
     public System.Type TargetShape { get; protected set; }
     public ISetting.SettingType Type { get; }  // Ensure it's correctly initialized
 
@@ -33,8 +40,9 @@ public abstract class Setting<T> : ISetting
     }
 
     public abstract GameObject GetUI();
-    public abstract void Apply(Shape obj);
+    public abstract void Apply();
     public abstract float Height();
+    public abstract void Update();
 
     public object GetValue() => Value;
 
@@ -54,7 +62,7 @@ public abstract class Setting<T> : ISetting
     // Virtual method allows customization in child classes
     public virtual void SetValue(T value)
     {
-        Debug.LogWarning(" set value = " + value + " - " + Value);
+        //Debug.LogWarning(" set value = " + value + " - " + Value);
         Value = value;
     }
 }

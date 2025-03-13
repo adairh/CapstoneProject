@@ -66,19 +66,18 @@ public class Segment : Shape, IDrawable2D
 
     protected override void InitializeSettings()
     {
-        Debug.LogWarning($"{Name}: InitializeSettings() not implemented.");
+        //Debug.LogWarning($"{Name}: InitializeSettings() not implemented.");
     }
-
-    public override void UpdateConfigData()
+    public override GameObject[] Components()
     {
-        Debug.LogWarning($"{Name}: OpenConfigPanel() not implemented.");
+        return new GameObject[]{}; // Use a List instead of an array
     }
-
     public void Sketch(Vector3 vector3, Camera mainCamera)
     {
         
-    }
-    public override void ModifySetting<T>(ISetting setting, T value)
-    { 
+    } 
+    
+    public override void UpdateHitbox()
+    {
     }
 }

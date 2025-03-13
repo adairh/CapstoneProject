@@ -6,6 +6,7 @@ public interface IShapeButton
     {
         None,
         Circle,
-        Rectangle
+        Rectangle,
+        Triangle
     }
 }

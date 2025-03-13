@@ -10,10 +10,15 @@ public class NumericSetting : Setting<float>
 
     }
 
-    public override void Apply(Shape obj)
+    public override void Apply()
     {
         //throw new System.NotImplementedException();
     }
+
+    public override void Update()
+    {
+    }
+
     public override float Height()
     {
         return 0f;

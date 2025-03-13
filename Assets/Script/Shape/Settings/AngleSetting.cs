@@ -10,9 +10,13 @@ public class AngleSetting : Setting<float>
 
     }
 
-    public override void Apply(Shape obj)
+    public override void Apply()
     {
         //throw new System.NotImplementedException();
+    }
+
+    public override void Update()
+    {
     }
 
 

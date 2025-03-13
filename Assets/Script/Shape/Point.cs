@@ -61,10 +61,9 @@ public class Point : Shape, IDrawable2D
     {
         //.LogWarning($"{Name}: InitializeSettings() not implemented.");
     }
-
-    public override void UpdateConfigData()
+    public override GameObject[] Components()
     {
-        //Debug.LogWarning($"{Name}: OpenConfigPanel() not implemented.");
+        return new GameObject[]{}; // Use a List instead of an array
     }
 
     public GameObject GetGameObject()
@@ -80,8 +79,9 @@ public class Point : Shape, IDrawable2D
     public void Sketch(Vector3 vector3, Camera mainCamera)
     {
         
-    }
-    public override void ModifySetting<T>(ISetting setting, T value)
-    { 
+    } 
+    
+    public override void UpdateHitbox()
+    {
     }
 }

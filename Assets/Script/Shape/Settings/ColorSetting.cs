@@ -10,17 +10,21 @@ public class ColorSetting : Setting<Color>
 
     }
 
-    public override void Apply(Shape obj)
+    public override void Apply()
     {
-        obj.ShapeColor = Value;
-        var renderer = obj.EditableShape.GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            renderer.material.color = Value; // Apply color to material
-        }
+        // obj.ShapeColor = Value;
+        // var renderer = obj.EditableShape.GetComponent<Renderer>();
+        // if (renderer != null)
+        // {
+        //     renderer.material.color = Value; // Apply color to material
+        // }
     }
     
-    
+
+    public override void Update()
+    {
+    }
+
     public override float Height()
     {
         return 0f;

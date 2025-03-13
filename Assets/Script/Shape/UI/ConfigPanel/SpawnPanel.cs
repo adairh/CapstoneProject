@@ -40,6 +40,8 @@ public class SpawnPanel
             Debug.LogError("Panel Prefab is missing in UIManager!");
             return;
         }
+        
+        //Debug.LogWarning("Created Panel!");
 
         // Instantiate UI panel at the top of the canvas
         spawnedPanel = Object.Instantiate(panelPrefab, canvas.transform);
@@ -58,17 +60,26 @@ public class SpawnPanel
         settingsPanel.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 1);
 
         // Adjust panel size dynamically
-        AdjustPanelSize(panelRect, settings.Count);
+        AdjustPanelSize(panelRect, settings);
+        //Debug.LogWarning(settings.Count);
 
+        
+        
         // Add close-on-click-outside behavior
         spawnedPanel.AddComponent<PanelCloser>();
     }
 
-    private void AdjustPanelSize(RectTransform panelRect, int settingCount)
+    private void AdjustPanelSize(RectTransform panelRect, List<ISetting> settings)
     {
         var pixelRect = canvas.pixelRect;
         float panelWidth = pixelRect.width * 0.7f; // Increase to 75% of canvas width
-        float panelHeight = pixelRect.height * 0.1f + (settingCount * 80f); // Increase base height and per-setting height
+        float panelHeight = pixelRect.height * 0.1f; // Increase base height and per-setting height
+
+        foreach (ISetting i in settings)
+        {
+            //panelHeight += i.Height();
+            //Debug.LogWarning($" Height of {i.Type}  {i.Height()}");
+        }
 
         panelRect.sizeDelta = new Vector2(panelWidth, panelHeight);
     }
