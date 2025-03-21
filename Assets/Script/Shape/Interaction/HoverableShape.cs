@@ -22,9 +22,10 @@ public class HoverableShape : MonoBehaviour
     }
     
     void OnMouseEnter()
-    {
+    { 
         if (_shape == null || shapeComponents == null) return;
 
+        
         foreach (GameObject part in shapeComponents)
         {
             if (part != null && part.TryGetComponent<Renderer>(out Renderer partRenderer))

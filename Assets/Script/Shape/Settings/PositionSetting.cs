@@ -68,17 +68,18 @@ public class PositionSetting : Setting<Vector3>
 
     public override void Apply()
     {
-        targetShape.GO.transform.position = Value;
-        targetShape.Position = Value;
+        //targetShape. = Value;
+        targetShape.AdjustToPosition(Value);
         targetShape.ModifySetting(this, Value);
         targetShape.CompleteSettings();
         targetShape.Draw();
         targetShape.UpdateHitbox();
+        targetShape.SetIgnoreRaycast(false);
     }
 
     public override void Update()
     {
-        Value = targetShape.GO.transform.position;
+        Value = targetShape.Position;
     }
 
     public override float Height()

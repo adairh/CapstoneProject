@@ -22,7 +22,7 @@ public class ShapeManager : MonoBehaviour
     {
         if (shape.IsSnappable)
         {
-            shape.Position = SnapToGrid(shape.Position);
+            shape.AdjustToPosition(SnapToGrid(shape.Position));
         }
 
         shapes.Add(shape);

@@ -14,12 +14,18 @@ public static class ShapeStorage
 }
 public abstract class Shape
 {
-    public Vector3 Position { get; set; }
+    public Vector3 Position { get; internal set; }
     public Color ShapeColor { get; set; }
     public string Name { get; set; }
     public bool IsSnappable { get; set; } = true; // Toggle Snap-to-Grid
 
     public abstract GameObject[] Components();
+    
+    public void AdjustToPosition(Vector3 vector3)
+    {
+        Position = vector3;
+        GO.transform.position = vector3;
+    }
     
     public Material DefaultMaterial { get; set; }
     public Material HighlightMaterial { get; set; }
@@ -159,6 +165,7 @@ public abstract class Shape
 
     public void SetIgnoreRaycast(bool ignore)
     {
+         
         if (GO == null) return;
 
         int targetLayer = ignore ? IGNORE_RAYCAST_LAYER : defaultLayer;

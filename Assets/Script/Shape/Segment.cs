@@ -22,6 +22,7 @@ public class Segment : Shape, IDrawable2D
         if (Parent != null)
         {
             GO.transform.SetParent(Parent.GO.transform, false);
+            Draw();
         }
 
         SetupGameObject();
@@ -34,6 +35,7 @@ public class Segment : Shape, IDrawable2D
     {
         Draw2D();
     }
+ 
 
     public override void Drawing()
     {
@@ -45,15 +47,26 @@ public class Segment : Shape, IDrawable2D
         if (GO == null) return;
 
         // ✅ Compute new segment offset
-        Vector3 offset = Start.Position - End.Position;
+        Vector3 diff = Start.Position - End.Position;
+        Vector3 offset = Position - Start.Position;
 
         // ✅ Move Start to the new Position and adjust End accordingly
-        //Start.Position = Position;
-        //End.Position = Position - offset;
+        
+        Debug.LogWarning($"New Position: {Position}");
+        
+        if (Parent == null)
+        {
+            Start.Position = Position;
+            End.Position += offset;
+        }
 
-        // ✅ Compute new midpoint and length
+    // ✅ Compute new midpoint and length
         Vector3 midPoint = (Start.Position + End.Position) / 2;
-        float length = offset.magnitude;
+        float length = diff.magnitude;
+        if (length == 0)
+        {
+            length = 0.001f;
+        }
 
         // ✅ Update GameObject Transform
         GO.transform.position = midPoint;

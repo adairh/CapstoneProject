@@ -52,6 +52,7 @@ public class RadiusSetting : Setting<float>
         targetShape.CompleteSettings();
         targetShape.Draw();
         targetShape.UpdateHitbox();
+        targetShape.SetIgnoreRaycast(false);
     }
 
     public override void Update()
