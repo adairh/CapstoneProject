@@ -7,6 +7,7 @@ public interface IShapeButton
         None,
         Circle,
         Rectangle,
-        Triangle
+        Triangle,
+        Segment
     }
 }

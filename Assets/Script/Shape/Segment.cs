@@ -1,35 +1,20 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Segment : Shape, IDrawable2D
 {
     public Point Start { get; set; }
-    public Point End { get; set; } 
+    public Point End { get; set; }
 
-    public Segment(Point start, Point end, Shape parent) : base(start.Position, "Segment", parent)
+    private static bool drawing = false;
+    private static Vector3 startPoint;
+    private static Segment currentSegment;
+
+    public Segment(Point start, Point end, Shape parent) : base((start.Position), "Segment", parent)
     {
         Start = start;
-        End = end; 
-        SetupGameObject();
-    }
+        End = end;
 
-    public Segment(Point start, Point end) : this(start, end, null) { }
-
-    private void SetupGameObject()
-    {
-        GO = new GameObject(Name);
-
-        if (Parent != null)
-        {
-            GO.transform.SetParent(Parent.GO.transform, false);
-        }
-
-        Draw2D();
-    }
-
-    public void Draw2D()
-    {
-        if (GO != null)
-            GameObject.Destroy(GO);
 
         GO = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         GO.name = Name;
@@ -39,18 +24,16 @@ public class Segment : Shape, IDrawable2D
             GO.transform.SetParent(Parent.GO.transform, false);
         }
 
-        UpdateTransform();
-    
-        // ✅ Replace the default collider with a CapsuleCollider
-        if (GO.GetComponent<CapsuleCollider>() != null)
-            GameObject.Destroy(GO.GetComponent<CapsuleCollider>());
-
-        CapsuleCollider capsule = GO.AddComponent<CapsuleCollider>();
-        capsule.direction = 1; // Align along the Y-axis
-        capsule.radius = 0.025f; // Half of the thickness (0.05)
-        capsule.height = Vector3.Distance(Start.Position, End.Position);
+        SetupGameObject();
     }
 
+
+    public Segment(Point start, Point end) : this(start, end, null) { }
+
+    private void SetupGameObject()
+    {
+        Draw2D();
+    }
 
     public override void Drawing()
     {
@@ -61,33 +44,119 @@ public class Segment : Shape, IDrawable2D
     {
         if (GO == null) return;
 
-        Vector3 midPoint = (Start.Position + End.Position) / 2;
-        float length = Vector3.Distance(Start.Position, End.Position);
+        // ✅ Compute new segment offset
+        Vector3 offset = Start.Position - End.Position;
 
+        // ✅ Move Start to the new Position and adjust End accordingly
+        //Start.Position = Position;
+        //End.Position = Position - offset;
+
+        // ✅ Compute new midpoint and length
+        Vector3 midPoint = (Start.Position + End.Position) / 2;
+        float length = offset.magnitude;
+
+        // ✅ Update GameObject Transform
         GO.transform.position = midPoint;
         GO.transform.localScale = new Vector3(0.05f, length / 2, 0.05f);
         GO.transform.rotation = Quaternion.FromToRotation(Vector3.up, End.Position - Start.Position);
 
-        if (GO.GetComponent<Renderer>() != null)
+        // ✅ Now we update the collider AFTER the transform is changed
+        //UpdateHitbox();
+    }
+
+
+
+
+    public static void Sketch(Vector3 worldPoint, Camera mainCamera)
+    {
+        if (Input.GetMouseButtonDown(0)) // Click to start drawing
         {
-            GO.GetComponent<Renderer>().material = DefaultMaterial;
+            if (!drawing)
+            {
+                // Start sketching by placing the first point
+                drawing = true;
+                startPoint = worldPoint;
+                currentSegment = new Segment(new Point(startPoint), new Point(startPoint));
+            }
+            else
+            {
+                // Second click finalizes the segment
+                currentSegment.End.Position = worldPoint;
+                currentSegment.UpdateTransform();
+                currentSegment.CompleteDraw();
+                drawing = false;
+            }
+        }
+
+        if (drawing)
+        {
+            // Update the second point dynamically while dragging
+            currentSegment.End.Position = worldPoint;
+            currentSegment.Draw();
         }
     }
 
     protected override void InitializeSettings()
     {
-        //Debug.LogWarning($"{Name}: InitializeSettings() not implemented.");
+        AppendSettings(
+            new PositionSetting(Position, this)
+        );
     }
+
     public override GameObject[] Components()
     {
-        return new GameObject[]{}; // Use a List instead of an array
-    }
-    public void Sketch(Vector3 vector3, Camera mainCamera)
-    {
+        List<GameObject> gos = new List<GameObject>(); // Use a List instead of an array
+        gos.Add(GO);
+        gos.Add(Start.GO);
+        gos.Add(End.GO);
         
-    } 
-    
+        return gos.ToArray();
+    }
+
     public override void UpdateHitbox()
     {
+        if (GO == null) return;
+
+        // ✅ Ensure MeshCollider exists
+        MeshCollider collider = GO.GetComponent<MeshCollider>();
+        if (collider == null)
+        {
+            collider = GO.AddComponent<MeshCollider>();
+        }
+
+        // ✅ Force Unity to recalculate the mesh bounds
+        MeshFilter meshFilter = GO.GetComponent<MeshFilter>();
+        if (meshFilter != null)
+        {
+            Mesh mesh = meshFilter.sharedMesh;
+            mesh.RecalculateBounds(); // ✅ This ensures the collider matches the new shape
+            collider.sharedMesh = null;  // ✅ Force Unity to refresh it
+            collider.sharedMesh = mesh;  
+        }
+
+        collider.convex = false; // Keep non-convex for accuracy
+    }
+
+
+    public void Draw2D()
+    {
+    }
+
+    public override void CompleteDraw()
+    {
+        UpdateHitbox();
+        
+        
+        if (Start.Parent == null)
+        {
+            Start.UpdateParent(this);
+        }
+
+        if (End.Parent == null)
+        {
+            End.UpdateParent(this);
+        }
+
+        base.CompleteDraw();
     }
 }

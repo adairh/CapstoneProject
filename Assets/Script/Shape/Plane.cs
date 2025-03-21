@@ -82,21 +82,32 @@ public class Plane : Shape, IDrawable3D
         meshCollider.sharedMesh = mesh;
 
         // **Step 5: Set Transparent Material**
-        DefaultMaterial = new Material(Shader.Find("Ciconia Studio/CS_Standard/Builtin/Standard (Specular setup)/Opaque"));
+        DefaultMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
         Material transparentMaterial = DefaultMaterial;
         
 
 // Enable transparency
-        transparentMaterial.SetFloat("_Mode", 3);
-        transparentMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        transparentMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        transparentMaterial.SetInt("_ZWrite", 0);
-        transparentMaterial.DisableKeyword("_ALPHATEST_ON");
+        // Set blend mode for transparency
+        transparentMaterial.SetFloat("_Surface", 1); // 0 = Opaque, 1 = Transparent (URP)
+        transparentMaterial.SetFloat("_Blend", 0);   // Alpha blending mode
+        transparentMaterial.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        transparentMaterial.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        transparentMaterial.SetFloat("_ZWrite", 0);  // Disable ZWrite for transparency
+        transparentMaterial.SetFloat("_Cull", 0);    // Disable backface culling (renders both sides)
+
+        // Enable transparency keywords
+        transparentMaterial.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
         transparentMaterial.EnableKeyword("_ALPHABLEND_ON");
+        transparentMaterial.DisableKeyword("_ALPHATEST_ON");
         transparentMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+
+        // Set render queue for transparency
         transparentMaterial.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
 
-        transparentMaterial.color = new Color(1f, 1f, 1f, 0.1f); // 30% Transparent
+        
+        
+        
+        
         meshRenderer.material = transparentMaterial;
 
     }

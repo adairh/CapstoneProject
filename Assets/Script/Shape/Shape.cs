@@ -54,8 +54,8 @@ public abstract class Shape
         Name = name;
 
         // ✅ Setup materials for hover effect
-        DefaultMaterial = new Material(Shader.Find("Custom/SolidShader")){ color = ShapeColor };
-        HighlightMaterial = new Material(Shader.Find("Custom/GlowingShader")){ color = Color.cyan };
+        DefaultMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")){ color = ShapeColor };
+        HighlightMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")){ color = Color.cyan };
 
         Parent = parent;
         shape = this; 
@@ -132,7 +132,11 @@ public abstract class Shape
         Drawing();
     } // General draw function
 
-    
+    public void UpdateParent(Shape shape)
+    {
+        Parent = shape;
+        GO.transform.parent = shape.GO.transform;
+    }
     
     public virtual void CompleteDraw()
     {

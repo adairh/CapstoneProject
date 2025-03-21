@@ -159,7 +159,7 @@ public class GridAndAxisSystem : MonoBehaviour
 
     void CreateLineMaterial()
     {
-        Shader shader = Shader.Find("Hidden/Internal-Colored");
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit");
         //lineMaterial.renderQueue = 2000; // Default opaque queue
         lineMaterial = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
         lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -196,7 +196,7 @@ public class GridAndAxisSystem : MonoBehaviour
         GameObject axis = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         axis.name = name;
         axis.transform.parent = this.transform;
-        axis.transform.localScale = new Vector3(axisThickness, direction.magnitude / 2, axisThickness);
+        axis.transform.localScale = new Vector3(axisThickness, direction.magnitude, axisThickness);
         axis.transform.position = direction / 2;
         axis.transform.up = direction.normalized;
 
@@ -206,7 +206,8 @@ public class GridAndAxisSystem : MonoBehaviour
         AxisHover hoverScript = axis.AddComponent<AxisHover>();
         hoverScript.defaultMaterial = renderer.material;
         hoverScript.highlightMaterial = highlightMaterial;
-
+ 
+        
         return axis;
     }
 

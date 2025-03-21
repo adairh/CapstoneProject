@@ -52,7 +52,6 @@ public class Triangle : PolygonalShape, IDrawable2D
 
     private void SetupGameObject()
     {
-        
         Draw2D();
     }
  
@@ -133,9 +132,8 @@ public class Triangle : PolygonalShape, IDrawable2D
     private static Vector3[] points = new Vector3[3];
     private static int pointCount = 0;
     private static Triangle triangle;
-    private static Vector3 startScreenPoint;
 
-    public static void Sketch(Vector3 vector3, Vector3 screenPoint, Camera mainCamera)
+    public static void Sketch(Vector3 vector3, Camera mainCamera)
     {
         if (Input.GetMouseButtonDown(0)) // Click to place points
         {
