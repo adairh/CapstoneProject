@@ -1,6 +1,5 @@
 
-using UnityEngine;
-using UnityEditor;  // Required for Handles
+using UnityEngine; 
 
 public class GridAndAxisSystem : MonoBehaviour
 {
@@ -64,9 +63,9 @@ public class GridAndAxisSystem : MonoBehaviour
         
         for (int i = 1; i <= axisLength; i++)
         {
-            Handles.Label(new Vector3(i, 0.1f, 0.1f), i.ToString(), labelStyle);
-            Handles.Label(new Vector3(0.1f, i, 0.1f), i.ToString(), labelStyle);
-            Handles.Label(new Vector3(0.1f, 0.1f, i), i.ToString(), labelStyle);
+            //Handles.Label(new Vector3(i, 0.1f, 0.1f), i.ToString(), labelStyle);
+            //Handles.Label(new Vector3(0.1f, i, 0.1f), i.ToString(), labelStyle);
+            //Handles.Label(new Vector3(0.1f, 0.1f, i), i.ToString(), labelStyle);
         }
     }
 
