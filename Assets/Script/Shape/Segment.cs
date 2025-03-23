@@ -15,7 +15,6 @@ public class Segment : Shape, IDrawable2D
         Start = start;
         End = end;
 
-
         GO = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         GO.name = Name;
 
@@ -73,6 +72,9 @@ public class Segment : Shape, IDrawable2D
         GO.transform.localScale = new Vector3(0.05f, length / 2, 0.05f);
         GO.transform.rotation = Quaternion.FromToRotation(Vector3.up, End.Position - Start.Position);
 
+        Start.Draw();
+        End.Draw();
+        
         // ✅ Now we update the collider AFTER the transform is changed
         //UpdateHitbox();
     }
@@ -86,15 +88,53 @@ public class Segment : Shape, IDrawable2D
         {
             if (!drawing)
             {
+
+                if (HoverManager.Instance.GetPinnedShape() != null)
+                {
+                    Shape pin = HoverManager.Instance.GetPinnedShape();
+                    if (pin is Point)
+                    {
+                        startPoint = pin.Position;
+                        currentSegment = new Segment(((Point)pin), new Point(startPoint));
+                    }
+                    else
+                    {
+                        startPoint = worldPoint;
+                        currentSegment = new Segment(new Point(startPoint), new Point(startPoint));
+                    }
+                }
+                else
+                {
+                    startPoint = worldPoint;
+                    currentSegment = new Segment(new Point(startPoint), new Point(startPoint));
+                }
                 // Start sketching by placing the first point
                 drawing = true;
-                startPoint = worldPoint;
-                currentSegment = new Segment(new Point(startPoint), new Point(startPoint));
             }
             else
             {
                 // Second click finalizes the segment
                 currentSegment.End.Position = worldPoint;
+                
+                if (HoverManager.Instance.GetPinnedShape() != null)
+                {
+                    Shape pin = HoverManager.Instance.GetPinnedShape();
+                    if (pin is Point)
+                    {
+                        currentSegment.End.Position = pin.Position;
+                        currentSegment.End.Destroy();
+                        currentSegment.End = ((Point)pin);
+                    }
+                    else
+                    {
+                        currentSegment.End.Position = worldPoint;
+                    }
+                }
+                else
+                {
+                    currentSegment.End.Position = worldPoint;
+                }
+                
                 currentSegment.UpdateTransform();
                 currentSegment.CompleteDraw();
                 drawing = false;
@@ -158,18 +198,22 @@ public class Segment : Shape, IDrawable2D
     public override void CompleteDraw()
     {
         UpdateHitbox();
-        
-        
-        if (Start.Parent == null)
-        {
-            Start.UpdateParent(this);
-        }
 
-        if (End.Parent == null)
-        {
-            End.UpdateParent(this);
-        }
+        Vector3 loc = Position;
+
+        GameObject go = new GameObject(Name);
+
+        go.transform.position -= loc;
+        
+        Start.CompleteDraw();
+        End.CompleteDraw();
+        GO.transform.parent = go.transform;
+        Start.GO.transform.parent = go.transform;
+        End.GO.transform.parent = go.transform;
+        
+        // ✅ Ensure Points Keep Their Original Scale 
 
         base.CompleteDraw();
     }
+
 }

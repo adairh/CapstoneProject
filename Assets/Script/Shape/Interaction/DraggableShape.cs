@@ -1,91 +1,87 @@
-﻿/*
-using UnityEngine;
-using System.Collections.Generic;
+﻿using UnityEngine;
 
 public class DraggableShape : MonoBehaviour
 {
-    private int state = 0; // 0: XZ movement, 1: Y movement, 2: No movement
-    private Vector3 allowedAxis = new Vector3(1, 0, 1); // Start with XZ movement
     private bool isDragging = false;
     private Vector3 offset;
-    private Plane movePlane;
+    private Shape _shape;
+    private Color originalColor;
+    private Renderer shapeRenderer;
 
-    void Update()
+    public void SetShape(Shape shape)
     {
-        if (Input.GetMouseButtonDown(1)) // Right-click to change movement state
+        _shape = shape;
+        shapeRenderer = _shape.GO.GetComponent<Renderer>();
+        if (shapeRenderer != null)
         {
-            ChangeState();
+            originalColor = shapeRenderer.material.color; // Store original color
         }
+    }
 
+    private void Update()
+    {
         if (Input.GetMouseButtonDown(0)) // Left-click to start dragging
         {
-            StartDragging();
+            TryStartDragging();
         }
 
-        if (isDragging && Input.GetMouseButton(0)) // Continue dragging
+        if (isDragging && Input.GetMouseButton(0))
         {
             DragObject();
         }
 
-        if (Input.GetMouseButtonUp(0)) // Stop dragging
+        if (Input.GetMouseButtonUp(0))
         {
-            isDragging = false;
+            StopDragging();
         }
     }
 
-    private void ChangeState()
+    private void TryStartDragging()
     {
-        state = (state + 1) % 3;
-        switch (state)
-        {
-            case 0:
-                allowedAxis = new Vector3(1, 0, 1); // Move along XZ
-                movePlane = new Plane(Vector3.up, transform.position);
-                break;
-            case 1:
-                allowedAxis = new Vector3(0, 1, 0); // Move along Y
-                movePlane = new Plane(Vector3.right + Vector3.forward, transform.position);
-                break;
-            case 2:
-                allowedAxis = Vector3.zero; // No movement
-                break;
-        }
-    }
+        if (DragManager.Instance.currentState == DragManager.DragState.None) return; // ✅ Prevent dragging if disabled
 
-    private void StartDragging()
-    {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider.gameObject == gameObject)
         {
-            // Check if the hit object is the parent or any of its children
-            if (IsPartOfShape(hit.collider.transform))
+            if (DragManager.Instance.StartDragging(this)) // ✅ Only start dragging if allowed
             {
-                offset = transform.position - hit.point;
+                offset = _shape.Position - hit.point;
                 isDragging = true;
 
-                // Set the move plane based on the current allowed axis
-                if (state == 0)
-                    movePlane = new Plane(Vector3.up, transform.position); // XZ movement
-                else if (state == 1)
-                    movePlane = new Plane(Vector3.right + Vector3.forward, transform.position); // Y movement
+                // ✅ Change color to green while dragging
+                if (shapeRenderer != null)
+                {
+                    shapeRenderer.material.color = Color.green;
+                }
             }
         }
     }
 
     private void DragObject()
     {
+        Vector3 allowedAxis = DragManager.Instance.GetAllowedAxis();
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (movePlane.Raycast(ray, out float distance))
+
+        if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            Vector3 targetPosition = ray.GetPoint(distance) + offset;
-            transform.position = Vector3.Lerp(transform.position, Vector3.Scale(targetPosition, allowedAxis) + Vector3.Scale(transform.position, Vector3.one - allowedAxis), Time.deltaTime * 10);
+            Vector3 targetPosition = hit.point + offset;
+            Vector3 newPosition = Vector3.Scale(targetPosition, allowedAxis) + 
+                                  Vector3.Scale(_shape.GO.transform.position, Vector3.one - allowedAxis);
+            _shape.AdjustToPosition(newPosition);
         }
     }
 
-    // Helper function to check if the clicked object is part of this shape
-    private bool IsPartOfShape(Transform hitTransform)
+    private void StopDragging()
     {
-        return hitTransform == transform || hitTransform.IsChildOf(transform);
+        if (!isDragging) return;
+
+        isDragging = false;
+        DragManager.Instance.StopDragging(this); // ✅ Notify DragManager
+
+        // ✅ Restore original color
+        if (shapeRenderer != null)
+        {
+            shapeRenderer.material.color = originalColor;
+        }
     }
 }
-*/

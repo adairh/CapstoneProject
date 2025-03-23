@@ -5,11 +5,21 @@ using System.Collections.Generic;
 
 public static class ShapeStorage
 {
-    public static Dictionary<string, Shape> shapes = new Dictionary<string, Shape>();
+    private static Dictionary<string, Shape> shapes = new Dictionary<string, Shape>();
 
     public static Shape GetShapeByID(string id)
     {
         return shapes[id];
+    }
+
+    public static void RemoveShape(string id)
+    {
+        shapes.Remove(id);
+    }
+
+    public static void AddShape(string id, Shape shape)
+    {
+        shapes.Add(id, shape);
     }
 }
 public abstract class Shape
@@ -20,12 +30,27 @@ public abstract class Shape
     public bool IsSnappable { get; set; } = true; // Toggle Snap-to-Grid
 
     public abstract GameObject[] Components();
-    
-    public void AdjustToPosition(Vector3 vector3)
+
+    public void AdjustToPosition(Vector3 vector3, bool transform = true)
     {
         Position = vector3;
-        GO.transform.position = vector3;
+        if (transform)
+        {
+            GO.transform.position = vector3;
+        }
     }
+    
+    
+    // TODO this 
+    /*public void OffsetToPosition(Vector3 offset, bool transform = true)
+    {
+        Position += offset;
+        if (transform)
+        {
+            GO.transform.position += offset;
+        }
+
+    }*/
     
     public Material DefaultMaterial { get; set; }
     public Material HighlightMaterial { get; set; }
@@ -73,8 +98,11 @@ public abstract class Shape
     {
         GO.AddComponent<ShapeClickHandler>().SetShape(this); // Link to this shape
         
-        HoverableShape hs = GO.AddComponent<HoverableShape>(); // Link to this shape
-        hs.SetMaterials(this);
+        GO.tag = (Parent == null) ? "Shape" : "Child";
+        
+        GO.AddComponent<DraggableShape>().SetShape(this);
+        
+        GO.AddComponent<HoverableShape>().SetMaterials(this);
         
     }
     
@@ -83,7 +111,7 @@ public abstract class Shape
 
     protected virtual void SetupGameObject()
     {
-        ShapeStorage.shapes.Add(go.name, this);
+        ShapeStorage.AddShape(go.name, this);
     }
 
     // 🔥 Allows child classes to append new settings
@@ -141,7 +169,16 @@ public abstract class Shape
     public void UpdateParent(Shape shape)
     {
         Parent = shape;
-        GO.transform.parent = shape.GO.transform;
+        
+        GO.transform.SetParent(Parent.GO.transform, true); // Keep world position
+        //GO.transform.position = Position; // Ensure world position is correct
+        
+        // ✅ Detach from parent scaling while keeping position
+        //GO.transform.SetParent(null, true);
+        
+        GO.tag = (Parent == null) ? "Shape" : "Child";
+        Drawing();
+        //UpdateHitbox();
     }
     
     public virtual void CompleteDraw()
@@ -152,7 +189,7 @@ public abstract class Shape
         {
             hs.SetComponents();
         }
-        SetIgnoreRaycast(false);
+        SetIgnoreRaycast(false);    
     }
     public virtual void CompleteSettings()
     {
@@ -194,6 +231,13 @@ public abstract class Shape
         if (forward == Vector3.zero) forward = Vector3.forward; // Fallback
 
         return Quaternion.LookRotation(forward, Vector3.up);
+    }
+
+
+    public void Destroy()
+    {
+        Object.Destroy(GO);
+        ShapeStorage.RemoveShape(go.name);
     }
     
 }
