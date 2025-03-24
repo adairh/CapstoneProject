@@ -69,12 +69,9 @@ public class PositionSetting : Setting<Vector3>
     public override void Apply()
     {
         //targetShape. = Value;
-        targetShape.AdjustToPosition(Value);
         targetShape.ModifySetting(this, Value);
-        targetShape.CompleteSettings();
-        targetShape.Draw();
-        targetShape.UpdateHitbox();
-        targetShape.SetIgnoreRaycast(false);
+        targetShape.MoveToPosition(Value);
+
     }
 
     public override void Update()

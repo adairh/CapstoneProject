@@ -7,6 +7,7 @@ public class DraggableShape : MonoBehaviour
     private Shape _shape;
     private Color originalColor;
     private Renderer shapeRenderer;
+    private Vector3 lastMousePosition;
 
     public void SetShape(Shape shape)
     {
@@ -47,6 +48,7 @@ public class DraggableShape : MonoBehaviour
             {
                 offset = _shape.Position - hit.point;
                 isDragging = true;
+                lastMousePosition = Input.mousePosition; // ✅ Store initial mouse position
 
                 // ✅ Change color to green while dragging
                 if (shapeRenderer != null)
@@ -60,15 +62,17 @@ public class DraggableShape : MonoBehaviour
     private void DragObject()
     {
         Vector3 allowedAxis = DragManager.Instance.GetAllowedAxis();
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        
+        // Convert mouse delta movement into world movement
+        Vector3 mouseDelta = Input.mousePosition - lastMousePosition;
+        Vector3 worldDelta = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.WorldToScreenPoint(_shape.Position).z)) - 
+                             Camera.main.ScreenToWorldPoint(new Vector3(lastMousePosition.x, lastMousePosition.y, Camera.main.WorldToScreenPoint(_shape.Position).z));
 
-        if (Physics.Raycast(ray, out RaycastHit hit))
-        {
-            Vector3 targetPosition = hit.point + offset;
-            Vector3 newPosition = Vector3.Scale(targetPosition, allowedAxis) + 
-                                  Vector3.Scale(_shape.GO.transform.position, Vector3.one - allowedAxis);
-            _shape.AdjustToPosition(newPosition);
-        }
+        lastMousePosition = Input.mousePosition; // Update last mouse position
+
+        // Apply movement along allowed axis only
+        Vector3 newPosition = _shape.Position + Vector3.Scale(worldDelta, allowedAxis);
+        _shape.MoveToPosition(newPosition);
     }
 
     private void StopDragging()

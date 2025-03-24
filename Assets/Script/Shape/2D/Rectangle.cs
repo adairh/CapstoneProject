@@ -24,7 +24,7 @@ public class Rectangle : PolygonalShape, IDrawable2D
         Height = height;
 
         // ✅ Calculate the center for positioning
-        Position = bottomLeft + new Vector3(width / 2, height / 2, 0);
+        Position = bottomLeft /*+ new Vector3(width / 2, height / 2, 0)*/;
         GO.transform.position = Position;
 
         this.bottomLeft = Position;
@@ -159,7 +159,7 @@ public class Rectangle : PolygonalShape, IDrawable2D
                 rect.Width = newWidth;
                 rect.Height = newHeight;
             
-                Vector3 newPos = startPoint + new Vector3(size.x / 2, 0, size.z / 2);
+                Vector3 newPos = startPoint/* + new Vector3(size.x / 2, 0, size.z / 2)*/;
                 rect.Position = newPos;
             
                 rect.GO.transform.rotation = GetAlignedRotation(mainCamera); // Rotate based on camera

@@ -4,6 +4,7 @@ public class Point : Shape, IDrawable2D
 { 
     private int pointNO;
     private SphereCollider collider;
+    private Constraint constraint = new FixedPointConstraint(); // Composition
 
     public Point(Vector3 position) : this(position, null) { }
 
@@ -29,6 +30,11 @@ public class Point : Shape, IDrawable2D
             GO.transform.position = Position;
         }
 
+        
+        // Register point as a constraint
+        ConstraintManager.Instance.RegisterConstraint(constraint);
+        constraint.AddShape(this);
+        
         // ✅ Ensure precise SphereCollider
         collider = GO.GetComponent<SphereCollider>();
         if (collider == null) collider = GO.AddComponent<SphereCollider>();
@@ -87,5 +93,12 @@ public class Point : Shape, IDrawable2D
     {
         UpdateHitbox();
         base.CompleteDraw();
+    }
+    
+    
+
+    public void ApplyConstraint(Vector3 movement)
+    {
+        constraint.ApplyConstraint(movement);
     }
 }

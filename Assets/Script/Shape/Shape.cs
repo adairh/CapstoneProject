@@ -41,16 +41,14 @@ public abstract class Shape
     }
     
     
-    // TODO this 
-    /*public void OffsetToPosition(Vector3 offset, bool transform = true)
+    public void MoveToPosition(Vector3 vector)
     {
-        Position += offset;
-        if (transform)
-        {
-            GO.transform.position += offset;
-        }
-
-    }*/
+        AdjustToPosition(vector);
+        CompleteSettings();
+        Draw();
+        UpdateHitbox();
+        SetIgnoreRaycast(false);
+    }
     
     public Material DefaultMaterial { get; set; }
     public Material HighlightMaterial { get; set; }
