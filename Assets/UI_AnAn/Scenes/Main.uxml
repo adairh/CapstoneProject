@@ -1,0 +1,25 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="MainContainer" style="flex-grow: 1; flex-direction: column; width: initial; height: initial;">
+        <ui:VisualElement name="HomeTab" style="flex-grow: 1; flex-direction: column; background-image: url(&quot;project://database/Assets/Images/backkground.png?fileID=2800000&amp;guid=f3ba032c674305b48adcf9d9dc9086a9&amp;type=3#backkground&quot;);">
+            <ui:Label style="unity-font-style: bold; font-size: 24px; margin-bottom: 0; width: 390px; height: 320px;" />
+            <ui:VisualElement name="VisualElement" style="flex-direction: row-reverse; justify-content: space-around; margin-top: 0; padding-top: 0; width: 380px; height: 150px;">
+                <ui:Button name="btnCreateRoom" display-tooltip-when-elided="false" enable-rich-text="true" style="width: 174px; height: 139px; background-color: rgb(221, 233, 252); background-image: url(&quot;project://database/Assets/Images/button_create.png?fileID=2800000&amp;guid=be05583cddb69e148b13766ae77fffc8&amp;type=3#button_create&quot;); transform-origin: center; position: relative; top: auto; left: auto; overflow: hidden; align-items: auto; justify-content: flex-start; -unity-background-scale-mode: stretch-to-fill; margin-right: auto; margin-left: auto; margin-top: auto; margin-bottom: auto; padding-top: initial; padding-right: initial; padding-bottom: initial; padding-left: initial; align-self: auto;" />
+                <ui:Button name="btnJoinRoom" style="width: 174px; height: 139px; background-color: rgb(232, 224, 240); background-image: url(&quot;project://database/Assets/Images/button_join.png?fileID=2800000&amp;guid=18d8675e37ad29f4481f4c91f95fc567&amp;type=3#button_join&quot;); transform-origin: center; overflow: hidden; opacity: 1; align-self: auto; justify-content: flex-start; padding-right: initial; padding-left: initial; padding-bottom: initial; padding-top: initial; margin-top: auto; margin-right: auto; margin-bottom: auto; margin-left: auto;" />
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-direction: row; justify-content: space-around; margin-top: 0; align-items: auto; width: 380px; height: 150px;">
+                <ui:Button name="btnTips" style="width: 174px; height: 139px; background-color: rgb(243, 217, 226); background-image: url(&quot;project://database/Assets/Images/button_tips.png?fileID=2800000&amp;guid=15b11c009f4b274428d6953cf75eb7ad&amp;type=3#button_tips&quot;); margin-top: auto; margin-right: auto; margin-bottom: auto; margin-left: auto; padding-top: initial; padding-right: initial; padding-bottom: initial; padding-left: initial;" />
+                <ui:Button name="btnDrawing" style="width: 174px; height: 139px; background-color: rgb(229, 244, 216); background-image: url(&quot;project://database/Assets/Images/button_drawing.png?fileID=2800000&amp;guid=803ccb6bf5c056448a70b2ec47b3b433&amp;type=3#button_drawing&quot;); margin-top: auto; margin-right: auto; margin-bottom: auto; margin-left: auto; padding-top: initial; padding-right: initial; padding-bottom: initial; padding-left: initial;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="FilesTab" tabindex="1" style="flex-grow: 1; flex-direction: column; display: none; width: 390px; height: 844px;">
+            <ui:Label text="Recent | Liked" style="font-size: 18px; margin-bottom: 10px; -unity-text-align: upper-center;" />
+            <ui:ScrollView style="flex-grow: 1;">
+                <ui:VisualElement name="FileListContainer" style="flex-direction: column;" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+        <ui:VisualElement name="BottomNav" style="height: 60px; flex-direction: row; justify-content: space-around; background-color: rgba(255, 255, 255, 0); -unity-background-image-tint-color: rgba(255, 255, 255, 0);">
+            <ui:Button name="btnHome" style="width: 50%; background-color: rgb(224, 216, 240); background-image: url(&quot;project://database/Assets/Images/button_home.png?fileID=2800000&amp;guid=3971a5d5b21d3e24a94a7199dedb7948&amp;type=3#button_home&quot;);" />
+            <ui:Button name="btnFiles" style="width: 50%; background-color: rgb(221, 233, 252); background-image: url(&quot;project://database/Assets/Images/button_files.png?fileID=2800000&amp;guid=08019e70d109a1f49b07cfc94cc81517&amp;type=3#button_files&quot;); overflow: visible;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:Style src="Assets/Styles/MainStyle.uss" />
+
+    <ui:VisualElement id="MainContainer" class="background">
+
+        <ui:Label text="Welcome back!" class="welcome-label" />
+
+
+        <ui:VisualElement style="flex-direction: row; justify-content: space-around; margin-top: 10px;">
+            <ui:Button class="button join-room" id="btnJoinRoom" text="Join Room" />
+            <ui:Button class="button create-room" id="btnCreateRoom" text="Create Room" />
+        </ui:VisualElement>
+
+        <ui:VisualElement style="flex-direction: row; justify-content: space-around; margin-top: 10px;">
+            <ui:Button class="button tips" id="btnTips" text="Tips" />
+            <ui:Button class="button drawing" id="btnDrawing" text="Drawing" />
+        </ui:VisualElement>
+
+        <!-- Popup -->
+        <ui:VisualElement id="popupContainer" class="popup-container" style="display: none;">
+            <ui:VisualElement id="popupBackground" class="popup-background" />
+            <ui:VisualElement id="popupContent" class="popup-content">
+                <ui:Label id="popupText" text="Popup Content Here!" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Bottom Navigation Bar -->
+        <ui:VisualElement id="BottomNav">
+            <ui:Button id="btnHome" class="nav-button" text="HOME" />
+            <ui:Button id="btnFiles" class="nav-button" text="FILES" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- Tabs -->
+    <ui:VisualElement id="HomeTab">
+        <ui:Label text="This is Home" />
+    </ui:VisualElement>
+
+    <ui:VisualElement id="FilesTab" />
+        <ui:Label text="This is Files" />
+    </ui:VisualElement>
+</ui:UXML>
