@@ -1,16 +1,16 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Segment : Shape, IDrawable2D
+public class StraightLine : Shape, IDrawable2D
 {
     public Point Start { get; set; }
     public Point End { get; set; }
 
     private static bool drawing = false;
     private static Vector3 startPoint;
-    private static Segment currentSegment;
+    private static StraightLine currentSegment;
 
-    public Segment(Point start, Point end, Shape parent) : base((start.Position), "Segment", parent)
+    public StraightLine(Point start, Point end, Shape parent) : base((start.Position), "StraightLine", parent)
     {
         Start = start;
         End = end;
@@ -28,7 +28,7 @@ public class Segment : Shape, IDrawable2D
     }
 
 
-    public Segment(Point start, Point end) : this(start, end, null) { }
+    public StraightLine(Point start, Point end) : this(start, end, null) { }
 
     private void SetupGameObject()
     {
@@ -95,18 +95,18 @@ public class Segment : Shape, IDrawable2D
                     if (pin is Point)
                     {
                         startPoint = pin.Position;
-                        currentSegment = new Segment(((Point)pin), new Point(startPoint));
+                        currentSegment = new StraightLine(((Point)pin), new Point(startPoint));
                     }
                     else
                     {
                         startPoint = worldPoint;
-                        currentSegment = new Segment(new Point(startPoint), new Point(startPoint));
+                        currentSegment = new StraightLine(new Point(startPoint), new Point(startPoint));
                     }
                 }
                 else
                 {
                     startPoint = worldPoint;
-                    currentSegment = new Segment(new Point(startPoint), new Point(startPoint));
+                    currentSegment = new StraightLine(new Point(startPoint), new Point(startPoint));
                 }
                 // Start sketching by placing the first point
                 drawing = true;
@@ -114,6 +114,24 @@ public class Segment : Shape, IDrawable2D
             else
             {
                 // Second click finalizes the segment
+
+                if (TempManager.instance.ModeStraight == TempManager.Straight.X)
+                {
+                    worldPoint.y = startPoint.y;
+                    worldPoint.z = startPoint.z;
+                }
+                else if (TempManager.instance.ModeStraight == TempManager.Straight.Y)
+                {
+                    worldPoint.x = startPoint.x;
+                    worldPoint.z = startPoint.z;
+                }
+                else if (TempManager.instance.ModeStraight == TempManager.Straight.Z)
+                {
+                    worldPoint.x = startPoint.x;
+                    worldPoint.y = startPoint.y;
+                }
+                
+                
                 currentSegment.End.Position = worldPoint;
                 
                 if (HoverManager.Instance.GetPinnedShape() != null)
@@ -143,6 +161,21 @@ public class Segment : Shape, IDrawable2D
 
         if (drawing)
         {
+            if (TempManager.instance.ModeStraight == TempManager.Straight.X)
+            {
+                worldPoint.y = startPoint.y;
+                worldPoint.z = startPoint.z;
+            }
+            else if (TempManager.instance.ModeStraight == TempManager.Straight.Y)
+            {
+                worldPoint.x = startPoint.x;
+                worldPoint.z = startPoint.z;
+            }
+            else if (TempManager.instance.ModeStraight == TempManager.Straight.Z)
+            {
+                worldPoint.x = startPoint.x;
+                worldPoint.y = startPoint.y;
+            }
             // Update the second point dynamically while dragging
             currentSegment.End.Position = worldPoint;
             currentSegment.Draw();

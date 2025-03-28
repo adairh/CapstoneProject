@@ -73,6 +73,9 @@ public class PerformDrawing : MonoBehaviour
             case IShapeButton.ShapeType.Segment:
                 Segment.Sketch(hitPoint, mainCamera);
                 break;
+            case IShapeButton.ShapeType.StraightLine:
+                StraightLine.Sketch(hitPoint, mainCamera);
+                break;
         }
     }
 

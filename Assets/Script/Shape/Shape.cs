@@ -235,9 +235,13 @@ public abstract class Shape
     public void Destroy()
     {
         Object.Destroy(GO);
-        ShapeStorage.RemoveShape(go.name);
-    }
-    
+        ShapeStorage.RemoveShape(GO.name);
+
+        if (ShapeStorage.GetShapeByID(GO.name) != null)
+        {
+            ShapeStorage.RemoveShape(GO.name);
+        }
+    } 
 }
 
 
