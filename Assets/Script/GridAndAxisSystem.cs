@@ -89,13 +89,13 @@ public class GridAndAxisSystem : MonoBehaviour
         foreach (var points in planePoints)
         {
             GroupShape gs = new GroupShape();
-            Plane plane = new Plane(new Point[]
+            ShapePlane shapePlane = new ShapePlane(new Point[]
             {
                 new Point(points[0], gs),
                 new Point(points[1], gs),
                 new Point(points[2], gs)
             }, gridSize, gs);
-            plane.GO.AddComponent<WorldComponents>();
+            shapePlane.GO.AddComponent<WorldComponents>();
         }
     }
     

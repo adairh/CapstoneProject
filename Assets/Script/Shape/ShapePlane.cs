@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
 
-public class Plane : Shape, IDrawable3D
+public class ShapePlane : Shape, IDrawable3D
 {
     public Point[] points; // 3 points defining the plane 
     private float planeSizeLimit; // Limit size
     private System.Numerics.Plane sysPlane;
 
-    public Plane(Point[] points, float limit) : this(points, limit, null)
+    public ShapePlane(Point[] points, float limit) : this(points, limit, null)
     { }
-    public Plane(Point[] points, float limit, Shape parent) : base(points[0].Position, "Plane", null)
+    public ShapePlane(Point[] points, float limit, Shape parent) : base(points[0].Position, "Plane", null)
     {
         planeSizeLimit = limit*2;
         sysPlane = new System.Numerics.Plane(); 
