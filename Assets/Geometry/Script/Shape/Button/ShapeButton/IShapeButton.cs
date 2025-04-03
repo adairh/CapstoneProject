@@ -1,14 +1,17 @@
-public interface IShapeButton
+namespace Manipulator
 {
-    ShapeType GetShapeType();
-
-    public enum ShapeType
+    public interface IShapeButton
     {
-        None,
-        Circle,
-        Rectangle,
-        Triangle,
-        Segment,
-        StraightLine
+        ShapeType GetShapeType();
+
+        public enum ShapeType
+        {
+            None,
+            Circle,
+            Rectangle,
+            Triangle,
+            Segment,
+            StraightLine
+        }
     }
 }

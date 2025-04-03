@@ -1,31 +1,34 @@
 ﻿using System;
 using UnityEngine;
 
-public class Fade : MonoBehaviour
+namespace CutGame
 {
-    public static Fade instance;
-
-    public CanvasGroup canvasGroup;
-
-    private void Start()
+    public class Fade : MonoBehaviour
     {
-        instance = this;
+        public static Fade instance;
 
-        canvasGroup.alpha = 1;
-        FadeIn();
-    }
+        public CanvasGroup canvasGroup;
 
-    // Fades in screen
-    public void FadeIn()
-    {
-        canvasGroup.LeanAlpha(0, 0.2f).setOnComplete(() => gameObject.SetActive(false));
-    }
+        private void Start()
+        {
+            instance = this;
 
-    // Fades out screen and executes action on complete
-    public void FadeOut(Action action)
-    {
-        gameObject.SetActive(true);
+            canvasGroup.alpha = 1;
+            FadeIn();
+        }
 
-        canvasGroup.LeanAlpha(1, 0.2f).setOnComplete(action);
+        // Fades in screen
+        public void FadeIn()
+        {
+            canvasGroup.LeanAlpha(0, 0.2f).setOnComplete(() => gameObject.SetActive(false));
+        }
+
+        // Fades out screen and executes action on complete
+        public void FadeOut(Action action)
+        {
+            gameObject.SetActive(true);
+
+            canvasGroup.LeanAlpha(1, 0.2f).setOnComplete(action);
+        }
     }
 }

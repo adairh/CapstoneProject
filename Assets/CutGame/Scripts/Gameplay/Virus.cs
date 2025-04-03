@@ -1,27 +1,32 @@
-﻿public class Virus : Destructible
+﻿
+namespace CutGame
 {
-    // Executes when virus is killed
-    public override void Destroy()
+    public class Virus : Destructible
     {
-        onDestroy = () => level.Destroy(this);
-         
-        base.Destroy();
+        // Executes when virus is killed
+        public override void Destroy()
+        {
+            onDestroy = () => level.Destroy(this);
+
+            base.Destroy();
 
 
-        
-        //show panel
-        //goto next question
+
+            //show panel
+            //goto next question
 
 
-        //in level design, each virus attach 1 question script
+            //in level design, each virus attach 1 question script
+
+        }
+
+        public void onHit()
+        {
+            GameManager gm = GameManager.instance;
+            gm.Quiz.gameObject.SetActive(true);
+            gm.SetVirus(this);
+        }
 
     }
 
-    public void onHit()
-    {
-        GameManager gm = GameManager.instance;
-        gm.Quiz.gameObject.SetActive(true);
-        gm.SetVirus(this);
-    }
-    
 }

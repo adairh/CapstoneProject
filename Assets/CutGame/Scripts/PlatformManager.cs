@@ -2,43 +2,45 @@
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// This class handles platform specific stuff (scaling, android action handlin etc.)
-public class PlatformManager : MonoBehaviour
+namespace CutGame
 {
-    public CanvasScaler canvasScaler;
-    public LevelLoader levelLoader;
+// This class handles platform specific stuff (scaling, android action handlin etc.)
+    public class PlatformManager : MonoBehaviour
+    {
+        public CanvasScaler canvasScaler;
+        public LevelLoader levelLoader;
 
 #if UNITY_WEBGL || UNITY_STANDALONE
-    private void Awake()
-    {
-        canvasScaler.matchWidthOrHeight = 1.0f;
-    }
+        private void Awake()
+        {
+            canvasScaler.matchWidthOrHeight = 1.0f;
+        }
 #endif
 
 #if UNITY_STANDALONE
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.F12))
+        private void Update()
         {
-            if (Screen.fullScreen)
-                TurnOffFullscreen();
-            else
+            if (Input.GetKeyDown(KeyCode.F12))
             {
-                var res = Screen.currentResolution;
-                Screen.SetResolution(res.width, res.height, FullScreenMode.FullScreenWindow);
+                if (Screen.fullScreen)
+                    TurnOffFullscreen();
+                else
+                {
+                    var res = Screen.currentResolution;
+                    Screen.SetResolution(res.width, res.height, FullScreenMode.FullScreenWindow);
+                }
+            }
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                TurnOffFullscreen();
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Escape))
+        private void TurnOffFullscreen()
         {
-            TurnOffFullscreen();
+            Screen.SetResolution(450, 800, false);
         }
-    }
-
-    private void TurnOffFullscreen()
-    {
-        Screen.SetResolution(450, 800, false);
-    }
 #endif
 
 #if UNITY_ANDROID
@@ -95,4 +97,6 @@ public class PlatformManager : MonoBehaviour
         }
     }
 #endif
+    }
+
 }

@@ -1,58 +1,61 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class AudioManager : MonoBehaviour
+namespace CutGame
 {
-    public static bool isMuted = false;
-
-    private static AudioManager instance;
-
-    public List<AudioSource> sfx;
-
-    private void Awake()
+    public class AudioManager : MonoBehaviour
     {
-        DontDestroyOnLoad(gameObject);
+        public static bool isMuted = false;
 
-        if (instance == null)
-            instance = this;
-        else
-            Destroy(gameObject);
-    }
+        private static AudioManager instance;
 
-    // Switches sound volume between 0 and 1
-    public static void Toggle()
-    {
-        switch (isMuted)
+        public List<AudioSource> sfx;
+
+        private void Awake()
         {
-            case true:
-                AudioListener.volume = 1;
-                isMuted = false;
-                break;
+            DontDestroyOnLoad(gameObject);
 
-            case false:
-                AudioListener.volume = 0;
-                isMuted = true;
-                break;
+            if (instance == null)
+                instance = this;
+            else
+                Destroy(gameObject);
+        }
+
+        // Switches sound volume between 0 and 1
+        public static void Toggle()
+        {
+            switch (isMuted)
+            {
+                case true:
+                    AudioListener.volume = 1;
+                    isMuted = false;
+                    break;
+
+                case false:
+                    AudioListener.volume = 0;
+                    isMuted = true;
+                    break;
+            }
+        }
+
+        // Plays certain sound effect
+        public static void Play(SFX effectName)
+        {
+            instance.sfx[(int)effectName].Play();
         }
     }
 
-    // Plays certain sound effect
-    public static void Play(SFX effectName)
+    public enum SFX
     {
-        instance.sfx[(int)effectName].Play();
-    }
+        Collect,
+        Death,
+        Failure,
+        Slash,
+        Success,
+        Click,
+        Tick,
+        Countdown,
+        Go
+    };
+
 }
-
-public enum SFX
-{ 
-    Collect,
-    Death,
-    Failure,
-    Slash,
-    Success,
-    Click,
-    Tick,
-    Countdown,
-    Go
-};
-

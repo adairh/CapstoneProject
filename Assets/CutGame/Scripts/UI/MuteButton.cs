@@ -1,29 +1,32 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class MuteButton : MonoBehaviour
+namespace CutGame
 {
-    private Image image;
-
-    public Sprite soundOn, soundOff;
-
-    private void Start()
+    public class MuteButton : MonoBehaviour
     {
-        image = GetComponent<Image>();
+        private Image image;
 
-        if (AudioManager.isMuted)
-            image.sprite = soundOff;
-        else
-            image.sprite = soundOn;
-    }
+        public Sprite soundOn, soundOff;
 
-    public void Toggle()
-    {
-        AudioManager.Toggle();
+        private void Start()
+        {
+            image = GetComponent<Image>();
 
-        if (image.sprite == soundOn)
-            image.sprite = soundOff;
-        else
-            image.sprite = soundOn;
+            if (AudioManager.isMuted)
+                image.sprite = soundOff;
+            else
+                image.sprite = soundOn;
+        }
+
+        public void Toggle()
+        {
+            AudioManager.Toggle();
+
+            if (image.sprite == soundOn)
+                image.sprite = soundOff;
+            else
+                image.sprite = soundOn;
+        }
     }
 }

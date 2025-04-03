@@ -1,91 +1,94 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class HoverableShape : MonoBehaviour
+namespace Manipulator
 {
-    private Renderer _renderer;
-    private Material _defaultMaterial;
-    private Shape _shape;
-    private bool isChild;
-    private List<GameObject> shapeComponents = new List<GameObject>();
-    
-    public void SetMaterials(Shape shape)
+    public class HoverableShape : MonoBehaviour
     {
-        _shape = shape; // Detect shape
-        _renderer = GetComponent<Renderer>();
+        private Renderer _renderer;
+        private Material _defaultMaterial;
+        private Shape _shape;
+        private bool isChild;
+        private List<GameObject> shapeComponents = new List<GameObject>();
 
-        if (_renderer != null)
+        public void SetMaterials(Shape shape)
         {
-            _renderer.material = _shape.DefaultMaterial;
+            _shape = shape; // Detect shape
+            _renderer = GetComponent<Renderer>();
+
+            if (_renderer != null)
+            {
+                _renderer.material = _shape.DefaultMaterial;
+            }
+
+            isChild = transform.parent != null; // Check if this is a child object
+
         }
 
-        isChild = transform.parent != null; // Check if this is a child object
 
-    }
-     
-    
-    private void OnMouseEnter()
-    {
-        if (_shape == null) return;
-
-        HoverManager.Instance.PinShape(_shape);
-        
-        HoverManager.Instance.RegisterHoveredObject(this); // Register this object in manager
-
-        if (HoverManager.Instance.AllMode && !isChild)
+        private void OnMouseEnter()
         {
-            foreach (GameObject part in shapeComponents)
+            if (_shape == null) return;
+
+            HoverManager.Instance.PinShape(_shape);
+
+            HoverManager.Instance.RegisterHoveredObject(this); // Register this object in manager
+
+            if (HoverManager.Instance.AllMode && !isChild)
             {
-                if (part.TryGetComponent<Renderer>(out Renderer partRenderer))
+                foreach (GameObject part in shapeComponents)
                 {
-                    partRenderer.material = _shape.HighlightMaterial;
-                    partRenderer.material.color = Color.cyan;
+                    if (part.TryGetComponent<Renderer>(out Renderer partRenderer))
+                    {
+                        partRenderer.material = _shape.HighlightMaterial;
+                        partRenderer.material.color = Color.cyan;
+                    }
+                }
+            }
+            else
+            {
+                if (_renderer != null)
+                {
+                    _renderer.material = _shape.HighlightMaterial;
+                    _renderer.material.color = Color.cyan;
                 }
             }
         }
-        else
+
+        private void OnMouseExit()
         {
-            if (_renderer != null)
-            {
-                _renderer.material = _shape.HighlightMaterial;
-                _renderer.material.color = Color.cyan;
-            }
+            HoverManager.Instance.UnpinShape();
+            HoverManager.Instance.ResetAllHoveredObjects(); // Reset everything when exiting
         }
-    }
 
-    private void OnMouseExit()
-    {
-        HoverManager.Instance.UnpinShape();
-        HoverManager.Instance.ResetAllHoveredObjects(); // Reset everything when exiting
-    }
-
-    public void ResetHover()
-    {
-        if (_shape == null) return;
-
-        if (HoverManager.Instance.AllMode && !isChild)
+        public void ResetHover()
         {
-            foreach (GameObject part in shapeComponents)
+            if (_shape == null) return;
+
+            if (HoverManager.Instance.AllMode && !isChild)
             {
-                if (part.TryGetComponent<Renderer>(out Renderer partRenderer))
+                foreach (GameObject part in shapeComponents)
                 {
-                    partRenderer.material = _defaultMaterial;
-                    partRenderer.material.color = Color.red;
+                    if (part.TryGetComponent<Renderer>(out Renderer partRenderer))
+                    {
+                        partRenderer.material = _defaultMaterial;
+                        partRenderer.material.color = Color.red;
+                    }
+                }
+            }
+            else
+            {
+                if (_renderer != null)
+                {
+                    _renderer.material = _defaultMaterial;
+                    _renderer.material.color = Color.red;
                 }
             }
         }
-        else
-        {
-            if (_renderer != null)
-            {
-                _renderer.material = _defaultMaterial;
-                _renderer.material.color = Color.red;
-            }
-        }
-    }
 
-    public void SetComponents()
-    {
-        shapeComponents = new List<GameObject>(_shape.Components()); // Get all parts of the shape
+        public void SetComponents()
+        {
+            shapeComponents = new List<GameObject>(_shape.Components()); // Get all parts of the shape
+        }
     }
 }

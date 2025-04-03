@@ -1,104 +1,109 @@
 ﻿using UnityEngine;
 
-public class Point : Shape, IDrawable2D
-{ 
-    private int pointNO;
-    private SphereCollider collider;
-    private Constraint constraint = new FixedPointConstraint(); // Composition
-
-    public Point(Vector3 position) : this(position, null) { }
-
-    public Point(Vector3 position, Shape parent) : base(position, "Pivot " + AlphabetCounter.Next(), parent)
+namespace Manipulator
+{
+    public class Point : Shape, IDrawable2D
     {
-        this.pointNO = AlphabetCounter.CurrentValue();
-        SetupGameObject();
-    }
+        private int pointNO;
+        private SphereCollider collider;
+        private Constraint constraint = new FixedPointConstraint(); // Composition
 
-    private void SetupGameObject()
-    {
-        GO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        GO.name = Name;
-        GO.transform.localScale = Vector3.one * 0.1f; // Small point
-
-        if (Parent != null)
+        public Point(Vector3 position) : this(position, null)
         {
-            GO.transform.SetParent(Parent.GO.transform, true); // Preserve world position
-            GO.transform.position = Position; // Ensure world position is correct
-        }
-        else
-        {
-            GO.transform.position = Position;
         }
 
-        
-        // Register point as a constraint
-        ConstraintManager.Instance.RegisterConstraint(constraint);
-        constraint.AddShape(this);
-        
-        // ✅ Ensure precise SphereCollider
-        collider = GO.GetComponent<SphereCollider>();
-        if (collider == null) collider = GO.AddComponent<SphereCollider>();
-        Drawing();
-        UpdateHitbox(); // Ensure hitbox is properly set
-    }
+        public Point(Vector3 position, Shape parent) : base(position, "Pivot " + AlphabetCounter.Next(), parent)
+        {
+            this.pointNO = AlphabetCounter.CurrentValue();
+            SetupGameObject();
+        }
 
-    public override void UpdateHitbox()
-    {
-        if (collider == null) return;
+        private void SetupGameObject()
+        {
+            GO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            GO.name = Name;
+            GO.transform.localScale = Vector3.one * 0.1f; // Small point
 
-        float worldScale = GO.transform.localScale.x; // Get real world size
-        //collider.radius = worldScale; // Set radius correctly
-        collider.center = Vector3.zero; // Keep it centered
-    }
+            if (Parent != null)
+            {
+                GO.transform.SetParent(Parent.GO.transform, true); // Preserve world position
+                GO.transform.position = Position; // Ensure world position is correct
+            }
+            else
+            {
+                GO.transform.position = Position;
+            }
 
 
-    public override void Drawing()
-    {
-        UpdateTransform();
-    }
+            // Register point as a constraint
+            ConstraintManager.Instance.RegisterConstraint(constraint);
+            constraint.AddShape(this);
 
-    private void UpdateTransform()
-    {
-        if (GO == null) return;
+            // ✅ Ensure precise SphereCollider
+            collider = GO.GetComponent<SphereCollider>();
+            if (collider == null) collider = GO.AddComponent<SphereCollider>();
+            Drawing();
+            UpdateHitbox(); // Ensure hitbox is properly set
+        }
 
-        
+        public override void UpdateHitbox()
+        {
+            if (collider == null) return;
+
+            float worldScale = GO.transform.localScale.x; // Get real world size
+            //collider.radius = worldScale; // Set radius correctly
+            collider.center = Vector3.zero; // Keep it centered
+        }
+
+
+        public override void Drawing()
+        {
+            UpdateTransform();
+        }
+
+        private void UpdateTransform()
+        {
+            if (GO == null) return;
+
+
             GO.transform.position = Position;
             GO.transform.localScale = Vector3.one * 0.1f; // Keep normal size
-        
-    }
+
+        }
 
 
-    protected override void InitializeSettings()
-    {
-        // LogWarning($"{Name}: InitializeSettings() not implemented.");
-    }
+        protected override void InitializeSettings()
+        {
+            // LogWarning($"{Name}: InitializeSettings() not implemented.");
+        }
 
-    public override GameObject[] Components()
-    {
-        return new GameObject[]{}; // Use a List instead of an array
-    }
+        public override GameObject[] Components()
+        {
+            return new GameObject[] { }; // Use a List instead of an array
+        }
 
-    public GameObject GetGameObject()
-    {
-        return GO;
-    }
+        public GameObject GetGameObject()
+        {
+            return GO;
+        }
 
-    public void Draw2D()
-    {
-        Debug.Log($"{Name} is being drawn in 2D.");
-    }
+        public void Draw2D()
+        {
+            Debug.Log($"{Name} is being drawn in 2D.");
+        }
 
-    
-    public override void CompleteDraw()
-    {
-        UpdateHitbox();
-        base.CompleteDraw();
-    }
-    
-    
 
-    public void ApplyConstraint(Vector3 movement)
-    {
-        constraint.ApplyConstraint(movement);
+        public override void CompleteDraw()
+        {
+            UpdateHitbox();
+            base.CompleteDraw();
+        }
+
+
+
+        public void ApplyConstraint(Vector3 movement)
+        {
+            constraint.ApplyConstraint(movement);
+        }
     }
 }

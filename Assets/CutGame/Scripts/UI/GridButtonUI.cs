@@ -1,53 +1,53 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class GridButtonUI : MonoBehaviour
+namespace CutGame
 {
-    private LevelLoader levelLoader;
-
-    public Button button;
-    public Text label;
-
-    [Space]
-    public Image locked;
-
-    [Space]
-    public Image[] stars;
-
-    [Space]
-    public Color starColor;
-
-    private int index;
-
-    public void EnterLevel()
+    public class GridButtonUI : MonoBehaviour
     {
-        AudioManager.Play(SFX.Click);
+        private LevelLoader levelLoader;
 
-        Fade.instance.FadeOut(() => levelLoader.LoadLevel(index));
-    }
+        public Button button;
+        public Text label;
 
-    // Sets up buttons instanciated in level grid
-    public void SetUpButton(LevelLoader levelLoader, int index, LevelData.Level level)
-    {
-        if (level.unlocked)
+        [Space] public Image locked;
+
+        [Space] public Image[] stars;
+
+        [Space] public Color starColor;
+
+        private int index;
+
+        public void EnterLevel()
         {
-            this.levelLoader = levelLoader;
-            this.index = index;
-            label.text = (index + 1).ToString();
+            AudioManager.Play(SFX.Click);
 
-            for (int i = 0; i < level.rating; i++)
-            {
-                stars[i].color = starColor;
-            }
+            Fade.instance.FadeOut(() => levelLoader.LoadLevel(index));
         }
-        else
-        {
-            button.interactable = false;
-            
-            label.gameObject.SetActive(false);
-            locked.gameObject.SetActive(true);
 
-            stars[0].transform.parent.gameObject.SetActive(false);
+        // Sets up buttons instanciated in level grid
+        public void SetUpButton(LevelLoader levelLoader, int index, LevelData.Level level)
+        {
+            if (level.unlocked)
+            {
+                this.levelLoader = levelLoader;
+                this.index = index;
+                label.text = (index + 1).ToString();
+
+                for (int i = 0; i < level.rating; i++)
+                {
+                    stars[i].color = starColor;
+                }
+            }
+            else
+            {
+                button.interactable = false;
+
+                label.gameObject.SetActive(false);
+                locked.gameObject.SetActive(true);
+
+                stars[0].transform.parent.gameObject.SetActive(false);
+            }
         }
     }
 }

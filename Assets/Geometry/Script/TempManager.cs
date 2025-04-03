@@ -1,20 +1,25 @@
 ﻿using System;
 using UnityEngine;
- 
-public class TempManager : MonoBehaviour
+
+namespace Manipulator
 {
-
-    public static TempManager instance;
-
-    public enum Straight
+    public class TempManager : MonoBehaviour
     {
-        X, Y, Z
-    }
 
-    public Straight ModeStraight;
-    
-    private void Start()
-    {
-        instance = this;
+        public static TempManager instance;
+
+        public enum Straight
+        {
+            X,
+            Y,
+            Z
+        }
+
+        public Straight ModeStraight;
+
+        private void Start()
+        {
+            instance = this;
+        }
     }
 }

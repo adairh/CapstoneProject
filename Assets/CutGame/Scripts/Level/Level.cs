@@ -2,39 +2,42 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Level : MonoBehaviour
+namespace CutGame
 {
-    public List<BloodCell> bloodCells;
-    public List<Virus> viruses;
-
-    public event Action OnAllyDestroy;
-    public event Action OnEnemyDestroy;
-
-    // Initializes references in actors (destructibles)
-    private void Start()
+    public class Level : MonoBehaviour
     {
-        foreach (var bloodCell in bloodCells)
+        public List<BloodCell> bloodCells;
+        public List<Virus> viruses;
+
+        public event Action OnAllyDestroy;
+        public event Action OnEnemyDestroy;
+
+        // Initializes references in actors (destructibles)
+        private void Start()
         {
-            bloodCell.level = this;
+            foreach (var bloodCell in bloodCells)
+            {
+                bloodCell.level = this;
+            }
+
+            foreach (var virus in viruses)
+            {
+                virus.level = this;
+            }
         }
 
-        foreach (var virus in viruses)
+        public void DestroyAlly()
         {
-            virus.level = this;
+            OnAllyDestroy();
+        }
+
+        public void Destroy(Virus virus)
+        {
+            viruses.Remove(virus);
+            Destroy(virus.gameObject);
+
+            OnEnemyDestroy();
         }
     }
 
-    public void DestroyAlly()
-    {
-        OnAllyDestroy();
-    }
-
-    public void Destroy(Virus virus)
-    {
-        viruses.Remove(virus);
-        Destroy(virus.gameObject);
-        
-        OnEnemyDestroy();
-    }
 }
-
