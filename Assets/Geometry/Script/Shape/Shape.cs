@@ -70,8 +70,7 @@ namespace Manipulator
             {
                 go = value;
                 RegisterEvents();
-                go.name = Name + " " + ObjectCounter.Next();
-                id = ObjectCounter.Current();
+                go.name = Name; 
                 //EditableShape = go.AddComponent<EditableShape>();
             }
         }
@@ -83,7 +82,8 @@ namespace Manipulator
         {
             Position = position;
             ShapeColor = Color.red;
-            Name = name;
+            Name = name + " " + ObjectCounter.Next();
+            id = ObjectCounter.Current();
 
             // ✅ Setup materials for hover effect
             DefaultMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = ShapeColor };
@@ -106,7 +106,14 @@ namespace Manipulator
             GO.AddComponent<HoverableShape>().SetMaterials(this);
 
         }
-
+        
+        
+        public virtual void OnPointMoved(Point movedPoint)
+        {
+            // Default behavior: Do nothing
+        }
+        
+        
         // 🔥 Abstract method: Each shape defines its own settings
         protected abstract void InitializeSettings();
 

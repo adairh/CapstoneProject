@@ -78,6 +78,7 @@ namespace Manipulator
 
             Start.Draw();
             End.Draw();
+            
 
             // ✅ Now we update the collider AFTER the transform is changed
             //UpdateHitbox();
@@ -124,22 +125,24 @@ namespace Manipulator
                     if (HoverManager.Instance.GetPinnedShape() != null)
                     {
                         Shape pin = HoverManager.Instance.GetPinnedShape();
-                        /*if (pin is Point)
+                        if (pin is Point)
                         {
                             currentSegment.End.Position = pin.Position;
                             currentSegment.End.Destroy();
                             currentSegment.End = ((Point)pin);
                         }
                         else
-                        {*/
-                        currentSegment.End.Position = worldPoint;
-                        //}
+                        {
+                            currentSegment.End.Position = worldPoint;
+                        }
                     }
                     else
                     {
                         currentSegment.End.Position = worldPoint;
                     }
 
+                    currentSegment.Start.AttachToShape(currentSegment);
+                    currentSegment.End.AttachToShape(currentSegment);
                     currentSegment.UpdateTransform();
                     currentSegment.CompleteDraw();
                     drawing = false;
@@ -152,6 +155,8 @@ namespace Manipulator
                 currentSegment.End.Position = worldPoint;
                 currentSegment.Draw();
             }
+            
+            
         }
 
         protected override void InitializeSettings()
@@ -221,6 +226,43 @@ namespace Manipulator
             base.CompleteDraw();
         }
 
+        public void ReloadToConstraint(Point movedPoint)
+        {
+
+            if (movedPoint.id == Start.id)
+            {
+                Start.Position = movedPoint.Position;
+                Start.GO.transform.position = movedPoint.GO.transform.position;
+            }
+            else if (movedPoint.id == End.id)
+            {
+                End.Position = movedPoint.Position;
+                End.GO.transform.position = movedPoint.GO.transform.position;
+            }
+            
+            
+            Vector3 midPoint = (Start.Position + End.Position) / 2;
+            Vector3 diff = Start.Position - End.Position;
+            float length = diff.magnitude;
+            if (length == 0)
+            {
+                length = 0.001f;
+            }
+
+            // ✅ Update GameObject Transform
+            GO.transform.position = midPoint;
+            GO.transform.localScale = new Vector3(0.05f, length / 2, 0.05f);
+            GO.transform.rotation = Quaternion.FromToRotation(Vector3.up, End.Position - Start.Position);
+            
+            //CompleteDraw();
+            //UpdateHitbox();
+        }
+        
+        public override void OnPointMoved(Point movedPoint)
+        {
+            Debug.Log($"{Name} updated because {movedPoint.Name} moved.");
+            ReloadToConstraint(movedPoint);
+        }
     }
 
 }

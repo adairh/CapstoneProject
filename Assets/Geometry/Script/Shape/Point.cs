@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Manipulator
 {
@@ -7,6 +8,7 @@ namespace Manipulator
         private int pointNO;
         private SphereCollider collider;
         private Constraint constraint = new FixedPointConstraint(); // Composition
+        private HashSet<Shape> attachedShapes = new HashSet<Shape>(); 
 
         public Point(Vector3 position) : this(position, null)
         {
@@ -64,13 +66,20 @@ namespace Manipulator
         private void UpdateTransform()
         {
             if (GO == null) return;
-
-
+            
             GO.transform.position = Position;
             GO.transform.localScale = Vector3.one * 0.1f; // Keep normal size
-
+            
+            
+            foreach (var shape in attachedShapes)
+            {
+                Debug.LogError($"This point {Name} move affect {shape.Name}");
+                shape.OnPointMoved(this);
+            }
+            
+            // 🔥 Notify all shapes that depend on this point
+            
         }
-
 
         protected override void InitializeSettings()
         {
@@ -100,10 +109,14 @@ namespace Manipulator
         }
 
 
-
-        public void ApplyConstraint(Vector3 movement)
+        public void AttachToShape(Shape shape)
         {
-            constraint.ApplyConstraint(movement);
+            if (!attachedShapes.Contains(shape))
+            {
+                attachedShapes.Add(shape);
+            }
         }
+ 
+ 
     }
 }
