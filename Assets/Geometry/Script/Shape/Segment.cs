@@ -233,6 +233,7 @@ namespace Manipulator
             {
                 Start.Position = movedPoint.Position;
                 Start.GO.transform.position = movedPoint.GO.transform.position;
+                Position = Start.Position;
             }
             else if (movedPoint.id == End.id)
             {
