@@ -36,17 +36,24 @@ namespace Manipulator
 
         private void TryStartDragging()
         {
-            if (ManipulationManager.Instance.CurrentDragState == ManipulationManager.DragState.None)
+            ManipulationManager mm = ManipulationManager.Instance;
+            if (mm.CurrentDragState == ManipulationManager.DragState.None)
                 return;
 
+            if (mm.IsDrawing())
+            {
+                Debug.Log($"Drawing {mm.IsDrawing()}");
+                return;
+            }
+            
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider.gameObject == gameObject)
-            {
-                if (ManipulationManager.Instance.StartDragging(this))
-                {
+            { 
+                if (mm.StartDragging(this))
+                { 
                     SetupDragPlane(ray);
                     if (dragPlane.Raycast(ray, out float enter))
-                    {
+                    { 
                         lastWorldPoint = ray.GetPoint(enter);
                         isDragging = true;
 

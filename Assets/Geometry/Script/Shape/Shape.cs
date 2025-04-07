@@ -1,5 +1,11 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using Object = UnityEngine.Object;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Manipulator
 {
@@ -62,6 +68,10 @@ namespace Manipulator
 
     public abstract class Shape
     {
+        private Dictionary<Point, RatioCalculator> DependentPoints = new Dictionary<Point, RatioCalculator>();
+
+        private List<Point> PivotPoints = new List<Point>();
+
         public Vector3 Position { get; internal set; }
         public Color ShapeColor { get; set; }
         public string Name { get; set; }
@@ -251,7 +261,7 @@ namespace Manipulator
         public void SetIgnoreRaycast(bool ignore)
         {
 
-            Debug.LogWarning($"{Name} Set to {ignore} raycast");
+            //Debug.LogWarning($"{Name} Set to {ignore} raycast");
             if (GO == null) return;
 
             int targetLayer = ignore ? IGNORE_RAYCAST_LAYER : defaultLayer;
@@ -284,8 +294,7 @@ namespace Manipulator
 
 
         public void Destroy()
-        {
-            Debug.LogError("BBBBBBBBBBBBBBBBBBB");
+        { 
             
             if (ShapeStorage.GetShapeByID(GO.name) != null)
             {
@@ -293,6 +302,209 @@ namespace Manipulator
             }
             Object.Destroy(GO); 
         }
+
+        public List<Point> GetPivots()
+        {
+            return PivotPoints;
+        }
+        
+        public void AddPivot(Point point)
+        {
+            if (!IsPivot(point))
+            {
+                PivotPoints.Add(point);
+            }
+        }
+
+        public void RemovePivot(Point point)
+        {
+            if (PivotPoints.Contains(point))
+            {
+                PivotPoints.Remove(point);
+            }
+        }
+
+        public bool IsPivot(Point point)
+        {
+            return PivotPoints.Contains(point);
+        }
+        
+        
+
+        public Dictionary<Point, RatioCalculator> GetDependencies()
+        {
+            return DependentPoints;
+        }
+
+        public void AddDepend(Point point)
+        {
+            if (!IsDepend(point))
+                DependentPoints.Add(point, new RatioCalculator(point, PivotPoints));
+        }
+
+        public void RemoveDepend(Point point)
+        {
+            if (IsDepend(point))
+                DependentPoints.Remove(point);
+        }
+
+        public bool IsDepend(Point point)
+        {
+            return DependentPoints.Remove(point);
+        }
+
+        public RatioCalculator GetData(Point point)
+        {
+            if (IsDepend(point))
+                return DependentPoints[point];
+            return null;
+        }
+
+        
+        public class RatioCalculator
+        {
+            private Point _point;
+            private List<Point> _pivots;
+            private Dictionary<Point, Tuple<Vector3, float>> data;
+
+            public RatioCalculator(Point point, List<Point> pivots)
+            {
+                _point = point;
+                _pivots = new List<Point>(pivots); // Copy to avoid reference issues
+                data = new Dictionary<Point, Tuple<Vector3, float>>();
+                Calculate();
+            }
+
+            /// <summary>
+            /// Recalculate all ratios between the base point and its pivots.
+            /// </summary>
+            private void Calculate()
+            {
+                data.Clear();
+                foreach (Point p in _pivots)
+                {
+                    Vector3 nav = (_point.Position - p.Position).normalized;
+                    float dis = Vector3.Distance(_point.Position, p.Position);
+                    data[p] = Tuple.Create(nav, dis);
+                }
+            }
+
+            /// <summary>
+            /// Get the ratio data: direction vector and distance for each pivot.
+            /// </summary>
+            public Dictionary<Point, Tuple<Vector3, float>> GetData() => data;
+
+            /// <summary>
+            /// Returns a copy of the pivot list.
+            /// </summary>
+            public List<Point> GetPivots() => new List<Point>(_pivots);
+
+            /// <summary>
+            /// Adds a pivot and updates the ratio.
+            /// </summary>
+            public void AddPivot(Point p)
+            {
+                if (!_pivots.Contains(p))
+                {
+                    _pivots.Add(p);
+                    UpdatePivot(p);
+                }
+            }
+
+            /// <summary>
+            /// Removes a pivot and clears its ratio.
+            /// </summary>
+            public void RemovePivot(Point p)
+            {
+                if (_pivots.Remove(p))
+                {
+                    data.Remove(p);
+                }
+            }
+
+            /// <summary>
+            /// Updates the ratio for a specific pivot only.
+            /// </summary>
+            public void UpdatePivot(Point p)
+            {
+                if (_pivots.Contains(p))
+                {
+                    Vector3 nav = (_point.Position - p.Position).normalized;
+                    float dis = Vector3.Distance(_point.Position, p.Position);
+                    data[p] = Tuple.Create(nav, dis);
+                }
+            }
+
+            /// <summary>
+            /// Refresh all data, useful if the main point has moved.
+            /// </summary>
+            public void Refresh()
+            {
+                Calculate();
+            }
+
+            /// <summary>
+            /// Returns true if the pivot exists.
+            /// </summary>
+            public bool HasPivot(Point p) => _pivots.Contains(p);
+
+            /// <summary>
+            /// Returns the direction vector from a pivot to the base point.
+            /// </summary>
+            public Vector3 GetDirection(Point p)
+            {
+                return data.ContainsKey(p) ? data[p].Item1 : Vector3.zero;
+            }
+
+            /// <summary>
+            /// Returns the stored distance from the pivot to the base point.
+            /// </summary>
+            public float GetDistance(Point p)
+            {
+                return data.ContainsKey(p) ? data[p].Item2 : 0f;
+            }
+
+            /// <summary>
+            /// Move the base point according to stored ratio from all pivots (used to reconstruct).
+            /// </summary>
+            public void RestorePositionFromPivots()
+            {
+                if (_pivots.Count == 0) return;
+
+                Vector3 average = Vector3.zero;
+
+                foreach (var kvp in data)
+                {
+                    Point pivot = kvp.Key;
+                    Vector3 dir = kvp.Value.Item1;
+                    float dis = kvp.Value.Item2;
+
+                    average += pivot.Position + dir * dis;
+                }
+
+                _point.MoveToPosition(average / _pivots.Count);
+            }
+
+            /// <summary>
+            /// Recalculates ratio data if a pivot has moved.
+            /// </summary>
+            public void NotifyPivotMoved(Point movedPivot)
+            {
+                if (_pivots.Contains(movedPivot))
+                {
+                    UpdatePivot(movedPivot);
+                }
+            }
+
+            /// <summary>
+            /// Clears all pivots and ratio data.
+            /// </summary>
+            public void Clear()
+            {
+                _pivots.Clear();
+                data.Clear();
+            }
+        } 
     }
 
 

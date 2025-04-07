@@ -18,8 +18,27 @@ namespace Manipulator
         {
             this.pointNO = AlphabetCounter.CurrentValue();
             SetupGameObject();
+            AttachProcess();
         }
 
+
+        private void AttachProcess()
+        {
+            ManipulationManager mm = ManipulationManager.Instance;
+            Shape shape = mm.GetPinnedShape();
+            if (shape != null)
+            {
+                if (shape is not Point)
+                {
+                    AttachToShape(shape);
+                    
+                    ///CÁI CHỖ NÀY TÍNH TOÁN RATIO VÀ VECTOR ĐỂ AFFECT CONSTRAINT NHỮNG POINT TRÊN SEGMENT HAY ĐÂU ĐÓ ....
+                    shape.AddDepend(this);
+                } 
+            }
+        }
+        
+        
         private void SetupGameObject()
         {
             GO = GameObject.CreatePrimitive(PrimitiveType.Sphere);

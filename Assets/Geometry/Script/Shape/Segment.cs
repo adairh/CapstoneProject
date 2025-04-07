@@ -152,6 +152,9 @@ namespace Manipulator
             //Start.GO.transform.parent = go.transform;
             //End.GO.transform.parent = go.transform;
 
+            AddPivot(Start);
+            AddPivot(End);
+            
             base.CompleteDraw();
         }
 
@@ -172,8 +175,7 @@ namespace Manipulator
             // Remove existing collider (likely a CapsuleCollider)
             Collider existingCollider = GO.GetComponent<Collider>();
             if (existingCollider != null && !(existingCollider is MeshCollider))
-            {
-                Debug.LogError("AAAAAAAAAAAAA");
+            { 
                 Object.DestroyImmediate(existingCollider);
             }
 

@@ -50,7 +50,7 @@ namespace Manipulator
         // === Drag Methods ===
         public bool StartDragging(DraggableShape shape)
         {
-            if (currentDraggingObject == null && CurrentDragState != DragState.None && !IsDrawing())
+            if (currentDraggingObject == null && CurrentDragState != DragState.None)
             {
                 currentDraggingObject = shape;
                 return true;
