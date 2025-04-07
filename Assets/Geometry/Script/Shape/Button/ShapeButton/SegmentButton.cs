@@ -9,7 +9,7 @@ namespace Manipulator
         protected override void OnButtonClick()
         {
             base.OnButtonClick();
-            Debug.Log("Segment Button Clicked!");
+            //Debug.Log("Segment Button Clicked!");
             ShapeButtonManager.SetActiveShape(GetShapeType());
         }
     }

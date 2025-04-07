@@ -21,7 +21,7 @@ namespace Manipulator
 
         void HandleShapeChange(IShapeButton.ShapeType newShape)
         {
-            Debug.Log($"[PerformDrawing] Shape changed to: {newShape}");
+            //Debug.Log($"[PerformDrawing] Shape changed to: {newShape}");
             currentShape = newShape; // Update the active shape
         }
 

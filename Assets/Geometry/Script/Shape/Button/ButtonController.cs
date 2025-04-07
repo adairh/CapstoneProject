@@ -38,7 +38,7 @@ namespace Manipulator
 
         public void OnButtonClicked(BaseButton button)
         {
-            Debug.Log($"Button Clicked: {button.name}");
+            //Debug.Log($"Button Clicked: {button.name}");
         }
     }
 }

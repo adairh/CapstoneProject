@@ -5,11 +5,12 @@ namespace Manipulator
     public class DraggableShape : MonoBehaviour
     {
         private bool isDragging = false;
-        private Vector3 offset;
+        private Plane dragPlane;
+        private Vector3 lastWorldPoint;
+
         private Shape _shape;
-        private Color originalColor;
         private Renderer shapeRenderer;
-        private Vector3 lastMousePosition;
+        private Color originalColor;
 
         public void SetShape(Shape shape)
         {
@@ -17,67 +18,78 @@ namespace Manipulator
             shapeRenderer = _shape.GO.GetComponent<Renderer>();
             if (shapeRenderer != null)
             {
-                originalColor = shapeRenderer.material.color; // Store original color
+                originalColor = shapeRenderer.material.color;
             }
         }
 
         private void Update()
         {
-            if (Input.GetMouseButtonDown(0)) // Left-click to start dragging
-            {
+            if (Input.GetMouseButtonDown(0))
                 TryStartDragging();
-            }
 
             if (isDragging && Input.GetMouseButton(0))
-            {
                 DragObject();
-            }
 
             if (Input.GetMouseButtonUp(0))
-            {
                 StopDragging();
-            }
         }
 
         private void TryStartDragging()
         {
-            if (DragManager.Instance.currentState == DragManager.DragState.None)
-                return; // ✅ Prevent dragging if disabled
+            if (ManipulationManager.Instance.CurrentDragState == ManipulationManager.DragState.None)
+                return;
 
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider.gameObject == gameObject)
             {
-                if (DragManager.Instance.StartDragging(this)) // ✅ Only start dragging if allowed
+                if (ManipulationManager.Instance.StartDragging(this))
                 {
-                    offset = _shape.Position - hit.point;
-                    isDragging = true;
-                    lastMousePosition = Input.mousePosition; // ✅ Store initial mouse position
-
-                    // ✅ Change color to green while dragging
-                    if (shapeRenderer != null)
+                    SetupDragPlane(ray);
+                    if (dragPlane.Raycast(ray, out float enter))
                     {
-                        shapeRenderer.material.color = Color.green;
+                        lastWorldPoint = ray.GetPoint(enter);
+                        isDragging = true;
+
+                        // ✅ Visual Feedback
+                        if (shapeRenderer != null)
+                            shapeRenderer.material.color = Color.green;
                     }
                 }
             }
         }
 
+        private void SetupDragPlane(Ray ray)
+        {
+            Vector3 normal = Vector3.up;
+
+            switch (ManipulationManager.Instance.CurrentDragState)
+            {
+                case ManipulationManager.DragState.XZ:
+                    normal = Vector3.up;
+                    break;
+                case ManipulationManager.DragState.Y:
+                    normal = Vector3.forward; // Vertical plane (side view)
+                    break;
+                // Add more cases if needed
+            }
+
+            dragPlane = new Plane(normal, _shape.Position);
+        }
+
         private void DragObject()
         {
-            Vector3 allowedAxis = DragManager.Instance.GetAllowedAxis();
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (dragPlane.Raycast(ray, out float enter))
+            {
+                Vector3 currentWorldPoint = ray.GetPoint(enter);
+                Vector3 delta = currentWorldPoint - lastWorldPoint;
 
-            // Convert mouse delta movement into world movement
-            Vector3 mouseDelta = Input.mousePosition - lastMousePosition;
-            Vector3 worldDelta = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,
-                                     Input.mousePosition.y, Camera.main.WorldToScreenPoint(_shape.Position).z)) -
-                                 Camera.main.ScreenToWorldPoint(new Vector3(lastMousePosition.x, lastMousePosition.y,
-                                     Camera.main.WorldToScreenPoint(_shape.Position).z));
+                Vector3 allowedAxis = ManipulationManager.Instance.GetAllowedDragAxis();
+                Vector3 constrainedDelta = Vector3.Scale(delta, allowedAxis);
 
-            lastMousePosition = Input.mousePosition; // Update last mouse position
-
-            // Apply movement along allowed axis only
-            Vector3 newPosition = _shape.Position + Vector3.Scale(worldDelta, allowedAxis);
-            _shape.MoveToPosition(newPosition);
+                _shape.MoveToPosition(_shape.Position + constrainedDelta);
+                lastWorldPoint = currentWorldPoint;
+            }
         }
 
         private void StopDragging()
@@ -85,13 +97,11 @@ namespace Manipulator
             if (!isDragging) return;
 
             isDragging = false;
-            DragManager.Instance.StopDragging(this); // ✅ Notify DragManager
+            ManipulationManager.Instance.StopDragging(this);
 
-            // ✅ Restore original color
+            // ✅ Restore color
             if (shapeRenderer != null)
-            {
                 shapeRenderer.material.color = originalColor;
-            }
         }
     }
 }

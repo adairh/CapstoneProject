@@ -18,7 +18,7 @@ namespace Manipulator
                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
 
                 // Log or use the world position
-                Debug.Log("World Position: " + worldPosition);
+                //Debug.Log("World Position: " + worldPosition);
             }
         }
     }

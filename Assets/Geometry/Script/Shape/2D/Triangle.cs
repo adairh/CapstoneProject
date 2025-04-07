@@ -132,19 +132,19 @@ namespace Manipulator
         }
 
         // 🎨 Dynamic Sketching Support
-        private static bool drawing = false;
         private static Vector3[] points = new Vector3[3];
         private static int pointCount = 0;
         private static Triangle triangle;
 
         public static void Sketch(Vector3 vector3, Camera mainCamera)
         {
+            ManipulationManager mm = ManipulationManager.Instance;
             if (Input.GetMouseButtonDown(0)) // Click to place points
             {
-                if (!drawing)
+                if (!mm.IsDrawing())
                 {
                     // First click: Initialize the triangle with the first point
-                    drawing = true;
+                    mm.SetDrawing(true);
                     pointCount = 1;
                     points = new Vector3[3];
 
@@ -172,12 +172,13 @@ namespace Manipulator
 
                         // Align to camera and finalize drawing
                         triangle.CompleteDraw();
-                        drawing = false;
+                        mm.SetDrawing(false);
+
                     }
                 }
             }
 
-            if (drawing)
+            if (mm.IsDrawing())
             {
                 // While dragging, update the next point dynamically
                 if (pointCount == 1)

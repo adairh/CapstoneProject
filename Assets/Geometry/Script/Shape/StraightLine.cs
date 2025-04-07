@@ -8,11 +8,11 @@ namespace Manipulator
         public Point Start { get; set; }
         public Point End { get; set; }
 
-        private static bool drawing = false;
         private static Vector3 startPoint;
-        private static StraightLine currentSegment;
-
-        public StraightLine(Point start, Point end, Shape parent) : base((start.Position), "StraightLine", parent)
+        private static StraightLine currentStraightLine;
+        private static ManipulationManager mm;
+        
+        public StraightLine(Point start, Point end, Shape parent = null) : base(start.Position, "StraightLine", parent)
         {
             Start = start;
             End = end;
@@ -29,200 +29,187 @@ namespace Manipulator
             SetupGameObject();
         }
 
-
-        public StraightLine(Point start, Point end) : this(start, end, null)
-        {
-        }
-
         private void SetupGameObject()
         {
             Draw2D();
         }
 
-
         public override void Drawing()
         {
-            UpdateTransform();
+            ApplyTransform();
         }
 
-        private void UpdateTransform()
+        private void DrawPoint()
+        {
+            Start.Draw();
+            End.Draw();
+        }
+
+        private void ApplyTransform(bool point = true)
         {
             if (GO == null) return;
 
-            // ✅ Compute new segment offset
-            Vector3 diff = Start.Position - End.Position;
             Vector3 offset = Position - Start.Position;
-
-            // ✅ Move Start to the new Position and adjust End accordingly
-
-            Debug.LogWarning($"New Position: {Position}");
-
             if (Parent == null)
             {
                 Start.Position = Position;
                 End.Position += offset;
             }
 
-            // ✅ Compute new midpoint and length
             Vector3 midPoint = (Start.Position + End.Position) / 2;
-            float length = diff.magnitude;
-            if (length == 0)
+            Vector3 direction = End.Position - Start.Position;
+            float length = Mathf.Max(direction.magnitude, 0.001f);
+
+            GO.transform.position = midPoint;
+            GO.transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
+            GO.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+
+            if (point)
             {
-                length = 0.001f;
+                DrawPoint();
             }
 
-            // ✅ Update GameObject Transform
-            GO.transform.position = midPoint;
-            GO.transform.localScale = new Vector3(0.05f, length / 2, 0.05f);
-            GO.transform.rotation = Quaternion.FromToRotation(Vector3.up, End.Position - Start.Position);
-
-            Start.Draw();
-            End.Draw();
-
-            // ✅ Now we update the collider AFTER the transform is changed
-            //UpdateHitbox();
         }
-
-
-
 
         public static void Sketch(Vector3 worldPoint, Camera mainCamera)
         {
-            if (Input.GetMouseButtonDown(0)) // Click to start drawing
+            mm = ManipulationManager.Instance;
+
+            if (mm.IsDrawing())
             {
-                if (!drawing)
+                if (mm.ModeStraight == ManipulationManager.Straight.X)
                 {
-
-                    if (HoverManager.Instance.GetPinnedShape() != null)
-                    {
-                        Shape pin = HoverManager.Instance.GetPinnedShape();
-                        if (pin is Point)
-                        {
-                            startPoint = pin.Position;
-                            currentSegment = new StraightLine(((Point)pin), new Point(startPoint));
-                        }
-                        else
-                        {
-                            startPoint = worldPoint;
-                            currentSegment = new StraightLine(new Point(startPoint), new Point(startPoint));
-                        }
-                    }
-                    else
-                    {
-                        startPoint = worldPoint;
-                        currentSegment = new StraightLine(new Point(startPoint), new Point(startPoint));
-                    }
-
-                    // Start sketching by placing the first point
-                    drawing = true;
+                    worldPoint.y = startPoint.y;
+                    worldPoint.z = startPoint.z;
+                }
+                else if (mm.ModeStraight == ManipulationManager.Straight.Y)
+                {
+                    worldPoint.x = startPoint.x;
+                    worldPoint.z = startPoint.z;
+                }
+                else if (mm.ModeStraight == ManipulationManager.Straight.Z)
+                {
+                    worldPoint.x = startPoint.x;
+                    worldPoint.y = startPoint.y;
+                }
+            }
+            
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (!mm.IsDrawing())
+                {
+                    StartSketch(worldPoint);
                 }
                 else
                 {
-                    // Second click finalizes the segment
-
-                    if (TempManager.instance.ModeStraight == TempManager.Straight.X)
-                    {
-                        worldPoint.y = startPoint.y;
-                        worldPoint.z = startPoint.z;
-                    }
-                    else if (TempManager.instance.ModeStraight == TempManager.Straight.Y)
-                    {
-                        worldPoint.x = startPoint.x;
-                        worldPoint.z = startPoint.z;
-                    }
-                    else if (TempManager.instance.ModeStraight == TempManager.Straight.Z)
-                    {
-                        worldPoint.x = startPoint.x;
-                        worldPoint.y = startPoint.y;
-                    }
-
-
-                    currentSegment.End.Position = worldPoint;
-
-                    if (HoverManager.Instance.GetPinnedShape() != null)
-                    {
-                        Shape pin = HoverManager.Instance.GetPinnedShape();
-                        /*if (pin is Point)
-                        {
-                            currentSegment.End.Position = pin.Position;
-                            currentSegment.End.Destroy();
-                            currentSegment.End = ((Point)pin);
-                        }
-                        else
-                        {*/
-                        currentSegment.End.Position = worldPoint;
-                        //}
-                    }
-                    else
-                    {
-                        currentSegment.End.Position = worldPoint;
-                    }
-
-                    currentSegment.UpdateTransform();
-                    currentSegment.CompleteDraw();
-                    drawing = false;
+                    CompleteSketch(worldPoint);
                 }
             }
 
-            if (drawing)
+            if (mm.IsDrawing())
             {
-                if (TempManager.instance.ModeStraight == TempManager.Straight.X)
-                {
-                    worldPoint.y = startPoint.y;
-                    worldPoint.z = startPoint.z;
-                }
-                else if (TempManager.instance.ModeStraight == TempManager.Straight.Y)
-                {
-                    worldPoint.x = startPoint.x;
-                    worldPoint.z = startPoint.z;
-                }
-                else if (TempManager.instance.ModeStraight == TempManager.Straight.Z)
-                {
-                    worldPoint.x = startPoint.x;
-                    worldPoint.y = startPoint.y;
-                }
-
-                // Update the second point dynamically while dragging
-                currentSegment.End.Position = worldPoint;
-                currentSegment.Draw();
+                currentStraightLine.End.Position = worldPoint;
+                currentStraightLine.Draw();
             }
+        }
+
+        private static void StartSketch(Vector3 worldPoint)
+        {
+            Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
+
+            if (nearestPoint != null)
+            {
+                startPoint = nearestPoint.Position;
+                currentStraightLine = new StraightLine(nearestPoint, new Point(startPoint));
+            }
+            else
+            {
+                startPoint = worldPoint;
+                Point start = new Point(startPoint);
+                currentStraightLine = new StraightLine(start, new Point(startPoint));
+            }
+
+            mm.SetDrawing(true);
+        }
+
+
+        private static void CompleteSketch(Vector3 worldPoint)
+        {
+            Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
+            
+            if (nearestPoint != null)
+            {
+                currentStraightLine.End.Destroy(); // Remove temporary end
+                Debug.LogError($"Nearest points {nearestPoint.Name}");
+                currentStraightLine.End = nearestPoint;
+            }
+            else
+            {
+                currentStraightLine.End.Position = worldPoint;
+            }
+
+            currentStraightLine.Start.AttachToShape(currentStraightLine);
+            currentStraightLine.End.AttachToShape(currentStraightLine);
+
+            currentStraightLine.ApplyTransform(); 
+            currentStraightLine.CompleteDraw();
+            mm.SetDrawing(false);
+
+            
+        }
+
+        public override void CompleteDraw()
+        {
+            UpdateHitbox();
+
+            //GameObject go = new GameObject(Name);
+            //go.transform.position -= Position;
+
+            Start.CompleteDraw();
+            End.CompleteDraw();
+
+            //GO.transform.parent = go.transform;
+            //Start.GO.transform.parent = go.transform;
+            //End.GO.transform.parent = go.transform;
+
+            base.CompleteDraw();
         }
 
         protected override void InitializeSettings()
         {
-            AppendSettings(
-                new PositionSetting(Position, this)
-            );
+            AppendSettings(new PositionSetting(Position, this));
         }
 
         public override GameObject[] Components()
         {
-            List<GameObject> gos = new List<GameObject>(); // Use a List instead of an array
-            gos.Add(GO);
-            gos.Add(Start.GO);
-            gos.Add(End.GO);
-
-            return gos.ToArray();
+            return new[] { GO, Start.GO, End.GO };
         }
 
         public override void UpdateHitbox()
         {
             if (GO == null) return;
 
-            // ✅ Ensure MeshCollider exists
+            // Remove existing collider (likely a CapsuleCollider)
+            Collider existingCollider = GO.GetComponent<Collider>();
+            if (existingCollider != null && !(existingCollider is MeshCollider))
+            { 
+                Object.DestroyImmediate(existingCollider);
+            }
+
+            // Ensure MeshCollider exists
             MeshCollider collider = GO.GetComponent<MeshCollider>();
             if (collider == null)
             {
                 collider = GO.AddComponent<MeshCollider>();
             }
 
-            // ✅ Force Unity to recalculate the mesh bounds
+            // Refresh the collider with updated mesh
             MeshFilter meshFilter = GO.GetComponent<MeshFilter>();
-            if (meshFilter != null)
+            if (meshFilter?.sharedMesh != null)
             {
                 Mesh mesh = meshFilter.sharedMesh;
-                mesh.RecalculateBounds(); // ✅ This ensures the collider matches the new shape
-                collider.sharedMesh = null; // ✅ Force Unity to refresh it
+                mesh.RecalculateBounds();
+                collider.sharedMesh = null;
                 collider.sharedMesh = mesh;
             }
 
@@ -232,28 +219,30 @@ namespace Manipulator
 
         public void Draw2D()
         {
+            // Future implementation (left empty)
         }
 
-        public override void CompleteDraw()
+        public void ReloadToConstraint(Point movedPoint)
         {
-            UpdateHitbox();
+            if (movedPoint.id == Start.id)
+            {
+                Start.Position = movedPoint.Position;
+                Start.GO.transform.position = movedPoint.GO.transform.position;
+                Position = Start.Position;
+            }
+            else if (movedPoint.id == End.id)
+            {
+                End.Position = movedPoint.Position;
+                End.GO.transform.position = movedPoint.GO.transform.position;
+            }
 
-            Vector3 loc = Position;
-
-            GameObject go = new GameObject(Name);
-
-            go.transform.position -= loc;
-
-            Start.CompleteDraw();
-            End.CompleteDraw();
-            GO.transform.parent = go.transform;
-            Start.GO.transform.parent = go.transform;
-            End.GO.transform.parent = go.transform;
-
-            // ✅ Ensure Points Keep Their Original Scale 
-
-            base.CompleteDraw();
+            ApplyTransform(false);
         }
 
+        public override void OnPointMoved(Point movedPoint)
+        {
+            //Debug.Log($"{Name} updated because {movedPoint.Name} moved.");
+            ReloadToConstraint(movedPoint);
+        }
     }
 }

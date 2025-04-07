@@ -17,7 +17,7 @@ namespace Manipulator
                 if (activeType != value)
                 {
                     activeType = value;
-                    Debug.Log($"[ShapeButtonManager] Active Shape Set To: {activeType}");
+                    //Debug.Log($"[ShapeButtonManager] Active Shape Set To: {activeType}");
                     OnShapeChanged?.Invoke(activeType); // Notify listeners
                 }
             }

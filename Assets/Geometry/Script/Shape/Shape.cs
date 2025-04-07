@@ -23,6 +23,41 @@ namespace Manipulator
         {
             shapes.Add(id, shape);
         }
+        
+        public static IEnumerable<Shape> GetAllShapes()
+        {
+            return shapes.Values;
+        }
+
+        public static Point FindNearestPoint(Vector3 position, float maxSnapDistance = 0.3f)
+        {
+            Point closest = null;
+            float closestSqrDistance = maxSnapDistance * maxSnapDistance;
+
+            int totalPoints = 0;
+            foreach (var shape in ShapeStorage.GetAllShapes())
+            { 
+                if (shape is Point point)
+                {
+                    totalPoints++;
+                    float sqrDist = (point.Position - position).sqrMagnitude;
+                    //Debug.Log($"Checking point {point.Name} at {point.Position} (sqrDist={sqrDist})");
+
+                    if (sqrDist < closestSqrDistance && sqrDist > 0)
+                    {
+                        closest = point;
+                        closestSqrDistance = sqrDist;
+                    }
+                }
+
+            }
+
+            //Debug.Log($"Total Points: {totalPoints}, Closest: {(closest != null ? closest.Name : "None")}");
+            return closest;
+        }
+
+
+
     }
 
     public abstract class Shape
@@ -49,8 +84,8 @@ namespace Manipulator
             AdjustToPosition(vector);
             CompleteSettings();
             Draw();
-            UpdateHitbox();
-            SetIgnoreRaycast(false);
+            UpdateHitbox(); 
+            CompleteDraw();
         }
 
         public Material DefaultMaterial { get; set; }
@@ -91,6 +126,8 @@ namespace Manipulator
 
             Parent = parent;
             shape = this;
+            
+            ShapeStorage.AddShape(Name, this);
             InitializeSettings();
             // Initialize settings on creation
         }
@@ -119,7 +156,7 @@ namespace Manipulator
 
         protected virtual void SetupGameObject()
         {
-            ShapeStorage.AddShape(go.name, this);
+            
         }
 
         // 🔥 Allows child classes to append new settings
@@ -198,6 +235,7 @@ namespace Manipulator
                 hs.SetComponents();
             }
 
+            
             SetIgnoreRaycast(false);
         }
 
@@ -213,6 +251,7 @@ namespace Manipulator
         public void SetIgnoreRaycast(bool ignore)
         {
 
+            Debug.LogWarning($"{Name} Set to {ignore} raycast");
             if (GO == null) return;
 
             int targetLayer = ignore ? IGNORE_RAYCAST_LAYER : defaultLayer;
@@ -246,13 +285,13 @@ namespace Manipulator
 
         public void Destroy()
         {
-            Object.Destroy(GO);
-            ShapeStorage.RemoveShape(GO.name);
-
+            Debug.LogError("BBBBBBBBBBBBBBBBBBB");
+            
             if (ShapeStorage.GetShapeByID(GO.name) != null)
             {
                 ShapeStorage.RemoveShape(GO.name);
             }
+            Object.Destroy(GO); 
         }
     }
 

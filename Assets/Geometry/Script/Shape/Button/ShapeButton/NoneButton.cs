@@ -9,7 +9,7 @@ namespace Manipulator
         protected override void OnButtonClick()
         {
             base.OnButtonClick();
-            Debug.Log("None Button Clicked!");
+            //Debug.Log("None Button Clicked!");
             ShapeButtonManager.SetActiveShape(GetShapeType());
         }
     }

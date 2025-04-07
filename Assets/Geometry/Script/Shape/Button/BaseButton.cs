@@ -39,7 +39,7 @@ namespace Manipulator
             }
             else
             {
-                Debug.LogError("[BaseButton] ButtonController.Instance is NULL on click!");
+                //Debug.LogError("[BaseButton] ButtonController.Instance is NULL on click!");
             }
         }
     }

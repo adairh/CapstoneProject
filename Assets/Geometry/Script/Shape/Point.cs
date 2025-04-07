@@ -73,7 +73,7 @@ namespace Manipulator
             
             foreach (var shape in attachedShapes)
             {
-                Debug.LogError($"This point {Name} move affect {shape.Name}");
+                //Debug.LogError($"This point {Name} move affect {shape.Name}");
                 shape.OnPointMoved(this);
             }
             
@@ -98,7 +98,7 @@ namespace Manipulator
 
         public void Draw2D()
         {
-            Debug.Log($"{Name} is being drawn in 2D.");
+            //Debug.Log($"{Name} is being drawn in 2D.");
         }
 
 
