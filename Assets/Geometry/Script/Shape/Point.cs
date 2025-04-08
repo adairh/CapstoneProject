@@ -30,10 +30,15 @@ namespace Manipulator
             {
                 if (shape is not Point)
                 {
+                    /*while (shape.Parent != null)
+                    {
+                        shape = shape.Parent;
+                    }*/
                     AttachToShape(shape);
-                    
                     ///CÁI CHỖ NÀY TÍNH TOÁN RATIO VÀ VECTOR ĐỂ AFFECT CONSTRAINT NHỮNG POINT TRÊN SEGMENT HAY ĐÂU ĐÓ ....
                     shape.AddDepend(this);
+                    //DEBUG here
+                    Debug.Log($"GetDependData {shape.GetDependData(this).ToString()}");
                 } 
             }
         }

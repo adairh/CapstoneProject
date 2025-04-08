@@ -42,7 +42,7 @@ namespace Manipulator
 
             if (mm.IsDrawing())
             {
-                Debug.Log($"Drawing {mm.IsDrawing()}");
+                //Debug.Log($"Drawing {mm.IsDrawing()}");
                 return;
             }
             

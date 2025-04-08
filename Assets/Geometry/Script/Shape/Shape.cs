@@ -35,9 +35,9 @@ namespace Manipulator
             return shapes.Values;
         }
 
-        public static Point FindNearestPoint(Vector3 position, float maxSnapDistance = 0.3f)
+        public static Point FindNearestPoint(Vector3 position, float maxSnapDistance = 0.1f)
         {
-            Point closest = null;
+            Point closest = null; 
             float closestSqrDistance = maxSnapDistance * maxSnapDistance;
 
             int totalPoints = 0;
@@ -49,14 +49,15 @@ namespace Manipulator
                     float sqrDist = (point.Position - position).sqrMagnitude;
                     //Debug.Log($"Checking point {point.Name} at {point.Position} (sqrDist={sqrDist})");
 
-                    if (sqrDist < closestSqrDistance && sqrDist > 0)
+                    if (sqrDist < closestSqrDistance && point.GO.layer != 2)
                     {
                         closest = point;
                         closestSqrDistance = sqrDist;
                     }
                 }
-
             }
+            
+            Debug.LogWarning(closestSqrDistance);
 
             //Debug.Log($"Total Points: {totalPoints}, Closest: {(closest != null ? closest.Name : "None")}");
             return closest;
@@ -350,10 +351,10 @@ namespace Manipulator
 
         public bool IsDepend(Point point)
         {
-            return DependentPoints.Remove(point);
+            return DependentPoints.ContainsKey(point);
         }
 
-        public RatioCalculator GetData(Point point)
+        public RatioCalculator GetDependData(Point point)
         {
             if (IsDepend(point))
                 return DependentPoints[point];
@@ -504,6 +505,55 @@ namespace Manipulator
                 _pivots.Clear();
                 data.Clear();
             }
+            
+            // ToString
+            
+            public override string ToString()
+            {
+                string result = $"RatioCalculator for Point: {_point.Name}\n";
+                result += "Pivot Ratios:\n";
+
+                foreach (var kvp in data)
+                {
+                    Point pivot = kvp.Key;
+                    Vector3 direction = kvp.Value.Item1;
+                    float distance = kvp.Value.Item2;
+
+                    result += $"- Pivot: {pivot.Name} | Direction: {direction} | Distance: {distance:F3}\n";
+                }
+
+                return result;
+            }
+
+            
+            public void RecalculatePosition()
+            {
+                if (_pivots == null || _pivots.Count == 0) return;
+
+                Vector3 finalPosition = Vector3.zero;
+
+                foreach (Point pivot in _pivots)
+                {
+                    if (!data.ContainsKey(pivot)) continue;
+
+                    Vector3 direction = data[pivot].Item1;
+                    float distance = data[pivot].Item2;
+
+                    // Pivot's new position + original direction * original distance
+                    Vector3 predicted = pivot.Position + direction * distance;
+                    finalPosition += predicted;
+                }
+
+                // Average all predicted positions
+                finalPosition /= _pivots.Count;
+
+                Debug.LogWarning($"Location {finalPosition}");
+
+                //_point.MoveToPosition(finalPosition); // Assuming this also updates .Position
+            }
+
+            
+            
         } 
     }
 

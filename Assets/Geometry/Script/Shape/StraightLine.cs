@@ -140,7 +140,7 @@ namespace Manipulator
             if (nearestPoint != null)
             {
                 currentStraightLine.End.Destroy(); // Remove temporary end
-                Debug.LogError($"Nearest points {nearestPoint.Name}");
+                //Debug.LogError($"Nearest points {nearestPoint.Name}");
                 currentStraightLine.End = nearestPoint;
             }
             else

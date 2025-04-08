@@ -219,6 +219,12 @@ namespace Manipulator
                 End.GO.transform.position = movedPoint.GO.transform.position;
             }
 
+            foreach (RatioCalculator r in GetDependencies().Values)
+            {
+                r.RecalculatePosition();
+            }
+            
+            
             ApplyTransform(false);
         }
 
