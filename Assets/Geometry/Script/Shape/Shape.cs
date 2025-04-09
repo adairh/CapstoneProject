@@ -41,7 +41,7 @@ namespace Manipulator
             float closestSqrDistance = maxSnapDistance * maxSnapDistance;
 
             int totalPoints = 0;
-            foreach (var shape in ShapeStorage.GetAllShapes())
+            foreach (var shape in GetAllShapes())
             { 
                 if (shape is Point point)
                 {
@@ -339,7 +339,7 @@ namespace Manipulator
 
         public void AddDepend(Point point)
         {
-            if (!IsDepend(point))
+            if (!IsDepend(point) && PivotPoints.Count > 0)
                 DependentPoints.Add(point, new RatioCalculator(point, PivotPoints));
         }
 
@@ -547,9 +547,9 @@ namespace Manipulator
                 // Average all predicted positions
                 finalPosition /= _pivots.Count;
 
-                Debug.LogWarning($"Location {finalPosition}");
+                //Debug.LogWarning($"Location {finalPosition}");
 
-                //_point.MoveToPosition(finalPosition); // Assuming this also updates .Position
+                _point.MoveToPosition(finalPosition); // Assuming this also updates .Position
             }
 
             

@@ -110,9 +110,11 @@ namespace Manipulator
             }
 
             mm.SetDrawing(true);
+            
+            currentSegment.Start.AttachProcess();
+            
         }
-
-
+        
         private static void CompleteSketch(Vector3 worldPoint)
         {
             Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
@@ -135,7 +137,8 @@ namespace Manipulator
             currentSegment.CompleteDraw();
             mm.SetDrawing(false);
 
-            
+            currentSegment.End.AttachProcess();
+
         }
 
         public override void CompleteDraw()

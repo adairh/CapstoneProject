@@ -18,11 +18,11 @@ namespace Manipulator
         {
             this.pointNO = AlphabetCounter.CurrentValue();
             SetupGameObject();
-            AttachProcess();
+            //AttachProcess();
         }
 
 
-        private void AttachProcess()
+        public void AttachProcess()
         {
             ManipulationManager mm = ManipulationManager.Instance;
             Shape shape = mm.GetPinnedShape();
@@ -34,11 +34,11 @@ namespace Manipulator
                     {
                         shape = shape.Parent;
                     }*/
-                    AttachToShape(shape);
-                    ///CÁI CHỖ NÀY TÍNH TOÁN RATIO VÀ VECTOR ĐỂ AFFECT CONSTRAINT NHỮNG POINT TRÊN SEGMENT HAY ĐÂU ĐÓ ....
+                    //AttachToShape(shape);
+                    //CÁI CHỖ NÀY TÍNH TOÁN RATIO VÀ VECTOR ĐỂ AFFECT CONSTRAINT NHỮNG POINT TRÊN SEGMENT HAY ĐÂU ĐÓ ...
                     shape.AddDepend(this);
                     //DEBUG here
-                    Debug.Log($"GetDependData {shape.GetDependData(this).ToString()}");
+                    //Debug.Log($"GetDependData {shape.GetDependData(this).ToString()}");
                 } 
             }
         }
