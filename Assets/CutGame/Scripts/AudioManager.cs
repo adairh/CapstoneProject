@@ -1,61 +1,58 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-namespace CutGame
+public class AudioManager : MonoBehaviour
 {
-    public class AudioManager : MonoBehaviour
+    public static bool isMuted = false;
+
+    private static AudioManager instance;
+
+    public List<AudioSource> sfx;
+
+    private void Awake()
     {
-        public static bool isMuted = false;
+        DontDestroyOnLoad(gameObject);
 
-        private static AudioManager instance;
+        if (instance == null)
+            instance = this;
+        else
+            Destroy(gameObject);
+    }
 
-        public List<AudioSource> sfx;
-
-        private void Awake()
+    // Switches sound volume between 0 and 1
+    public static void Toggle()
+    {
+        switch (isMuted)
         {
-            DontDestroyOnLoad(gameObject);
+            case true:
+                AudioListener.volume = 1;
+                isMuted = false;
+                break;
 
-            if (instance == null)
-                instance = this;
-            else
-                Destroy(gameObject);
-        }
-
-        // Switches sound volume between 0 and 1
-        public static void Toggle()
-        {
-            switch (isMuted)
-            {
-                case true:
-                    AudioListener.volume = 1;
-                    isMuted = false;
-                    break;
-
-                case false:
-                    AudioListener.volume = 0;
-                    isMuted = true;
-                    break;
-            }
-        }
-
-        // Plays certain sound effect
-        public static void Play(SFX effectName)
-        {
-            instance.sfx[(int)effectName].Play();
+            case false:
+                AudioListener.volume = 0;
+                isMuted = true;
+                break;
         }
     }
 
-    public enum SFX
+    // Plays certain sound effect
+    public static void Play(SFX effectName)
     {
-        Collect,
-        Death,
-        Failure,
-        Slash,
-        Success,
-        Click,
-        Tick,
-        Countdown,
-        Go
-    };
-
+        instance.sfx[(int)effectName].Play();
+    }
 }
+
+public enum SFX
+{ 
+    Collect,
+    Death,
+    Failure,
+    Slash,
+    Success,
+    Click,
+    Tick,
+    Countdown,
+    Go
+};
+

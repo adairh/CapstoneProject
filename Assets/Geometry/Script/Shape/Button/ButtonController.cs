@@ -1,44 +1,41 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Manipulator
+public class ButtonController : MonoBehaviour
 {
-    public class ButtonController : MonoBehaviour
+    public static ButtonController Instance { get; private set; }
+
+    private List<BaseButton> buttons = new List<BaseButton>();
+
+    private void Awake()
     {
-        public static ButtonController Instance { get; private set; }
-
-        private List<BaseButton> buttons = new List<BaseButton>();
-
-        private void Awake()
+        if (Instance == null)
         {
-            if (Instance == null)
-            {
-                Instance = this;
-            }
-            else
-            {
-                Destroy(gameObject);
-                return; // Prevents further execution if a duplicate exists
-            }
+            Instance = this;
         }
-
-        private void Start()
+        else
         {
-            Debug.Log("ButtonController is initialized.");
+            Destroy(gameObject);
+            return;  // Prevents further execution if a duplicate exists
         }
+    }
 
-        public void RegisterButton(BaseButton button)
-        {
-            if (!buttons.Contains(button))
-            {
-                buttons.Add(button);
-                Debug.Log($"Registered Button: {button.name}");
-            }
-        }
+    private void Start()
+    {
+        Debug.Log("ButtonController is initialized.");
+    }
 
-        public void OnButtonClicked(BaseButton button)
+    public void RegisterButton(BaseButton button)
+    {
+        if (!buttons.Contains(button))
         {
-            //Debug.Log($"Button Clicked: {button.name}");
+            buttons.Add(button);
+            Debug.Log($"Registered Button: {button.name}");
         }
+    }
+
+    public void OnButtonClicked(BaseButton button)
+    {
+        Debug.Log($"Button Clicked: {button.name}");
     }
 }

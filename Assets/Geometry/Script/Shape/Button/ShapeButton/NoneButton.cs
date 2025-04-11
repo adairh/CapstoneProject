@@ -1,16 +1,13 @@
 using UnityEngine;
 
-namespace Manipulator
+public class NoneButton : BaseButton, IShapeButton
 {
-    public class NoneButton : BaseButton, IShapeButton
-    {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.None;
+    public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.None;
 
-        protected override void OnButtonClick()
-        {
-            base.OnButtonClick();
-            //Debug.Log("None Button Clicked!");
-            ShapeButtonManager.SetActiveShape(GetShapeType());
-        }
+    protected override void OnButtonClick()
+    {
+        base.OnButtonClick();
+        Debug.Log("None Button Clicked!");
+        ShapeButtonManager.SetActiveShape(GetShapeType());
     }
 }
