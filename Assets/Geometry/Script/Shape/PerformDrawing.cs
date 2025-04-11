@@ -2,6 +2,7 @@
 using Unity.Netcode;
 using System.Collections;
 using System.Collections.Generic;
+using Manipulator;
 
 namespace Manipulator
 {
