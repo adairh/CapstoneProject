@@ -1,35 +1,32 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Manipulator
+public class ConstraintManager : MonoBehaviour
 {
-    public class ConstraintManager : MonoBehaviour
+    public static ConstraintManager Instance { get; private set; }
+    private List<Constraint> constraints = new List<Constraint>();
+
+    private void Awake()
     {
-        public static ConstraintManager Instance { get; private set; }
-        private List<Constraint> constraints = new List<Constraint>();
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
 
-        private void Awake()
+    public void RegisterConstraint(Constraint constraint)
+    {
+        if (!constraints.Contains(constraint))
         {
-            if (Instance == null) Instance = this;
-            else Destroy(gameObject);
+            constraints.Add(constraint);
         }
+    }
 
-        public void RegisterConstraint(Constraint constraint)
+    public void ApplyConstraints(Shape movedShape, Vector3 movement)
+    {
+        foreach (Constraint constraint in constraints)
         {
-            if (!constraints.Contains(constraint))
+            if (constraint.HasShape(movedShape))
             {
-                constraints.Add(constraint);
-            }
-        }
-
-        public void ApplyConstraints(Shape movedShape, Vector3 movement)
-        {
-            foreach (Constraint constraint in constraints)
-            {
-                if (constraint.HasShape(movedShape))
-                {
-                    constraint.ApplyConstraint(movement);
-                }
+                constraint.ApplyConstraint(movement);
             }
         }
     }

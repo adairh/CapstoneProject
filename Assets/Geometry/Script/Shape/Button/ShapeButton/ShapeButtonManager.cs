@@ -1,31 +1,27 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Manipulator
+public static class ShapeButtonManager
 {
-    public static class ShapeButtonManager
+    public static event Action<IShapeButton.ShapeType> OnShapeChanged;
+    
+    private static IShapeButton.ShapeType activeType = IShapeButton.ShapeType.None;
+    public static IShapeButton.ShapeType ActiveType
     {
-        public static event Action<IShapeButton.ShapeType> OnShapeChanged;
-
-        private static IShapeButton.ShapeType activeType = IShapeButton.ShapeType.None;
-
-        public static IShapeButton.ShapeType ActiveType
+        get => activeType;
+        private set
         {
-            get => activeType;
-            private set
+            if (activeType != value)
             {
-                if (activeType != value)
-                {
-                    activeType = value;
-                    //Debug.Log($"[ShapeButtonManager] Active Shape Set To: {activeType}");
-                    OnShapeChanged?.Invoke(activeType); // Notify listeners
-                }
+                activeType = value;
+                Debug.Log($"[ShapeButtonManager] Active Shape Set To: {activeType}");
+                OnShapeChanged?.Invoke(activeType); // Notify listeners
             }
         }
+    }
 
-        public static void SetActiveShape(IShapeButton.ShapeType newType)
-        {
-            ActiveType = newType;
-        }
+    public static void SetActiveShape(IShapeButton.ShapeType newType)
+    {
+        ActiveType = newType;
     }
 }

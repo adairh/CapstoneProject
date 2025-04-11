@@ -1,32 +1,29 @@
 ﻿using UnityEngine;
 
-namespace Manipulator
+public class ShapeClickHandler : MonoBehaviour
 {
-    public class ShapeClickHandler : MonoBehaviour
+    private Shape shape;
+    private SpawnPanel panelSpawner;
+
+    public void SetShape(Shape shape)
     {
-        private Shape shape;
-        private SpawnPanel panelSpawner;
-
-        public void SetShape(Shape shape)
+        this.shape = shape;
+        while (this.shape.Parent != null)
         {
-            this.shape = shape;
-            while (this.shape.Parent != null)
-            {
-                this.shape = this.shape.Parent;
-            }
+            this.shape = this.shape.Parent;
         }
+    }
 
-        private void Start()
-        {
-            panelSpawner = new SpawnPanel();
-        }
+    private void Start()
+    {
+        panelSpawner = new SpawnPanel();
+    }
 
-        private void OnMouseOver()
+    private void OnMouseOver()
+    {
+        if (Input.GetMouseButtonDown(1)) // Right-click
         {
-            if (Input.GetMouseButtonDown(1)) // Right-click
-            {
-                panelSpawner.SpawnPanelAtTop(shape);
-            }
+            panelSpawner.SpawnPanelAtTop(shape);
         }
     }
 }
