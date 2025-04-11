@@ -1,6 +1,11 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Water/Soft2D/Samples/Sandbox/Level 1.unity.meta
 guid: 5dab5f20953d7e249ba014ab208c413c
 DefaultImporter:
+========
+guid: e6222ea919b23564b966676b4a1d06c9
+PrefabImporter:
+>>>>>>>> 3d8db5cc9d7f58f7c553fee411ee4f6df654eab8:Assets/Prefab/MouseRaycast.prefab.meta
   externalObjects: {}
   userData: 
   assetBundleName: 
