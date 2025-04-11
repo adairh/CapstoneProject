@@ -78,3 +78,6 @@ ProjectSettings/ProjectVersion.txt
 ProjectSettings/ProjectVersion.txt
 ProjectSettings/ProjectSettings.asset
 /ProjectSettings
+/Assets/Water
+/Assets/Water/Soft2D/Core/Plugins/iOS
+/ProjectSettings
