@@ -1,32 +1,34 @@
 ﻿using UnityEngine;
 
-public class PlayerPathRenderer : MonoBehaviour
+namespace CutGame
 {
-    [SerializeField]
-    private LineRenderer lineRenderer = null;
 
-    [SerializeField]
-    private SpriteRenderer spriteRenderer = null;
-
-    // Draws a line indicating if moves is possible between two points
-    public void Draw(Vector3 startPosition, Vector3 endPosition, bool isMovePossible)
+    public class PlayerPathRenderer : MonoBehaviour
     {
-        transform.position = endPosition;
-        lineRenderer.SetPosition(0, startPosition);
-        lineRenderer.SetPosition(1, endPosition);
+        [SerializeField] private LineRenderer lineRenderer = null;
 
-        if (isMovePossible)
-            lineRenderer.endColor = Color.green;
-        else
-            lineRenderer.endColor = Color.red;
+        [SerializeField] private SpriteRenderer spriteRenderer = null;
 
-        lineRenderer.enabled = true;
-        spriteRenderer.enabled = true;
-    }
+        // Draws a line indicating if moves is possible between two points
+        public void Draw(Vector3 startPosition, Vector3 endPosition, bool isMovePossible)
+        {
+            transform.position = endPosition;
+            lineRenderer.SetPosition(0, startPosition);
+            lineRenderer.SetPosition(1, endPosition);
 
-    public void Clear()
-    {
-        lineRenderer.enabled = false;
-        spriteRenderer.enabled = false;
+            if (isMovePossible)
+                lineRenderer.endColor = Color.green;
+            else
+                lineRenderer.endColor = Color.red;
+
+            lineRenderer.enabled = true;
+            spriteRenderer.enabled = true;
+        }
+
+        public void Clear()
+        {
+            lineRenderer.enabled = false;
+            spriteRenderer.enabled = false;
+        }
     }
 }

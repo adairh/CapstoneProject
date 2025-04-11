@@ -1,13 +1,16 @@
 using UnityEngine;
 
-public class SegmentButton : BaseButton, IShapeButton
+namespace Manipulator
 {
-    public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.Segment;
-
-    protected override void OnButtonClick()
+    public class SegmentButton : BaseButton, IShapeButton
     {
-        base.OnButtonClick();
-        Debug.Log("Segment Button Clicked!");
-        ShapeButtonManager.SetActiveShape(GetShapeType());
+        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.Segment;
+
+        protected override void OnButtonClick()
+        {
+            base.OnButtonClick();
+            //Debug.Log("Segment Button Clicked!");
+            ShapeButtonManager.SetActiveShape(GetShapeType());
+        }
     }
 }

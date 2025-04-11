@@ -1,48 +1,51 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class ShapeManager : MonoBehaviour
+namespace Manipulator
 {
-    private List<Shape> shapes = new List<Shape>();
-
-    void Start()
+    public class ShapeManager : MonoBehaviour
     {
-        // Example Usage
-        // AddShape(new Rectangle(new Vector3(2, 2, 2), 2f, 3f));
-        // AddShape(new Triangle(new Vector3(2, 2,2),new Vector3(3, 3, 3),new Vector3(4, 2,2)));
-        // AddShape(new Circle(new Vector3(2, 2, 2), 3f));
-        // AddShape(new Cube(new Vector3(0, 0, 0), 1f));
-        // AddShape(new Sphere(new Vector3(4, 0, 5), 2f));
-        // AddShape(new Pyramid(new Vector3(4, 0, 5)));
+        private List<Shape> shapes = new List<Shape>();
 
-        DrawAllShapes();
-    }
-
-    void AddShape(Shape shape)
-    {
-        if (shape.IsSnappable)
+        void Start()
         {
-            shape.AdjustToPosition(SnapToGrid(shape.Position));
+            // Example Usage
+            // AddShape(new Rectangle(new Vector3(2, 2, 2), 2f, 3f));
+            // AddShape(new Triangle(new Vector3(2, 2,2),new Vector3(3, 3, 3),new Vector3(4, 2,2)));
+            // AddShape(new Circle(new Vector3(2, 2, 2), 3f));
+            // AddShape(new Cube(new Vector3(0, 0, 0), 1f));
+            // AddShape(new Sphere(new Vector3(4, 0, 5), 2f));
+            // AddShape(new Pyramid(new Vector3(4, 0, 5)));
+
+            DrawAllShapes();
         }
 
-        shapes.Add(shape);
-    }
-
-    void DrawAllShapes()
-    {
-        foreach (var shape in shapes)
+        void AddShape(Shape shape)
         {
-            //shape.Draw();
-        }
-    }
+            if (shape.IsSnappable)
+            {
+                shape.AdjustToPosition(SnapToGrid(shape.Position));
+            }
 
-    Vector3 SnapToGrid(Vector3 position)
-    {
-        float gridSize = 1f;
-        return new Vector3(
-            Mathf.Round(position.x / gridSize) * gridSize,
-            Mathf.Round(position.y / gridSize) * gridSize,
-            Mathf.Round(position.z / gridSize) * gridSize
-        );
+            shapes.Add(shape);
+        }
+
+        void DrawAllShapes()
+        {
+            foreach (var shape in shapes)
+            {
+                //shape.Draw();
+            }
+        }
+
+        Vector3 SnapToGrid(Vector3 position)
+        {
+            float gridSize = 1f;
+            return new Vector3(
+                Mathf.Round(position.x / gridSize) * gridSize,
+                Mathf.Round(position.y / gridSize) * gridSize,
+                Mathf.Round(position.z / gridSize) * gridSize
+            );
+        }
     }
 }

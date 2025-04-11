@@ -1,30 +1,33 @@
 ﻿using UnityEngine;
 
-public class RotatableShape : MonoBehaviour
+namespace Manipulator
 {
-    private bool isRotating = false;
-    private Vector3 initialMousePos;
-    private float initialRotation;
-
-    void OnMouseDown()
+    public class RotatableShape : MonoBehaviour
     {
-        isRotating = true;
-        initialMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        initialRotation = transform.eulerAngles.z;
-    }
+        private bool isRotating = false;
+        private Vector3 initialMousePos;
+        private float initialRotation;
 
-    void OnMouseDrag()
-    {
-        if (!isRotating) return;
+        void OnMouseDown()
+        {
+            isRotating = true;
+            initialMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            initialRotation = transform.eulerAngles.z;
+        }
 
-        Vector3 currentMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        float angleChange = (currentMousePos.x - initialMousePos.x) * 5f; // Adjust sensitivity
+        void OnMouseDrag()
+        {
+            if (!isRotating) return;
 
-        transform.rotation = Quaternion.Euler(0, 0, initialRotation + angleChange);
-    }
+            Vector3 currentMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            float angleChange = (currentMousePos.x - initialMousePos.x) * 5f; // Adjust sensitivity
 
-    void OnMouseUp()
-    {
-        isRotating = false;
+            transform.rotation = Quaternion.Euler(0, 0, initialRotation + angleChange);
+        }
+
+        void OnMouseUp()
+        {
+            isRotating = false;
+        }
     }
 }

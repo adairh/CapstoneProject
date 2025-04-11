@@ -1,21 +1,24 @@
 ﻿using UnityEngine;
 
+
+namespace CutGame {
 // This class is parent for all destructibles in game
-public abstract class Destructible : MonoBehaviour
-{
-    [HideInInspector]
-    public Level level;
-    
-    protected System.Action onDestroy;
-
-    public virtual void Destroy()
+    public abstract class Destructible : MonoBehaviour
     {
-        AudioManager.Play(SFX.Death);
-
-        gameObject.GetComponent<Collider>().enabled = false;
-
-        LeanTween.scale(gameObject, Vector3.zero, 0.4f)
-            .setEaseInElastic()
-            .setOnComplete(onDestroy);
+        [HideInInspector]
+        public Level level;
+        
+        protected System.Action onDestroy;
+    
+        public virtual void Destroy()
+        {
+            AudioManager.Play(SFX.Death);
+    
+            gameObject.GetComponent<Collider>().enabled = false;
+    
+            LeanTween.scale(gameObject, Vector3.zero, 0.4f)
+                .setEaseInElastic()
+                .setOnComplete(onDestroy);
+        }
     }
 }

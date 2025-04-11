@@ -1,4 +1,4 @@
-﻿namespace Script
+﻿namespace Mani
 {
     using System;
     using System.Collections.Generic;
