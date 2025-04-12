@@ -40,28 +40,23 @@ namespace Manipulator
             Point closest = null; 
             float closestSqrDistance = maxSnapDistance * maxSnapDistance;
 
-            int totalPoints = 0;
             foreach (var shape in GetAllShapes())
             { 
-                if (shape is Point point)
+                if (shape is Point point && point.IsSnappable && point.GO.layer != 2)
                 {
-                    totalPoints++;
                     float sqrDist = (point.Position - position).sqrMagnitude;
-                    //Debug.Log($"Checking point {point.Name} at {point.Position} (sqrDist={sqrDist})");
 
-                    if (sqrDist < closestSqrDistance && point.GO.layer != 2)
+                    if (sqrDist < closestSqrDistance)
                     {
                         closest = point;
                         closestSqrDistance = sqrDist;
                     }
                 }
             }
-            
-            Debug.LogWarning(closestSqrDistance);
 
-            //Debug.Log($"Total Points: {totalPoints}, Closest: {(closest != null ? closest.Name : "None")}");
             return closest;
         }
+
 
 
 
@@ -69,6 +64,7 @@ namespace Manipulator
 
     public abstract class Shape
     {
+
         private Dictionary<Point, RatioCalculator> DependentPoints = new Dictionary<Point, RatioCalculator>();
 
         private List<Point> PivotPoints = new List<Point>();
@@ -141,6 +137,8 @@ namespace Manipulator
             ShapeStorage.AddShape(Name, this);
             InitializeSettings();
             // Initialize settings on creation
+            
+            
         }
 
         protected void RegisterEvents()
@@ -152,6 +150,7 @@ namespace Manipulator
             GO.AddComponent<DraggableShape>().SetShape(this);
 
             GO.AddComponent<HoverableShape>().SetMaterials(this);
+             
 
         }
         

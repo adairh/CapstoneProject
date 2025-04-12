@@ -43,6 +43,8 @@ namespace Manipulator
             }
         }
 
+        
+
         private Vector3 GetPointOnCircle(float angleDegrees)
         {
             float rad = Mathf.Deg2Rad * angleDegrees;

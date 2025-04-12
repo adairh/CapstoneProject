@@ -65,6 +65,7 @@ namespace Manipulator
 
         }
 
+
         private void InitializeEdges()
         {
             edges = new Segment[]

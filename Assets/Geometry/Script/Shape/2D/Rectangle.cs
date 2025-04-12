@@ -75,6 +75,7 @@ namespace Manipulator
         {
             Debug.Log($"✅ Drawing Rectangle with Cylinders at {Position}");
         }
+        
 
 
         public override void Drawing()

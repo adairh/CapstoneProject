@@ -138,7 +138,6 @@ namespace Manipulator
             mm.SetDrawing(false);
 
             currentSegment.End.AttachProcess();
-
         }
 
         public override void CompleteDraw()
@@ -207,6 +206,7 @@ namespace Manipulator
         {
             // Future implementation (left empty)
         }
+
 
         public void ReloadToConstraint(Point movedPoint)
         {
