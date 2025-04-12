@@ -7,6 +7,7 @@ using Unity.Netcode;
 
 public class ShapeNetworkSync : NetworkBehaviour
 {
+    private ManipulationManager mm = ManipulationManager.Instance;
     public enum ShapeType
     {
         None, Circle, Rectangle, Triangle, Segment
@@ -24,7 +25,7 @@ public class ShapeNetworkSync : NetworkBehaviour
     private string LogPrefix => $"[{(ownerClientId.Value == 0 ? "Host" : "Client")}:{ownerClientId.Value}]";
 
     public override void OnNetworkSpawn()
-    {
+    { 
         Debug.Log($"{LogPrefix} [ShapeNetworkSync] OnNetworkSpawn - Local IsHost: {IsHost}, LocalClientId: {NetworkManager.LocalClientId}, OwnerClientId: {ownerClientId.Value}");
         shapeType.OnValueChanged += OnShapeChanged;
         startPoint.OnValueChanged += OnShapeChanged;
@@ -32,7 +33,7 @@ public class ShapeNetworkSync : NetworkBehaviour
         isDrawing.OnValueChanged += OnDrawingChanged;
         isFinalized.OnValueChanged += OnFinalizedChanged;
 
-        if (isDrawing.Value)
+        if (isDrawing.Value && !mm.IsDrawing())
             StartShape();
         UpdateShape();
     }
@@ -71,6 +72,19 @@ public class ShapeNetworkSync : NetworkBehaviour
 
     private void StartShape()
     {
+        Segment.BeginSketch(startPoint.Value);
+    }
+    private void UpdateShape()
+    {
+        Segment.UpdateSketch(currentPoint.Value);
+    }
+    private void FinalizeShape()
+    {
+        Segment.EndSketch(currentPoint.Value);
+    }
+    
+    /*private void StartShape()
+    {
         if (currentShape != null && currentShape.GO != null)
             Destroy(currentShape.GO);
 
@@ -89,12 +103,13 @@ public class ShapeNetworkSync : NetworkBehaviour
                 Debug.Log($"{LogPrefix} [ShapeNetworkSync] Created Triangle at {startPoint.Value}");
                 break;
             case ShapeType.Segment:
-                currentShape = new Segment(new Point(startPoint.Value), new Point(startPoint.Value));
-                Debug.Log($"{LogPrefix} [ShapeNetworkSync] Created Segment at {startPoint.Value}");
+                //currentShape = new Segment(new Point(startPoint.Value), new Point(startPoint.Value));
+                //Debug.Log($"{LogPrefix} [ShapeNetworkSync] Created Segment at {startPoint.Value}");
+                Segment.BeginSketch(startPoint.Value);
                 break;
         }
 
-        if (currentShape != null && currentShape.GO != null)
+        /*if (currentShape != null && currentShape.GO != null)
         {
             currentShape.GO.transform.SetParent(transform, false);
             currentShape.GO.SetActive(true);
@@ -103,7 +118,9 @@ public class ShapeNetworkSync : NetworkBehaviour
         else
         {
             Debug.LogError($"{LogPrefix} [ShapeNetworkSync] Shape or GO is null after creation!");
-        }
+        }#1#
+        
+        //mm.SetDrawing(true);
     }
 
     private void UpdateShape()
@@ -136,8 +153,8 @@ public class ShapeNetworkSync : NetworkBehaviour
                 currentShape.Draw();
                 break;
             case ShapeType.Segment:
-                ((Segment)currentShape).End.Position = currentPoint.Value;
-                currentShape.Draw();
+                //((Segment)currentShape).End.Position = currentPoint.Value;
+                //currentShape.Draw();
                 break;
         }
 
@@ -152,6 +169,18 @@ public class ShapeNetworkSync : NetworkBehaviour
             currentShape.CompleteDraw();
             Debug.Log($"{LogPrefix} [ShapeNetworkSync] Finalized {shapeType.Value}");
             currentShape = null;
+            mm.SetDrawing(false);
+            
+            
+            switch (shapeType.Value)
+            { 
+                case ShapeType.Segment:
+//                    ((Segment)currentShape).End.AttachToShape(currentShape);
+//                    ((Segment)currentShape).Start.AttachToShape(currentShape);
+                    break;
+            }
+            
+            
         }
-    }
+    }*/
 }

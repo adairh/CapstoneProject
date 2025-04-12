@@ -6,6 +6,7 @@ namespace Manipulator
 {
     public class ManipulationManager : MonoBehaviour
     {
+        public GameObject shapeNetworkPrefab;
         public static ManipulationManager Instance { get; private set; }
 
         // === Dragging ===

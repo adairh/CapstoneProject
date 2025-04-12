@@ -71,30 +71,10 @@ namespace Manipulator
 
         }
 
-        public static void Sketch(Vector3 worldPoint, Camera mainCamera)
+        public static void BeginSketch(Vector3 worldPoint)
         {
             mm = ManipulationManager.Instance;
-            if (Input.GetMouseButtonDown(0))
-            {
-                if (!mm.IsDrawing())
-                {
-                    StartSketch(worldPoint);
-                }
-                else
-                {
-                    CompleteSketch(worldPoint);
-                }
-            }
 
-            if (mm.IsDrawing())
-            {
-                currentSegment.End.Position = worldPoint;
-                currentSegment.Draw();
-            }
-        }
-
-        private static void StartSketch(Vector3 worldPoint)
-        {
             Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
 
             if (nearestPoint != null)
@@ -110,15 +90,23 @@ namespace Manipulator
             }
 
             mm.SetDrawing(true);
-            
             currentSegment.Start.AttachProcess();
-            
         }
-        
-        private static void CompleteSketch(Vector3 worldPoint)
+
+        public static void UpdateSketch(Vector3 worldPoint)
         {
+            if (mm == null || !mm.IsDrawing() || currentSegment == null) return;
+
+            currentSegment.End.Position = worldPoint;
+            currentSegment.Draw();
+        }
+
+        public static void EndSketch(Vector3 worldPoint)
+        {
+            if (mm == null || !mm.IsDrawing() || currentSegment == null) return;
+
             Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
-            
+
             if (nearestPoint != null)
             {
                 currentSegment.End.Destroy(); // Remove temporary end
@@ -133,12 +121,13 @@ namespace Manipulator
             currentSegment.Start.AttachToShape(currentSegment);
             currentSegment.End.AttachToShape(currentSegment);
 
-            currentSegment.ApplyTransform(); 
+            currentSegment.ApplyTransform();
             currentSegment.CompleteDraw();
             mm.SetDrawing(false);
 
             currentSegment.End.AttachProcess();
         }
+
 
         public override void CompleteDraw()
         {

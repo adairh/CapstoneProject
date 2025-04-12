@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Unity.Netcode;
 using Object = UnityEngine.Object;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
@@ -68,6 +69,7 @@ namespace Manipulator
         private Dictionary<Point, RatioCalculator> DependentPoints = new Dictionary<Point, RatioCalculator>();
 
         private List<Point> PivotPoints = new List<Point>();
+        private ShapeNetworkSync currentShapeObject;
 
         public Vector3 Position { get; internal set; }
         public Color ShapeColor { get; set; }
@@ -147,10 +149,8 @@ namespace Manipulator
 
             GO.tag = (Parent == null) ? "Shape" : "Child";
 
-            GO.AddComponent<DraggableShape>().SetShape(this);
+            GO.AddComponent<DraggableShape>().SetShape(this); 
 
-            GO.AddComponent<HoverableShape>().SetMaterials(this);
-             
 
         }
         

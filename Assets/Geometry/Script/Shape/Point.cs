@@ -88,7 +88,7 @@ namespace Manipulator
         }
 
         private void UpdateTransform()
-        {
+        { 
             if (GO == null) return;
             
             GO.transform.position = Position;
