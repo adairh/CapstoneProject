@@ -85,6 +85,8 @@ namespace Manipulator
             {
                 GO.transform.position = vector3;
             }
+            
+            
         }
 
 

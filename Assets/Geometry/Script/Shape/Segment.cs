@@ -11,7 +11,7 @@ namespace Manipulator
         private static Vector3 startPoint;
         private static Segment currentSegment;
         private static ManipulationManager mm;
-        
+         
         public Segment(Point start, Point end, Shape parent = null) : base(start.Position, "Segment", parent)
         {
             Start = start;

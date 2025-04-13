@@ -23,7 +23,48 @@ public class ShapeNetworkSync : NetworkBehaviour
     private Shape currentShape;
 
     private string LogPrefix => $"[{(ownerClientId.Value == 0 ? "Host" : "Client")}:{ownerClientId.Value}]";
+    
+    // ==============================================================================================
+    // Chỉnh cái khúc này cho nó theo logic của phép move bình thường
+    
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestMoveServerRpc(Vector3 newPosition)
+    {
+        ApplyPositionChange(newPosition);
 
+        // Gửi cho các client còn lại
+        ApplyMoveClientRpc(newPosition);
+    }
+
+    [ClientRpc]
+    private void ApplyMoveClientRpc(Vector3 newPosition)
+    {
+        if (!IsOwner) // Tránh áp dụng lại với người đã gọi
+            ApplyPositionChange(newPosition);
+    }
+
+    
+    private void ApplyPositionChange(Vector3 newPosition)
+    {
+        if (currentShape != null)
+            currentShape.MoveToPosition(newPosition);
+    }
+
+    public void MoveShape(Vector3 newPos)
+    {
+        if (IsServer)
+        {
+            ApplyPositionChange(newPos);
+            ApplyMoveClientRpc(newPos);
+        }
+        else
+        {
+            RequestMoveServerRpc(newPos); // Client gọi Server để xử lý
+        }
+    }
+
+    // ==============================================================================================
+    
     public override void OnNetworkSpawn()
     { 
         Debug.Log($"{LogPrefix} [ShapeNetworkSync] OnNetworkSpawn - Local IsHost: {IsHost}, LocalClientId: {NetworkManager.LocalClientId}, OwnerClientId: {ownerClientId.Value}");
