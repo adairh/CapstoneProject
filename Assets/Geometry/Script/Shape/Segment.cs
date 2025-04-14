@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using Geometry.Script.Network;
+using Manipulator.Data;
 using UnityEngine;
 
 namespace Manipulator
@@ -8,9 +10,7 @@ namespace Manipulator
         public Point Start { get; set; }
         public Point End { get; set; }
 
-        private static Vector3 startPoint;
-        private static Segment currentSegment;
-        private static ManipulationManager mm;
+        private ManipulationManager mm;
          
         public Segment(Point start, Point end, Shape parent = null) : base(start.Position, "Segment", parent)
         {
@@ -27,6 +27,11 @@ namespace Manipulator
             }
 
             SetupGameObject();
+        }
+
+        public Segment(Vector3 only) : this(new Point(only), new Point(only))
+        {
+            
         }
 
         private void SetupGameObject()
@@ -71,61 +76,70 @@ namespace Manipulator
 
         }
 
-        public static void BeginSketch(Vector3 worldPoint)
+        public override void BeginSketch(Vector3 worldPoint)
         {
             mm = ManipulationManager.Instance;
 
             Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
 
+            Start.SetIgnoreRaycast(true);
+            End.SetIgnoreRaycast(true);
+            
             if (nearestPoint != null)
             {
-                startPoint = nearestPoint.Position;
-                currentSegment = new Segment(nearestPoint, new Point(startPoint));
+                if (nearestPoint != Start)
+                {
+                    Start.Destroy();
+                    Debug.LogError($"Nearest points {nearestPoint.Name}");
+                    Start = nearestPoint;
+                }
             }
             else
             {
-                startPoint = worldPoint;
-                Point start = new Point(startPoint);
-                currentSegment = new Segment(start, new Point(startPoint));
+                Start.Destroy();
+                Start = new Point(worldPoint);
             }
 
             mm.SetDrawing(true);
-            currentSegment.Start.AttachProcess();
+            Start.AttachProcess();
         }
 
-        public static void UpdateSketch(Vector3 worldPoint)
+        public override void UpdateSketch(Vector3 worldPoint)
         {
-            if (mm == null || !mm.IsDrawing() || currentSegment == null) return;
+            if (mm == null || !mm.IsDrawing() || Start == null || End == null) return;
 
-            currentSegment.End.Position = worldPoint;
-            currentSegment.Draw();
+            End.Position = worldPoint;
+            Draw();
         }
 
-        public static void EndSketch(Vector3 worldPoint)
+        public override void EndSketch(Vector3 worldPoint)
         {
-            if (mm == null || !mm.IsDrawing() || currentSegment == null) return;
+            if (mm == null || !mm.IsDrawing() || Start == null || End == null) return;
 
             Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
 
             if (nearestPoint != null)
             {
-                currentSegment.End.Destroy(); // Remove temporary end
+                End.Destroy(); // Remove temporary end
                 Debug.LogError($"Nearest points {nearestPoint.Name}");
-                currentSegment.End = nearestPoint;
+                End = nearestPoint;
             }
             else
             {
-                currentSegment.End.Position = worldPoint;
+                End.Position = worldPoint;
             }
 
-            currentSegment.Start.AttachToShape(currentSegment);
-            currentSegment.End.AttachToShape(currentSegment);
+            Start.AttachToShape(this);
+            End.AttachToShape(this);
 
-            currentSegment.ApplyTransform();
-            currentSegment.CompleteDraw();
+            Start.SetIgnoreRaycast(false);
+            End.SetIgnoreRaycast(false);
+            
+            ApplyTransform();
+            CompleteDraw();
             mm.SetDrawing(false);
 
-            currentSegment.End.AttachProcess();
+            End.AttachProcess();
         }
 
 
@@ -210,7 +224,16 @@ namespace Manipulator
                 End.Position = movedPoint.Position;
                 End.GO.transform.position = movedPoint.GO.transform.position;
             }
-
+            
+            if (GetSNS() != null)
+            {
+                GetSNS().MoveShape(Position);
+                
+                //????? chưa có kéo dc cái end thì phải ?????  nó cũng chưa kéo dc start, nó chỉ đang kéo cả cái shape thui
+                // kéo point đang chưa có trigger
+                
+            }
+            
             foreach (RatioCalculator r in GetDependencies().Values)
             {
                 r.RecalculatePosition();
@@ -224,6 +247,16 @@ namespace Manipulator
         {
             //Debug.Log($"{Name} updated because {movedPoint.Name} moved.");
             ReloadToConstraint(movedPoint);
+            
+        }
+
+        public ShapeData Serialize()
+        {
+            return null;
+        }
+
+        public void Deserialize(ShapeData data)
+        {
         }
     }
 }

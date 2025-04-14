@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Geometry.Script.Network;
 using Manipulator;
 using UnityEngine;
 using Unity.Netcode;
@@ -47,19 +48,21 @@ public class ShapeNetworkSync : NetworkBehaviour
     private void ApplyPositionChange(Vector3 newPosition)
     {
         if (currentShape != null)
+        {
             currentShape.MoveToPosition(newPosition);
+        }
     }
+
 
     public void MoveShape(Vector3 newPos)
     {
         if (IsServer)
         {
-            ApplyPositionChange(newPos);
             ApplyMoveClientRpc(newPos);
         }
         else
         {
-            RequestMoveServerRpc(newPos); // Client gọi Server để xử lý
+            //RequestMoveServerRpc(newPos); // Client gọi Server để xử lý
         }
     }
 
@@ -113,15 +116,34 @@ public class ShapeNetworkSync : NetworkBehaviour
 
     private void StartShape()
     {
-        Segment.BeginSketch(startPoint.Value);
+        //Segment.BeginSketch(startPoint.Value);
+        currentShape = new Segment(startPoint.Value);
+        currentShape.AsignSyncer(this);
+        if (currentShape is ISynchronizedShape)
+        {
+            ISynchronizedShape iSync = (ISynchronizedShape)currentShape;
+            iSync.BeginSketch(startPoint.Value);
+        }
     }
     private void UpdateShape()
     {
-        Segment.UpdateSketch(currentPoint.Value);
+        //Segment.UpdateSketch(currentPoint.Value);
+        
+        if (currentShape is ISynchronizedShape)
+        {
+            ISynchronizedShape iSync = (ISynchronizedShape)currentShape;
+            iSync.UpdateSketch(currentPoint.Value);
+        }
     }
     private void FinalizeShape()
     {
-        Segment.EndSketch(currentPoint.Value);
+        //Segment.EndSketch(currentPoint.Value);
+        
+        if (currentShape is ISynchronizedShape)
+        {
+            ISynchronizedShape iSync = (ISynchronizedShape)currentShape;
+            iSync.EndSketch(currentPoint.Value);
+        }
     }
     
     /*private void StartShape()

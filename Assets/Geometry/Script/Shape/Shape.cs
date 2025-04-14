@@ -3,6 +3,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Geometry.Script.Network;
+using Manipulator.Data;
 using Unity.Netcode;
 using Object = UnityEngine.Object;
 using Quaternion = UnityEngine.Quaternion;
@@ -47,7 +49,7 @@ namespace Manipulator
                 {
                     float sqrDist = (point.Position - position).sqrMagnitude;
 
-                    if (sqrDist < closestSqrDistance)
+                    if (sqrDist < closestSqrDistance && sqrDist > 0f)
                     {
                         closest = point;
                         closestSqrDistance = sqrDist;
@@ -62,9 +64,10 @@ namespace Manipulator
 
 
     }
-
-    public abstract class Shape
+    
+    public abstract class Shape : ISynchronizedShape
     {
+        private ShapeNetworkSync syncer;
 
         private Dictionary<Point, RatioCalculator> DependentPoints = new Dictionary<Point, RatioCalculator>();
 
@@ -80,15 +83,36 @@ namespace Manipulator
 
         public void AdjustToPosition(Vector3 vector3, bool transform = true)
         {
+            
+            if (syncer != null)
+            {
+                if (!syncer.IsServer)
+                {
+                    Vector3 offset = vector3 - Position;
+                    foreach (Point p in GetPivots())
+                    {
+                        p.MoveTo(p.Position + offset);
+                    }
+
+                }
+            }
+            
             Position = vector3;
             if (transform)
             {
                 GO.transform.position = vector3;
             }
+
+
             
-            
+
+
         }
 
+        public void AsignSyncer(ShapeNetworkSync shapeNetworkSync)
+        {
+            syncer = shapeNetworkSync;
+        }
 
         public void MoveToPosition(Vector3 vector)
         {
@@ -97,6 +121,11 @@ namespace Manipulator
             Draw();
             UpdateHitbox(); 
             CompleteDraw();
+
+            if (syncer != null)
+            {
+                syncer.MoveShape(vector);
+            }
         }
 
         public Material DefaultMaterial { get; set; }
@@ -160,6 +189,7 @@ namespace Manipulator
         public virtual void OnPointMoved(Point movedPoint)
         {
             // Default behavior: Do nothing
+            
         }
         
         
@@ -237,7 +267,7 @@ namespace Manipulator
             Drawing();
             //UpdateHitbox();
         }
-
+        
         public virtual void CompleteDraw()
         {
             PerformDrawing.ResetShape();
@@ -362,6 +392,10 @@ namespace Manipulator
             return null;
         }
 
+        public ShapeNetworkSync GetSNS()
+        {
+            return syncer;
+        }
         
         public class RatioCalculator
         {
@@ -555,7 +589,29 @@ namespace Manipulator
 
             
             
-        } 
+        }
+
+        public virtual void BeginSketch(Vector3 vector)
+        {
+        }
+
+        public virtual void UpdateSketch(Vector3 vector)
+        {
+        }
+
+        public virtual void EndSketch(Vector3 vector)
+        {
+        }
+
+        public ShapeData Serialize()
+        {
+            return null;
+        }
+
+        public void Deserialize(ShapeData data)
+        {
+            
+        }
     }
 
 
