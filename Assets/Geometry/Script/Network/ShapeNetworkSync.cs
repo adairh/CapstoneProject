@@ -14,6 +14,7 @@ public class ShapeNetworkSync : NetworkBehaviour
         None, Circle, Rectangle, Triangle, Segment, Point
     }
 
+    
     public NetworkVariable<ShapeType> shapeType = new NetworkVariable<ShapeType>(ShapeType.None);
     public NetworkVariable<Vector3> startPoint = new NetworkVariable<Vector3>(Vector3.zero);
     public NetworkVariable<Vector3> currentPoint = new NetworkVariable<Vector3>(Vector3.zero);
@@ -22,6 +23,13 @@ public class ShapeNetworkSync : NetworkBehaviour
     public NetworkVariable<ulong> ownerClientId = new NetworkVariable<ulong>(ulong.MaxValue); // Tracks who created the shape
 
     private Shape currentShape;
+
+    
+    public void LinkShape(Shape shape)
+    {
+        currentShape = shape;
+        currentShape.AsignSyncer(this);
+    }
 
     private string LogPrefix => $"[{(ownerClientId.Value == 0 ? "Host" : "Client")}:{ownerClientId.Value}]";
     
@@ -43,7 +51,38 @@ public class ShapeNetworkSync : NetworkBehaviour
         if (!IsOwner) // Tránh áp dụng lại với người đã gọi
             ApplyPositionChange(newPosition);
     }
+    
+    [ClientRpc]
+    public void MovePivotsClientRpc(string pointName, Vector3 loc)
+    {
+        if (!IsOwner)
+        {
+            Debug.LogError($"SNS: {pointName}");
+            if (ShapeStorage.GetShapeByID(pointName) is Point point && currentShape != null)
+            {
+                currentShape.MovePivots(pointName, loc);
+            }
+        }
+    }
 
+        
+    [ClientRpc]
+    public void ForceClientRefreshClientRpc()
+    {
+        currentShape.FullRefresh();
+    }
+    
+    public void ForceClientRefreshAll()
+    {
+        if (!IsServer) return;
+        ForceClientRefreshClientRpc(); // Broadcast
+    }
+
+ 
+    public void MovePivots(Point position)
+    {
+        MovePivotsClientRpc(position.Name, position.Position);
+    }
     
     private void ApplyPositionChange(Vector3 newPosition)
     {
@@ -250,8 +289,5 @@ public class ShapeNetworkSync : NetworkBehaviour
             
         }
     }*/
-    public void MovePivots(Point position)
-    {
-        currentShape.MovePivots(position);
-    }
+    
 }

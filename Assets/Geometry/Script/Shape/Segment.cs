@@ -50,7 +50,7 @@ namespace Manipulator
             End.Draw();
         }
 
-        private void ApplyTransform(bool point = true)
+        private void ApplyTransform(bool updatePoints = true)
         {
             if (GO == null) return;
 
@@ -69,12 +69,12 @@ namespace Manipulator
             GO.transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
             GO.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
 
-            if (point)
+            if (updatePoints && !isUpdatingPoints)
             {
                 DrawPoint();
             }
-
         }
+
 
         public override void BeginSketch(Vector3 worldPoint)
         {
@@ -231,46 +231,99 @@ namespace Manipulator
         }
 
 
+        private bool isUpdatingPoints = false;
+
         public override void MovePivots(Point movedPoint)
         {
+            if (isUpdatingPoints) return; // ✅ Prevent recursive entry
+            isUpdatingPoints = true;
+
             string who = NetStatus.WhoAmI();
             ulong clientId = NetStatus.MyID();
 
-            Debug.Log($"[{who} | ClientID: {clientId}] [MovePivots] on Segment '{Name}' due to Point '{movedPoint.Name}' (ID: {movedPoint.id})");
-            Debug.Log($"[Before] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
+            //Debug.Log($"[{who} | ClientID: {clientId}] [MovePivots] on Segment '{Name}' due to Point '{movedPoint.Name}' (ID: {movedPoint.id})");
+            //Debug.Log($"[Before] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
 
             if (movedPoint.id == Start.id)
             {
-                Debug.Log($"[{who}] ➤ Moving START point.");
+                //Debug.Log($"[{who}] ➤ Moving START point.");
                 Start.Position = movedPoint.Position;
                 Start.GO.transform.position = movedPoint.GO.transform.position;
                 Position = Start.Position;
             }
             else if (movedPoint.id == End.id)
             {
-                Debug.Log($"[{who}] ➤ Moving END point.");
+                //Debug.Log($"[{who}] ➤ Moving END point.");
                 End.Position = movedPoint.Position;
                 End.GO.transform.position = movedPoint.GO.transform.position;
             }
 
-            Debug.Log($"[After] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
-            DrawPoint();
+            //Debug.Log($"[After] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
+
+            ApplyTransform(false); // ✅ Apply transform without redrawing points individually
+
+            isUpdatingPoints = false;
         }
-
-
         
-        public void ReloadToConstraint(Point movedPoint)
+        public override void MovePivots(string pointName, Vector3 loc)
+        { 
+            if (isUpdatingPoints) return; // ✅ Prevent recursive entry
+            isUpdatingPoints = true;
+
+            string who = NetStatus.WhoAmI();
+            ulong clientId = NetStatus.MyID();
+
+            /*Debug.Log($"[{who} | ClientID: {clientId}] [MovePivots] on Segment '{Name}' due to Point '{pointName}' (ID:)");
+            Debug.Log($"[Before] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
+            */
+
+
+            if (ShapeStorage.GetShapeByID(pointName) is Point point)
+            {
+                if (point.id == Start.id)
+                {
+                    //Debug.Log($"[{who}] ➤ Moving START point.");
+                    Start.Position = loc;
+                    Start.GO.transform.position = loc;
+                    Position = Start.Position;
+                }
+                else if (point.id == End.id)
+                {
+                    //Debug.Log($"[{who}] ➤ Moving END point.");
+                    End.Position = loc;
+                    End.GO.transform.position = loc;
+                }
+
+                //Debug.Log($"[After] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
+
+                ApplyTransform(false); // ✅ Apply transform without redrawing points individually
+
+                isUpdatingPoints = false;
+                ReloadToConstraint(point, false);
+            }
+
+        }
+        
+        public override void FullRefresh()
+        {
+
+
+            if (!mm.IsDrawing())
+            {
+                // Dinh la auto refresh de update vi tri nhung co ve ko on lam
+            }
+            
+            base.FullRefresh();
+        }
+        
+        
+        public void ReloadToConstraint(Point movedPoint, bool trigger = true)
         {
             MovePivots(movedPoint);
             
-            if (GetSNS() != null)
+            if (GetSNS() != null && trigger)
             {
-                // GetSNS().MovePivots(movedPoint);
-                // ????? chưa có kéo dc cái end thì phải ?????  nó cũng chưa kéo dc start, nó chỉ đang kéo cả cái shape thui
-                // kéo point đang chưa có trigger
-                
-                
-                
+                GetSNS().MovePivots(movedPoint);
             }
             
             foreach (RatioCalculator r in GetDependencies().Values)
@@ -284,7 +337,7 @@ namespace Manipulator
 
         public override void OnPointMoved(Point movedPoint)
         {
-            //Debug.Log($"{Name} updated because {movedPoint.Name} moved.");
+            Debug.Log($"{Name} updated because {movedPoint.Name} moved.");
             ReloadToConstraint(movedPoint);
             
         }

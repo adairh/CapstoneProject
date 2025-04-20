@@ -325,7 +325,7 @@ namespace Manipulator
         }
 
 
-        public void Destroy()
+        public virtual void Destroy()
         { 
             
             if (ShapeStorage.GetShapeByID(GO.name) != null)
@@ -398,6 +398,9 @@ namespace Manipulator
         }
 
         public virtual void MovePivots(Point movedPoint)
+        {
+        }
+        public virtual void MovePivots(string pointName, Vector3 loc)
         {
         }
 
@@ -594,6 +597,40 @@ namespace Manipulator
             
             
         }
+        
+        public virtual void FullRefresh()
+        {
+            
+            //Debug.LogError("WOWO");
+            // 1. Recalculate all dependent positions (constraints)
+            /*foreach (var dep in GetDependencies())
+            {
+                dep.Value.RecalculatePosition();
+            }*/
+
+            /*// 2. Redraw visuals
+            Draw();
+
+            // 3. Reapply settings
+            CompleteSettings();*/
+
+            // 4. Rebuild collider
+            // UpdateHitbox();
+
+            // 5. Reset raycast layer
+            //SetIgnoreRaycast(false);
+
+            // 6. Reset hover visuals
+            /*var hover = GO.GetComponent<HoverableShape>();
+            if (hover != null)
+            {
+                hover.SetComponents();
+            }*/
+
+            // 7. You can extend here (materials, labels, visual debug, etc.)
+        }
+
+        
 
         public virtual void BeginSketch(Vector3 vector)
         {

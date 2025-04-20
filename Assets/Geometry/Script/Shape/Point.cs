@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Manipulator
@@ -20,8 +21,11 @@ namespace Manipulator
         
         
         
+        
     }
 
+    private NetworkObject segmentNetObj = null;
+    
     private void SetupGameObject()
     {
         GO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -37,8 +41,15 @@ namespace Manipulator
 
         ConstraintManager.Instance.RegisterConstraint(constraint);
         constraint.AddShape(this);
+
+        
     }
 
+    public override void Destroy()
+    {
+        base.Destroy();
+    }
+    
     public void AttachProcess()
     {
         var mm = ManipulationManager.Instance;
