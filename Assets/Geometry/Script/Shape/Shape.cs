@@ -396,7 +396,11 @@ namespace Manipulator
         {
             return syncer;
         }
-        
+
+        public virtual void MovePivots(Point movedPoint)
+        {
+        }
+
         public class RatioCalculator
         {
             private Point _point;

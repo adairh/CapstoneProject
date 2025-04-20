@@ -209,28 +209,67 @@ namespace Manipulator
         {
             // Future implementation (left empty)
         }
-
-
-        public void ReloadToConstraint(Point movedPoint)
+        public static class NetStatus
         {
+            public static string WhoAmI()
+            {
+                if (!Unity.Netcode.NetworkManager.Singleton) return "NO_NET";
+
+                var net = Unity.Netcode.NetworkManager.Singleton;
+
+                if (net.IsHost) return "HOST";
+                if (net.IsServer) return "SERVER";
+                if (net.IsClient) return "CLIENT";
+
+                return "OFFLINE";
+            }
+
+            public static ulong MyID()
+            {
+                return Unity.Netcode.NetworkManager.Singleton?.LocalClientId ?? 9999;
+            }
+        }
+
+
+        public override void MovePivots(Point movedPoint)
+        {
+            string who = NetStatus.WhoAmI();
+            ulong clientId = NetStatus.MyID();
+
+            Debug.Log($"[{who} | ClientID: {clientId}] [MovePivots] on Segment '{Name}' due to Point '{movedPoint.Name}' (ID: {movedPoint.id})");
+            Debug.Log($"[Before] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
+
             if (movedPoint.id == Start.id)
             {
+                Debug.Log($"[{who}] ➤ Moving START point.");
                 Start.Position = movedPoint.Position;
                 Start.GO.transform.position = movedPoint.GO.transform.position;
                 Position = Start.Position;
             }
             else if (movedPoint.id == End.id)
             {
+                Debug.Log($"[{who}] ➤ Moving END point.");
                 End.Position = movedPoint.Position;
                 End.GO.transform.position = movedPoint.GO.transform.position;
             }
+
+            Debug.Log($"[After] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
+            DrawPoint();
+        }
+
+
+        
+        public void ReloadToConstraint(Point movedPoint)
+        {
+            MovePivots(movedPoint);
             
             if (GetSNS() != null)
             {
-                GetSNS().MoveShape(Position);
-                
-                //????? chưa có kéo dc cái end thì phải ?????  nó cũng chưa kéo dc start, nó chỉ đang kéo cả cái shape thui
+                // GetSNS().MovePivots(movedPoint);
+                // ????? chưa có kéo dc cái end thì phải ?????  nó cũng chưa kéo dc start, nó chỉ đang kéo cả cái shape thui
                 // kéo point đang chưa có trigger
+                
+                
                 
             }
             

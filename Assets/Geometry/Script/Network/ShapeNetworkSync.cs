@@ -11,7 +11,7 @@ public class ShapeNetworkSync : NetworkBehaviour
     private ManipulationManager mm = ManipulationManager.Instance;
     public enum ShapeType
     {
-        None, Circle, Rectangle, Triangle, Segment
+        None, Circle, Rectangle, Triangle, Segment, Point
     }
 
     public NetworkVariable<ShapeType> shapeType = new NetworkVariable<ShapeType>(ShapeType.None);
@@ -65,6 +65,10 @@ public class ShapeNetworkSync : NetworkBehaviour
             //RequestMoveServerRpc(newPos); // Client gọi Server để xử lý
         }
     }
+    
+    
+    
+    
 
     // ==============================================================================================
     
@@ -246,4 +250,8 @@ public class ShapeNetworkSync : NetworkBehaviour
             
         }
     }*/
+    public void MovePivots(Point position)
+    {
+        currentShape.MovePivots(position);
+    }
 }
