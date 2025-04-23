@@ -1,0 +1,54 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System;
+
+public class LobbyPopupUI : MonoBehaviour
+{
+    [SerializeField] private TMP_InputField lobbyNameInputField;
+    [SerializeField] private TMP_InputField passwordInputField;
+    [SerializeField] private Button confirmButton;
+    [SerializeField] private Button cancelButton;
+
+    private Action<string, string> onConfirm;
+
+    private void Awake()
+    {
+        if (lobbyNameInputField == null) Debug.LogError("LobbyNameInputField is not assigned in LobbyPopupUI!");
+        if (passwordInputField == null) Debug.LogError("PasswordInputField is not assigned in LobbyPopupUI!");
+        if (confirmButton == null) Debug.LogError("ConfirmButton is not assigned in LobbyPopupUI!");
+        if (cancelButton == null) Debug.LogError("CancelButton is not assigned in LobbyPopupUI!");
+
+        confirmButton.onClick.AddListener(() =>
+        {
+            string lobbyName = lobbyNameInputField.text?.Trim();
+            string password = passwordInputField.text?.Trim();
+            Debug.Log($"Popup Input: Name={lobbyName}, Password={password}");
+            if (string.IsNullOrEmpty(lobbyName) || string.IsNullOrEmpty(password))
+            {
+                Debug.LogWarning("Lobby name and password cannot be empty!");
+                return;
+            }
+            onConfirm?.Invoke(lobbyName, password);
+            Hide();
+        });
+
+        cancelButton.onClick.AddListener(() =>
+        {
+            Hide();
+        });
+    }
+
+    public void Show(Action<string, string> confirmCallback)
+    {
+        gameObject.SetActive(true);
+        lobbyNameInputField.text = "";
+        passwordInputField.text = "";
+        onConfirm = confirmCallback;
+    }
+
+    public void Hide()
+    {
+        gameObject.SetActive(false);
+    }
+}
