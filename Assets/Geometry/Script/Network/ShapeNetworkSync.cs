@@ -65,6 +65,62 @@ public class ShapeNetworkSync : NetworkBehaviour
         }
     }
  
+    // 1) Client gọi lên server để request snap
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestSnapPivotServerRpc(string role, string oldName, string newName)
+    {
+        // Server nhận request, broadcast xuống client
+        SnapPivotClientRpc(role, oldName, newName);
+    }
+
+    // 2) ClientRpc để mọi client (kể cả host) thực hiện snap đúng
+    [ClientRpc]
+    private void SnapPivotClientRpc(string role, string oldName, string newName)
+    {
+
+        if (IsOwner) return;
+            // Chỉ xử lý nếu currentShape là Segment
+        if (!(currentShape is Segment seg)) return;
+
+        // --- 2.1 Xóa pivot cũ nếu có ---
+        if (ShapeStorage.GetShapeByID(oldName) is Point oldPt)
+        {
+            // Unsubscribe và destroy
+            oldPt.OnChanged -= seg.OnChildChanged;
+            oldPt.Destroy();
+        }
+        
+
+        // --- 2.2 Lấy hoặc tạo pivot mới ---
+        Point newPt;
+        var maybeShape = ShapeStorage.GetShapeByID(newName);
+        if (maybeShape is Point existingPt)
+        {
+            newPt = existingPt;
+        }
+        else
+        {
+            // Pivot mới chưa có trên client, tạo ra ở vị trí gần đúng
+            var pos = (role == "Start") ? seg.Start.Position : seg.End.Position;
+            newPt = new Point(pos);
+            newPt.Name = newName;
+            ShapeStorage.AddShape(newName, newPt);
+        }
+
+        // --- 2.3 Gán lại vào segment và subscribe sự kiện ---
+        if (role == "Start") seg.Start = newPt;
+        else if (role == "End") seg.End = newPt;
+
+        newPt.OnChanged += seg.OnChildChanged;
+        newPt.AttachToShape(seg);
+
+        
+        // --- 2.4 Redraw & cập nhật collider ---
+        seg.Draw();
+        seg.ApplyTransform(false);
+        seg.UpdateHitbox();
+        seg.CompleteDraw();
+    }
      
  
     public void MovePivots(Point position)

@@ -151,7 +151,7 @@ namespace Manipulator
         }
 
         // Subscribe callbacks: child change
-        protected virtual void OnChildChanged(Shape child)
+        public virtual void OnChildChanged(Shape child)
         {
             if (child is Point pt)
                 MovePivots(pt);

@@ -50,7 +50,7 @@ namespace Manipulator
             End.Draw();
         }
 
-        private void ApplyTransform(bool updatePoints = true)
+        public void ApplyTransform(bool updatePoints = true)
         {
             if (GO == null) return;
 
@@ -74,12 +74,12 @@ namespace Manipulator
                 DrawPoint();
             }
         }
-
-
+        
         public override void BeginSketch(Vector3 worldPoint)
         {
             mm = ManipulationManager.Instance;
 
+            Point oldStart = Start;
             Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
 
             Start.SetIgnoreRaycast(true);
@@ -92,6 +92,8 @@ namespace Manipulator
                     Start.Destroy();
                     Debug.LogError($"Nearest points {nearestPoint.Name}");
                     Start = nearestPoint;
+                    
+                    GetSNS()?.RequestSnapPivotServerRpc("Start", oldStart.Name, Start.Name);
                 }
             }
             else
@@ -115,7 +117,8 @@ namespace Manipulator
         public override void EndSketch(Vector3 worldPoint)
         {
             if (mm == null || !mm.IsDrawing() || Start == null || End == null) return;
-
+            
+            Point oldEnd = End;
             Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
 
             if (nearestPoint != null)
@@ -123,6 +126,8 @@ namespace Manipulator
                 End.Destroy(); // Remove temporary end
                 Debug.LogError($"Nearest points {nearestPoint.Name}");
                 End = nearestPoint;
+                
+                GetSNS()?.RequestSnapPivotServerRpc("End", oldEnd.Name, End.Name);
             }
             else
             {
@@ -137,8 +142,8 @@ namespace Manipulator
             
             ApplyTransform();
             CompleteDraw();
+            
             mm.SetDrawing(false);
-
             End.AttachProcess();
         }
 
