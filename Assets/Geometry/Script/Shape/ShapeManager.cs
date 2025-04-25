@@ -20,7 +20,7 @@ namespace Manipulator
             DrawAllShapes();
         }
 
-        void AddShape(Shape shape)
+        /*void AddShape(Shape shape)
         {
             if (shape.IsSnappable)
             {
@@ -28,7 +28,7 @@ namespace Manipulator
             }
 
             shapes.Add(shape);
-        }
+        }*/
 
         void DrawAllShapes()
         {

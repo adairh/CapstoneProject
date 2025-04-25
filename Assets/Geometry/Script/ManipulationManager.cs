@@ -13,21 +13,7 @@ namespace Manipulator
         
         private float refreshTimer = 0f;
         private float refreshInterval = 1f;
-
-        private void Update()
-        {
-            if (!NetworkManager.Singleton.IsHost) return;
-
-            refreshTimer += Time.deltaTime;
-            if (refreshTimer >= refreshInterval)
-            {
-                RefreshAllShapes();
-                refreshTimer = 0f;
-            }
-        }
-
-        
-        
+ 
         // === Dragging ===
         public enum DragState
         {
@@ -140,28 +126,5 @@ namespace Manipulator
         {
             return drawing;
         }
-        
-        
-        public void RefreshAllShapes()
-        {
-            if (!NetworkManager.Singleton.IsHost)
-            {
-                Debug.LogWarning("Only host should trigger shape refresh.");
-                return;
-            }
-
-            foreach (var shape in ShapeStorage.GetAllShapes())
-            {
-                //shape.FullRefresh();
-                shape.GetSNS()?.ForceClientRefreshAll();
-            }
-
-            Debug.Log("[Host] All shapes refreshed.");
-        }
-
-        
-
-        
-        
     }
 }

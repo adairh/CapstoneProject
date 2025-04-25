@@ -28,7 +28,7 @@ public class ShapeNetworkSync : NetworkBehaviour
     public void LinkShape(Shape shape)
     {
         currentShape = shape;
-        currentShape.AsignSyncer(this);
+        currentShape.AssignSyncer(this);
     }
 
     private string LogPrefix => $"[{(ownerClientId.Value == 0 ? "Host" : "Client")}:{ownerClientId.Value}]";
@@ -64,20 +64,8 @@ public class ShapeNetworkSync : NetworkBehaviour
             }
         }
     }
-
-        
-    [ClientRpc]
-    public void ForceClientRefreshClientRpc()
-    {
-        currentShape.FullRefresh();
-    }
-    
-    public void ForceClientRefreshAll()
-    {
-        if (!IsServer) return;
-        ForceClientRefreshClientRpc(); // Broadcast
-    }
-
+ 
+     
  
     public void MovePivots(Point position)
     {
@@ -161,7 +149,7 @@ public class ShapeNetworkSync : NetworkBehaviour
     {
         //Segment.BeginSketch(startPoint.Value);
         currentShape = new Segment(startPoint.Value);
-        currentShape.AsignSyncer(this);
+        currentShape.AssignSyncer(this);
         if (currentShape is ISynchronizedShape)
         {
             ISynchronizedShape iSync = (ISynchronizedShape)currentShape;

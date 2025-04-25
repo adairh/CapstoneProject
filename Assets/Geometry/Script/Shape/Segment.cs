@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    public class Segment : Shape, IDrawable2D
+    public class Segment : Shape
     {
         public Point Start { get; set; }
         public Point End { get; set; }

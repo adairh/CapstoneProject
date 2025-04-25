@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    public class Point : Shape, IDrawable2D
+    public class Point : Shape
 {
     private int pointNO;
     private SphereCollider collider;

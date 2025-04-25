@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    public class StraightLine : Shape, IDrawable2D
+    public class StraightLine : Shape
     {
         public Point Start { get; set; }
         public Point End { get; set; }
