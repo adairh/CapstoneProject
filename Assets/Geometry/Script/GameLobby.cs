@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
@@ -215,6 +216,8 @@ public class GameLobby : MonoBehaviour
             try
             {
                 NetworkManager.Singleton.StartHost();
+                //load scene here
+                //NetworkManager.Singleton.SceneManager.LoadScene("MAIN", LoadSceneMode.Single);
                 Debug.Log("Host started successfully");
             }
             catch (System.Exception e)
