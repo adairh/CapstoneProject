@@ -44,41 +44,47 @@
 
 using UnityEngine;
 
-public class BottomNavigationBar : MonoBehaviour
+namespace An_An
 {
-    [SerializeField] GameObject[] panels; // gom 4 panel: home, file, draw, setting
-
-    private int currentIndex = 0;
-
-    void Start()
+    // BottomNavigationManager.cs
+    // Quan li cac tab dieu huong trong ung dung
+    // Gom 4 tab: Home, File, Draw, Setting
+    public class BottomNavigationBar : MonoBehaviour
     {
-        ShowPanel(0); // hien thi panel home dau tien
-    }
+        [SerializeField] GameObject[] panels; // gom 4 panel: home, file, draw, setting
 
-    public void NavigationBarClick(int index)
-    {
-        ShowPanel(index);
-    }
+        private int currentIndex = 0;
 
-    void ShowPanel(int index)
-    {
-        for (int i = 0; i < panels.Length; i++)
+        void Start()
         {
-            panels[i].SetActive(i == index);
+            ShowPanel(0); // hien thi panel home dau tien
         }
-        currentIndex = index;
-    }
 
-    // Swipe 
-    public void SwipeToNext()
-    {
-        int nextIndex = (currentIndex + 1) % panels.Length;
-        ShowPanel(nextIndex);
-    }
+        public void NavigationBarClick(int index)
+        {
+            ShowPanel(index);
+        }
 
-    public void SwipeToPrevious()
-    {
-        int prevIndex = (currentIndex - 1 + panels.Length) % panels.Length;
-        ShowPanel(prevIndex);
+        void ShowPanel(int index)
+        {
+            for (int i = 0; i < panels.Length; i++)
+            {
+                panels[i].SetActive(i == index);
+            }
+            currentIndex = index;
+        }
+
+        // Swipe 
+        public void SwipeToNext()
+        {
+            int nextIndex = (currentIndex + 1) % panels.Length;
+            ShowPanel(nextIndex);
+        }
+
+        public void SwipeToPrevious()
+        {
+            int prevIndex = (currentIndex - 1 + panels.Length) % panels.Length;
+            ShowPanel(prevIndex);
+        }
     }
 }
