@@ -7526,6 +7526,7 @@ MonoBehaviour:
   passwordInputField: {fileID: 299402236}
   confirmButton: {fileID: 681841094}
   cancelButton: {fileID: 935349865}
+  darkOverlay: {fileID: 685115022}
 --- !u!1 &1202280822
 GameObject:
   m_ObjectHideFlags: 0
@@ -11398,6 +11399,7 @@ MonoBehaviour:
   passwordInputField: {fileID: 879019629}
   confirmButton: {fileID: 1257228844}
   cancelButton: {fileID: 1775604233}
+  darkOverlay: {fileID: 685115022}
 --- !u!1 &1749356543
 GameObject:
   m_ObjectHideFlags: 0

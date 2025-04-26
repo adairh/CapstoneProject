@@ -12,6 +12,7 @@ public class LobbyPopupUI : MonoBehaviour
     [SerializeField] private TMP_InputField passwordInputField;
     [SerializeField] private Button confirmButton;
     [SerializeField] private Button cancelButton;
+    [SerializeField] private GameObject darkOverlay; // Optional: for dimming background when popup is active
 
     private Action<string, string> onConfirm;
 
@@ -49,6 +50,7 @@ public class LobbyPopupUI : MonoBehaviour
         cancelButton.onClick.AddListener(() =>
         {
             Hide();
+            if (darkOverlay != null) darkOverlay.SetActive(false);
         });
     }
 
