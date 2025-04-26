@@ -315,7 +315,7 @@ public class GameLobby : MonoBehaviour
 
 
 
-    public async void JoinLobbyByNameAndPassword(string lobbyName, string password)
+    /*public async void JoinLobbyByNameAndPassword(string lobbyName, string password)
     {
         try
         {
@@ -426,7 +426,7 @@ public class GameLobby : MonoBehaviour
             }
 
             // Hide UI
-            /*Debug.Log("Hiding UI");
+            *//*Debug.Log("Hiding UI");
             if (LobbyUI.Instance != null)
             {
                 LobbyUI.Instance.UpdateStatus("Client Joined");
@@ -435,7 +435,7 @@ public class GameLobby : MonoBehaviour
             else
             {
                 Debug.LogError("LobbyUI instance not found!");
-            }*/
+            }*//*
         }
         catch (System.Exception e)
         {
@@ -445,7 +445,114 @@ public class GameLobby : MonoBehaviour
                 LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
             }
         }
+    }*/
+
+    public async void JoinLobbyByNameAndPassword(string lobbyName, string password)
+    {
+        try
+        {
+            // Ensure Unity Services are initialized
+            if (UnityServices.State != ServicesInitializationState.Initialized)
+            {
+                Debug.Log("UnityServices not initialized, initializing now...");
+                await UnityServices.InitializeAsync();
+                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                Debug.Log("UnityServices initialized and authenticated.");
+            }
+
+            Debug.Log($"Joining lobby: Name={lobbyName}, Password={password}");
+
+            // Query all available lobbies
+            /*QueryResponse queryResponse = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
+            {
+                Filters = new List<QueryFilter>
+            {
+                new QueryFilter(QueryFilter.FieldOptions.Name, QueryFilter.OpOptions.EQ, lobbyName)
+            }
+            });*/
+
+            /*QueryResponse queryResponse = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
+            {
+                Filters = new List<QueryFilter>
+            {
+                new QueryFilter("name", "EQ", lobbyName)
+            }
+            });*/
+
+            QueryResponse queryResponse = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
+            {
+                Filters = new List<QueryFilter>
+                {
+                    new QueryFilter(
+                        field: QueryFilter.FieldOptions.Name,
+                        op: QueryFilter.OpOptions.EQ,
+                        value: lobbyName
+                        )
+                }
+            });
+
+
+            if (queryResponse.Results.Count == 0)
+            {
+                Debug.LogError("No lobbies found with that name.");
+                return;
+            }
+
+            // Pick the first lobby that matches
+            Lobby lobby = queryResponse.Results[0];
+
+            // Check password if needed
+            if (lobby.Data.TryGetValue("Password", out var passwordData))
+            {
+                if (passwordData.Value != password)
+                {
+                    Debug.LogError("Wrong password!");
+                    return;
+                }
+            }
+
+            // Join the lobby
+            joinedLobby = await Lobbies.Instance.JoinLobbyByIdAsync(lobby.Id);
+
+            Debug.Log($"Successfully joined lobby: {joinedLobby.Name}");
+
+            // configure Relay
+            if (joinedLobby.Data.TryGetValue("JoinCode", out var joinCodeData))
+            {
+                string joinCode = joinCodeData.Value;
+                Debug.Log($"Joining Relay with JoinCode={joinCode}");
+
+                JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
+
+                var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+                if (transport == null)
+                {
+                    Debug.LogError("UnityTransport not found on NetworkManager!");
+                    return;
+                }
+
+                transport.SetClientRelayData(
+                    joinAllocation.RelayServer.IpV4,
+                    (ushort)joinAllocation.RelayServer.Port,
+                    joinAllocation.AllocationIdBytes,
+                    joinAllocation.Key,
+                    joinAllocation.ConnectionData,
+                    joinAllocation.HostConnectionData
+                );
+
+                NetworkManager.Singleton.StartClient();
+            }
+            else
+            {
+                Debug.LogError("No join code found in lobby data.");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to join lobby: {e.Message}");
+        }
     }
+
 
     public Unity.Services.Lobbies.Models.Lobby GetJoinedLobby()
     {
