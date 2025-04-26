@@ -56,7 +56,7 @@ public class HomeScreenController : MonoBehaviour
 
     [Header("Join Room Inputs")]
     public TMP_InputField joinRoomIDInput;
-    public TMP_InputField joinNicknameInput;
+    public TMP_InputField joinPasswordInput;
 
     [Header("Create Room Inputs")]
     public TMP_InputField createRoomIDInput;
@@ -119,7 +119,7 @@ public class HomeScreenController : MonoBehaviour
 
     public void SubmitJoinRoom()
     {
-        Debug.Log("Join Room: " + joinRoomIDInput.text + " | Nickname: " + joinNicknameInput.text);
+        Debug.Log("Join Room: " + joinRoomIDInput.text + " | Password: " + joinPasswordInput.text);
         popupJoinRoom.SetActive(false);
         darkOverlay.SetActive(false);
     }

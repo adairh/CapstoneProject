@@ -1,13 +1,16 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using An_An;
+using An_An;
+using Manipulator;
 
 public class LobbyUI : MonoBehaviour
 {
-    [SerializeField] private Button mainMenuButton;
+    //[SerializeField] private Button mainMenuButton;
     [SerializeField] private Button quickJoinButton;
     [SerializeField] private Button createLobbyButton;
-    [SerializeField] private TextMeshProUGUI statusText;
+    //[SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private LobbyPopupUI lobbyPopupUI;
 
     public static LobbyUI Instance { get; private set; }
@@ -26,17 +29,17 @@ public class LobbyUI : MonoBehaviour
         }
 
         // Validate components
-        if (mainMenuButton == null) Debug.LogError("MainMenuButton is not assigned!");
+        //if (mainMenuButton == null) Debug.LogError("MainMenuButton is not assigned!");
         if (quickJoinButton == null) Debug.LogError("QuickJoinButton is not assigned!");
         if (createLobbyButton == null) Debug.LogError("CreateLobbyButton is not assigned!");
         if (lobbyPopupUI == null) Debug.LogError("LobbyPopupUI is not assigned!");
-        if (statusText == null) Debug.LogWarning("StatusText is not assigned (optional).");
+        //if (statusText == null) Debug.LogWarning("StatusText is not assigned (optional).");
 
-        mainMenuButton.onClick.AddListener(() =>
+        /*mainMenuButton.onClick.AddListener(() =>
         {
             Debug.Log("Main Menu Button Clicked");
             // UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
-        });
+        });*/
 
         createLobbyButton.onClick.AddListener(() =>
         {
@@ -108,9 +111,6 @@ public class LobbyUI : MonoBehaviour
     public void UpdateStatus(string message)
     {
         Debug.Log($"LobbyUI Status: {message}");
-        if (statusText != null)
-        {
-            statusText.text = message;
-        }
+        
     }
 }

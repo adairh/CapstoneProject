@@ -3,6 +3,9 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 
+using An_An;
+using Manipulator;
+
 public class LobbyPopupUI : MonoBehaviour
 {
     [SerializeField] private TMP_InputField lobbyNameInputField;
@@ -30,6 +33,16 @@ public class LobbyPopupUI : MonoBehaviour
                 return;
             }
             onConfirm?.Invoke(lobbyName, password);
+            Debug.Log("Confirm Clicked: Checking GameLobby.Instance...");
+            if (GameLobby.Instance == null)
+            {
+                Debug.LogError("GameLobby.Instance is NULL!");
+            }
+            else
+            {
+                Debug.Log("GameLobby.Instance is valid: " + GameLobby.Instance);
+                GameLobby.Instance.CreateLobby(lobbyName, password, false);
+            }
             Hide();
         });
 

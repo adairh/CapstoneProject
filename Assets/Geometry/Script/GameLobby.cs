@@ -10,6 +10,8 @@ using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using System.Threading.Tasks;
 using System.Linq;
+using An_An;
+using Manipulator;
 
 
 public class GameLobby : MonoBehaviour
@@ -49,25 +51,26 @@ public class GameLobby : MonoBehaviour
             }
         }
     }
-        /*  SendHeartbeatPingAsync keeps the lobby alive.
-        Called every 15 seconds(within the 30 second timeout).
-        Only runs on the host(server).*/ 
+    /*  SendHeartbeatPingAsync keeps the lobby alive.
+    Called every 15 seconds(within the 30 second timeout).
+    Only runs on the host(server).*/
 
     private void Awake()
     {
-        Debug.Log("GameLobby Awake");
+        Debug.Log("GameLobby Awake - This instance: " + this);
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            Debug.Log("GameLobby Instance set successfully.");
         }
         else
         {
+            Debug.LogWarning("GameLobby already exists, destroying duplicate!");
             Destroy(gameObject);
         }
-
-        InitializeUnityAuthentication();
     }
+
 
     private async void InitializeUnityAuthentication()
     {
@@ -131,7 +134,7 @@ public class GameLobby : MonoBehaviour
         }
     }
 
-    public async void CreateLobby(string lobbyName, string password, bool isPrivate)
+    /*public async void CreateLobby(string lobbyName, string password, bool isPrivate)
     {
         try
         {
@@ -213,7 +216,104 @@ public class GameLobby : MonoBehaviour
                 LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
             }
         }
+    }*/
+
+    public async void CreateLobby(string lobbyName, string password, bool isPrivate)
+    {
+        try
+        {
+            //  Ensure UnityServices is initialized
+            if (UnityServices.State != ServicesInitializationState.Initialized)
+            {
+                Debug.Log("UnityServices not initialized, initializing now...");
+                await UnityServices.InitializeAsync();
+                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                Debug.Log("UnityServices initialized and authenticated.");
+            }
+
+            
+            lobbyName = lobbyName.Trim();
+            password = password.Trim();
+            Debug.Log($"Creating lobby: Name={lobbyName}, Password={password}");
+
+            // Create Relay allocation
+            Debug.Log("Creating Relay allocation");
+            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(max_user_amount);
+            string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+            Debug.Log($"Relay allocation created: JoinCode={joinCode}");
+
+            // Create lobby
+            CreateLobbyOptions options = new CreateLobbyOptions
+            {
+                IsPrivate = isPrivate,
+                Data = new Dictionary<string, DataObject>
+            {
+                { "JoinCode", new DataObject(DataObject.VisibilityOptions.Public, joinCode) },
+                { "Password", new DataObject(DataObject.VisibilityOptions.Public, password) }
+            }
+            };
+
+            joinedLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, max_user_amount, options);
+            Debug.Log($"Lobby created: Name={joinedLobby.Name}, ID={joinedLobby.Id}, JoinCode={joinCode}, Password={password}");
+
+            // Configure UnityTransport
+            Debug.Log("Configuring UnityTransport");
+            var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+            if (transport == null)
+            {
+                Debug.LogError("UnityTransport component not found on NetworkManager!");
+                return;
+            }
+
+            transport.SetHostRelayData(
+                allocation.RelayServer.IpV4,
+                (ushort)allocation.RelayServer.Port,
+                allocation.AllocationIdBytes,
+                allocation.Key,
+                allocation.ConnectionData
+            );
+            Debug.Log("UnityTransport configured successfully");
+
+            // Start host
+            Debug.Log("Starting host");
+            try
+            {
+                NetworkManager.Singleton.StartHost();
+                Debug.Log("Host started successfully");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to start host: {e.Message}");
+                return;
+            }
+
+            // Hide UI
+            Debug.Log("Hiding UI");
+            if (LobbyUI.Instance != null)
+            {
+                LobbyUI.Instance.UpdateStatus("Host Started");
+                LobbyUI.Instance.Hide();
+            }
+            else
+            {
+                Debug.LogError("LobbyUI instance not found!");
+            }
+
+            // Start monitoring Relay (optional, for long sessions)
+            MonitorRelayAllocation();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to create lobby: {e.Message}");
+            if (LobbyUI.Instance != null)
+            {
+                LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
+            }
+        }
     }
+
+
+
 
     public async void JoinLobbyByNameAndPassword(string lobbyName, string password)
     {
