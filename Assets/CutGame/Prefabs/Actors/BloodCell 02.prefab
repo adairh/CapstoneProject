@@ -10,11 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 9156435229165284744}
   - component: {fileID: 7165935962937484226}
-  - component: {fileID: 1589841154951752712}
-  - component: {fileID: -6058250949422766434}
+  - component: {fileID: 9058403752673481092}
   m_Layer: 0
   m_Name: BloodCell 02
-  m_TagString: Untagged
+  m_TagString: Fat
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -45,8 +44,8 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 185598295237152392}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!135 &1589841154951752712
-SphereCollider:
+--- !u!136 &9058403752673481092
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -63,24 +62,11 @@ SphereCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.65
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &-6058250949422766434
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 185598295237152392}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e0b11c28ab5ac7d4a98f6b91f2b4aabe, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  level: {fileID: 0}
-  brokenStar: {fileID: 4686934947935803494, guid: 1e529d1cd2ee1ab4685520e2c3565d13,
-    type: 3}
+  serializedVersion: 2
+  m_Radius: 0.09201479
+  m_Height: 5.6593223
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.12452483, z: 2.6343646}
 --- !u!1 &8915770053731330972
 GameObject:
   m_ObjectHideFlags: 0
