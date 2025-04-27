@@ -1,4 +1,4 @@
-/*using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 using An_An;
 using Manipulator;
 
-public class LobbyPopupUI : MonoBehaviour
+public class JoinPopupUI : MonoBehaviour
 {
     [SerializeField] private TMP_InputField lobbyNameInputField;
     [SerializeField] private TMP_InputField passwordInputField;
@@ -16,7 +16,6 @@ public class LobbyPopupUI : MonoBehaviour
     [SerializeField] private GameObject darkOverlay; // Optional: for dimming background when popup is active
 
     private Action<string, string> onConfirm;
-
     private void Awake()
     {
         if (lobbyNameInputField == null) Debug.LogError("LobbyNameInputField is not assigned in LobbyPopupUI!");
@@ -43,7 +42,8 @@ public class LobbyPopupUI : MonoBehaviour
             else
             {
                 Debug.Log("GameLobby.Instance is valid: " + GameLobby.Instance);
-                GameLobby.Instance.CreateLobby(lobbyName, password, false);
+                //GameLobby.Instance.CreateLobby(lobbyName, password, false);
+                GameLobby.Instance.JoinLobbyByNameAndPassword(lobbyName, password);
             }
             Hide();
         });
@@ -52,7 +52,7 @@ public class LobbyPopupUI : MonoBehaviour
         {
             Hide();
             if (darkOverlay != null) darkOverlay.SetActive(false);
-            SceneManager.LoadScene("MAIN");
+            //SceneManager.LoadScene("MAIN");
         });
     }
 
@@ -68,4 +68,4 @@ public class LobbyPopupUI : MonoBehaviour
     {
         gameObject.SetActive(false);
     }
-}*/
+}

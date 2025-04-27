@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
@@ -14,21 +13,21 @@ using System.Linq;
 using An_An;
 using Manipulator;
 
-
 public class GameLobby : MonoBehaviour
 {
     public static GameLobby Instance { get; private set; }
     public const int max_user_amount = 40;
     private Unity.Services.Lobbies.Models.Lobby joinedLobby;
+    private string profileId;
 
-    private void Start()
+    /*private void Start()
     {
-        // Start heartbeat for host
         if (IsHost)
         {
-            InvokeRepeating(nameof(SendHeartbeat), 15f, 15f); // Every 15 seconds
+            InvokeRepeating(nameof(SendHeartbeat), 10f, 10f); // Heartbeat every 10s
         }
-    }
+    }*/
+
     private bool IsHost
     {
         get
@@ -41,20 +40,34 @@ public class GameLobby : MonoBehaviour
     {
         if (joinedLobby != null && IsHost)
         {
-            try
+            for (int attempt = 1; attempt <= 3; attempt++)
             {
-                await LobbyService.Instance.SendHeartbeatPingAsync(joinedLobby.Id);
-                Debug.Log($"Heartbeat sent for lobby: {joinedLobby.Name}");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to send heartbeat: {e.Message}");
+                try
+                {
+                    // Validate authentication state
+                    if (!AuthenticationService.Instance.IsSignedIn || !AuthenticationService.Instance.SessionTokenExists)
+                    {
+                        Debug.Log($"Authentication invalid before heartbeat for Profile: {profileId}. Re-authenticating...");
+                        await SignInAnonymouslyWithRetry();
+                    }
+                    await LobbyService.Instance.SendHeartbeatPingAsync(joinedLobby.Id);
+                    Debug.Log($"Heartbeat sent for lobby: {joinedLobby.Name}, ID: {joinedLobby.Id}, IsPrivate: {joinedLobby.IsPrivate}, Profile: {profileId}");
+                    await VerifyLobbyStatus();
+                    break;
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning($"Heartbeat attempt {attempt} failed for lobby {joinedLobby.Name}: {e.Message}");
+                    if (attempt == 3)
+                    {
+                        Debug.LogError($"Failed to send heartbeat after 3 attempts: {e.Message}");
+                        await RecreateLobbyIfNeeded();
+                    }
+                    await Task.Delay(2000);
+                }
             }
         }
     }
-    /*  SendHeartbeatPingAsync keeps the lobby alive.
-    Called every 15 seconds(within the 30 second timeout).
-    Only runs on the host(server).*/
 
     private void Awake()
     {
@@ -64,6 +77,7 @@ public class GameLobby : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             Debug.Log("GameLobby Instance set successfully.");
+            InitializeUnityAuthentication();
         }
         else
         {
@@ -72,53 +86,75 @@ public class GameLobby : MonoBehaviour
         }
     }
 
-
     private async void InitializeUnityAuthentication()
     {
         if (UnityServices.State != ServicesInitializationState.Initialized)
         {
-            InitializationOptions options = new InitializationOptions();
-            options.SetProfile(Random.Range(0, 10000).ToString());
-
+            profileId = $"default_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
+            InitializationOptions initOptions = new InitializationOptions();
+            initOptions.SetProfile(profileId);
             try
             {
-                await UnityServices.InitializeAsync(options);
-                await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                Debug.Log("Signed in anonymously.");
+                Debug.Log($"UnityServices.State before init: {UnityServices.State}, Profile: {profileId}");
+                await UnityServices.InitializeAsync(initOptions);
+                await SignInAnonymouslyWithRetry();
+                Debug.Log($"Signed in anonymously with profile: {profileId}");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Failed to initialize Unity Services: {e.Message}");
+                Debug.LogError($"Failed to initialize Unity Services with profile {profileId}: {e.Message}");
             }
         }
     }
 
-    // 
+    private async Task SignInAnonymouslyWithRetry(int maxRetries = 3)
+    {
+        if (AuthenticationService.Instance.IsSignedIn && AuthenticationService.Instance.SessionTokenExists)
+        {
+            Debug.Log($"Player already signed in with PlayerId: {AuthenticationService.Instance.PlayerId}, Profile: {profileId}");
+            return;
+        }
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                Debug.Log($"Authentication successful on attempt {attempt}. PlayerId: {AuthenticationService.Instance.PlayerId}, Profile: {profileId}");
+                return;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"Authentication attempt {attempt} failed: {e.Message}");
+                if (attempt == maxRetries)
+                {
+                    Debug.LogError($"Failed to authenticate after {maxRetries} attempts: {e.Message}");
+                    throw;
+                }
+                await Task.Delay(2000);
+            }
+        }
+    }
+
     private async void MonitorRelayAllocation()
     {
-        // Refresh after 50 minutes
-        await Task.Delay(50 * 60 * 1000); // 50 minutes
+        await Task.Delay(30 * 60 * 1000); // 30 minutes
         if (joinedLobby != null && IsHost)
         {
             try
             {
-                Debug.Log("Refreshing Relay allocation");
+                Debug.Log($"Refreshing Relay allocation for lobby: {joinedLobby.Name}");
                 Allocation newAllocation = await RelayService.Instance.CreateAllocationAsync(max_user_amount);
                 string newJoinCode = await RelayService.Instance.GetJoinCodeAsync(newAllocation.AllocationId);
-
-                // Update lobby with new join code
                 var updateOptions = new UpdateLobbyOptions
                 {
                     Data = new Dictionary<string, DataObject>
-                {
-                    { "JoinCode", new DataObject(DataObject.VisibilityOptions.Public, newJoinCode) },
-                    { "Password", new DataObject(DataObject.VisibilityOptions.Public, joinedLobby.Data["Password"].Value) }
-                }
+                    {
+                        { "JoinCode", new DataObject(DataObject.VisibilityOptions.Public, newJoinCode) },
+                        { "Password", new DataObject(DataObject.VisibilityOptions.Public, joinedLobby.Data["Password"].Value) }
+                    }
                 };
                 joinedLobby = await LobbyService.Instance.UpdateLobbyAsync(joinedLobby.Id, updateOptions);
                 Debug.Log($"Relay allocation refreshed: New JoinCode={newJoinCode}");
-
-                // Update transport
                 var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
                 transport.SetHostRelayData(
                     newAllocation.RelayServer.IpV4,
@@ -135,51 +171,63 @@ public class GameLobby : MonoBehaviour
         }
     }
 
+    
+
     public async void CreateLobby(string lobbyName, string password, bool isPrivate)
     {
         try
         {
-            // Ensure Unity Services are initialized
             if (UnityServices.State == ServicesInitializationState.Uninitialized)
             {
                 Debug.Log("Initializing Unity Services...");
-                await UnityServices.InitializeAsync();
+                profileId = $"default_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
+                InitializationOptions initOptions = new InitializationOptions();
+                initOptions.SetProfile(profileId);
+                await UnityServices.InitializeAsync(initOptions);
+                await SignInAnonymouslyWithRetry();
             }
 
-            // Ensure Authentication is signed in
-            if (!AuthenticationService.Instance.IsSignedIn)
+            if (!AuthenticationService.Instance.IsSignedIn || !AuthenticationService.Instance.SessionTokenExists)
             {
-                Debug.Log("Signing in anonymously...");
-                try
-                {
-                    await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                }
-                catch (AuthenticationException ex)
-                {
-                    Debug.LogWarning($"Already signing in or signed in: {ex.Message}");
-                }
-                catch (RequestFailedException ex)
-                {
-                    Debug.LogError($"Sign-in failed: {ex.Message}");
-                    return;
-                }
+                Debug.Log("Not signed in or invalid session, attempting to sign in...");
+                await SignInAnonymouslyWithRetry();
             }
 
-            Debug.Log("Unity Services ready. Proceeding to Create Lobby...");
+            Debug.Log($"Unity Services ready. Proceeding to Create Lobby with Profile: {profileId}");
 
-
-
-            lobbyName = lobbyName.Trim();
+            lobbyName = lobbyName.Trim().ToLower();
             password = password.Trim();
-            Debug.Log($"Creating lobby: Name={lobbyName}, Password={password}");
 
-            // Create Relay allocation
-            Debug.Log("Creating Relay allocation");
+            // Before creating, check for duplicate lobby name
+            QueryResponse existingLobbies = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
+            {
+                Filters = new List<QueryFilter>
+            {
+                new QueryFilter(
+                    field: QueryFilter.FieldOptions.Name,
+                    value: lobbyName,
+                    op: QueryFilter.OpOptions.EQ
+                )
+            }
+            });
+
+            if (existingLobbies.Results.Count > 0)
+            {
+                Debug.LogError($"Lobby with name {lobbyName} already exists! Aborting creation.");
+                if (LobbyUI.Instance != null)
+                {
+                    LobbyUI.Instance.UpdateStatus($"Error: Lobby '{lobbyName}' already exists!");
+                }
+                return;
+            }
+
+            Debug.Log($"Creating lobby: Name={lobbyName}, Password={password}, IsPrivate={isPrivate}");
+
+            Debug.Log("Creating Relay allocation...");
             Allocation allocation = await RelayService.Instance.CreateAllocationAsync(max_user_amount);
             string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
             Debug.Log($"Relay allocation created: JoinCode={joinCode}");
 
-            // Create lobby
             CreateLobbyOptions options = new CreateLobbyOptions
             {
                 IsPrivate = isPrivate,
@@ -191,17 +239,17 @@ public class GameLobby : MonoBehaviour
             };
 
             joinedLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, max_user_amount, options);
-            Debug.Log($"Lobby created: Name={joinedLobby.Name}, ID={joinedLobby.Id}, JoinCode={joinCode}, Password={password}");
+            Debug.Log($"Lobby created: {joinedLobby.Name}, ID: {joinedLobby.Id}");
 
-            // Configure UnityTransport
-            Debug.Log("Configuring UnityTransport");
             var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
             if (transport == null)
             {
-                Debug.LogError("UnityTransport component not found on NetworkManager!");
+                Debug.LogError("UnityTransport not found!");
                 return;
             }
 
+            transport.ConnectTimeoutMS = 15000;
+            transport.DisconnectTimeoutMS = 30000;
             transport.SetHostRelayData(
                 allocation.RelayServer.IpV4,
                 (ushort)allocation.RelayServer.Port,
@@ -209,36 +257,20 @@ public class GameLobby : MonoBehaviour
                 allocation.Key,
                 allocation.ConnectionData
             );
-            Debug.Log("UnityTransport configured successfully");
 
-            // Start host
-            Debug.Log("Starting host");
-            try
-            {
-                NetworkManager.Singleton.StartHost();
-                //load scene here
-                //NetworkManager.Singleton.SceneManager.LoadScene("MAIN", LoadSceneMode.Single);
-                Debug.Log("Host started successfully");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to start host: {e.Message}");
-                return;
-            }
+            Debug.Log("Starting host...");
+            NetworkManager.Singleton.StartHost();
+            Debug.Log("Host started successfully.");
 
-            // Hide UI
-            Debug.Log("Hiding UI");
+            InvokeRepeating(nameof(SendHeartbeat), 10f, 10f);
+            KeepLobbyAlive(); // NEW!
+
             if (LobbyUI.Instance != null)
             {
                 LobbyUI.Instance.UpdateStatus("Host Started");
                 LobbyUI.Instance.Hide();
             }
-            else
-            {
-                Debug.LogError("LobbyUI instance not found!");
-            }
 
-            // Start monitoring Relay (optional, for long sessions)
             MonitorRelayAllocation();
         }
         catch (System.Exception e)
@@ -251,76 +283,157 @@ public class GameLobby : MonoBehaviour
         }
     }
 
+    private async void KeepLobbyAlive()
+    {
+        while (joinedLobby != null && IsHost)
+        {
+            try
+            {
+                var updateOptions = new UpdateLobbyOptions
+                {
+                    Data = new Dictionary<string, DataObject>
+                {
+                    { "Heartbeat", new DataObject(DataObject.VisibilityOptions.Public, System.DateTime.UtcNow.ToString()) }
+                }
+                };
+                await LobbyService.Instance.UpdateLobbyAsync(joinedLobby.Id, updateOptions);
+                Debug.Log("Sent lobby keep-alive update.");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"Failed to send keep-alive update: {e.Message}");
+            }
+            await Task.Delay(10000); // 10 seconds
+        }
+    }
 
     public async void JoinLobbyByNameAndPassword(string lobbyName, string password)
     {
         try
         {
-            // Ensure Unity Services are initialized
             if (UnityServices.State != ServicesInitializationState.Initialized)
             {
                 Debug.Log("UnityServices not initialized, initializing now...");
-                await UnityServices.InitializeAsync();
-                await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                Debug.Log("UnityServices initialized and authenticated.");
+                profileId = $"default_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
+                InitializationOptions initOptions = new InitializationOptions();
+                initOptions.SetProfile(profileId);
+                await UnityServices.InitializeAsync(initOptions);
+                await SignInAnonymouslyWithRetry();
+                Debug.Log($"UnityServices initialized and authenticated with Profile: {profileId}");
             }
-
+            if (!AuthenticationService.Instance.IsSignedIn || !AuthenticationService.Instance.SessionTokenExists)
+            {
+                Debug.Log("Not signed in or invalid session, attempting to sign in...");
+                await SignInAnonymouslyWithRetry();
+            }
+            Debug.Log($"Authentication status: IsSignedIn={AuthenticationService.Instance.IsSignedIn}, SessionTokenExists={AuthenticationService.Instance.SessionTokenExists}, PlayerId={AuthenticationService.Instance.PlayerId}, Profile: {profileId}");
+            lobbyName = lobbyName.Trim().ToLower();
             Debug.Log($"Joining lobby: Name={lobbyName}, Password={password}");
-
-            
-
-            QueryResponse queryResponse = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
+            QueryResponse queryResponse = null;
+            int maxRetries = 3;
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
             {
-                Filters = new List<QueryFilter>
+                try
                 {
-                    new QueryFilter(
-                        field: QueryFilter.FieldOptions.Name,
-                        op: QueryFilter.OpOptions.EQ,
-                        value: lobbyName
-                        )
+                    queryResponse = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
+                    {
+                        Filters = new List<QueryFilter>
+                        {
+                            new QueryFilter(
+                                field: QueryFilter.FieldOptions.Name,
+                                value: lobbyName,
+                                op: QueryFilter.OpOptions.EQ
+                            )
+                        }
+                    });
+                    Debug.Log($"Lobby query successful on attempt {attempt}: Found {queryResponse.Results.Count} lobbies.");
+                    break;
                 }
-            });
-
-
-            if (queryResponse.Results.Count == 0)
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning($"Lobby query attempt {attempt} failed: {e.Message}");
+                    if (attempt == maxRetries)
+                    {
+                        Debug.LogError($"Failed to query lobbies after {maxRetries} attempts: {e.Message}");
+                        if (LobbyUI.Instance != null)
+                        {
+                            LobbyUI.Instance.UpdateStatus($"Error: Failed to query lobbies: {e.Message}");
+                        }
+                        // Fallback query without filters
+                        try
+                        {
+                            queryResponse = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions());
+                            Debug.Log($"Fallback query found {queryResponse.Results.Count} lobbies: {string.Join(", ", queryResponse.Results.Select(l => l.Name))}");
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Debug.LogError($"Fallback query failed: {ex.Message}");
+                        }
+                        return;
+                    }
+                    await Task.Delay(3000);
+                }
+            }
+            if (queryResponse == null || queryResponse.Results.Count == 0)
             {
-                Debug.LogError("No lobbies found with that name.");
+                Debug.LogError($"No lobbies found with name: {lobbyName}");
+                if (LobbyUI.Instance != null)
+                {
+                    LobbyUI.Instance.UpdateStatus($"Error: No lobby named {lobbyName}");
+                }
                 return;
             }
-
-            // Pick the first lobby that matches
             Lobby lobby = queryResponse.Results[0];
-
-            // Check password if needed
             if (lobby.Data.TryGetValue("Password", out var passwordData))
             {
                 if (passwordData.Value != password)
                 {
                     Debug.LogError("Wrong password!");
+                    if (LobbyUI.Instance != null)
+                    {
+                        LobbyUI.Instance.UpdateStatus("Error: Incorrect password!");
+                    }
                     return;
                 }
             }
-
-            // Join the lobby
             joinedLobby = await Lobbies.Instance.JoinLobbyByIdAsync(lobby.Id);
-
-            Debug.Log($"Successfully joined lobby: {joinedLobby.Name}");
-
-            // configure Relay
-            if (joinedLobby.Data.TryGetValue("JoinCode", out var joinCodeData))
+            Debug.Log($"Successfully joined lobby: {joinedLobby.Name}, ID: {joinedLobby.Id}, IsPrivate: {joinedLobby.IsPrivate}");
+            if (lobby.Data.TryGetValue("JoinCode", out var joinCodeData))
             {
                 string joinCode = joinCodeData.Value;
                 Debug.Log($"Joining Relay with JoinCode={joinCode}");
-
-                JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
-
+                JoinAllocation joinAllocation = null;
+                for (int attempt = 1; attempt <= maxRetries; attempt++)
+                {
+                    try
+                    {
+                        joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
+                        Debug.Log($"Relay join successful on attempt {attempt}.");
+                        break;
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogWarning($"Relay join attempt {attempt} failed: {e.Message}");
+                        if (attempt == maxRetries)
+                        {
+                            Debug.LogError($"Failed to join Relay allocation after {maxRetries} attempts: {e.Message}");
+                            if (LobbyUI.Instance != null)
+                            {
+                                LobbyUI.Instance.UpdateStatus($"Error: Failed to join Relay: {e.Message}");
+                            }
+                            return;
+                        }
+                        await Task.Delay(2000);
+                    }
+                }
                 var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
                 if (transport == null)
                 {
                     Debug.LogError("UnityTransport not found on NetworkManager!");
                     return;
                 }
-
+                transport.ConnectTimeoutMS = 15000;
+                transport.DisconnectTimeoutMS = 30000;
                 transport.SetClientRelayData(
                     joinAllocation.RelayServer.IpV4,
                     (ushort)joinAllocation.RelayServer.Port,
@@ -329,12 +442,20 @@ public class GameLobby : MonoBehaviour
                     joinAllocation.ConnectionData,
                     joinAllocation.HostConnectionData
                 );
-
-                NetworkManager.Singleton.StartClient();
-
-                Debug.Log("Client started successfully.");
-
-                // Hide UI after client joins
+                try
+                {
+                    NetworkManager.Singleton.StartClient();
+                    Debug.Log("Client started successfully.");
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Failed to start client: {e.Message}");
+                    if (LobbyUI.Instance != null)
+                    {
+                        LobbyUI.Instance.UpdateStatus($"Error: Failed to start client: {e.Message}");
+                    }
+                    return;
+                }
                 if (LobbyUI.Instance != null)
                 {
                     LobbyUI.Instance.UpdateStatus("Client Connected");
@@ -348,14 +469,57 @@ public class GameLobby : MonoBehaviour
             else
             {
                 Debug.LogError("No join code found in lobby data.");
+                if (LobbyUI.Instance != null)
+                {
+                    LobbyUI.Instance.UpdateStatus("Error: No join code found!");
+                }
             }
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to join lobby: {e.Message}");
+            if (LobbyUI.Instance != null)
+            {
+                LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
+            }
         }
     }
 
+    private async Task VerifyLobbyStatus()
+    {
+        try
+        {
+            if (!AuthenticationService.Instance.IsSignedIn || !AuthenticationService.Instance.SessionTokenExists)
+            {
+                Debug.Log($"Authentication invalid before verifying lobby status. Re-authenticating...");
+                await SignInAnonymouslyWithRetry();
+            }
+            var lobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
+            Debug.Log($"Lobby status verified: {lobby.Name} is active with {lobby.Players.Count} players, IsPrivate: {lobby.IsPrivate}, Profile: {profileId}");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to verify lobby status: {e.Message}");
+            await RecreateLobbyIfNeeded();
+        }
+    }
+
+    private async Task RecreateLobbyIfNeeded()
+    {
+        try
+        {
+            await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Lobby {joinedLobby.Name} no longer exists: {e.Message}");
+            string lobbyName = joinedLobby.Name;
+            string password = joinedLobby.Data["Password"].Value;
+            bool isPrivate = joinedLobby.IsPrivate;
+            joinedLobby = null;
+            CreateLobby(lobbyName, password, isPrivate);
+        }
+    }
 
     public Unity.Services.Lobbies.Models.Lobby GetJoinedLobby()
     {
