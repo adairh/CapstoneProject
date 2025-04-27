@@ -8,6 +8,7 @@ public class LevelData : MonoBehaviour
     {
         public GameObject levelPrefab;
         public int timeLimit;
+        public bool hardmode = false;
 
         public bool unlocked;
         public int rating;

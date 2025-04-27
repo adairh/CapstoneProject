@@ -17,6 +17,9 @@ public class GridButtonUI : MonoBehaviour
     [Space]
     public Color starColor;
 
+    [Space]
+    public Image hard;
+
     private int index;
 
     public void EnterLevel()
@@ -43,11 +46,16 @@ public class GridButtonUI : MonoBehaviour
         else
         {
             button.interactable = false;
-            
+
             label.gameObject.SetActive(false);
             locked.gameObject.SetActive(true);
 
             stars[0].transform.parent.gameObject.SetActive(false);
+        }
+
+        if (level.hardmode)
+        {
+            hard.gameObject.SetActive(true);
         }
     }
 }
