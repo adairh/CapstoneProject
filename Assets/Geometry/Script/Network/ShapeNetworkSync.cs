@@ -58,7 +58,7 @@ public class ShapeNetworkSync : NetworkBehaviour
     {
         if (!IsOwner)
         {
-            Debug.LogError($"SNS: {pointName}");
+            //Debug.LogError($"SNS: {pointName}");
             if (ShapeStorage.GetShapeByID(pointName) is Point point && currentShape != null)
             {
                 currentShape.MovePivots(pointName, loc);
@@ -100,7 +100,7 @@ public class ShapeNetworkSync : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void ReportSingleShapeServerRpc(string shapeName, ulong clientId)
     {
-        Debug.LogError($"[Server] Client {clientId} has shape: {shapeName}");
+        //Debug.LogError($"[Server] Client {clientId} has shape: {shapeName}");
     }
 
     
@@ -117,8 +117,8 @@ public class ShapeNetworkSync : NetworkBehaviour
 
         foreach (Shape s in ShapeStorage.GetAllShapes())
         {
-            Debug.LogError($"meomeo meo {s.id} {s.Name}");
-            Debug.LogError($"meomeo {role} {oldName} {newName}");
+            //Debug.LogError($"meomeo meo {s.id} {s.Name}");
+            //Debug.LogError($"meomeo {role} {oldName} {newName}");
         }
         
         if (ShapeStorage.GetShapeByID(oldName) is Point oldPt)

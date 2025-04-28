@@ -88,7 +88,7 @@ namespace Manipulator
             Start.Destroy();
             Start = new Point(worldPoint); 
 
-            Debug.LogError($"<color=green>{Start.Name}!</color>");
+            // Debug.LogError($"<color=green>{Start.Name}!</color>");
             
             if (nearestPoint != null)
             {
