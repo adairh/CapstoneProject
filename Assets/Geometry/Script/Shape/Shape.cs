@@ -12,13 +12,31 @@ namespace Manipulator
 {
     // Shape storage for lookup and nearest-point snapping
     public static class ShapeStorage
-    {
+    { 
         private static readonly Dictionary<string, Shape> shapes = new Dictionary<string, Shape>();
         private const int IGNORE_RAYCAST_LAYER = 2;
+        
+        /// <summary>Được gọi ngay sau khi một shape mới được thêm vào.</summary>
+        public static event Action<string> ShapeAdded;
 
-        public static Shape GetShapeByID(string id) => shapes[id];
-        public static void AddShape(string id, Shape shape) => shapes.Add(id, shape);
-        public static void RemoveShape(string id) => shapes.Remove(id);
+        /// <summary>Được gọi ngay sau khi một shape bị xóa.</summary>
+        public static event Action<string> ShapeRemoved;
+
+        public static Shape GetShapeByID(string id)
+            => shapes.TryGetValue(id, out var s) ? s : null;
+
+        public static void AddShape(string id, Shape shape)
+        {
+            shapes[id] = shape;
+            ShapeAdded?.Invoke(id);
+        }
+
+        public static void RemoveShape(string id)
+        {
+            if (shapes.Remove(id))
+                ShapeRemoved?.Invoke(id);
+        }
+
         public static IEnumerable<Shape> GetAllShapes() => shapes.Values;
 
         public static Point FindNearestPoint(Vector3 position, float maxSnapDistance = 0.1f)

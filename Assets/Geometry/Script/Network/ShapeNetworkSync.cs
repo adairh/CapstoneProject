@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Geometry.Script.Network;
 using Manipulator;
 using UnityEngine;
@@ -73,6 +74,36 @@ public class ShapeNetworkSync : NetworkBehaviour
         SnapPivotClientRpc(role, oldName, newName);
     }
 
+    public void RequestAllClientsShapeList()
+    {
+        AskClientsForShapeListClientRpc();
+    }
+
+    /// <summary>
+    /// ClientRpc: server broadcast xuống, mỗi client nhận sẽ gửi từng shape của mình lên server.
+    /// </summary>
+    [ClientRpc]
+    private void AskClientsForShapeListClientRpc()
+    {
+        // Nếu bạn muốn host cũng gửi, bỏ qua check này:
+        if (!IsOwner) return;
+
+        foreach (var shape in ShapeStorage.GetAllShapes())
+        {
+            ReportSingleShapeServerRpc(shape.Name, NetworkManager.LocalClientId);
+        }
+    }
+
+    /// <summary>
+    /// ServerRpc: mỗi client gọi lên server báo tên từng shape kèm clientId.
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    private void ReportSingleShapeServerRpc(string shapeName, ulong clientId)
+    {
+        Debug.LogError($"[Server] Client {clientId} has shape: {shapeName}");
+    }
+
+    
     // 2) ClientRpc để mọi client (kể cả host) thực hiện snap đúng
     [ClientRpc]
     private void SnapPivotClientRpc(string role, string oldName, string newName)
@@ -80,46 +111,55 @@ public class ShapeNetworkSync : NetworkBehaviour
 
         if (IsOwner) return;
             // Chỉ xử lý nếu currentShape là Segment
-        if (!(currentShape is Segment seg)) return;
+        // if (!(currentShape is Segment seg)) return;
 
         // --- 2.1 Xóa pivot cũ nếu có ---
+
+        foreach (Shape s in ShapeStorage.GetAllShapes())
+        {
+            Debug.LogError($"meomeo meo {s.id} {s.Name}");
+            Debug.LogError($"meomeo {role} {oldName} {newName}");
+        }
+        
         if (ShapeStorage.GetShapeByID(oldName) is Point oldPt)
         {
             // Unsubscribe và destroy
-            oldPt.OnChanged -= seg.OnChildChanged;
+            oldPt.OnChanged -= currentShape.OnChildChanged;
             oldPt.Destroy();
         }
         
 
-        // --- 2.2 Lấy hoặc tạo pivot mới ---
-        Point newPt;
-        var maybeShape = ShapeStorage.GetShapeByID(newName);
-        if (maybeShape is Point existingPt)
+        if (currentShape is Segment seg)
         {
-            newPt = existingPt;
+            // --- 2.2 Lấy hoặc tạo pivot mới ---
+            Point newPt;
+            var maybeShape = ShapeStorage.GetShapeByID(newName);
+            if (maybeShape is Point existingPt)
+            {
+                newPt = existingPt;
+            }
+            else
+            {
+                // Pivot mới chưa có trên client, tạo ra ở vị trí gần đúng
+                var pos = (role == "Start") ? seg.Start.Position : seg.End.Position;
+                newPt = new Point(pos);
+                newPt.Name = newName;
+                ShapeStorage.AddShape(newName, newPt);
+            }
+
+            // --- 2.3 Gán lại vào segment và subscribe sự kiện ---
+            if (role == "Start") seg.Start = newPt;
+            else if (role == "End") seg.End = newPt;
+
+            newPt.OnChanged += seg.OnChildChanged;
+            newPt.AttachToShape(seg);
+            seg.ApplyTransform(false);
         }
-        else
-        {
-            // Pivot mới chưa có trên client, tạo ra ở vị trí gần đúng
-            var pos = (role == "Start") ? seg.Start.Position : seg.End.Position;
-            newPt = new Point(pos);
-            newPt.Name = newName;
-            ShapeStorage.AddShape(newName, newPt);
-        }
-
-        // --- 2.3 Gán lại vào segment và subscribe sự kiện ---
-        if (role == "Start") seg.Start = newPt;
-        else if (role == "End") seg.End = newPt;
-
-        newPt.OnChanged += seg.OnChildChanged;
-        newPt.AttachToShape(seg);
-
         
         // --- 2.4 Redraw & cập nhật collider ---
-        seg.Draw();
-        seg.ApplyTransform(false);
-        seg.UpdateHitbox();
-        seg.CompleteDraw();
+        currentShape.Draw();
+        currentShape.UpdateHitbox();
+        currentShape.CompleteDraw();
     }
      
  

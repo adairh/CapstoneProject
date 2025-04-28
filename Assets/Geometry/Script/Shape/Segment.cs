@@ -79,27 +79,28 @@ namespace Manipulator
         {
             mm = ManipulationManager.Instance;
 
-            Point oldStart = Start;
+            
             Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
 
             Start.SetIgnoreRaycast(true);
             End.SetIgnoreRaycast(true);
+
+            Start.Destroy();
+            Start = new Point(worldPoint); 
+
+            Debug.LogError($"<color=green>{Start.Name}!</color>");
             
             if (nearestPoint != null)
             {
                 if (nearestPoint != Start)
                 {
-                    Start.Destroy();
-                    Debug.LogError($"Nearest points {nearestPoint.Name}");
-                    Start = nearestPoint;
+                    // 1) Thông báo server/client trước
+                    GetSNS()?.RequestSnapPivotServerRpc("Start", Start.Name, nearestPoint.Name);
                     
-                    GetSNS()?.RequestSnapPivotServerRpc("Start", oldStart.Name, Start.Name);
+                    // 2) Rồi mới destroy pivot cũ và gán pivot mới
+                    Start.Destroy();
+                    Start = nearestPoint;             
                 }
-            }
-            else
-            {
-                Start.Destroy();
-                Start = new Point(worldPoint);
             }
 
             mm.SetDrawing(true);
@@ -123,11 +124,12 @@ namespace Manipulator
 
             if (nearestPoint != null)
             {
-                End.Destroy(); // Remove temporary end
-                Debug.LogError($"Nearest points {nearestPoint.Name}");
-                End = nearestPoint;
+                // 1) Broadcast snap pivot, còn giữ pivot cũ trong storage
+                GetSNS()?.RequestSnapPivotServerRpc("End", oldEnd.Name, nearestPoint.Name);
                 
-                GetSNS()?.RequestSnapPivotServerRpc("End", oldEnd.Name, End.Name);
+                // 2) Destroy old + assign new
+                End.Destroy();
+                End = nearestPoint;
             }
             else
             {
@@ -145,6 +147,8 @@ namespace Manipulator
             
             mm.SetDrawing(false);
             End.AttachProcess();
+            
+            GetSNS().RequestAllClientsShapeList();
         }
 
 

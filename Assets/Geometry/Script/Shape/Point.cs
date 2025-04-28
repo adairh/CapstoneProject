@@ -17,11 +17,6 @@ namespace Manipulator
     {
         this.pointNO = AlphabetCounter.CurrentValue();
         SetupGameObject();
-        
-        
-        
-        
-        
     }
 
     private NetworkObject segmentNetObj = null;
