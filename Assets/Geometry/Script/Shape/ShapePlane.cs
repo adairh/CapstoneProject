@@ -2,7 +2,7 @@
 
 namespace Manipulator
 {
-    public class ShapePlane : Shape, IDrawable3D
+    public class ShapePlane : Shape
     {
         public Point[] points; // 3 points defining the plane 
         private float planeSizeLimit; // Limit size

@@ -1,17 +1,17 @@
 ﻿using System.Collections.Generic;
+using Geometry.Script.Network;
+using Manipulator.Data;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class Segment : Shape, IDrawable2D
+    public class Segment : Shape
     {
         public Point Start { get; set; }
         public Point End { get; set; }
 
-        private static Vector3 startPoint;
-        private static Segment currentSegment;
-        private static ManipulationManager mm;
-        
+        private ManipulationManager mm;
+         
         public Segment(Point start, Point end, Shape parent = null) : base(start.Position, "Segment", parent)
         {
             Start = start;
@@ -27,6 +27,11 @@ namespace Manipulator
             }
 
             SetupGameObject();
+        }
+
+        public Segment(Vector3 only) : this(new Point(only), new Point(only))
+        {
+            
         }
 
         private void SetupGameObject()
@@ -45,7 +50,7 @@ namespace Manipulator
             End.Draw();
         }
 
-        private void ApplyTransform(bool point = true)
+        public void ApplyTransform(bool updatePoints = true)
         {
             if (GO == null) return;
 
@@ -64,68 +69,86 @@ namespace Manipulator
             GO.transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
             GO.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
 
-            if (point)
+            if (updatePoints && !isUpdatingPoints)
             {
                 DrawPoint();
             }
-
         }
-
-        public static void BeginSketch(Vector3 worldPoint)
+        
+        public override void BeginSketch(Vector3 worldPoint)
         {
             mm = ManipulationManager.Instance;
 
+            
             Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
 
+            Start.SetIgnoreRaycast(true);
+            End.SetIgnoreRaycast(true);
+
+            Start.Destroy();
+            Start = new Point(worldPoint); 
+
+            // Debug.LogError($"<color=green>{Start.Name}!</color>");
+            
             if (nearestPoint != null)
             {
-                startPoint = nearestPoint.Position;
-                currentSegment = new Segment(nearestPoint, new Point(startPoint));
-            }
-            else
-            {
-                startPoint = worldPoint;
-                Point start = new Point(startPoint);
-                currentSegment = new Segment(start, new Point(startPoint));
+                if (nearestPoint != Start)
+                {
+                    // 1) Thông báo server/client trước
+                    GetSNS()?.RequestSnapPivotServerRpc("Start", Start.Name, nearestPoint.Name);
+                    
+                    // 2) Rồi mới destroy pivot cũ và gán pivot mới
+                    Start.Destroy();
+                    Start = nearestPoint;             
+                }
             }
 
             mm.SetDrawing(true);
-            currentSegment.Start.AttachProcess();
+            Start.AttachProcess();
         }
 
-        public static void UpdateSketch(Vector3 worldPoint)
+        public override void UpdateSketch(Vector3 worldPoint)
         {
-            if (mm == null || !mm.IsDrawing() || currentSegment == null) return;
+            if (mm == null || !mm.IsDrawing() || Start == null || End == null) return;
 
-            currentSegment.End.Position = worldPoint;
-            currentSegment.Draw();
+            End.Position = worldPoint;
+            Draw();
         }
 
-        public static void EndSketch(Vector3 worldPoint)
+        public override void EndSketch(Vector3 worldPoint)
         {
-            if (mm == null || !mm.IsDrawing() || currentSegment == null) return;
-
+            if (mm == null || !mm.IsDrawing() || Start == null || End == null) return;
+            
+            Point oldEnd = End;
             Point nearestPoint = ShapeStorage.FindNearestPoint(worldPoint);
 
             if (nearestPoint != null)
             {
-                currentSegment.End.Destroy(); // Remove temporary end
-                Debug.LogError($"Nearest points {nearestPoint.Name}");
-                currentSegment.End = nearestPoint;
+                // 1) Broadcast snap pivot, còn giữ pivot cũ trong storage
+                GetSNS()?.RequestSnapPivotServerRpc("End", oldEnd.Name, nearestPoint.Name);
+                
+                // 2) Destroy old + assign new
+                End.Destroy();
+                End = nearestPoint;
             }
             else
             {
-                currentSegment.End.Position = worldPoint;
+                End.Position = worldPoint;
             }
 
-            currentSegment.Start.AttachToShape(currentSegment);
-            currentSegment.End.AttachToShape(currentSegment);
+            Start.AttachToShape(this);
+            End.AttachToShape(this);
 
-            currentSegment.ApplyTransform();
-            currentSegment.CompleteDraw();
+            Start.SetIgnoreRaycast(false);
+            End.SetIgnoreRaycast(false);
+            
+            ApplyTransform();
+            CompleteDraw();
+            
             mm.SetDrawing(false);
-
-            currentSegment.End.AttachProcess();
+            End.AttachProcess();
+            
+            GetSNS().RequestAllClientsShapeList();
         }
 
 
@@ -195,22 +218,123 @@ namespace Manipulator
         {
             // Future implementation (left empty)
         }
-
-
-        public void ReloadToConstraint(Point movedPoint)
+        public static class NetStatus
         {
+            public static string WhoAmI()
+            {
+                if (!Unity.Netcode.NetworkManager.Singleton) return "NO_NET";
+
+                var net = Unity.Netcode.NetworkManager.Singleton;
+
+                if (net.IsHost) return "HOST";
+                if (net.IsServer) return "SERVER";
+                if (net.IsClient) return "CLIENT";
+
+                return "OFFLINE";
+            }
+
+            public static ulong MyID()
+            {
+                return Unity.Netcode.NetworkManager.Singleton?.LocalClientId ?? 9999;
+            }
+        }
+
+
+        private bool isUpdatingPoints = false;
+
+        public override void MovePivots(Point movedPoint)
+        {
+            if (isUpdatingPoints) return; // ✅ Prevent recursive entry
+            isUpdatingPoints = true;
+
+            string who = NetStatus.WhoAmI();
+            ulong clientId = NetStatus.MyID();
+
+            //Debug.Log($"[{who} | ClientID: {clientId}] [MovePivots] on Segment '{Name}' due to Point '{movedPoint.Name}' (ID: {movedPoint.id})");
+            //Debug.Log($"[Before] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
+
             if (movedPoint.id == Start.id)
             {
+                //Debug.Log($"[{who}] ➤ Moving START point.");
                 Start.Position = movedPoint.Position;
                 Start.GO.transform.position = movedPoint.GO.transform.position;
                 Position = Start.Position;
             }
             else if (movedPoint.id == End.id)
             {
+                //Debug.Log($"[{who}] ➤ Moving END point.");
                 End.Position = movedPoint.Position;
                 End.GO.transform.position = movedPoint.GO.transform.position;
             }
 
+            //Debug.Log($"[After] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
+
+            ApplyTransform(false); // ✅ Apply transform without redrawing points individually
+
+            isUpdatingPoints = false;
+        }
+        
+        public override void MovePivots(string pointName, Vector3 loc)
+        { 
+            if (isUpdatingPoints) return; // ✅ Prevent recursive entry
+            isUpdatingPoints = true;
+
+            string who = NetStatus.WhoAmI();
+            ulong clientId = NetStatus.MyID();
+
+            /*Debug.Log($"[{who} | ClientID: {clientId}] [MovePivots] on Segment '{Name}' due to Point '{pointName}' (ID:)");
+            Debug.Log($"[Before] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
+            */
+
+
+            if (ShapeStorage.GetShapeByID(pointName) is Point point)
+            {
+                if (point.id == Start.id)
+                {
+                    //Debug.Log($"[{who}] ➤ Moving START point.");
+                    Start.Position = loc;
+                    Start.GO.transform.position = loc;
+                    Position = Start.Position;
+                }
+                else if (point.id == End.id)
+                {
+                    //Debug.Log($"[{who}] ➤ Moving END point.");
+                    End.Position = loc;
+                    End.GO.transform.position = loc;
+                }
+
+                //Debug.Log($"[After] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
+
+                ApplyTransform(false); // ✅ Apply transform without redrawing points individually
+
+                isUpdatingPoints = false;
+                ReloadToConstraint(point, false);
+            }
+
+        }
+        
+        public override void FullRefresh()
+        {
+
+
+            if (!mm.IsDrawing())
+            {
+                // Dinh la auto refresh de update vi tri nhung co ve ko on lam
+            }
+            
+            base.FullRefresh();
+        }
+        
+        
+        public void ReloadToConstraint(Point movedPoint, bool trigger = true)
+        {
+            MovePivots(movedPoint);
+            
+            if (GetSNS() != null && trigger)
+            {
+                GetSNS().MovePivots(movedPoint);
+            }
+            
             foreach (RatioCalculator r in GetDependencies().Values)
             {
                 r.RecalculatePosition();
@@ -222,8 +346,18 @@ namespace Manipulator
 
         public override void OnPointMoved(Point movedPoint)
         {
-            //Debug.Log($"{Name} updated because {movedPoint.Name} moved.");
+            Debug.Log($"{Name} updated because {movedPoint.Name} moved.");
             ReloadToConstraint(movedPoint);
+            
+        }
+
+        public ShapeData Serialize()
+        {
+            return null;
+        }
+
+        public void Deserialize(ShapeData data)
+        {
         }
     }
 }

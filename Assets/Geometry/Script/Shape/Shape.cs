@@ -1,187 +1,194 @@
 ﻿using System;
-using UnityEngine;
 using System.Collections.Generic;
-using System.Numerics;
-using System.Runtime.CompilerServices;
+using UnityEngine;
 using Unity.Netcode;
+using Geometry.Script.Network;
+using Manipulator.Data;
 using Object = UnityEngine.Object;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Manipulator
 {
-// Base abstract class for all shapes
-
+    // Shape storage for lookup and nearest-point snapping
     public static class ShapeStorage
-    {
-        private static Dictionary<string, Shape> shapes = new Dictionary<string, Shape>();
+    { 
+        private static readonly Dictionary<string, Shape> shapes = new Dictionary<string, Shape>();
+        private const int IGNORE_RAYCAST_LAYER = 2;
+        
+        /// <summary>Được gọi ngay sau khi một shape mới được thêm vào.</summary>
+        public static event Action<string> ShapeAdded;
+
+        /// <summary>Được gọi ngay sau khi một shape bị xóa.</summary>
+        public static event Action<string> ShapeRemoved;
 
         public static Shape GetShapeByID(string id)
+            => shapes.TryGetValue(id, out var s) ? s : null;
+
+        public static void AddShape(string id, Shape shape)
         {
-            return shapes[id];
+            shapes[id] = shape;
+            ShapeAdded?.Invoke(id);
         }
 
         public static void RemoveShape(string id)
         {
-            shapes.Remove(id);
+            if (shapes.Remove(id))
+                ShapeRemoved?.Invoke(id);
         }
 
-        public static void AddShape(string id, Shape shape)
-        {
-            shapes.Add(id, shape);
-        }
-        
-        public static IEnumerable<Shape> GetAllShapes()
-        {
-            return shapes.Values;
-        }
+        public static IEnumerable<Shape> GetAllShapes() => shapes.Values;
 
         public static Point FindNearestPoint(Vector3 position, float maxSnapDistance = 0.1f)
         {
-            Point closest = null; 
-            float closestSqrDistance = maxSnapDistance * maxSnapDistance;
-
-            foreach (var shape in GetAllShapes())
-            { 
-                if (shape is Point point && point.IsSnappable && point.GO.layer != 2)
+            Point closest = null;
+            float minSqr = maxSnapDistance * maxSnapDistance;
+            foreach (var s in shapes.Values)
+            {
+                if (s is Point pt && pt.IsSnappable && pt.GO.layer != IGNORE_RAYCAST_LAYER)
                 {
-                    float sqrDist = (point.Position - position).sqrMagnitude;
-
-                    if (sqrDist < closestSqrDistance)
+                    float sqr = (pt.Position - position).sqrMagnitude;
+                    if (sqr < minSqr && sqr > 0f)
                     {
-                        closest = point;
-                        closestSqrDistance = sqrDist;
+                        closest = pt;
+                        minSqr = sqr;
                     }
                 }
             }
-
             return closest;
         }
-
-
-
-
     }
 
-    public abstract class Shape
+    public abstract class Shape : ISynchronizedShape
     {
+        // Event for change notifications
+        public event Action<Shape> OnChanged;
+        private void NotifyChange()
+        {
+            OnChanged?.Invoke(this);
+            Parent?.NotifyChange();
+        }
 
-        private Dictionary<Point, RatioCalculator> DependentPoints = new Dictionary<Point, RatioCalculator>();
+        // Network syncer reference
+        private ShapeNetworkSync syncer;
 
-        private List<Point> PivotPoints = new List<Point>();
-        private ShapeNetworkSync currentShapeObject;
+        // Backing GameObject
+        private GameObject go;
 
-        public Vector3 Position { get; internal set; }
+        // Settings, pivots, and dependencies
+        protected readonly List<ISetting> settings = new List<ISetting>();
+        protected readonly List<Point> PivotPoints = new List<Point>();
+        protected readonly Dictionary<Point, RatioCalculator> DependentPoints = new Dictionary<Point, RatioCalculator>();
+
+        // Shape properties
+        public Vector3 Position { get; set; }
         public Color ShapeColor { get; set; }
         public string Name { get; set; }
-        public bool IsSnappable { get; set; } = true; // Toggle Snap-to-Grid
-
-        public abstract GameObject[] Components();
-
-        public void AdjustToPosition(Vector3 vector3, bool transform = true)
-        {
-            Position = vector3;
-            if (transform)
-            {
-                GO.transform.position = vector3;
-            }
-        }
-
-
-        public void MoveToPosition(Vector3 vector)
-        {
-            AdjustToPosition(vector);
-            CompleteSettings();
-            Draw();
-            UpdateHitbox(); 
-            CompleteDraw();
-        }
+        public int id { get; set; }
+        public Shape Parent { get; set; }
+        public bool IsSnappable { get; set; } = true;
 
         public Material DefaultMaterial { get; set; }
         public Material HighlightMaterial { get; set; }
-
         public EditableShape EditableShape;
 
-        private GameObject go; // Private backing field
-        public int id;
-        public Shape shape;
-        public Shape Parent { get; set; }
-
+        // Access to GameObject
         public GameObject GO
         {
-            get { return go; }
+            get => go;
             set
             {
                 go = value;
+                go.name = Name;
                 RegisterEvents();
-                go.name = Name; 
-                //EditableShape = go.AddComponent<EditableShape>();
+                SetupGameObject();
             }
         }
 
-        // 🔥 List of settings for the shape
-        protected List<ISetting> settings = new List<ISetting>();
-
-        public Shape(Vector3 position, string name, Shape parent)
+        // Constructor
+        protected Shape(Vector3 position, string baseName, Shape parent)
         {
             Position = position;
-            ShapeColor = Color.red;
-            Name = name + " " + ObjectCounter.Next();
+            Name = baseName + " " + ObjectCounter.Next();
             id = ObjectCounter.Current();
+            Parent = parent;
 
-            // ✅ Setup materials for hover effect
+            ShapeColor = Color.red;
             DefaultMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = ShapeColor };
             HighlightMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = Color.cyan };
 
-            Parent = parent;
-            shape = this;
-            
             ShapeStorage.AddShape(Name, this);
             InitializeSettings();
-            // Initialize settings on creation
-            
-            
         }
 
-        protected void RegisterEvents()
+        // Register click and drag handlers
+        protected virtual void RegisterEvents()
         {
-            GO.AddComponent<ShapeClickHandler>().SetShape(this); // Link to this shape
-
-            GO.tag = (Parent == null) ? "Shape" : "Child";
-
-            GO.AddComponent<DraggableShape>().SetShape(this); 
-
-
+            go.tag = Parent == null ? "Shape" : "Child";
+            go.AddComponent<ShapeClickHandler>().SetShape(this);
+            go.AddComponent<DraggableShape>().SetShape(this);
         }
-        
-        
+
+        // Additional setup (override in subclasses)
+        protected virtual void SetupGameObject() { }
+
+        // Assign network syncer
+        public void AssignSyncer(ShapeNetworkSync networkSync) => syncer = networkSync;
+        public ShapeNetworkSync GetSNS() => syncer;
+
+        // Position adjustment without full redraw
+        public void AdjustToPosition(Vector3 newPos, bool transformGO = true)
+        {
+            Vector3 offset = newPos - Position;
+            foreach (var p in PivotPoints)
+                p.MoveTo(p.Position + offset);
+
+            Position = newPos;
+            if (transformGO && go != null)
+                go.transform.position = newPos;
+
+            NotifyChange();
+        }
+
+        // Full move
+        public virtual void MoveToPosition(Vector3 newPos)
+        {
+            AdjustToPosition(newPos);
+            CompleteSettings();
+            Draw();
+            UpdateHitbox();
+            CompleteDraw();
+            syncer?.MoveShape(newPos);
+            NotifyChange();
+        }
+
+        // Called when a pivot point moves
         public virtual void OnPointMoved(Point movedPoint)
         {
-            // Default behavior: Do nothing
+            NotifyChange();
         }
-        
-        
-        // 🔥 Abstract method: Each shape defines its own settings
+
+        // Subscribe callbacks: child change
+        public virtual void OnChildChanged(Shape child)
+        {
+            if (child is Point pt)
+                MovePivots(pt);
+        }
+
+        // MovePivots overloads
+        public virtual void MovePivots(Point movedPoint)
+        {
+            NotifyChange();
+        }
+        public virtual void MovePivots(string pointName, Vector3 loc)
+        {
+            NotifyChange();
+        }
+
+        // Settings initialization and application
         protected abstract void InitializeSettings();
-
-        protected virtual void SetupGameObject()
-        {
-            
-        }
-
-        // 🔥 Allows child classes to append new settings
-        public void AppendSettings(params ISetting[] newSettings)
-        {
-            settings.AddRange(newSettings);
-        }
-
-        // 🔥 Opens the settings panel
-
-        // 🔥 Applies the settings to the shape
-        public virtual void ApplySettings()
-        {
-
-        }
+        public virtual void ApplySettings() { }
+        public virtual void OnSettingChanged(ISetting setting) => ApplySettings();
 
         public void UpdateSettings(ISetting setting)
         {
@@ -189,219 +196,152 @@ namespace Manipulator
             {
                 if (settings[i].GetType() == setting.GetType())
                 {
-                    settings[i] = setting; // Replace with the new setting
-                    return; // Exit early after updating
+                    settings[i] = setting;
+                    OnSettingChanged(setting);
+                    NotifyChange();
+                    return;
                 }
             }
-
-            // If not found, add the new setting
             settings.Add(setting);
+            OnSettingChanged(setting);
+            NotifyChange();
         }
-
-
-        // 🔥 Updates shape when a setting is changed (for real-time updates)
-        public virtual void OnSettingChanged(ISetting setting)
+        public void AppendSettings(params ISetting[] newSettings)
         {
-            ApplySettings();
+            settings.AddRange(newSettings);
+            NotifyChange();
         }
-
         public void ModifySetting<T>(ISetting setting, T value)
         {
             setting.SetValue(value);
             UpdateSettings(setting);
-            UpdateHitbox();
         }
 
-        public abstract void UpdateHitbox(); // General draw function
-        public abstract void Drawing(); // General draw function
+        // Abstract draw methods
+        public abstract void Drawing();
+        public abstract void UpdateHitbox();
+        public abstract GameObject[] Components();
 
+        // Draw entry
         public void Draw()
         {
             SetIgnoreRaycast(true);
             Drawing();
-        } // General draw function
-
-        public void UpdateParent(Shape shape)
-        {
-            Parent = shape;
-
-            GO.transform.SetParent(Parent.GO.transform, true); // Keep world position
-            //GO.transform.position = Position; // Ensure world position is correct
-
-            // ✅ Detach from parent scaling while keeping position
-            //GO.transform.SetParent(null, true);
-
-            GO.tag = (Parent == null) ? "Shape" : "Child";
-            Drawing();
-            //UpdateHitbox();
         }
-
         public virtual void CompleteDraw()
         {
             PerformDrawing.ResetShape();
-            HoverableShape hs = GO.GetComponent<HoverableShape>();
-            if (hs != null)
-            {
+            if (go.TryGetComponent<HoverableShape>(out var hs))
                 hs.SetComponents();
-            }
-
-            
             SetIgnoreRaycast(false);
         }
 
-        public virtual void CompleteSettings()
-        {
+        // Complete settings hook
+        public virtual void CompleteSettings() { }
 
-        }
-        // General sketch function
-
-        private const int IGNORE_RAYCAST_LAYER = 2; // Unity's built-in Ignore Raycast layer
-        private int defaultLayer = 0; // Store original layer
-
+        // Raycast control
+        protected const int IGNORE_RAYCAST_LAYER = 2;
+        private const int defaultLayer = 0;
         public void SetIgnoreRaycast(bool ignore)
         {
-
-            //Debug.LogWarning($"{Name} Set to {ignore} raycast");
-            if (GO == null) return;
-
-            int targetLayer = ignore ? IGNORE_RAYCAST_LAYER : defaultLayer;
-
-            // Change layer for the main object
-            GO.layer = targetLayer;
-
-            // Apply to all children recursively
-            foreach (Transform child in GO.transform)
-            {
-                child.gameObject.layer = targetLayer;
-            }
+            if (go == null) return;
+            int layer = ignore ? IGNORE_RAYCAST_LAYER : defaultLayer;
+            go.layer = layer;
+            foreach (Transform c in go.transform)
+                c.gameObject.layer = layer;
         }
 
+        // Settings and pivots access
+        public List<ISetting> GetSettings() => settings;
+        public List<Point> GetPivots() => PivotPoints;
 
-        // ✅ Return settings list
-        public List<ISetting> GetSettings()
-        {
-            return settings;
-        }
-
-        protected static Quaternion GetAlignedRotation(Camera mainCamera)
-        {
-            Vector3 forward = mainCamera.transform.forward;
-            //forward.y = 0; // Remove vertical tilt to keep it on the XZ plane
-            if (forward == Vector3.zero) forward = Vector3.forward; // Fallback
-
-            return Quaternion.LookRotation(forward, Vector3.up);
-        }
-
-
-        public void Destroy()
-        { 
-            
-            if (ShapeStorage.GetShapeByID(GO.name) != null)
-            {
-                ShapeStorage.RemoveShape(GO.name);
-            }
-            Object.Destroy(GO); 
-        }
-
-        public List<Point> GetPivots()
-        {
-            return PivotPoints;
-        }
-        
         public void AddPivot(Point point)
         {
-            if (!IsPivot(point))
+            if (!PivotPoints.Contains(point))
             {
                 PivotPoints.Add(point);
+                point.OnChanged += OnChildChanged;
             }
         }
-
         public void RemovePivot(Point point)
         {
-            if (PivotPoints.Contains(point))
-            {
-                PivotPoints.Remove(point);
-            }
+            if (PivotPoints.Remove(point))
+                point.OnChanged -= OnChildChanged;
         }
+        public bool IsPivot(Point point) => PivotPoints.Contains(point);
 
-        public bool IsPivot(Point point)
-        {
-            return PivotPoints.Contains(point);
-        }
-        
-        
-
-        public Dictionary<Point, RatioCalculator> GetDependencies()
-        {
-            return DependentPoints;
-        }
-
+        // Dependency management
+        public Dictionary<Point, RatioCalculator> GetDependencies() => DependentPoints;
         public void AddDepend(Point point)
         {
-            if (!IsDepend(point) && PivotPoints.Count > 0)
+            if (!DependentPoints.ContainsKey(point) && PivotPoints.Count > 0)
                 DependentPoints.Add(point, new RatioCalculator(point, PivotPoints));
         }
+        public void RemoveDepend(Point point) => DependentPoints.Remove(point);
+        public bool IsDepend(Point point) => DependentPoints.ContainsKey(point);
+        public RatioCalculator GetDependData(Point point) => DependentPoints.TryGetValue(point, out var rc) ? rc : null;
 
-        public void RemoveDepend(Point point)
+        // Refresh and serialization
+        public virtual void FullRefresh() { }
+        public virtual void BeginSketch(Vector3 vector)
         {
-            if (IsDepend(point))
-                DependentPoints.Remove(point);
         }
 
-        public bool IsDepend(Point point)
+        public virtual void UpdateSketch(Vector3 vector)
         {
-            return DependentPoints.ContainsKey(point);
         }
 
-        public RatioCalculator GetDependData(Point point)
+        public virtual void EndSketch(Vector3 vector)
         {
-            if (IsDepend(point))
-                return DependentPoints[point];
-            return null;
         }
 
-        
+        public virtual ShapeData Serialize() => null;
+        public virtual void Deserialize(ShapeData data) { }
+
+        // Utility rotation
+        public static Quaternion GetAlignedRotation(Camera cam)
+        {
+            var fwd = cam.transform.forward;
+            if (fwd == Vector3.zero) fwd = Vector3.forward;
+            return Quaternion.LookRotation(fwd, Vector3.up);
+        }
+
+        // Cleanup
+        public virtual void Destroy()
+        {
+            if (ShapeStorage.GetShapeByID(go.name) != null)
+                ShapeStorage.RemoveShape(go.name);
+            Object.Destroy(go);
+        }
+
+        // RatioCalculator nested class
         public class RatioCalculator
         {
-            private Point _point;
-            private List<Point> _pivots;
-            private Dictionary<Point, Tuple<Vector3, float>> data;
+            private readonly Point _point;
+            private readonly List<Point> _pivots;
+            private readonly Dictionary<Point, Tuple<Vector3, float>> data = new();
 
-            public RatioCalculator(Point point, List<Point> pivots)
+            public RatioCalculator(Point point, IEnumerable<Point> pivots)
             {
                 _point = point;
-                _pivots = new List<Point>(pivots); // Copy to avoid reference issues
-                data = new Dictionary<Point, Tuple<Vector3, float>>();
+                _pivots = new List<Point>(pivots);
                 Calculate();
             }
 
-            /// <summary>
-            /// Recalculate all ratios between the base point and its pivots.
-            /// </summary>
             private void Calculate()
             {
                 data.Clear();
-                foreach (Point p in _pivots)
+                foreach (var p in _pivots)
                 {
-                    Vector3 nav = (_point.Position - p.Position).normalized;
-                    float dis = Vector3.Distance(_point.Position, p.Position);
-                    data[p] = Tuple.Create(nav, dis);
+                    var dir = (_point.Position - p.Position).normalized;
+                    var dist = Vector3.Distance(_point.Position, p.Position);
+                    data[p] = Tuple.Create(dir, dist);
                 }
             }
 
-            /// <summary>
-            /// Get the ratio data: direction vector and distance for each pivot.
-            /// </summary>
-            public Dictionary<Point, Tuple<Vector3, float>> GetData() => data;
-
-            /// <summary>
-            /// Returns a copy of the pivot list.
-            /// </summary>
+            public Dictionary<Point, Tuple<Vector3, float>> GetData() => new Dictionary<Point, Tuple<Vector3, float>>(data);
             public List<Point> GetPivots() => new List<Point>(_pivots);
 
-            /// <summary>
-            /// Adds a pivot and updates the ratio.
-            /// </summary>
             public void AddPivot(Point p)
             {
                 if (!_pivots.Contains(p))
@@ -410,180 +350,80 @@ namespace Manipulator
                     UpdatePivot(p);
                 }
             }
-
-            /// <summary>
-            /// Removes a pivot and clears its ratio.
-            /// </summary>
             public void RemovePivot(Point p)
             {
                 if (_pivots.Remove(p))
-                {
                     data.Remove(p);
-                }
             }
-
-            /// <summary>
-            /// Updates the ratio for a specific pivot only.
-            /// </summary>
             public void UpdatePivot(Point p)
             {
                 if (_pivots.Contains(p))
-                {
-                    Vector3 nav = (_point.Position - p.Position).normalized;
-                    float dis = Vector3.Distance(_point.Position, p.Position);
-                    data[p] = Tuple.Create(nav, dis);
-                }
+                    data[p] = Tuple.Create(
+                        (_point.Position - p.Position).normalized,
+                        Vector3.Distance(_point.Position, p.Position)
+                    );
             }
 
-            /// <summary>
-            /// Refresh all data, useful if the main point has moved.
-            /// </summary>
-            public void Refresh()
-            {
-                Calculate();
-            }
+            public void Refresh() => Calculate();
+            public bool HasPivot(Point p) => data.ContainsKey(p);
+            public Vector3 GetDirection(Point p) => data.TryGetValue(p, out var v) ? v.Item1 : Vector3.zero;
+            public float GetDistance(Point p) => data.TryGetValue(p, out var v) ? v.Item2 : 0f;
 
-            /// <summary>
-            /// Returns true if the pivot exists.
-            /// </summary>
-            public bool HasPivot(Point p) => _pivots.Contains(p);
-
-            /// <summary>
-            /// Returns the direction vector from a pivot to the base point.
-            /// </summary>
-            public Vector3 GetDirection(Point p)
-            {
-                return data.ContainsKey(p) ? data[p].Item1 : Vector3.zero;
-            }
-
-            /// <summary>
-            /// Returns the stored distance from the pivot to the base point.
-            /// </summary>
-            public float GetDistance(Point p)
-            {
-                return data.ContainsKey(p) ? data[p].Item2 : 0f;
-            }
-
-            /// <summary>
-            /// Move the base point according to stored ratio from all pivots (used to reconstruct).
-            /// </summary>
             public void RestorePositionFromPivots()
             {
                 if (_pivots.Count == 0) return;
-
-                Vector3 average = Vector3.zero;
-
-                foreach (var kvp in data)
-                {
-                    Point pivot = kvp.Key;
-                    Vector3 dir = kvp.Value.Item1;
-                    float dis = kvp.Value.Item2;
-
-                    average += pivot.Position + dir * dis;
-                }
-
-                _point.MoveToPosition(average / _pivots.Count);
+                Vector3 sum = Vector3.zero;
+                foreach (var kv in data)
+                    sum += kv.Key.Position + kv.Value.Item1 * kv.Value.Item2;
+                _point.MoveToPosition(sum / _pivots.Count);
             }
 
-            /// <summary>
-            /// Recalculates ratio data if a pivot has moved.
-            /// </summary>
             public void NotifyPivotMoved(Point movedPivot)
             {
                 if (_pivots.Contains(movedPivot))
-                {
                     UpdatePivot(movedPivot);
-                }
             }
 
-            /// <summary>
-            /// Clears all pivots and ratio data.
-            /// </summary>
             public void Clear()
             {
                 _pivots.Clear();
                 data.Clear();
             }
-            
-            // ToString
-            
+
             public override string ToString()
             {
-                string result = $"RatioCalculator for Point: {_point.Name}\n";
-                result += "Pivot Ratios:\n";
-
-                foreach (var kvp in data)
-                {
-                    Point pivot = kvp.Key;
-                    Vector3 direction = kvp.Value.Item1;
-                    float distance = kvp.Value.Item2;
-
-                    result += $"- Pivot: {pivot.Name} | Direction: {direction} | Distance: {distance:F3}\n";
-                }
-
-                return result;
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine($"RatioCalculator for {_point.Name}");
+                sb.AppendLine("Pivot Ratios:");
+                foreach (var kv in data)
+                    sb.AppendLine($"- Pivot: {kv.Key.Name} | Dir: {kv.Value.Item1} | Dist: {kv.Value.Item2:F3}");
+                return sb.ToString();
             }
 
-            
             public void RecalculatePosition()
             {
-                if (_pivots == null || _pivots.Count == 0) return;
-
-                Vector3 finalPosition = Vector3.zero;
-
-                foreach (Point pivot in _pivots)
-                {
-                    if (!data.ContainsKey(pivot)) continue;
-
-                    Vector3 direction = data[pivot].Item1;
-                    float distance = data[pivot].Item2;
-
-                    // Pivot's new position + original direction * original distance
-                    Vector3 predicted = pivot.Position + direction * distance;
-                    finalPosition += predicted;
-                }
-
-                // Average all predicted positions
-                finalPosition /= _pivots.Count;
-
-                //Debug.LogWarning($"Location {finalPosition}");
-
-                _point.MoveToPosition(finalPosition); // Assuming this also updates .Position
+                if (_pivots.Count == 0) return;
+                Vector3 sum = Vector3.zero;
+                foreach (var kv in data)
+                    sum += kv.Key.Position + kv.Value.Item1 * kv.Value.Item2;
+                _point.MoveToPosition(sum / _pivots.Count);
             }
-
-            
-            
-        } 
+        }
     }
 
+    public interface IDrawable2D { void Draw2D(); }
+    public interface IDrawable3D { void Draw3D(); }
 
-// Interface for 2D shapes
-    public interface IDrawable2D
-    {
-        void Draw2D();
-    }
-
-// Interface for 3D shapes
-    public interface IDrawable3D
-    {
-        void Draw3D();
-    }
-
-// Polygonal base class (Square, Triangle, Cube, etc.)
     public abstract class PolygonalShape : Shape
     {
-        public PolygonalShape(Vector3 position, string name, Shape parent) : base(position, name, parent)
-        {
-        }
+        protected PolygonalShape(Vector3 position, string name, Shape parent)
+            : base(position, name, parent) { }
     }
 
-// Circular base class (Circle, Sphere, etc.)
     public abstract class CircularShape : Shape
     {
-        public CircularShape(Vector3 position, string name, Shape parent) : base(position, name, parent)
-        {
-        }
-
+        protected CircularShape(Vector3 position, string name, Shape parent)
+            : base(position, name, parent) { }
         public float Radius { get; set; }
     }
 }

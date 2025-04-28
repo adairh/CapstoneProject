@@ -7,6 +7,7 @@ namespace Manipulator
         public enum ShapeType
         {
             None,
+            Point,
             Circle,
             Rectangle,
             Triangle,

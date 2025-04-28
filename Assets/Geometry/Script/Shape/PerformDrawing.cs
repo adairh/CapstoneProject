@@ -36,7 +36,7 @@ namespace Manipulator
 
         void Update()
         {
-            if (!IsOwner) return;
+            if (!IsOwner) return; // check mode online/offline trước
             if (mainCamera == null) return;
             if (currentShape == IShapeButton.ShapeType.None) return;
 

@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Geometry.Script.Network;
 using Manipulator;
 using UnityEngine;
 using Unity.Netcode;
@@ -10,9 +12,10 @@ public class ShapeNetworkSync : NetworkBehaviour
     private ManipulationManager mm = ManipulationManager.Instance;
     public enum ShapeType
     {
-        None, Circle, Rectangle, Triangle, Segment
+        None, Circle, Rectangle, Triangle, Segment, Point
     }
 
+    
     public NetworkVariable<ShapeType> shapeType = new NetworkVariable<ShapeType>(ShapeType.None);
     public NetworkVariable<Vector3> startPoint = new NetworkVariable<Vector3>(Vector3.zero);
     public NetworkVariable<Vector3> currentPoint = new NetworkVariable<Vector3>(Vector3.zero);
@@ -22,8 +25,176 @@ public class ShapeNetworkSync : NetworkBehaviour
 
     private Shape currentShape;
 
-    private string LogPrefix => $"[{(ownerClientId.Value == 0 ? "Host" : "Client")}:{ownerClientId.Value}]";
+    
+    public void LinkShape(Shape shape)
+    {
+        currentShape = shape;
+        currentShape.AssignSyncer(this);
+    }
 
+    private string LogPrefix => $"[{(ownerClientId.Value == 0 ? "Host" : "Client")}:{ownerClientId.Value}]";
+    
+    // ==============================================================================================
+    // Chỉnh cái khúc này cho nó theo logic của phép move bình thường
+    
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestMoveServerRpc(Vector3 newPosition)
+    {
+        ApplyPositionChange(newPosition);
+
+        // Gửi cho các client còn lại
+        ApplyMoveClientRpc(newPosition);
+    }
+
+    [ClientRpc]
+    private void ApplyMoveClientRpc(Vector3 newPosition)
+    {
+        if (!IsOwner) // Tránh áp dụng lại với người đã gọi
+            ApplyPositionChange(newPosition);
+    }
+    
+    [ClientRpc]
+    public void MovePivotsClientRpc(string pointName, Vector3 loc)
+    {
+        if (!IsOwner)
+        {
+            //Debug.LogError($"SNS: {pointName}");
+            if (ShapeStorage.GetShapeByID(pointName) is Point point && currentShape != null)
+            {
+                currentShape.MovePivots(pointName, loc);
+            }
+        }
+    }
+ 
+    // 1) Client gọi lên server để request snap
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestSnapPivotServerRpc(string role, string oldName, string newName)
+    {
+        // Server nhận request, broadcast xuống client
+        SnapPivotClientRpc(role, oldName, newName);
+    }
+
+    public void RequestAllClientsShapeList()
+    {
+        AskClientsForShapeListClientRpc();
+    }
+
+    /// <summary>
+    /// ClientRpc: server broadcast xuống, mỗi client nhận sẽ gửi từng shape của mình lên server.
+    /// </summary>
+    [ClientRpc]
+    private void AskClientsForShapeListClientRpc()
+    {
+        // Nếu bạn muốn host cũng gửi, bỏ qua check này:
+        if (!IsOwner) return;
+
+        foreach (var shape in ShapeStorage.GetAllShapes())
+        {
+            ReportSingleShapeServerRpc(shape.Name, NetworkManager.LocalClientId);
+        }
+    }
+
+    /// <summary>
+    /// ServerRpc: mỗi client gọi lên server báo tên từng shape kèm clientId.
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    private void ReportSingleShapeServerRpc(string shapeName, ulong clientId)
+    {
+        //Debug.LogError($"[Server] Client {clientId} has shape: {shapeName}");
+    }
+
+    
+    // 2) ClientRpc để mọi client (kể cả host) thực hiện snap đúng
+    [ClientRpc]
+    private void SnapPivotClientRpc(string role, string oldName, string newName)
+    {
+
+        if (IsOwner) return;
+            // Chỉ xử lý nếu currentShape là Segment
+        // if (!(currentShape is Segment seg)) return;
+
+        // --- 2.1 Xóa pivot cũ nếu có ---
+
+        foreach (Shape s in ShapeStorage.GetAllShapes())
+        {
+            //Debug.LogError($"meomeo meo {s.id} {s.Name}");
+            //Debug.LogError($"meomeo {role} {oldName} {newName}");
+        }
+        
+        if (ShapeStorage.GetShapeByID(oldName) is Point oldPt)
+        {
+            // Unsubscribe và destroy
+            oldPt.OnChanged -= currentShape.OnChildChanged;
+            oldPt.Destroy();
+        }
+        
+
+        if (currentShape is Segment seg)
+        {
+            // --- 2.2 Lấy hoặc tạo pivot mới ---
+            Point newPt;
+            var maybeShape = ShapeStorage.GetShapeByID(newName);
+            if (maybeShape is Point existingPt)
+            {
+                newPt = existingPt;
+            }
+            else
+            {
+                // Pivot mới chưa có trên client, tạo ra ở vị trí gần đúng
+                var pos = (role == "Start") ? seg.Start.Position : seg.End.Position;
+                newPt = new Point(pos);
+                newPt.Name = newName;
+                ShapeStorage.AddShape(newName, newPt);
+            }
+
+            // --- 2.3 Gán lại vào segment và subscribe sự kiện ---
+            if (role == "Start") seg.Start = newPt;
+            else if (role == "End") seg.End = newPt;
+
+            newPt.OnChanged += seg.OnChildChanged;
+            newPt.AttachToShape(seg);
+            seg.ApplyTransform(false);
+        }
+        
+        // --- 2.4 Redraw & cập nhật collider ---
+        currentShape.Draw();
+        currentShape.UpdateHitbox();
+        currentShape.CompleteDraw();
+    }
+     
+ 
+    public void MovePivots(Point position)
+    {
+        MovePivotsClientRpc(position.Name, position.Position);
+    }
+    
+    private void ApplyPositionChange(Vector3 newPosition)
+    {
+        if (currentShape != null)
+        {
+            currentShape.MoveToPosition(newPosition);
+        }
+    }
+
+
+    public void MoveShape(Vector3 newPos)
+    {
+        if (IsServer)
+        {
+            ApplyMoveClientRpc(newPos);
+        }
+        else
+        {
+            //RequestMoveServerRpc(newPos); // Client gọi Server để xử lý
+        }
+    }
+    
+    
+    
+    
+
+    // ==============================================================================================
+    
     public override void OnNetworkSpawn()
     { 
         Debug.Log($"{LogPrefix} [ShapeNetworkSync] OnNetworkSpawn - Local IsHost: {IsHost}, LocalClientId: {NetworkManager.LocalClientId}, OwnerClientId: {ownerClientId.Value}");
@@ -72,15 +243,34 @@ public class ShapeNetworkSync : NetworkBehaviour
 
     private void StartShape()
     {
-        Segment.BeginSketch(startPoint.Value);
+        //Segment.BeginSketch(startPoint.Value);
+        currentShape = new Segment(startPoint.Value);
+        currentShape.AssignSyncer(this);
+        if (currentShape is ISynchronizedShape)
+        {
+            ISynchronizedShape iSync = (ISynchronizedShape)currentShape;
+            iSync.BeginSketch(startPoint.Value);
+        }
     }
     private void UpdateShape()
     {
-        Segment.UpdateSketch(currentPoint.Value);
+        //Segment.UpdateSketch(currentPoint.Value);
+        
+        if (currentShape is ISynchronizedShape)
+        {
+            ISynchronizedShape iSync = (ISynchronizedShape)currentShape;
+            iSync.UpdateSketch(currentPoint.Value);
+        }
     }
     private void FinalizeShape()
     {
-        Segment.EndSketch(currentPoint.Value);
+        //Segment.EndSketch(currentPoint.Value);
+        
+        if (currentShape is ISynchronizedShape)
+        {
+            ISynchronizedShape iSync = (ISynchronizedShape)currentShape;
+            iSync.EndSketch(currentPoint.Value);
+        }
     }
     
     /*private void StartShape()
@@ -183,4 +373,5 @@ public class ShapeNetworkSync : NetworkBehaviour
             
         }
     }*/
+    
 }
