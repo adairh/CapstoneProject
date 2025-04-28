@@ -36,34 +36,67 @@ namespace Manipulator
 
         private void TryStartDragging()
         {
+            Debug.Log($"[Debug] TryStartDragging called. CurrentDragState = {ManipulationManager.Instance.CurrentDragState}");
             ManipulationManager mm = ManipulationManager.Instance;
             if (mm.CurrentDragState == ManipulationManager.DragState.None)
+            {
+                Debug.Log("[Debug] CurrentDragState is None → return");
                 return;
+            }
 
             if (mm.IsDrawing())
             {
-                //Debug.Log($"Drawing {mm.IsDrawing()}");
+                Debug.Log("[Debug] IsDrawing() == true → still sketching, cannot drag");
                 return;
             }
             
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider.gameObject == gameObject)
-            { 
-                if (mm.StartDragging(this))
-                { 
-                    SetupDragPlane(ray);
-                    if (dragPlane.Raycast(ray, out float enter))
-                    { 
-                        lastWorldPoint = ray.GetPoint(enter);
-                        isDragging = true;
+            Debug.Log($"[Debug] Ray from camera: origin={ray.origin}, dir={ray.direction}");
 
-                        // ✅ Visual Feedback
-                        if (shapeRenderer != null)
-                            shapeRenderer.material.color = Color.green;
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                Debug.Log($"[Debug] Raycast hit: {hit.collider.gameObject.name}");
+                if (hit.collider.gameObject == gameObject)
+                {
+                    Debug.Log("[Debug] Hit matches this gameObject → attempt StartDragging");
+                    if (mm.StartDragging(this))
+                    {
+                        Debug.Log("[Debug] StartDragging(this) returned true → setting up dragPlane");
+                        SetupDragPlane(ray);
+                        if (dragPlane.Raycast(ray, out float enter))
+                        {
+                            lastWorldPoint = ray.GetPoint(enter);
+                            isDragging = true;
+                            Debug.Log($"[Debug] dragPlane.Raycast succeeded at distance {enter}, lastWorldPoint = {lastWorldPoint}");
+
+                            // Visual feedback
+                            if (shapeRenderer != null)
+                            {
+                                shapeRenderer.material.color = Color.green;
+                                Debug.Log("[Debug] Changed shapeRenderer color to green");
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log("[Debug] dragPlane.Raycast returned false → cannot compute lastWorldPoint");
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("[Debug] StartDragging(this) returned false → cannot drag");
                     }
                 }
+                else
+                {
+                    Debug.Log("[Debug] Raycast hit other object, not this one");
+                }
+            }
+            else
+            {
+                Debug.Log("[Debug] Raycast did not hit anything");
             }
         }
+
 
         private void SetupDragPlane(Ray ray)
         {

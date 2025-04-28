@@ -56,13 +56,22 @@ namespace Manipulator
         // === Drag Methods ===
         public bool StartDragging(DraggableShape shape)
         {
-            if (currentDraggingObject == null && CurrentDragState != DragState.None && !IsDrawing())
+            bool canDrag = currentDraggingObject == null 
+                           && CurrentDragState != DragState.None 
+                           && !IsDrawing();
+
+            // In debug có màu: xanh nếu drag được, đỏ nếu không
+            string color = canDrag ? "green" : "red";
+            Debug.Log($"<color={color}>[StartDragging] Can drag {shape.name}? {canDrag}</color>");
+
+            if (canDrag)
             {
                 currentDraggingObject = shape;
                 return true;
             }
             return false;
         }
+
 
         public void StopDragging(DraggableShape shape)
         {
