@@ -1,53 +1,61 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace CutGame
+public class GridButtonUI : MonoBehaviour
 {
-    public class GridButtonUI : MonoBehaviour
+    private LevelLoader levelLoader;
+
+    public Button button;
+    public Text label;
+
+    [Space]
+    public Image locked;
+
+    [Space]
+    public Image[] stars;
+
+    [Space]
+    public Color starColor;
+
+    [Space]
+    public Image hard;
+
+    private int index;
+
+    public void EnterLevel()
     {
-        private LevelLoader levelLoader;
+        AudioManager.Play(SFX.Click);
 
-        public Button button;
-        public Text label;
+        Fade.instance.FadeOut(() => levelLoader.LoadLevel(index));
+    }
 
-        [Space] public Image locked;
-
-        [Space] public Image[] stars;
-
-        [Space] public Color starColor;
-
-        private int index;
-
-        public void EnterLevel()
+    // Sets up buttons instanciated in level grid
+    public void SetUpButton(LevelLoader levelLoader, int index, LevelData.Level level)
+    {
+        if (level.unlocked)
         {
-            AudioManager.Play(SFX.Click);
+            this.levelLoader = levelLoader;
+            this.index = index;
+            label.text = (index + 1).ToString();
 
-            Fade.instance.FadeOut(() => levelLoader.LoadLevel(index));
+            for (int i = 0; i < level.rating; i++)
+            {
+                stars[i].color = starColor;
+            }
+        }
+        else
+        {
+            button.interactable = false;
+
+            label.gameObject.SetActive(false);
+            locked.gameObject.SetActive(true);
+
+            stars[0].transform.parent.gameObject.SetActive(false);
         }
 
-        // Sets up buttons instanciated in level grid
-        public void SetUpButton(LevelLoader levelLoader, int index, LevelData.Level level)
+        if (level.hardmode)
         {
-            if (level.unlocked)
-            {
-                this.levelLoader = levelLoader;
-                this.index = index;
-                label.text = (index + 1).ToString();
-
-                for (int i = 0; i < level.rating; i++)
-                {
-                    stars[i].color = starColor;
-                }
-            }
-            else
-            {
-                button.interactable = false;
-
-                label.gameObject.SetActive(false);
-                locked.gameObject.SetActive(true);
-
-                stars[0].transform.parent.gameObject.SetActive(false);
-            }
+            hard.gameObject.SetActive(true);
         }
     }
 }

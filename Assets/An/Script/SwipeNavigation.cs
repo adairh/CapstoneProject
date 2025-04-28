@@ -2,45 +2,49 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NewBehaviourScript : MonoBehaviour
+namespace An_An
 {
-    public BottomNavigationBar navBar;
-
-    private Vector2 startTouchPosition;
-    private Vector2 endTouchPosition;
-
-    void Update()
+    public class NewBehaviourScript : MonoBehaviour
     {
-        if (Input.touchCount > 0)
-        {
-            Touch touch = Input.GetTouch(0);
+        public BottomNavigationBar navBar;
 
-            if (touch.phase == TouchPhase.Began)
+        private Vector2 startTouchPosition;
+        private Vector2 endTouchPosition;
+
+        void Update()
+        {
+            if (Input.touchCount > 0)
             {
-                startTouchPosition = touch.position;
+                Touch touch = Input.GetTouch(0);
+
+                if (touch.phase == TouchPhase.Began)
+                {
+                    startTouchPosition = touch.position;
+                }
+                else if (touch.phase == TouchPhase.Ended)
+                {
+                    endTouchPosition = touch.position;
+                    HandleSwipe();
+                }
             }
-            else if (touch.phase == TouchPhase.Ended)
+        }
+
+        void HandleSwipe()
+        {
+            float deltaX = endTouchPosition.x - startTouchPosition.x;
+
+            if (Mathf.Abs(deltaX) > 100f) // Vuot du xa
             {
-                endTouchPosition = touch.position;
-                HandleSwipe();
+                if (deltaX > 0)
+                {
+                    navBar.SwipeToPrevious();
+                }
+                else
+                {
+                    navBar.SwipeToNext();
+                }
             }
         }
     }
 
-    void HandleSwipe()
-    {
-        float deltaX = endTouchPosition.x - startTouchPosition.x;
-
-        if (Mathf.Abs(deltaX) > 100f) // Vuot du xa
-        {
-            if (deltaX > 0)
-            {
-                navBar.SwipeToPrevious();
-            }
-            else
-            {
-                navBar.SwipeToNext();
-            }
-        }
-    }
 }
