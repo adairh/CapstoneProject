@@ -2,204 +2,204 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CutGame
+public class GameUI : MonoBehaviour
 {
-    public class GameUI : MonoBehaviour
+    public Image clockFill;
+    public Text clockText;
+    public Color clockTextColor;
+
+    private int time;
+
+    [Space]
+    public GameObject timesUp;
+    public GameObject complete;
+
+    [Space]
+    public LevelLoader levelLoader;
+
+    public Button nextLevel;
+
+    [Space]
+    public Image[] stars;
+    public Color starColor;    
+
+    private int clockID;
+
+    [Space]
+    public Text countdown;
+    private Vector3 countdownScale = new Vector3(1.25f, 1.25f);
+
+    [Space]
+    public Text starCount;
+
+    void Start()
     {
-        public Image clockFill;
-        public Text clockText;
-        public Color clockTextColor;
+        GameManager.instance.OnCountdown += OnCountdown;
 
-        private int time;
+        GameManager.instance.OnTick += OnClockUpdate;
+        GameManager.instance.OnAllyKilled += UpdateStarCount;
 
-        [Space] public GameObject timesUp;
-        public GameObject complete;
+        GameManager.instance.OnTimesUp += OnTimesUp;
+        GameManager.instance.OnComplete += OnComplete;
+    }
 
-        [Space] public LevelLoader levelLoader;
+    // Initializes clock;
+    public void Init(int time)
+    {
+        this.time = time;
+        clockText.text = time.ToString();
+        enabled = true;
+        countdown.text = "";
+    }
 
-        public Button nextLevel;
+    // Updates the clock on every tick
+    private void OnClockUpdate()
+    {
+        int currTime = GameManager.timeLeft - 1;
 
-        [Space] public Image[] stars;
-        public Color starColor;
+        float from = clockFill.fillAmount;
+        float to = currTime / (float)time;
 
-        private int clockID;
-
-        [Space] public Text countdown;
-        private Vector3 countdownScale = new Vector3(1.25f, 1.25f);
-
-        [Space] public Text starCount;
-
-        void Start()
-        {
-            GameManager.instance.OnCountdown += OnCountdown;
-
-            GameManager.instance.OnTick += OnClockUpdate;
-            GameManager.instance.OnAllyKilled += UpdateStarCount;
-
-            GameManager.instance.OnTimesUp += OnTimesUp;
-            GameManager.instance.OnComplete += OnComplete;
-        }
-
-        // Initializes clock;
-        public void Init(int time)
-        {
-            this.time = time;
-            clockText.text = time.ToString();
-            enabled = true;
-            countdown.text = "";
-        }
-
-        // Updates the clock on every tick
-        private void OnClockUpdate()
-        {
-            int currTime = GameManager.timeLeft - 1;
-
-            float from = clockFill.fillAmount;
-            float to = currTime / (float)time;
-
-            clockID = LeanTween.value(from, to, 1)
-                .setOnUpdate(fill => clockFill.fillAmount = fill)
-                .setOnComplete(() =>
-                {
-                    if (currTime == 0)
-                        clockText.color = clockTextColor;
-                    clockText.text = currTime.ToString();
+        clockID = LeanTween.value(from, to, 1)
+            .setOnUpdate(fill => clockFill.fillAmount = fill)
+            .setOnComplete(() => {
+                if (currTime == 0)
+                    clockText.color = clockTextColor;
+                clockText.text = currTime.ToString();
                 })
-                .id;
+            .id;
 
-            if (currTime < 3)
-                clockText.rectTransform
-                    .LeanScale(new Vector3(1.25f, 1.25f), 0.25f).setEaseInOutBounce()
-                    .setOnComplete(() => clockText.rectTransform.localScale = Vector3.one);
+        if (currTime < 3)
+            clockText.rectTransform
+                .LeanScale(new Vector3(1.25f, 1.25f), 0.25f).setEaseInOutBounce()
+                .setOnComplete(() => clockText.rectTransform.localScale = Vector3.one);
 
-            AudioManager.Play(SFX.Tick);
-        }
+        AudioManager.Play(SFX.Tick);
+    }
 
-        private void OnCountdown()
+    private void OnCountdown()
+    {
+        if (GameManager.instance.countdown > 0)
         {
-            if (GameManager.instance.countdown > 0)
-            {
-                countdown.rectTransform.localScale = Vector3.one;
+            countdown.rectTransform.localScale = Vector3.one;
+            
+            countdown.text = GameManager.instance.countdown.ToString();
 
-                countdown.text = GameManager.instance.countdown.ToString();
-
-                LeanTween.scale(countdown.rectTransform, countdownScale, 0.33f)
-                    .setEaseOutElastic();
-
-                AudioManager.Play(SFX.Countdown);
-            }
-            else
-            {
-                GameObject go = countdown.transform.parent.gameObject;
-
-                go.GetComponent<CanvasGroup>().LeanAlpha(0, 0.1f)
-                    .setOnComplete(() => go.SetActive(false));
-
-                AudioManager.Play(SFX.Go);
-            }
-        }
-
-        // Occurs when player failed or didn't finish level in time
-        private void OnTimesUp()
+            LeanTween.scale(countdown.rectTransform, countdownScale, 0.33f)
+                .setEaseOutElastic();
+            
+            AudioManager.Play(SFX.Countdown);
+        }   
+        else
         {
-            if (GameManager.instance.hasEnded)
-                return;
+            GameObject go = countdown.transform.parent.gameObject;
+            
+            go.GetComponent<CanvasGroup>().LeanAlpha(0, 0.1f)
+                .setOnComplete(() => go.SetActive(false));
 
-            AudioManager.Play(SFX.Failure);
-            LeanTween.cancel(clockID);
+            AudioManager.Play(SFX.Go);
+        }   
+    }
 
-            if (GameManager.instance.failed)
-            {
-                timesUp.GetComponentInChildren<Text>().text = "FAILED!";
-                timesUp.transform.GetChild(1).gameObject.SetActive(true);
-            }
+    // Occurs when player failed or didn't finish level in time
+    private void OnTimesUp()
+    {
+        if (GameManager.instance.hasEnded)
+            return;
 
-            FadeIn(timesUp);
-        }
+        AudioManager.Play(SFX.Failure);
+        LeanTween.cancel(clockID);
 
-        // Occurs when player complete the level
-        private void OnComplete()
+        if (GameManager.instance.failed)
         {
-            if (GameManager.instance.hasEnded)
-                return;
-
-            AudioManager.Play(SFX.Success);
-            LeanTween.cancel(clockID);
-
-            if (!levelLoader.IsNextLevelAvailable())
-                nextLevel.interactable = false;
-
-            FadeIn(complete, () => ShowStar(0));
+            timesUp.GetComponentInChildren<Text>().text = "FAILED!";
+            timesUp.transform.GetChild(1).gameObject.SetActive(true);
         }
 
-        // Fades in the complete or timesup screen
-        private void FadeIn(GameObject gameObject, Action onComplete = null)
+        FadeIn(timesUp);
+    }
+
+    // Occurs when player complete the level
+    private void OnComplete()
+    {
+        if (GameManager.instance.hasEnded)
+            return;
+
+        AudioManager.Play(SFX.Success);
+        LeanTween.cancel(clockID);
+
+        if (!levelLoader.IsNextLevelAvailable())
+            nextLevel.interactable = false;
+
+        FadeIn(complete, () => ShowStar(0));
+    }
+
+    // Fades in the complete or timesup screen
+    private void FadeIn(GameObject gameObject, Action onComplete = null)
+    {
+        CanvasGroup canvas = gameObject.GetComponent<CanvasGroup>();
+
+        var seq = LeanTween.sequence();
+        seq.append(1);
+        seq.append(() => {
+            canvas.alpha = 0;
+            gameObject.SetActive(true);
+        });
+        seq.append(() => canvas.LeanAlpha(1, 0.1f));
+        seq.append(onComplete);
+    }
+
+    // Animates the stars when complete screen is activated
+    private void ShowStar(int n)
+    {
+        if (n < GameManager.instance.rating)
         {
-            CanvasGroup canvas = gameObject.GetComponent<CanvasGroup>();
+            var star = Instantiate(stars[n], stars[n].transform.parent);
+            var scale = star.rectTransform.localScale;
+            
+            star.rectTransform.localScale = Vector3.zero;
+            star.color = starColor;
 
-            var seq = LeanTween.sequence();
-            seq.append(1);
-            seq.append(() =>
-            {
-                canvas.alpha = 0;
-                gameObject.SetActive(true);
-            });
-            seq.append(() => canvas.LeanAlpha(1, 0.1f));
-            seq.append(onComplete);
+            star.rectTransform.LeanScale(scale, 0.2f)
+                .setEaseOutElastic()
+                .setOnComplete(() => ShowStar(n + 1));
+            
+            AudioManager.Play(SFX.Collect);
         }
+    }
 
-        // Animates the stars when complete screen is activated
-        private void ShowStar(int n)
-        {
-            if (n < GameManager.instance.rating)
-            {
-                var star = Instantiate(stars[n], stars[n].transform.parent);
-                var scale = star.rectTransform.localScale;
+    // Updates star count in UI
+    private void UpdateStarCount()
+    {
+        int count = GameManager.instance.rating;
 
-                star.rectTransform.localScale = Vector3.zero;
-                star.color = starColor;
+        if (count < 0)
+            starCount.text = "!";
+        else
+            starCount.text = count.ToString();
+    }
 
-                star.rectTransform.LeanScale(scale, 0.2f)
-                    .setEaseOutElastic()
-                    .setOnComplete(() => ShowStar(n + 1));
+    public void MainMenu()
+    {
+        AudioManager.Play(SFX.Click);
+        Fade.instance.FadeOut(() => levelLoader.LoadMenu(false));
+    }
 
-                AudioManager.Play(SFX.Collect);
-            }
-        }
+    public void Restart()
+    {
+        AudioManager.Play(SFX.Click);
+        Fade.instance.FadeOut(() => levelLoader.ReloadLevel());
+    }
 
-        // Updates star count in UI
-        private void UpdateStarCount()
-        {
-            int count = GameManager.instance.rating;
+    public void SelectLevel()
+    {
+        AudioManager.Play(SFX.Click);
+        Fade.instance.FadeOut(() => levelLoader.LoadMenu(true));
+    }
 
-            if (count < 0)
-                starCount.text = "!";
-            else
-                starCount.text = count.ToString();
-        }
-
-        public void MainMenu()
-        {
-            AudioManager.Play(SFX.Click);
-            Fade.instance.FadeOut(() => levelLoader.LoadMenu(false));
-        }
-
-        public void Restart()
-        {
-            AudioManager.Play(SFX.Click);
-            Fade.instance.FadeOut(() => levelLoader.ReloadLevel());
-        }
-
-        public void SelectLevel()
-        {
-            AudioManager.Play(SFX.Click);
-            Fade.instance.FadeOut(() => levelLoader.LoadMenu(true));
-        }
-
-        public void NextLevel()
-        {
-            AudioManager.Play(SFX.Click);
-            Fade.instance.FadeOut(() => levelLoader.LoadNextLevel());
-        }
+    public void NextLevel()
+    {
+        AudioManager.Play(SFX.Click);
+        Fade.instance.FadeOut(() => levelLoader.LoadNextLevel());
     }
 }

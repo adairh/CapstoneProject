@@ -1,57 +1,54 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace CutGame
+public class LevelLoader : MonoBehaviour
 {
-    public class LevelLoader : MonoBehaviour
+    public LevelData levelData;
+
+    public static int currentLevelIndex;
+    public static LevelData.Level levelToLoad;
+
+    public static bool loadLevelGrid;
+
+    public void LoadLevel(int index)
     {
-        public LevelData levelData;
+        currentLevelIndex = index;
+        levelToLoad = levelData.levels[index];
+        
+        SceneManager.LoadScene(1, LoadSceneMode.Single);
+    }
 
-        public static int currentLevelIndex;
-        public static LevelData.Level levelToLoad;
+    public void ReloadLevel()
+    {
+        SceneManager.LoadScene(1, LoadSceneMode.Single);
+    }
 
-        public static bool loadLevelGrid;
-
-        public void LoadLevel(int index)
+    public void LoadNextLevel()
+    {
+        if (IsNextLevelAvailable())
         {
-            currentLevelIndex = index;
-            levelToLoad = levelData.levels[index];
-
-            SceneManager.LoadScene(1, LoadSceneMode.Single);
+            LoadLevel(currentLevelIndex + 1);
         }
+    }
 
-        public void ReloadLevel()
-        {
-            SceneManager.LoadScene(1, LoadSceneMode.Single);
-        }
+    public bool IsNextLevelAvailable()
+    {
+        int nextLevelIndex = currentLevelIndex + 1;
 
-        public void LoadNextLevel()
-        {
-            if (IsNextLevelAvailable())
-            {
-                LoadLevel(currentLevelIndex + 1);
-            }
-        }
+        if (levelData.levels.Count > nextLevelIndex &&
+            levelData.levels[nextLevelIndex].unlocked)
+            return true;
+        else
+            return false;
+    }
 
-        public bool IsNextLevelAvailable()
-        {
-            int nextLevelIndex = currentLevelIndex + 1;
+    public void LoadMenu(bool levelGrid)
+    {
+        if (levelGrid)
+            loadLevelGrid = true;
+        else
+            loadLevelGrid = false;
 
-            if (levelData.levels.Count > nextLevelIndex &&
-                levelData.levels[nextLevelIndex].unlocked)
-                return true;
-            else
-                return false;
-        }
-
-        public void LoadMenu(bool levelGrid)
-        {
-            if (levelGrid)
-                loadLevelGrid = true;
-            else
-                loadLevelGrid = false;
-
-            SceneManager.LoadScene(0, LoadSceneMode.Single);
-        }
+        SceneManager.LoadScene(0, LoadSceneMode.Single);
     }
 }

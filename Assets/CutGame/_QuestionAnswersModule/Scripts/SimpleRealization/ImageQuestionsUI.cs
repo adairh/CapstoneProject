@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using _QuestionAnswersModule.Scripts.Base;
-using CutGame;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;

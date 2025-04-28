@@ -1,32 +1,26 @@
 ﻿using UnityEngine;
 
-namespace Manipulator
+public class NumericSetting : Setting<float>
 {
-    public class NumericSetting : Setting<float>
+    public NumericSetting(float length) : base(length, ISetting.SettingType.NUMERIC, typeof(Shape)) { }
+    public override GameObject GetUI()
     {
-        public NumericSetting(float length) : base(length, ISetting.SettingType.NUMERIC, typeof(Shape))
-        {
-        }
+        //throw new System.NotImplementedException();
+        return new GameObject();
 
-        public override GameObject GetUI()
-        {
-            //throw new System.NotImplementedException();
-            return new GameObject();
+    }
 
-        }
+    public override void Apply()
+    {
+        //throw new System.NotImplementedException();
+    }
 
-        public override void Apply()
-        {
-            //throw new System.NotImplementedException();
-        }
+    public override void Update()
+    {
+    }
 
-        public override void Update()
-        {
-        }
-
-        public override float Height()
-        {
-            return 0f;
-        }
+    public override float Height()
+    {
+        return 0f;
     }
 }

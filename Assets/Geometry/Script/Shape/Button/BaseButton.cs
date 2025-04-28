@@ -1,46 +1,43 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Manipulator
+public class BaseButton : MonoBehaviour
 {
-    public class BaseButton : MonoBehaviour
+    protected Button button;
+
+    protected virtual void Awake()
     {
-        protected Button button;
+        button = GetComponent<Button>();
 
-        protected virtual void Awake()
+        if (button == null)
         {
-            button = GetComponent<Button>();
-
-            if (button == null)
-            {
-                Debug.LogError($"[BaseButton] Missing Button component on {gameObject.name}");
-                return;
-            }
-
-            button.onClick.AddListener(OnButtonClick);
+            Debug.LogError($"[BaseButton] Missing Button component on {gameObject.name}");
+            return;
         }
 
-        protected virtual void Start()
-        {
-            if (ButtonController.Instance == null)
-            {
-                Debug.LogError("[BaseButton] ButtonController instance is null!");
-                return;
-            }
+        button.onClick.AddListener(OnButtonClick);
+    }
 
-            ButtonController.Instance.RegisterButton(this);
+    protected virtual void Start()
+    {
+        if (ButtonController.Instance == null)
+        {
+            Debug.LogError("[BaseButton] ButtonController instance is null!");
+            return;
         }
 
-        protected virtual void OnButtonClick()
+        ButtonController.Instance.RegisterButton(this);
+    }
+
+    protected virtual void OnButtonClick()
+    {
+        if (ButtonController.Instance != null)
         {
-            if (ButtonController.Instance != null)
-            {
-                ButtonController.Instance.OnButtonClicked(this);
-            }
-            else
-            {
-                //Debug.LogError("[BaseButton] ButtonController.Instance is NULL on click!");
-            }
+            ButtonController.Instance.OnButtonClicked(this);
+        }
+        else
+        {
+            Debug.LogError("[BaseButton] ButtonController.Instance is NULL on click!");
         }
     }
 }

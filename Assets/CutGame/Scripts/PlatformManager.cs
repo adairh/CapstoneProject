@@ -2,45 +2,43 @@
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace CutGame
-{
 // This class handles platform specific stuff (scaling, android action handlin etc.)
-    public class PlatformManager : MonoBehaviour
-    {
-        public CanvasScaler canvasScaler;
-        public LevelLoader levelLoader;
+public class PlatformManager : MonoBehaviour
+{
+    public CanvasScaler canvasScaler;
+    public LevelLoader levelLoader;
 
 #if UNITY_WEBGL || UNITY_STANDALONE
-        private void Awake()
-        {
-            canvasScaler.matchWidthOrHeight = 1.0f;
-        }
+    private void Awake()
+    {
+        canvasScaler.matchWidthOrHeight = 1.0f;
+    }
 #endif
 
 #if UNITY_STANDALONE
-        private void Update()
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F12))
         {
-            if (Input.GetKeyDown(KeyCode.F12))
-            {
-                if (Screen.fullScreen)
-                    TurnOffFullscreen();
-                else
-                {
-                    var res = Screen.currentResolution;
-                    Screen.SetResolution(res.width, res.height, FullScreenMode.FullScreenWindow);
-                }
-            }
-
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
+            if (Screen.fullScreen)
                 TurnOffFullscreen();
+            else
+            {
+                var res = Screen.currentResolution;
+                Screen.SetResolution(res.width, res.height, FullScreenMode.FullScreenWindow);
             }
         }
 
-        private void TurnOffFullscreen()
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
-            Screen.SetResolution(450, 800, false);
+            TurnOffFullscreen();
         }
+    }
+
+    private void TurnOffFullscreen()
+    {
+        Screen.SetResolution(450, 800, false);
+    }
 #endif
 
 #if UNITY_ANDROID
@@ -97,6 +95,4 @@ namespace CutGame
         }
     }
 #endif
-    }
-
 }
