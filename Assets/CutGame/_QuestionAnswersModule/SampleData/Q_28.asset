@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8423eb9b4854e5c851f945a0be0cbdd, type: 3}
+  m_Name: Q_28
+  m_EditorClassIdentifier: 
+  _questName: Question 28
+  _questDescription: "Tam gi\xE1c ABC c\xF3 AB = 4, BC = 6, AC = 2\u221A7. \u0110i\u1EC3m
+    M thu\u1ED9c \u0111o\u1EA1n BC sao cho MC = 2MB. T\xEDnh \u0111\u1ED9 d\xE0i
+    c\u1EA1nh AM."
+  _questSprite: {fileID: 21300000, guid: bc417d9bae70f7f4480d107e4a3123d9, type: 3}
+  _correctAnswer: {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  _answers:
+  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  - {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  - {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _isShuffleAnswers: 0

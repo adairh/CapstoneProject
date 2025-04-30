@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8423eb9b4854e5c851f945a0be0cbdd, type: 3}
+  m_Name: Q_24
+  m_EditorClassIdentifier: 
+  _questName: Question 24
+  _questDescription: "Cho tam gi\xE1c ABC c\xF3 \u0111\u1EC9nh A(1; 1), B(-2; 4)
+    v\xE0 G(1; 2) l\xE0 tr\u1ECDng t\xE2m c\u1EE7a tam gi\xE1c. Khi \u0111\xF3 t\u1ECDa
+    \u0111\u1ED9 \u0111\u1EC9nh C l\xE0:\r\nA. C(0;7/3)     B. C(4; 1)\r\nC. C(2;-3)      
+    D. C(-2; 2)\r\n"
+  _questSprite: {fileID: 0}
+  _correctAnswer: {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  _answers:
+  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  - {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  - {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _isShuffleAnswers: 0
