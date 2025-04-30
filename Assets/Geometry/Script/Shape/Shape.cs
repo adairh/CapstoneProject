@@ -128,6 +128,9 @@ namespace Manipulator
             go.AddComponent<ShapeClickHandler>().SetShape(this);
             go.AddComponent<DraggableShape>().SetShape(this);
             go.AddComponent<HoverableShape>().SetShape(this);
+            
+            if (go.CompareTag("Shape"))
+                go.AddComponent<SelectableShape>().SetShape(this);
         }
 
         // Additional setup (override in subclasses)

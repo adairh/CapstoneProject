@@ -115,6 +115,8 @@ namespace Manipulator
         if (!attachedShapes.Contains(shape))
             attachedShapes.Add(shape);
     }
+
+    public HashSet<Shape> AttachedShapes => attachedShapes;
 }
 
 }

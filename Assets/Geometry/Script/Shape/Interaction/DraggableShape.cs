@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 
 namespace Manipulator
 {
@@ -120,18 +121,30 @@ namespace Manipulator
         private void DragObject()
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (dragPlane.Raycast(ray, out float enter))
+            if (!dragPlane.Raycast(ray, out float enter)) return;
+
+            Vector3 currentPoint = ray.GetPoint(enter);
+            Vector3 delta = currentPoint - lastWorldPoint;
+            Vector3 axis = ManipulationManager.Instance.GetAllowedDragAxis();
+            Vector3 move = Vector3.Scale(delta, axis);
+            lastWorldPoint = currentPoint;
+
+            var mgr = ManipulationManager.Instance;
+            // Nếu shape này nằm trong selectedShapes, drag tất cả
+            if (mgr.SelectedShapes.Contains(_shape))
             {
-                Vector3 currentWorldPoint = ray.GetPoint(enter);
-                Vector3 delta = currentWorldPoint - lastWorldPoint;
-
-                Vector3 allowedAxis = ManipulationManager.Instance.GetAllowedDragAxis();
-                Vector3 constrainedDelta = Vector3.Scale(delta, allowedAxis);
-
-                _shape.MoveToPosition(_shape.Position + constrainedDelta);
-                lastWorldPoint = currentWorldPoint;
+                foreach (var s in mgr.SelectedShapes)
+                {
+                    s.MoveToPosition(s.Position + move);
+                }
+            }
+            else
+            {
+                // Chỉ drag riêng
+                _shape.MoveToPosition(_shape.Position + move);
             }
         }
+
 
         private void StopDragging()
         {

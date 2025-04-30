@@ -12,6 +12,7 @@ namespace Manipulator
         Drag,
         Draw,
         OpenSettings,
+        Select
         // … thêm tùy bạn
     }
 
@@ -42,6 +43,10 @@ namespace Manipulator
                 OnAction?.Invoke(UserAction.RightClick, Input.mousePosition);
             if (Input.GetMouseButton(0))
                 OnAction?.Invoke(UserAction.Drag, Input.mousePosition);
+            
+            
+            if (Input.GetMouseButtonDown(1) && Input.GetKeyDown(KeyCode.LeftControl))
+                OnAction?.Invoke(UserAction.Select, Input.mousePosition);
             
             
             

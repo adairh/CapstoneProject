@@ -13,6 +13,8 @@ namespace Manipulator
                 Destroy(gameObject.GetComponent<HoverableShape>());
             if (gameObject.GetComponent<DraggableShape>() != null)
                 Destroy(gameObject.GetComponent<DraggableShape>());
+            if (gameObject.GetComponent<SelectableShape>() != null)
+                Destroy(gameObject.GetComponent<SelectableShape>());
         }
     }
 }

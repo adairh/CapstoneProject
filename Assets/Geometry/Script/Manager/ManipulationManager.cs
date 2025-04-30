@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Manipulator
@@ -53,6 +55,45 @@ namespace Manipulator
                 Destroy(gameObject);
         }
 
+        
+        // === InputManager ===
+        
+        
+        private void OnEnable()
+        {
+            InputManager.Instance.OnAction += HandleAction;
+        }
+        private void OnDisable()
+        {
+            InputManager.Instance.OnAction -= HandleAction;
+        }
+ 
+        private void HandleAction(UserAction action, Vector2 pos)
+        {
+            if (action == UserAction.LeftClick)
+            {
+                bool ctrl = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+                Ray ray = Camera.main.ScreenPointToRay(pos);
+
+                if (ctrl)
+                {
+                    // Việc chọn đã được xử lý trong ClickableShape.OnMouseDown.
+                    // Không cần làm gì thêm nếu muốn giữ OnMouseDown.
+                }
+                else
+                {
+                    // Nếu click vùng trống (không hit collider nào), clear selection
+                    if (!Physics.Raycast(ray, out _))
+                    {
+                        ClearSelection();
+                    }
+                }
+            }
+
+            // ... các case khác ...
+        }
+        
+        
         // === Drag Methods ===
         public bool StartDragging(DraggableShape shape)
         {
@@ -135,5 +176,77 @@ namespace Manipulator
         {
             return drawing;
         }
+        
+        
+        
+        // === Select ===
+        
+        public bool IsShapeOrParentSelected(Shape shape)
+        {
+            return selectedShapes.Contains(shape)
+                   || (shape.Parent != null && selectedShapes.Contains(shape.Parent))
+                   || (shape is Point p && p.AttachedShapes.Any(s => selectedShapes.Contains(s)));
+        }
+
+        
+         private HashSet<Shape> selectedShapes = new HashSet<Shape>();
+        public IReadOnlyCollection<Shape> SelectedShapes => selectedShapes;
+
+        /// <summary>
+        /// Toggle chọn / bỏ chọn một shape.
+        /// </summary>
+        public void ToggleSelection(Shape shape)
+        {
+            if (selectedShapes.Contains(shape))
+            {
+                // Bỏ chọn
+                selectedShapes.Remove(shape);
+            }
+            else
+            {
+                // Thêm chọn
+                selectedShapes.Add(shape);
+            }
+
+            // Update trực tiếp material
+            shape.Components().ForEach(go =>
+            {
+                if (go.TryGetComponent<Renderer>(out var rend))
+                    rend.material = selectedShapes.Contains(shape)
+                        ? MaterialLibrary.Get(MaterialType.Select)
+                        : MaterialLibrary.Get(MaterialType.Default);
+            });
+        }
+
+        /// <summary>
+        /// Clear hết selection khi ctrl không giữ và click vùng trống.
+        /// </summary>
+        public void ClearSelection()
+        {
+            foreach (var shape in selectedShapes)
+            {
+                shape.Components().ForEach(go =>
+                {
+                    if (go.TryGetComponent<Renderer>(out var rend))
+                        rend.material = MaterialLibrary.Get(MaterialType.Default);
+                });
+            }
+            selectedShapes.Clear();
+        }
+ 
+
+
+
     }
+    
+    
+    public static class Extensions
+    {
+        public static void ForEach<T>(this IEnumerable<T> src, System.Action<T> act)
+        {
+            foreach (var x in src) act(x);
+        }
+    }
+    
+    
 }

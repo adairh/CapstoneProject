@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Manipulator
@@ -64,24 +65,24 @@ namespace Manipulator
         {
             if (_shape == null) return;
 
+            // 1) Xác định xem shape (hoặc parent) có đang được select không
+            bool isSelected = ManipulationManager.Instance.IsShapeOrParentSelected(_shape);
+
+            // 2) Chọn material tương ứng chỉ trong 1 dòng
+            var targetMat = MaterialLibrary.Get(
+                isSelected 
+                    ? MaterialType.Select 
+                    : MaterialType.Default
+            );
+
             if (ManipulationManager.Instance.AllHoverMode && !isChild)
             {
                 foreach (GameObject part in shapeComponents)
-                {
-                    if (part.TryGetComponent<Renderer>(out Renderer partRenderer))
-                    {
-                        partRenderer.material = MaterialLibrary.Get(MaterialType.Default);
-
-                    }
-                }
+                    part.GetComponent<Renderer>().material = targetMat;
             }
             else
             {
-                if (_renderer != null)
-                {
-                    _renderer.material = MaterialLibrary.Get(MaterialType.Default);
-
-                }
+                _renderer.material = targetMat;
             }
         }
 
