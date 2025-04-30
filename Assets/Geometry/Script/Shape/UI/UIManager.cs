@@ -15,6 +15,15 @@ namespace Manipulator
         [SerializeField] private GameObject canvasHome; // Home page for hosting/joining rooms
         [SerializeField] private List<GameObject> uiPrefabsList; // List of UI prefabs set via editor
 
+        /*public GameObject canvasPlaygame;
+        public GameObject popupJoinRoom;
+        public GameObject popupCreateRoom;
+        public GameObject darkOverlay;
+        public TMP_InputField joinRoomIDInput;
+        public TMP_InputField joinPasswordInput;
+        public TMP_InputField createRoomIDInput;
+        public TMP_InputField createPasswordInput;*/
+
         private Dictionary<string, GameObject> uiPrefabs = new Dictionary<string, GameObject>(); // Storage for UI components
 
         public Dictionary<string, GameObject> UIPrefabs
@@ -42,9 +51,9 @@ namespace Manipulator
             }
 
             // Validate serialized fields
-            if (canvas == null) Debug.LogError("Main canvas Transform is not assigned in UIManager!");
+            /*if (canvas == null) Debug.LogError("Main canvas Transform is not assigned in UIManager!");
             if (canvasOnboarding == null) Debug.LogError("canvasOnboarding is not assigned in UIManager!");
-            if (canvasHome == null) Debug.LogError("canvasHome is not assigned in UIManager!");
+            if (canvasHome == null) Debug.LogError("canvasHome is not assigned in UIManager!");*/
             if (uiPrefabsList == null || uiPrefabsList.Count == 0)
                 Debug.LogWarning("uiPrefabsList is empty or not assigned in UIManager!");
 
@@ -54,7 +63,7 @@ namespace Manipulator
         private void Start()
         {
             // Initialize canvas states
-            if (canvasOnboarding != null)
+            /*if (canvasOnboarding != null)
             {
                 canvasOnboarding.SetActive(true);
                 Debug.Log("canvasOnboarding activated");
@@ -62,9 +71,9 @@ namespace Manipulator
             else
             {
                 Debug.LogError("Cannot activate canvasOnboarding: Not assigned!");
-            }
+            }*/
 
-            if (canvasHome != null)
+            /*if (canvasHome != null)
             {
                 canvasHome.SetActive(false);
                 Debug.Log("canvasHome deactivated");
@@ -72,12 +81,12 @@ namespace Manipulator
             else
             {
                 Debug.LogError("Cannot deactivate canvasHome: Not assigned!");
-            }
+            }*/
         }
 
         public void ShowHome()
         {
-            if (canvasOnboarding != null)
+            /*if (canvasOnboarding != null)
             {
                 canvasOnboarding.SetActive(false);
                 Debug.Log("canvasOnboarding deactivated");
@@ -85,9 +94,9 @@ namespace Manipulator
             else
             {
                 Debug.LogError("Cannot deactivate canvasOnboarding: Not assigned!");
-            }
+            }*/
 
-            if (canvasHome != null)
+            /*if (canvasHome != null)
             {
                 canvasHome.SetActive(true);
                 Debug.Log("canvasHome activated");
@@ -95,7 +104,7 @@ namespace Manipulator
             else
             {
                 Debug.LogError("Cannot activate canvasHome: Not assigned!");
-            }
+            }*/
 
             /*if (canvas != null)
             {
@@ -110,7 +119,7 @@ namespace Manipulator
 
         public void ShowOnboarding()
         {
-            if (canvasHome != null)
+            /*if (canvasHome != null)
             {
                 canvasHome.SetActive(false);
                 Debug.Log("canvasHome deactivated");
@@ -128,7 +137,7 @@ namespace Manipulator
             else
             {
                 Debug.LogError("Cannot activate canvasOnboarding: Not assigned!");
-            }
+            }*/
         }
 
         public void RegisterUIComponent(string key, GameObject prefab)

@@ -11,7 +11,8 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private Button quickJoinButton;
     [SerializeField] private Button createLobbyButton;
     //[SerializeField] private TextMeshProUGUI statusText;
-    [SerializeField] private LobbyPopupUI lobbyPopupUI;
+    [SerializeField] private CreatePopupUI createPopupUI;
+    [SerializeField] private JoinPopupUI joinPopupUI;
 
     public static LobbyUI Instance { get; private set; }
 
@@ -32,7 +33,8 @@ public class LobbyUI : MonoBehaviour
         //if (mainMenuButton == null) Debug.LogError("MainMenuButton is not assigned!");
         if (quickJoinButton == null) Debug.LogError("QuickJoinButton is not assigned!");
         if (createLobbyButton == null) Debug.LogError("CreateLobbyButton is not assigned!");
-        if (lobbyPopupUI == null) Debug.LogError("LobbyPopupUI is not assigned!");
+        if (createPopupUI == null) Debug.LogError("createPopupUI is not assigned!");
+        if (joinPopupUI == null) Debug.LogError("joinPopupUI is not assigned!");
         //if (statusText == null) Debug.LogWarning("StatusText is not assigned (optional).");
 
         /*mainMenuButton.onClick.AddListener(() =>
@@ -44,12 +46,12 @@ public class LobbyUI : MonoBehaviour
         createLobbyButton.onClick.AddListener(() =>
         {
             Debug.Log("Create Lobby Button Clicked");
-            if (lobbyPopupUI == null)
+            if (createPopupUI == null)
             {
-                Debug.LogError("lobbyPopupUI is null when trying to show popup!");
+                Debug.LogError("createPopupUI is null when trying to show popup!");
                 return;
             }
-            lobbyPopupUI.Show((lobbyName, password) =>
+            createPopupUI.Show((lobbyName, password) =>
             {
                 if (GameLobby.Instance != null)
                 {
@@ -67,12 +69,12 @@ public class LobbyUI : MonoBehaviour
         quickJoinButton.onClick.AddListener(() =>
         {
             Debug.Log("Quick Join Button Clicked");
-            if (lobbyPopupUI == null)
+            if (joinPopupUI == null)
             {
-                Debug.LogError("lobbyPopupUI is null when trying to show popup!");
+                Debug.LogError("joinPopupUI is null when trying to show popup!");
                 return;
             }
-            lobbyPopupUI.Show((lobbyName, password) =>
+            joinPopupUI.Show((lobbyName, password) =>
             {
                 if (GameLobby.Instance != null)
                 {
@@ -90,15 +92,24 @@ public class LobbyUI : MonoBehaviour
 
     private void Start()
     {
-        Debug.Log("LobbyUI Start");
+        Debug.Log("Lobby Start");
         gameObject.SetActive(true);
-        if (lobbyPopupUI != null)
+        if (createPopupUI != null)
         {
-            lobbyPopupUI.Hide();
+            createPopupUI.Hide();
         }
         else
         {
-            Debug.LogError("lobbyPopupUI is null in Start!");
+            Debug.LogError("createPopupUI is null in Start!");
+        }
+
+        if (joinPopupUI != null)
+        {
+            joinPopupUI.Hide();
+        }
+        else
+        {
+            Debug.LogError("joinPopupUI is null in Start!");
         }
     }
 

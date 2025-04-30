@@ -1,156 +1,169 @@
-//using UnityEngine;
-//using UnityEngine.SceneManagement;
-
-//public class HomeScreenController : MonoBehaviour
-//{
-//    [Header("Canvas Panels")]
-//    public GameObject canvasHome;
-//    public GameObject canvasPlaygame;
-
-//    void Start()
-//    {
-//        canvasPlaygame.SetActive(false); // An playgame khi bat dau
-//    }
-
-//    // Button Play Game (trong panel_home)
-//    public void OnPlayGamesButton()
-//    {
-//        canvasHome.SetActive(false);
-//        canvasPlaygame.SetActive(true);
-//    }
-
-//    // Button Back (trong canvas_playgame)
-//    public void OnBackToHome()
-//    {
-//        canvasPlaygame.SetActive(false);
-//        canvasHome.SetActive(true);
-//    }
-
-//    // Button de choi game 1
-//    public void OnPlayGame1()
-//    {
-//        SceneManager.LoadScene("Game1");
-//    }
-
-//    // Button de choi game 2
-//    public void OnPlayGame2()
-//    {
-//        SceneManager.LoadScene("Game2");
-//    }
-//}
-
+﻿
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
-
-namespace An_An
+using System.Collections;
+// Khoa đã ở đây
+public class HomeScreenController : MonoBehaviour
 {
-    public class HomeScreenController : MonoBehaviour
+    public static HomeScreenController Instance;
+
+    [Header("Main Canvases")]
+    public GameObject canvasHome;
+    public GameObject canvasPlaygame;
+    public GameObject canvasOnboarding; // Onboarding screen with ShowHome button
+    public GameObject canvas; // Main Canvas transform for UI instantiation
+
+    [Header("Popups")]
+    public GameObject popupJoinRoom;
+    public GameObject popupCreateRoom;
+    public GameObject darkOverlay;
+
+    [Header("Join Room Inputs")]
+    public TMP_InputField joinRoomIDInput;
+    public TMP_InputField joinPasswordInput;
+
+    [Header("Create Room Inputs")]
+    public TMP_InputField createRoomIDInput;
+    public TMP_InputField createPasswordInput;
+
+    private bool isCreateRoomButtonClicked = false;
+
+    private void Awake()
     {
-        [Header("Main Canvases")]
-        public GameObject canvasHome;
-        public GameObject canvasPlaygame;
-
-        [Header("Popups")]
-        public GameObject popupJoinRoom;
-        public GameObject popupCreateRoom;
-        public GameObject darkOverlay;
-
-        [Header("Join Room Inputs")]
-        public TMP_InputField joinRoomIDInput;
-        public TMP_InputField joinNicknameInput;
-
-        [Header("Create Room Inputs")]
-        public TMP_InputField createRoomIDInput;
-        public TMP_InputField createPasswordInput;
-
-        //void Start()
-        //{
-        //    // mac dinh hien thi canvas home
-        //    canvasHome.SetActive(true);
-        //    canvasPlaygame.SetActive(false);
-
-        //    // an popup, overlay luc dau
-        //    popupJoinRoom.SetActive(false);
-        //    popupCreateRoom.SetActive(false);
-        //    darkOverlay.SetActive(false);
-        //}
-        void Start()
+        // Singleton pattern to prevent duplicates
+        if (Instance == null)
         {
-            //mac dinh hien canvasHome, an canvasPlaygame
-            canvasHome.SetActive(true);
-            canvasPlaygame.SetActive(false);
-
-            // dam bao cac popup + overlay duoc an ngay khi lo bat trong editor
-            if (popupJoinRoom != null) popupJoinRoom.SetActive(false);
-            if (popupCreateRoom != null) popupCreateRoom.SetActive(false);
-            if (darkOverlay != null) darkOverlay.SetActive(false);
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // Make this object persistent
         }
-        // ===================== PLAY GAME =====================
-
-        public void OnPlayGamesButton()
+        else
         {
-            canvasHome.SetActive(false);
-            canvasPlaygame.SetActive(true);
-        }
-
-        public void OnBackToHome()
-        {
-            canvasPlaygame.SetActive(false);
-            canvasHome.SetActive(true);
-        }
-
-        public void OnPlayGame1()
-        {
-            SceneManager.LoadScene("Game1");
-        }
-
-        public void OnPlayGame2()
-        {
-            SceneManager.LoadScene("Game2");
-        }
-
-        // ===================== JOIN ROOM =====================
-
-        public void OnJoinRoomButton()
-        {
-            popupJoinRoom.SetActive(true);
-            popupCreateRoom.SetActive(false);
-            darkOverlay.SetActive(true);
-        }
-
-        public void SubmitJoinRoom()
-        {
-            Debug.Log("Join Room: " + joinRoomIDInput.text + " | Nickname: " + joinNicknameInput.text);
-            popupJoinRoom.SetActive(false);
-            darkOverlay.SetActive(false);
-        }
-
-        // ===================== CREATE ROOM =====================
-
-        public void OnCreateRoomButton()
-        {
-            popupCreateRoom.SetActive(true);
-            popupJoinRoom.SetActive(false);
-            darkOverlay.SetActive(true);
-        }
-
-        public void SubmitCreateRoom()
-        {
-            Debug.Log("Create Room: " + createRoomIDInput.text + " | Password: " + createPasswordInput.text);
-            popupCreateRoom.SetActive(false);
-            darkOverlay.SetActive(false);
-        }
-
-        // ===================== QUIT POPUP =====================
-
-        public void CloseAllPopups()
-        {
-            popupJoinRoom.SetActive(false);
-            popupCreateRoom.SetActive(false);
-            darkOverlay.SetActive(false);
-            canvasHome.SetActive(true);
+            Destroy(gameObject); // Destroy duplicate instances
         }
     }
-}
 
+   
+    void Start()
+    {   
+        // Không đụng 
+        //mac dinh hien canvasHome, an canvasPlaygame
+        ConfigureUIBasedOnScene();
+        canvasHome.SetActive(true);
+        canvasPlaygame.SetActive(false);
+        //canvasOnboarding.SetActive(false); // Hide onboarding screen if it's active
+        //canvas.SetActive(false); // an canvas chinh khi bat dau
+
+        // dam bao cac popup + overlay duoc an ngay khi lo bat trong editor
+        if (popupJoinRoom != null) popupJoinRoom.SetActive(false);
+        if (popupCreateRoom != null) popupCreateRoom.SetActive(false);
+        if (darkOverlay != null) darkOverlay.SetActive(false);
+        // Configure UI based on the current scene
+        
+    }
+
+    private void ConfigureUIBasedOnScene()
+    {
+        // Get the active scene
+        Scene currentScene = SceneManager.GetActiveScene();
+
+        // Check the scene name or build index
+        if (currentScene.name == "SampleScene")
+        {
+            if (isCreateRoomButtonClicked)
+            {
+                popupCreateRoom.SetActive(true);
+                popupJoinRoom.SetActive(false);
+
+                darkOverlay.SetActive(true);
+
+                isCreateRoomButtonClicked = false;
+            }
+
+        }
+        
+    }
+    // ===================== PLAY GAME =====================
+
+    public void OnPlayGamesButton()
+    {
+        canvasHome.SetActive(false);
+        canvasPlaygame.SetActive(true);
+    }
+
+    public void OnBackToHome()
+    {
+        canvasPlaygame.SetActive(false);
+        canvasHome.SetActive(true);
+    }
+
+    public void OnPlayGame1()
+    {
+        SceneManager.LoadScene("Game1");
+    }
+
+    public void OnPlayGame2()
+    {
+        SceneManager.LoadScene("Game2");
+    }
+
+    // ===================== JOIN ROOM =====================
+
+    public void OnJoinRoomButton()
+    {
+        // Không đụng - KHoa
+        SceneManager.LoadScene("SampleScene");
+        /*popupJoinRoom.SetActive(true);
+        popupCreateRoom.SetActive(false);
+       
+        darkOverlay.SetActive(true);
+        canvasHome.SetActive(true);*/
+        /*canvasPlaygame.SetActive(false);
+        canvasOnboarding.SetActive(false);*/ // Hide onboarding screen if it's active
+    }
+
+    public void SubmitJoinRoom()
+    {
+        Debug.Log("Join Room: " + joinRoomIDInput.text + " | Password: " + joinPasswordInput.text);
+        popupJoinRoom.SetActive(false);
+        darkOverlay.SetActive(false);
+    }
+
+    // ===================== CREATE ROOM =====================
+
+    public void OnCreateRoomButton()
+    {
+        isCreateRoomButtonClicked = true;
+        // Không đụng - Khoa
+        SceneManager.LoadScene("SampleScene");
+        /*popupCreateRoom.SetActive(true);
+        popupJoinRoom.SetActive(false);*/
+        
+      /*  canvasHome.SetActive(true);
+        darkOverlay.SetActive(true);
+        */
+        /*canvasPlaygame.SetActive(false);
+        canvasOnboarding.SetActive(false); */
+
+    }
+   
+
+    public void SubmitCreateRoom()
+    {
+        Debug.Log("Create Room: " + createRoomIDInput.text + " | Password: " + createPasswordInput.text);
+        popupCreateRoom.SetActive(false);
+        darkOverlay.SetActive(false);
+    }
+
+    // ===================== QUIT POPUP =====================
+
+    public void CloseAllPopups()
+    {
+        //SceneManager.LoadScene("MAIN");
+        popupJoinRoom.SetActive(false);
+        popupCreateRoom.SetActive(false);
+        darkOverlay.SetActive(false);
+        canvasOnboarding.SetActive(false);
+        canvasHome.SetActive(true);
+    }
+}
