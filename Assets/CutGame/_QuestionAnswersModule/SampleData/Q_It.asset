@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _questName: What is the player pointing at?
   _questDescription: 
-  _questSprite: {fileID: 21300000, guid: fc7e92ab14a313b43be874603361432c, type: 3}
-  _correctAnswer: {fileID: 11400000, guid: 5b6fe467f10892c49a89c9ee3c989d5a, type: 2}
+  _questSprite: {fileID: 21300000, guid: 390ba38c07f3fa347810e64397ecfe4d, type: 3}
+  _correctAnswer: {fileID: 11400000, guid: ea5372e0843e8b64d8b5c575d6f2ec49, type: 2}
   _answers:
   - {fileID: 11400000, guid: efd69a6d3b8256246abdc63df6bfd147, type: 2}
-  - {fileID: 11400000, guid: 5b6fe467f10892c49a89c9ee3c989d5a, type: 2}
   - {fileID: 11400000, guid: d1051c95f2ba465458008804172a4b6a, type: 2}
-  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: ea5372e0843e8b64d8b5c575d6f2ec49, type: 2}
+  - {fileID: 11400000, guid: dddd0bf5a8d82fa4aafd742ab50fd548, type: 2}
   _isShuffleAnswers: 1
