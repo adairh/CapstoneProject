@@ -15,12 +15,12 @@ public class LevelLoader : MonoBehaviour
         currentLevelIndex = index;
         levelToLoad = levelData.levels[index];
         
-        SceneManager.LoadScene(1, LoadSceneMode.Single);
+        SceneManager.LoadScene(3, LoadSceneMode.Single);
     }
 
     public void ReloadLevel()
     {
-        SceneManager.LoadScene(1, LoadSceneMode.Single);
+        SceneManager.LoadScene(3, LoadSceneMode.Single);
     }
 
     public void LoadNextLevel()
@@ -49,6 +49,6 @@ public class LevelLoader : MonoBehaviour
         else
             loadLevelGrid = false;
 
-        SceneManager.LoadScene(0, LoadSceneMode.Single);
+        SceneManager.LoadScene(2, LoadSceneMode.Single);
     }
 }
