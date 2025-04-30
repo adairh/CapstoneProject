@@ -1,26 +1,32 @@
 ﻿using UnityEngine;
 
-public class NameSetting : Setting<string>
+namespace Manipulator
 {
-    public NameSetting(string name) : base(name, ISetting.SettingType.NONNUMERIC, typeof(Shape)) { }
-    public override GameObject GetUI()
+    public class NameSetting : Setting<string>
     {
-        //throw new System.NotImplementedException();
-        return new GameObject();
+        public NameSetting(string name) : base(name, ISetting.SettingType.NONNUMERIC, typeof(Shape))
+        {
+        }
 
-    }
+        public override GameObject GetUI()
+        {
+            //throw new System.NotImplementedException();
+            return new GameObject();
 
-    public override void Apply()
-    {
-        //throw new System.NotImplementedException();
-    }
+        }
 
-    public override void Update()
-    {
-    }
+        public override void Apply()
+        {
+            //throw new System.NotImplementedException();
+        }
 
-    public override float Height()
-    {
-        return 0f;
+        public override void Update()
+        {
+        }
+
+        public override float Height()
+        {
+            return 0f;
+        }
     }
 }

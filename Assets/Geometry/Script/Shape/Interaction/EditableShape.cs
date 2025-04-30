@@ -1,31 +1,35 @@
 ﻿using System;
-using UnityEngine; 
+using UnityEngine;
 
-public class EditableShape : MonoBehaviour
+namespace Manipulator
 {
-        
-    public ISetting[] Settings { get; set; }
 
-    void Start()
+    public class EditableShape : MonoBehaviour
     {
-        ISetting[] defaultSetting =
+
+        public ISetting[] Settings { get; set; }
+
+        void Start()
         {
-            new ColorSetting(Color.red),
-            new NameSetting(this.ToString())
-        };
+            ISetting[] defaultSetting =
+            {
+                new ColorSetting(Color.red),
+                new NameSetting(this.ToString())
+            };
 
 
-        Settings = defaultSetting;
-    }
-    
-    
-    public void ApplySettings()
-    {
-        foreach (ISetting setting in Settings) // ✅ Corrected loop
-        {
-            setting.Apply(); // ✅ Apply each setting to the GameObject
+            Settings = defaultSetting;
         }
+
+
+        public void ApplySettings()
+        {
+            foreach (ISetting setting in Settings) // ✅ Corrected loop
+            {
+                setting.Apply(); // ✅ Apply each setting to the GameObject
+            }
+        }
+
+
     }
-    
-    
 }

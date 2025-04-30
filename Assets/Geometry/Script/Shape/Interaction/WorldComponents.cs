@@ -1,15 +1,18 @@
 ﻿using System;
 using UnityEngine;
 
-public class WorldComponents : MonoBehaviour
+namespace Manipulator
 {
-    private void Start()
+    public class WorldComponents : MonoBehaviour
     {
-        if (gameObject.GetComponent<ShapeClickHandler>() != null)
-            Destroy(gameObject.GetComponent<ShapeClickHandler>());
-        if (gameObject.GetComponent<HoverableShape>() != null)
-            Destroy(gameObject.GetComponent<HoverableShape>());
-        if (gameObject.GetComponent<DraggableShape>() != null)
-            Destroy(gameObject.GetComponent<DraggableShape>());
+        private void Start()
+        {
+            if (gameObject.GetComponent<ShapeClickHandler>() != null)
+                Destroy(gameObject.GetComponent<ShapeClickHandler>());
+            if (gameObject.GetComponent<HoverableShape>() != null)
+                Destroy(gameObject.GetComponent<HoverableShape>());
+            if (gameObject.GetComponent<DraggableShape>() != null)
+                Destroy(gameObject.GetComponent<DraggableShape>());
+        }
     }
 }

@@ -1,12 +1,15 @@
 ﻿using UnityEngine;
 
-public class FixedPointConstraint : Constraint
+namespace Manipulator
 {
-    public override void ApplyConstraint(Vector3 movement)
+    public class FixedPointConstraint : Constraint
     {
-        foreach (Shape shape in GetLinkedShapes())
+        public override void ApplyConstraint(Vector3 movement)
         {
-            shape.MoveToPosition(shape.Position + movement);
+            foreach (Shape shape in GetLinkedShapes())
+            {
+                shape.MoveToPosition(shape.Position + movement);
+            }
         }
     }
 }

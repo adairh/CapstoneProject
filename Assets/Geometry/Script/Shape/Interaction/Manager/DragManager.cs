@@ -1,52 +1,61 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class DragManager : MonoBehaviour
+namespace Manipulator
 {
-    public static DragManager Instance { get; private set; }
-
-     
-    public enum DragState { XZ, Y, None }
-    
-    public DragState currentState;
-    
-    private DraggableShape currentDraggingObject = null;
-
-    private void Awake()
+    public class DragManager : MonoBehaviour
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
-
-    }
+        public static DragManager Instance { get; private set; }
 
 
-    public bool StartDragging(DraggableShape shape)
-    {
-        if (currentDraggingObject == null && currentState != DragState.None)
+        public enum DragState
         {
-            currentDraggingObject = shape;
-            //shape.SetDragging(true);
-            return true;
+            XZ,
+            Y,
+            None
         }
-        return false;
-    }
 
-    public void StopDragging(DraggableShape shape)
-    {
-        if (currentDraggingObject == shape)
+        public DragState currentState;
+
+        private DraggableShape currentDraggingObject = null;
+
+        private void Awake()
         {
-            //shape.SetDragging(false);
-            currentDraggingObject = null;
+            if (Instance == null) Instance = this;
+            else Destroy(gameObject);
+
         }
-    }
 
-    public Vector3 GetAllowedAxis()
-    {
-        switch (currentState)
+
+        public bool StartDragging(DraggableShape shape)
         {
-            case DragState.XZ: return new Vector3(1, 0, 1);
-            case DragState.Y: return new Vector3(0, 1, 0);
-            default: return Vector3.zero;
+            if (currentDraggingObject == null && currentState != DragState.None)
+            {
+                currentDraggingObject = shape;
+                //shape.SetDragging(true);
+                return true;
+            }
+
+            return false;
+        }
+
+        public void StopDragging(DraggableShape shape)
+        {
+            if (currentDraggingObject == shape)
+            {
+                //shape.SetDragging(false);
+                currentDraggingObject = null;
+            }
+        }
+
+        public Vector3 GetAllowedAxis()
+        {
+            switch (currentState)
+            {
+                case DragState.XZ: return new Vector3(1, 0, 1);
+                case DragState.Y: return new Vector3(0, 1, 0);
+                default: return Vector3.zero;
+            }
         }
     }
 }

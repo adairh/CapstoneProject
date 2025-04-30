@@ -1,26 +1,32 @@
 ﻿using UnityEngine;
 
-public class RotationSetting : Setting<Quaternion>
+namespace Manipulator
 {
-    public RotationSetting(Quaternion rotation) : base(rotation, ISetting.SettingType.NUMERIC, typeof(Shape)) { }
-    public override GameObject GetUI()
+    public class RotationSetting : Setting<Quaternion>
     {
-        //throw new System.NotImplementedException();
-        return new GameObject();
+        public RotationSetting(Quaternion rotation) : base(rotation, ISetting.SettingType.NUMERIC, typeof(Shape))
+        {
+        }
 
-    }
+        public override GameObject GetUI()
+        {
+            //throw new System.NotImplementedException();
+            return new GameObject();
 
-    public override void Apply()
-    {
-        //throw new System.NotImplementedException();
-    }
+        }
 
-    public override void Update()
-    {
-    }
+        public override void Apply()
+        {
+            //throw new System.NotImplementedException();
+        }
 
-    public override float Height()
-    {
-        return 0f;
+        public override void Update()
+        {
+        }
+
+        public override float Height()
+        {
+            return 0f;
+        }
     }
 }

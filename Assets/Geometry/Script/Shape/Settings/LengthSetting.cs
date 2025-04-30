@@ -1,26 +1,32 @@
-﻿using UnityEngine; 
+﻿using UnityEngine;
 
-public class LengthSetting : Setting<float>
+namespace Manipulator
 {
-    public LengthSetting(float length) : base(length, ISetting.SettingType.NUMERIC, typeof(Segment)) { }
-    public override GameObject GetUI()
+    public class LengthSetting : Setting<float>
     {
-        //throw new System.NotImplementedException();
-        return new GameObject();
+        public LengthSetting(float length) : base(length, ISetting.SettingType.NUMERIC, typeof(Segment))
+        {
+        }
 
-    }
+        public override GameObject GetUI()
+        {
+            //throw new System.NotImplementedException();
+            return new GameObject();
 
-    public override void Apply()
-    {
-        //throw new System.NotImplementedException();
-    }
+        }
 
-    public override void Update()
-    {
-    }
+        public override void Apply()
+        {
+            //throw new System.NotImplementedException();
+        }
 
-    public override float Height()
-    {
-        return 0f;
+        public override void Update()
+        {
+        }
+
+        public override float Height()
+        {
+            return 0f;
+        }
     }
 }

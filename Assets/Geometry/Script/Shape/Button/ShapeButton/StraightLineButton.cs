@@ -1,13 +1,16 @@
 using UnityEngine;
 
-public class StraightLineButton : BaseButton, IShapeButton
+namespace Manipulator
 {
-    public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.StraightLine;
-
-    protected override void OnButtonClick()
+    public class StraightLineButton : BaseButton, IShapeButton
     {
-        base.OnButtonClick();
-        Debug.Log("StraightLine Button Clicked!");
-        ShapeButtonManager.SetActiveShape(GetShapeType());
+        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.StraightLine;
+
+        protected override void OnButtonClick()
+        {
+            base.OnButtonClick();
+            Debug.Log("StraightLine Button Clicked!");
+            ShapeButtonManager.SetActiveShape(GetShapeType());
+        }
     }
 }
