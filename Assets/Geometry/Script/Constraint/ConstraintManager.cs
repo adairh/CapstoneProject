@@ -22,14 +22,13 @@ namespace Manipulator
             }
         }
 
+        // Bây giờ gọi ApplyConstraint với cả movedShape
         public void ApplyConstraints(Shape movedShape, Vector3 movement)
         {
-            foreach (Constraint constraint in constraints)
+            foreach (var constraint in constraints)
             {
                 if (constraint.HasShape(movedShape))
-                {
-                    constraint.ApplyConstraint(movement);
-                }
+                    constraint.ApplyConstraint(movedShape, movement);
             }
         }
     }

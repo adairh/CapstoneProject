@@ -114,8 +114,8 @@ namespace Manipulator
             Parent = parent;
 
             ShapeColor = Color.red;
-            DefaultMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = ShapeColor };
-            HighlightMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = Color.cyan };
+            DefaultMaterial = MaterialLibrary.Get(MaterialType.Default);
+            HighlightMaterial = MaterialLibrary.Get(MaterialType.Highlight);
 
             ShapeStorage.AddShape(Name, this);
             InitializeSettings();
@@ -127,6 +127,7 @@ namespace Manipulator
             go.tag = Parent == null ? "Shape" : "Child";
             go.AddComponent<ShapeClickHandler>().SetShape(this);
             go.AddComponent<DraggableShape>().SetShape(this);
+            go.AddComponent<HoverableShape>().SetShape(this);
         }
 
         // Additional setup (override in subclasses)

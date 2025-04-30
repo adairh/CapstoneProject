@@ -11,7 +11,7 @@ namespace Manipulator
         private bool isChild;
         private List<GameObject> shapeComponents = new List<GameObject>();
 
-        public void SetMaterials(Shape shape)
+        public void SetShape(Shape shape)
         {
             _shape = shape; // Detect shape
             _renderer = GetComponent<Renderer>();
@@ -30,18 +30,17 @@ namespace Manipulator
         {
             if (_shape == null) return;
 
-            HoverManager.Instance.PinShape(_shape);
+            ManipulationManager.Instance.PinShape(_shape);
 
-            HoverManager.Instance.RegisterHoveredObject(this); // Register this object in manager
+            ManipulationManager.Instance.RegisterHoveredObject(this); // Register this object in manager
 
-            if (HoverManager.Instance.AllMode && !isChild)
+            if (ManipulationManager.Instance.AllHoverMode && !isChild)
             {
                 foreach (GameObject part in shapeComponents)
                 {
                     if (part.TryGetComponent<Renderer>(out Renderer partRenderer))
                     {
-                        partRenderer.material = _shape.HighlightMaterial;
-                        partRenderer.material.color = Color.cyan;
+                        partRenderer.material = MaterialLibrary.Get(MaterialType.Hover);
                     }
                 }
             }
@@ -49,30 +48,30 @@ namespace Manipulator
             {
                 if (_renderer != null)
                 {
-                    _renderer.material = _shape.HighlightMaterial;
-                    _renderer.material.color = Color.cyan;
+                    _renderer.material = MaterialLibrary.Get(MaterialType.Hover);
+
                 }
             }
         }
 
         private void OnMouseExit()
         {
-            HoverManager.Instance.UnpinShape();
-            HoverManager.Instance.ResetAllHoveredObjects(); // Reset everything when exiting
+            ManipulationManager.Instance.UnpinShape();
+            ManipulationManager.Instance.ResetAllHoveredObjects(); // Reset everything when exiting
         }
 
         public void ResetHover()
         {
             if (_shape == null) return;
 
-            if (HoverManager.Instance.AllMode && !isChild)
+            if (ManipulationManager.Instance.AllHoverMode && !isChild)
             {
                 foreach (GameObject part in shapeComponents)
                 {
                     if (part.TryGetComponent<Renderer>(out Renderer partRenderer))
                     {
-                        partRenderer.material = _defaultMaterial;
-                        partRenderer.material.color = Color.red;
+                        partRenderer.material = MaterialLibrary.Get(MaterialType.Default);
+
                     }
                 }
             }
@@ -80,8 +79,8 @@ namespace Manipulator
             {
                 if (_renderer != null)
                 {
-                    _renderer.material = _defaultMaterial;
-                    _renderer.material.color = Color.red;
+                    _renderer.material = MaterialLibrary.Get(MaterialType.Default);
+
                 }
             }
         }

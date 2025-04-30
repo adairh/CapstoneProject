@@ -24,5 +24,5 @@ public abstract class Constraint
         return new List<Shape>(linkedShapes); // Return a copy to avoid modification
     }
 
-    public abstract void ApplyConstraint(Vector3 movement);
+    public abstract void ApplyConstraint(Shape movedShape, Vector3 movement);
 }

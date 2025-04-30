@@ -72,7 +72,8 @@ namespace Manipulator
                             // Visual feedback
                             if (shapeRenderer != null)
                             {
-                                shapeRenderer.material.color = Color.green;
+                                shapeRenderer.material = MaterialLibrary.Get(MaterialType.Drag);
+
                                 Debug.Log("[Debug] Changed shapeRenderer color to green");
                             }
                         }
@@ -141,7 +142,8 @@ namespace Manipulator
 
             // ✅ Restore color
             if (shapeRenderer != null)
-                shapeRenderer.material.color = originalColor;
+                shapeRenderer.material = MaterialLibrary.Get(MaterialType.Default);
+
         }
     }
 }

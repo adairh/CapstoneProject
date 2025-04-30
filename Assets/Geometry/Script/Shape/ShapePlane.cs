@@ -87,7 +87,7 @@ namespace Manipulator
             meshCollider.sharedMesh = mesh;
 
             // **Step 5: Set Transparent Material**
-            DefaultMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            DefaultMaterial = MaterialLibrary.Get(MaterialType.Plane);
             Material transparentMaterial = DefaultMaterial;
 
 
