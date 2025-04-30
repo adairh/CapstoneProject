@@ -236,6 +236,12 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &98838646 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7128279299386033603, guid: fca09b510ce0e1e41857f2e41013a9be,
+    type: 3}
+  m_PrefabInstance: {fileID: 5501393593742880859}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &103598811
 GameObject:
   m_ObjectHideFlags: 0
@@ -5288,7 +5294,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0642ab912fa05a043a444da1028672f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shapeNetworkPrefab: {fileID: 0}
+  shapeNetworkPrefab: {fileID: 98838646}
   CurrentDragState: 0
   AllHoverMode: 0
   ModeStraight: 0

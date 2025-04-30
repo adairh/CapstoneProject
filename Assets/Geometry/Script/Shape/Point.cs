@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Unity.Netcode;
+using Unity.Netcode; 
 using UnityEngine;
 
 namespace Manipulator
@@ -8,8 +8,8 @@ namespace Manipulator
 {
     private int pointNO;
     private SphereCollider collider;
-    private Constraint constraint = new FixedPointConstraint(); // Composition
-    private HashSet<Shape> attachedShapes = new HashSet<Shape>(); 
+    
+    private FixedPointConstraint constraint; // Composition 
 
     public Point(Vector3 position) : this(position, null) { }
 
@@ -34,8 +34,11 @@ namespace Manipulator
         collider = GO.GetComponent<SphereCollider>() ?? GO.AddComponent<SphereCollider>();
         UpdateHitbox();
 
+        constraint = GO.AddComponent<FixedPointConstraint>();
+        constraint.Owner = this;
         ConstraintManager.Instance.RegisterConstraint(constraint);
-        constraint.AddShape(this);
+        
+        
 
         
     }
@@ -44,15 +47,18 @@ namespace Manipulator
     {
         base.Destroy();
     }
+
+    public FixedPointConstraint GetPointConstraint() => constraint;
     
     public void AttachProcess()
     {
         var mm = ManipulationManager.Instance;
         var shape = mm.GetPinnedShape();
+            
         
         if (shape != null && shape != this && !(shape is Point))
         {
-            shape.AddDepend(this);
+            constraint.AddDepend(this, shape);
         }
     }
 
@@ -69,10 +75,7 @@ namespace Manipulator
         GO.transform.localScale = Vector3.one * 0.1f;
 
         // Notify shapes that depend on this point
-        foreach (var shape in attachedShapes)
-        {
-            shape.OnPointMoved(this);
-        }
+        constraint.ApplyConstraint(this, new Vector3());
     }
 
     public void MoveTo(Vector3 newPosition)
@@ -103,7 +106,7 @@ namespace Manipulator
     }
 
     public void Draw2D() { }
-
+ 
     public override void CompleteDraw()
     {
         UpdateHitbox();
@@ -112,11 +115,11 @@ namespace Manipulator
 
     public void AttachToShape(Shape shape)
     {
-        if (!attachedShapes.Contains(shape))
-            attachedShapes.Add(shape);
+        if (!constraint.GetLinkedShapes().Contains(shape))
+            constraint.AddShape(shape);
     }
 
-    public HashSet<Shape> AttachedShapes => attachedShapes;
+    public List<Shape> AttachedShapes => constraint.GetLinkedShapes();
 }
 
 }

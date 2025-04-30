@@ -20,7 +20,7 @@ namespace Manipulator
         {
             if (mainCamera == null) mainCamera = Camera.main;
             ShapeButtonManager.OnShapeChanged += HandleShapeChange;
-            Debug.Log($"{LogPrefix} [PerformDrawing] Start - IsHost: {IsHost}, IsClient: {IsClient}, LocalClientId: {NetworkManager.LocalClientId}");
+            //Debug.Log($"{LogPrefix} [PerformDrawing] Start - IsHost: {IsHost}, IsClient: {IsClient}, LocalClientId: {NetworkManager.LocalClientId}");
         }
 
         void OnDestroy()
@@ -30,7 +30,7 @@ namespace Manipulator
 
         void HandleShapeChange(IShapeButton.ShapeType newShape)
         {
-            Debug.Log($"{LogPrefix} [PerformDrawing] Shape changed to: {newShape}");
+            //Debug.Log($"{LogPrefix} [PerformDrawing] Shape changed to: {newShape}");
             currentShape = newShape;
         }
 
@@ -43,7 +43,7 @@ namespace Manipulator
             Vector3 hitPoint = GetHitPoint();
             if (hitPoint == Vector3.zero)
             {
-                Debug.LogWarning($"{LogPrefix} [PerformDrawing] Invalid hit point, skipping");
+                //Debug.LogWarning($"{LogPrefix} [PerformDrawing] Invalid hit point, skipping");
                 return;
             }
 
@@ -80,13 +80,13 @@ namespace Manipulator
 
             NetworkObject netObj = shapeObj.GetComponent<NetworkObject>();
             netObj.Spawn();
-            Debug.Log($"{LogPrefix} [PerformDrawing] Spawned ShapeNetworkSync for {currentShape} at {hitPoint}");
+            //Debug.Log($"{LogPrefix} [PerformDrawing] Spawned ShapeNetworkSync for {currentShape} at {hitPoint}");
         }
 
         private void UpdateDrawing(Vector3 hitPoint)
         {
             currentShapeObject.currentPoint.Value = hitPoint;
-            Debug.Log($"{LogPrefix} [PerformDrawing] Updated currentPoint to {hitPoint}");
+            //Debug.Log($"{LogPrefix} [PerformDrawing] Updated currentPoint to {hitPoint}");
         }
 
         private void FinishDrawing(Vector3 hitPoint)
@@ -94,7 +94,7 @@ namespace Manipulator
             currentShapeObject.currentPoint.Value = hitPoint;
             currentShapeObject.isDrawing.Value = false;
             currentShapeObject.isFinalized.Value = true;
-            Debug.Log($"{LogPrefix} [PerformDrawing] Finalized shape");
+            //Debug.Log($"{LogPrefix} [PerformDrawing] Finalized shape");
             currentShapeObject = null;
             ResetShape();
         }
@@ -105,7 +105,7 @@ namespace Manipulator
 
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                Debug.Log($"{LogPrefix} [PerformDrawing] Raycast hit at {hit.point}");
+                //Debug.Log($"{LogPrefix} [PerformDrawing] Raycast hit at {hit.point}");
                 return hit.point;
             }
 
@@ -113,11 +113,11 @@ namespace Manipulator
             if (groundPlane.Raycast(ray, out float enter))
             {
                 Vector3 point = ray.GetPoint(enter);
-                Debug.Log($"{LogPrefix} [PerformDrawing] Ground plane hit at {point}");
+                //Debug.Log($"{LogPrefix} [PerformDrawing] Ground plane hit at {point}");
                 return point;
             }
 
-            Debug.LogWarning($"{LogPrefix} [PerformDrawing] No hit detected");
+            //Debug.LogWarning($"{LogPrefix} [PerformDrawing] No hit detected");
             return Vector3.zero;
         }
     }

@@ -17,7 +17,7 @@ namespace Manipulator
             uiInstance = Object.Instantiate(prefab);
             if (UIManager.Instance == null)
             {
-                Debug.LogError("UIManager instance not found in the scene!");
+                //Debug.LogError("UIManager instance not found in the scene!");
                 return null;
             }
 

@@ -63,7 +63,7 @@ namespace Manipulator
     {
         // Event for change notifications
         public event Action<Shape> OnChanged;
-        private void NotifyChange()
+        public void NotifyChange()
         {
             OnChanged?.Invoke(this);
             Parent?.NotifyChange();
@@ -77,8 +77,7 @@ namespace Manipulator
 
         // Settings, pivots, and dependencies
         protected readonly List<ISetting> settings = new List<ISetting>();
-        protected readonly List<Point> PivotPoints = new List<Point>();
-        protected readonly Dictionary<Point, RatioCalculator> DependentPoints = new Dictionary<Point, RatioCalculator>();
+        public readonly List<Point> PivotPoints = new List<Point>();
 
         // Shape properties
         public Vector3 Position { get; set; }
@@ -141,7 +140,7 @@ namespace Manipulator
         public ShapeNetworkSync GetSNS() => syncer;
 
         // Position adjustment without full redraw
-        public void AdjustToPosition(Vector3 newPos, bool transformGO = true)
+        public void AdjustToPosition(Vector3 newPos, bool silent, bool transformGO = true)
         {
             Vector3 offset = newPos - Position;
             foreach (var p in PivotPoints)
@@ -151,19 +150,19 @@ namespace Manipulator
             if (transformGO && go != null)
                 go.transform.position = newPos;
 
-            NotifyChange();
+            if (!silent) NotifyChange();
         }
 
         // Full move
-        public virtual void MoveToPosition(Vector3 newPos)
+        public virtual void MoveToPosition(Vector3 newPos, bool silent = false)
         {
-            AdjustToPosition(newPos);
+            AdjustToPosition(newPos, silent);
             CompleteSettings();
             Draw();
             UpdateHitbox();
             CompleteDraw();
             syncer?.MoveShape(newPos);
-            NotifyChange();
+            if (!silent) NotifyChange();
         }
 
         // Called when a pivot point moves
@@ -237,7 +236,7 @@ namespace Manipulator
             PerformDrawing.ResetShape();
             if (go.TryGetComponent<HoverableShape>(out var hs))
                 hs.SetComponents();
-            SetIgnoreRaycast(false);
+            SetIgnoreRaycast(false); 
         }
 
         // Complete settings hook
@@ -274,16 +273,6 @@ namespace Manipulator
         }
         public bool IsPivot(Point point) => PivotPoints.Contains(point);
 
-        // Dependency management
-        public Dictionary<Point, RatioCalculator> GetDependencies() => DependentPoints;
-        public void AddDepend(Point point)
-        {
-            if (!DependentPoints.ContainsKey(point) && PivotPoints.Count > 0)
-                DependentPoints.Add(point, new RatioCalculator(point, PivotPoints));
-        }
-        public void RemoveDepend(Point point) => DependentPoints.Remove(point);
-        public bool IsDepend(Point point) => DependentPoints.ContainsKey(point);
-        public RatioCalculator GetDependData(Point point) => DependentPoints.TryGetValue(point, out var rc) ? rc : null;
 
         // Refresh and serialization
         public virtual void FullRefresh() { }
@@ -319,100 +308,7 @@ namespace Manipulator
         }
 
         // RatioCalculator nested class
-        public class RatioCalculator
-        {
-            private readonly Point _point;
-            private readonly List<Point> _pivots;
-            private readonly Dictionary<Point, Tuple<Vector3, float>> data = new();
-
-            public RatioCalculator(Point point, IEnumerable<Point> pivots)
-            {
-                _point = point;
-                _pivots = new List<Point>(pivots);
-                Calculate();
-            }
-
-            private void Calculate()
-            {
-                data.Clear();
-                foreach (var p in _pivots)
-                {
-                    var dir = (_point.Position - p.Position).normalized;
-                    var dist = Vector3.Distance(_point.Position, p.Position);
-                    data[p] = Tuple.Create(dir, dist);
-                }
-            }
-
-            public Dictionary<Point, Tuple<Vector3, float>> GetData() => new Dictionary<Point, Tuple<Vector3, float>>(data);
-            public List<Point> GetPivots() => new List<Point>(_pivots);
-
-            public void AddPivot(Point p)
-            {
-                if (!_pivots.Contains(p))
-                {
-                    _pivots.Add(p);
-                    UpdatePivot(p);
-                }
-            }
-            public void RemovePivot(Point p)
-            {
-                if (_pivots.Remove(p))
-                    data.Remove(p);
-            }
-            public void UpdatePivot(Point p)
-            {
-                if (_pivots.Contains(p))
-                    data[p] = Tuple.Create(
-                        (_point.Position - p.Position).normalized,
-                        Vector3.Distance(_point.Position, p.Position)
-                    );
-            }
-
-            public void Refresh() => Calculate();
-            public bool HasPivot(Point p) => data.ContainsKey(p);
-            public Vector3 GetDirection(Point p) => data.TryGetValue(p, out var v) ? v.Item1 : Vector3.zero;
-            public float GetDistance(Point p) => data.TryGetValue(p, out var v) ? v.Item2 : 0f;
-
-            public void RestorePositionFromPivots()
-            {
-                if (_pivots.Count == 0) return;
-                Vector3 sum = Vector3.zero;
-                foreach (var kv in data)
-                    sum += kv.Key.Position + kv.Value.Item1 * kv.Value.Item2;
-                _point.MoveToPosition(sum / _pivots.Count);
-            }
-
-            public void NotifyPivotMoved(Point movedPivot)
-            {
-                if (_pivots.Contains(movedPivot))
-                    UpdatePivot(movedPivot);
-            }
-
-            public void Clear()
-            {
-                _pivots.Clear();
-                data.Clear();
-            }
-
-            public override string ToString()
-            {
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine($"RatioCalculator for {_point.Name}");
-                sb.AppendLine("Pivot Ratios:");
-                foreach (var kv in data)
-                    sb.AppendLine($"- Pivot: {kv.Key.Name} | Dir: {kv.Value.Item1} | Dist: {kv.Value.Item2:F3}");
-                return sb.ToString();
-            }
-
-            public void RecalculatePosition()
-            {
-                if (_pivots.Count == 0) return;
-                Vector3 sum = Vector3.zero;
-                foreach (var kv in data)
-                    sum += kv.Key.Position + kv.Value.Item1 * kv.Value.Item2;
-                _point.MoveToPosition(sum / _pivots.Count);
-            }
-        }
+        
     }
 
     public interface IDrawable2D { void Draw2D(); }

@@ -59,11 +59,11 @@ namespace Manipulator
         // === InputManager ===
         
         
-        private void OnEnable()
+        private void Start()
         {
             InputManager.Instance.OnAction += HandleAction;
         }
-        private void OnDisable()
+        private void OnDestroy()
         {
             InputManager.Instance.OnAction -= HandleAction;
         }
@@ -88,6 +88,10 @@ namespace Manipulator
                         ClearSelection();
                     }
                 }
+            }
+            else if (action == UserAction.AngleCons)
+            {
+                TryApplyAngleConstraint();
             }
 
             // ... các case khác ...
@@ -188,8 +192,7 @@ namespace Manipulator
                    || (shape is Point p && p.AttachedShapes.Any(s => selectedShapes.Contains(s)));
         }
 
-        
-         private HashSet<Shape> selectedShapes = new HashSet<Shape>();
+        private HashSet<Shape> selectedShapes = new HashSet<Shape>();
         public IReadOnlyCollection<Shape> SelectedShapes => selectedShapes;
 
         /// <summary>
@@ -197,27 +200,51 @@ namespace Manipulator
         /// </summary>
         public void ToggleSelection(Shape shape)
         {
-            if (selectedShapes.Contains(shape))
+            // 1) Xác định tất cả target cần toggle
+            var targets = new List<Shape>();
+
+            if (shape.Parent != null)
             {
-                // Bỏ chọn
-                selectedShapes.Remove(shape);
+                // Nếu là child, chọn parent
+                targets.Add(shape.Parent);
+            }
+            else if (shape is Point p && p.AttachedShapes.Count > 0)
+            {
+                // Nếu là Point và có nhiều shape gắn vào, chọn hết
+                targets.AddRange(p.AttachedShapes);
             }
             else
             {
-                // Thêm chọn
-                selectedShapes.Add(shape);
+                // Không có parent hay attached shapes → chọn chính nó
+                targets.Add(shape);
             }
 
-            // Update trực tiếp material
-            shape.Components().ForEach(go =>
+            // 2) Với mỗi target, toggle và đổi màu
+            foreach (var target in targets)
             {
-                if (go.TryGetComponent<Renderer>(out var rend))
-                    rend.material = selectedShapes.Contains(shape)
-                        ? MaterialLibrary.Get(MaterialType.Select)
-                        : MaterialLibrary.Get(MaterialType.Default);
-            });
+                bool nowSelected = !selectedShapes.Contains(target);
+                if (nowSelected)
+                    selectedShapes.Add(target);
+                else
+                    selectedShapes.Remove(target);
+
+                // Chọn material tương ứng
+                var mat = MaterialLibrary.Get(nowSelected 
+                    ? MaterialType.Select 
+                    : MaterialType.Default);
+
+                // Áp lên tất cả component của target
+                foreach (var go in target.Components())
+                {
+                    if (go.TryGetComponent<Renderer>(out var rend))
+                        rend.material = mat;
+                }
+            }
         }
 
+
+
+        
         /// <summary>
         /// Clear hết selection khi ctrl không giữ và click vùng trống.
         /// </summary>
@@ -235,6 +262,48 @@ namespace Manipulator
         }
  
 
+        
+        // === Constraint
+        
+        // === Angle
+        
+        private void TryApplyAngleConstraint()
+        {
+            // Muốn đúng 2 shape được chọn
+            if (selectedShapes.Count == 2)
+            {
+                // Lọc chỉ lấy 2 Segment
+                var segments = selectedShapes.OfType<Segment>().ToList();
+                if (segments.Count == 2)
+                {
+                    var segA = segments[0];
+                    var segB = segments[1];
+
+                    // Tính góc hiện tại giữa 2 vector của 2 segment
+                    float currentAngle = Vector3.Angle(
+                        (segA.End.Position - segA.Start.Position),
+                        (segB.End.Position - segB.Start.Position)
+                    );
+
+                    // Tạo constraint và đăng ký luôn trong constructor
+                    var constraint = new AngleConstraint(segA, segB, currentAngle);
+
+                    Debug.Log(
+                        $"<color=green>[AngleConstraint]</color> " +
+                        $"Áp dụng giữa {segA.Name} và {segB.Name} với góc ban đầu " +
+                        $"<color=green>{currentAngle:F1}°</color>"
+                    );
+                }
+                else
+                {
+                    Debug.Log("<color=red>[AngleConstraint]</color> Phải chọn chính xác 2 Segment!");
+                }
+            }
+            else
+            {
+                Debug.Log("<color=yellow>[AngleConstraint]</color> Vui lòng chọn đúng 2 Shape để áp dụng.");
+            }
+        }
 
 
     }

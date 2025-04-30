@@ -12,10 +12,12 @@ namespace Manipulator
         Drag,
         Draw,
         OpenSettings,
-        Select
+        Select,
+        AngleCons
         // … thêm tùy bạn
     }
-
+    
+    [DefaultExecutionOrder(-100)] 
     public class InputManager : MonoBehaviour
     {
         public static InputManager Instance { get; private set; }
@@ -48,6 +50,10 @@ namespace Manipulator
             if (Input.GetMouseButtonDown(1) && Input.GetKeyDown(KeyCode.LeftControl))
                 OnAction?.Invoke(UserAction.Select, Input.mousePosition);
             
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                OnAction?.Invoke(UserAction.AngleCons, Input.mousePosition);
+            }
             
             
 #elif UNITY_IOS || UNITY_ANDROID

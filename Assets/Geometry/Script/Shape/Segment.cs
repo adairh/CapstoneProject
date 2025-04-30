@@ -73,6 +73,11 @@ namespace Manipulator
             {
                 DrawPoint();
             }
+
+            if (!mm.IsDrawing())
+            {
+                NotifyChange();
+            }
         }
         
         public override void BeginSketch(Vector3 worldPoint)
@@ -218,26 +223,7 @@ namespace Manipulator
         {
             // Future implementation (left empty)
         }
-        public static class NetStatus
-        {
-            public static string WhoAmI()
-            {
-                if (!Unity.Netcode.NetworkManager.Singleton) return "NO_NET";
-
-                var net = Unity.Netcode.NetworkManager.Singleton;
-
-                if (net.IsHost) return "HOST";
-                if (net.IsServer) return "SERVER";
-                if (net.IsClient) return "CLIENT";
-
-                return "OFFLINE";
-            }
-
-            public static ulong MyID()
-            {
-                return Unity.Netcode.NetworkManager.Singleton?.LocalClientId ?? 9999;
-            }
-        }
+        
 
 
         private bool isUpdatingPoints = false;
@@ -246,9 +232,7 @@ namespace Manipulator
         {
             if (isUpdatingPoints) return; // ✅ Prevent recursive entry
             isUpdatingPoints = true;
-
-            string who = NetStatus.WhoAmI();
-            ulong clientId = NetStatus.MyID();
+ 
 
             //Debug.Log($"[{who} | ClientID: {clientId}] [MovePivots] on Segment '{Name}' due to Point '{movedPoint.Name}' (ID: {movedPoint.id})");
             //Debug.Log($"[Before] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
@@ -258,7 +242,7 @@ namespace Manipulator
                 //Debug.Log($"[{who}] ➤ Moving START point.");
                 Start.Position = movedPoint.Position;
                 Start.GO.transform.position = movedPoint.GO.transform.position;
-                Position = Start.Position;
+                Position = Start.Position; 
             }
             else if (movedPoint.id == End.id)
             {
@@ -272,15 +256,15 @@ namespace Manipulator
             ApplyTransform(false); // ✅ Apply transform without redrawing points individually
 
             isUpdatingPoints = false;
+            
+            
         }
         
         public override void MovePivots(string pointName, Vector3 loc)
         { 
             if (isUpdatingPoints) return; // ✅ Prevent recursive entry
             isUpdatingPoints = true;
-
-            string who = NetStatus.WhoAmI();
-            ulong clientId = NetStatus.MyID();
+ 
 
             /*Debug.Log($"[{who} | ClientID: {clientId}] [MovePivots] on Segment '{Name}' due to Point '{pointName}' (ID:)");
             Debug.Log($"[Before] Start: {Start.Position}, End: {End.Position}, Segment.Position: {Position}");
@@ -334,19 +318,16 @@ namespace Manipulator
             {
                 GetSNS().MovePivots(movedPoint);
             }
-            
-            foreach (RatioCalculator r in GetDependencies().Values)
-            {
-                r.RecalculatePosition();
-            }
-            
-            
+             
+
             ApplyTransform(false);
         }
+ 
 
+        
         public override void OnPointMoved(Point movedPoint)
         {
-            Debug.Log($"{Name} updated because {movedPoint.Name} moved.");
+            //Debug.Log($"{Name} updated because {movedPoint.Name} moved.");
             ReloadToConstraint(movedPoint);
             
         }
