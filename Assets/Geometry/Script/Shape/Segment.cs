@@ -340,5 +340,7 @@ namespace Manipulator
         public void Deserialize(ShapeData data)
         {
         }
+        
+        
     }
 }

@@ -267,6 +267,53 @@ namespace Manipulator
         
         // === Angle
         
+        /// <summary>
+        /// Tìm điểm chung (pivot) và hai đầu còn lại (freeA, freeB) của hai segment.
+        /// </summary>
+        /// <param name="segA">Segment A</param>
+        /// <param name="segB">Segment B</param>
+        /// <param name="pivot">(out) điểm chung</param>
+        /// <param name="freeA">(out) đầu tự do thuộc segA</param>
+        /// <param name="freeB">(out) đầu tự do thuộc segB</param>
+        public static void GetSharedPivotPoints(
+            Segment segA,
+            Segment segB,
+            out Point pivot,
+            out Point freeA,
+            out Point freeB)
+        {
+            if (segA.Start == segB.Start)
+            {
+                pivot = segA.Start;
+                freeA = segA.End;
+                freeB = segB.End;
+            }
+            else if (segA.Start == segB.End)
+            {
+                pivot = segA.Start;
+                freeA = segA.End;
+                freeB = segB.Start;
+            }
+            else if (segA.End == segB.Start)
+            {
+                pivot = segA.End;
+                freeA = segA.Start;
+                freeB = segB.End;
+            }
+            else if (segA.End == segB.End)
+            {
+                pivot = segA.End;
+                freeA = segA.Start;
+                freeB = segB.Start;
+            }
+            else
+            {
+                throw new InvalidOperationException("Hai segment không có điểm chung!");
+            }
+        }
+        
+        private Point pivot, freeA, freeB;
+        
         private void TryApplyAngleConstraint()
         {
             // Muốn đúng 2 shape được chọn
@@ -284,10 +331,19 @@ namespace Manipulator
                         (segA.End.Position - segA.Start.Position),
                         (segB.End.Position - segB.Start.Position)
                     );
-
+                    
+                    GetSharedPivotPoints(segA, segB, out pivot, out freeA, out freeB);
+                    
+                    var ac = pivot.GO.AddComponent<AngleConstraint>();
+                    ac.Owner = pivot;
+                    ac.AddDependencies(segA, segB, pivot, currentAngle);
+                    
+                    
                     // Tạo constraint và đăng ký luôn trong constructor
-                    var constraint = new AngleConstraint(segA, segB, currentAngle);
+                    // var constraint = new AngleConstraint(segA, segB, currentAngle);
 
+                    
+                    
                     Debug.Log(
                         $"<color=green>[AngleConstraint]</color> " +
                         $"Áp dụng giữa {segA.Name} và {segB.Name} với góc ban đầu " +

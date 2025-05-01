@@ -75,7 +75,9 @@ namespace Manipulator
         GO.transform.localScale = Vector3.one * 0.1f;
 
         // Notify shapes that depend on this point
-        constraint.ApplyConstraint(this, new Vector3());
+        constraint.ApplyConstraint(this);
+        ConstraintManager.Instance.ApplyConstraints(this);
+
     }
 
     public void MoveTo(Vector3 newPosition)

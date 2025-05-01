@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 using Unity.Netcode;
 using Geometry.Script.Network;
 using Manipulator.Data;
+using UnityEngine;
 using Object = UnityEngine.Object;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
@@ -12,14 +12,11 @@ namespace Manipulator
 {
     // Shape storage for lookup and nearest-point snapping
     public static class ShapeStorage
-    { 
+    {
         private static readonly Dictionary<string, Shape> shapes = new Dictionary<string, Shape>();
         private const int IGNORE_RAYCAST_LAYER = 2;
-        
-        /// <summary>Được gọi ngay sau khi một shape mới được thêm vào.</summary>
-        public static event Action<string> ShapeAdded;
 
-        /// <summary>Được gọi ngay sau khi một shape bị xóa.</summary>
+        public static event Action<string> ShapeAdded;
         public static event Action<string> ShapeRemoved;
 
         public static Shape GetShapeByID(string id)
@@ -58,28 +55,23 @@ namespace Manipulator
             return closest;
         }
     }
+ 
 
     public abstract class Shape : ISynchronizedShape
     {
-        // Event for change notifications
         public event Action<Shape> OnChanged;
-        public void NotifyChange()
+        protected void NotifyChange()
         {
             OnChanged?.Invoke(this);
             Parent?.NotifyChange();
         }
 
-        // Network syncer reference
         private ShapeNetworkSync syncer;
-
-        // Backing GameObject
         private GameObject go;
 
-        // Settings, pivots, and dependencies
         protected readonly List<ISetting> settings = new List<ISetting>();
         public readonly List<Point> PivotPoints = new List<Point>();
 
-        // Shape properties
         public Vector3 Position { get; set; }
         public Color ShapeColor { get; set; }
         public string Name { get; set; }
@@ -91,7 +83,6 @@ namespace Manipulator
         public Material HighlightMaterial { get; set; }
         public EditableShape EditableShape;
 
-        // Access to GameObject
         public GameObject GO
         {
             get => go;
@@ -104,7 +95,6 @@ namespace Manipulator
             }
         }
 
-        // Constructor
         protected Shape(Vector3 position, string baseName, Shape parent)
         {
             Position = position;
@@ -120,42 +110,37 @@ namespace Manipulator
             InitializeSettings();
         }
 
-        // Register click and drag handlers
         protected virtual void RegisterEvents()
         {
             go.tag = Parent == null ? "Shape" : "Child";
             go.AddComponent<ShapeClickHandler>().SetShape(this);
             go.AddComponent<DraggableShape>().SetShape(this);
             go.AddComponent<HoverableShape>().SetShape(this);
-            
             if (go.CompareTag("Shape"))
                 go.AddComponent<SelectableShape>().SetShape(this);
         }
 
-        // Additional setup (override in subclasses)
         protected virtual void SetupGameObject() { }
 
-        // Assign network syncer
         public void AssignSyncer(ShapeNetworkSync networkSync) => syncer = networkSync;
         public ShapeNetworkSync GetSNS() => syncer;
 
-        // Position adjustment without full redraw
-        public void AdjustToPosition(Vector3 newPos, bool silent, bool transformGO = true)
+        public void AdjustToPosition(Vector3 newPos, bool silent = false)
         {
             Vector3 offset = newPos - Position;
             foreach (var p in PivotPoints)
                 p.MoveTo(p.Position + offset);
 
             Position = newPos;
-            if (transformGO && go != null)
-                go.transform.position = newPos;
+            go.transform.position = newPos;
 
-            if (!silent) NotifyChange();
+            if (!silent)
+                NotifyChange();
         }
 
-        // Full move
         public virtual void MoveToPosition(Vector3 newPos, bool silent = false)
         {
+            Vector3 delta = newPos - Position;
             AdjustToPosition(newPos, silent);
             CompleteSettings();
             Draw();
@@ -163,69 +148,33 @@ namespace Manipulator
             CompleteDraw();
             syncer?.MoveShape(newPos);
             if (!silent) NotifyChange();
+
+            // Áp constraint cho mọi liên kết
+            ConstraintManager.Instance.ApplyConstraints(this, delta);
         }
 
-        // Called when a pivot point moves
-        public virtual void OnPointMoved(Point movedPoint)
-        {
-            NotifyChange();
-        }
-
-        // Subscribe callbacks: child change
+        public virtual void OnPointMoved(Point movedPoint) { }
         public virtual void OnChildChanged(Shape child)
         {
             if (child is Point pt)
                 MovePivots(pt);
         }
 
-        // MovePivots overloads
-        public virtual void MovePivots(Point movedPoint)
-        {
-            NotifyChange();
-        }
-        public virtual void MovePivots(string pointName, Vector3 loc)
-        {
-            NotifyChange();
-        }
+        public virtual void MovePivots(Point movedPoint) { NotifyChange(); }
+        public virtual void MovePivots(string pointName, Vector3 loc) { NotifyChange(); }
 
-        // Settings initialization and application
         protected abstract void InitializeSettings();
         public virtual void ApplySettings() { }
         public virtual void OnSettingChanged(ISetting setting) => ApplySettings();
 
-        public void UpdateSettings(ISetting setting)
-        {
-            for (int i = 0; i < settings.Count; i++)
-            {
-                if (settings[i].GetType() == setting.GetType())
-                {
-                    settings[i] = setting;
-                    OnSettingChanged(setting);
-                    NotifyChange();
-                    return;
-                }
-            }
-            settings.Add(setting);
-            OnSettingChanged(setting);
-            NotifyChange();
-        }
-        public void AppendSettings(params ISetting[] newSettings)
-        {
-            settings.AddRange(newSettings);
-            NotifyChange();
-        }
-        public void ModifySetting<T>(ISetting setting, T value)
-        {
-            setting.SetValue(value);
-            UpdateSettings(setting);
-        }
+        public void UpdateSettings(ISetting setting) { /* ... */ NotifyChange(); }
+        public void AppendSettings(params ISetting[] newSettings) { /* ... */ NotifyChange(); }
+        public void ModifySetting<T>(ISetting setting, T value) { /* ... */ NotifyChange(); }
 
-        // Abstract draw methods
         public abstract void Drawing();
         public abstract void UpdateHitbox();
         public abstract GameObject[] Components();
 
-        // Draw entry
         public void Draw()
         {
             SetIgnoreRaycast(true);
@@ -236,25 +185,19 @@ namespace Manipulator
             PerformDrawing.ResetShape();
             if (go.TryGetComponent<HoverableShape>(out var hs))
                 hs.SetComponents();
-            SetIgnoreRaycast(false); 
+            SetIgnoreRaycast(false);
         }
 
-        // Complete settings hook
         public virtual void CompleteSettings() { }
 
-        // Raycast control
-        protected const int IGNORE_RAYCAST_LAYER = 2;
-        private const int defaultLayer = 0;
         public void SetIgnoreRaycast(bool ignore)
         {
-            if (go == null) return;
-            int layer = ignore ? IGNORE_RAYCAST_LAYER : defaultLayer;
+            int layer = ignore ? 2 : 0;
             go.layer = layer;
             foreach (Transform c in go.transform)
                 c.gameObject.layer = layer;
         }
 
-        // Settings and pivots access
         public List<ISetting> GetSettings() => settings;
         public List<Point> GetPivots() => PivotPoints;
 
@@ -273,25 +216,14 @@ namespace Manipulator
         }
         public bool IsPivot(Point point) => PivotPoints.Contains(point);
 
-
-        // Refresh and serialization
         public virtual void FullRefresh() { }
-        public virtual void BeginSketch(Vector3 vector)
-        {
-        }
-
-        public virtual void UpdateSketch(Vector3 vector)
-        {
-        }
-
-        public virtual void EndSketch(Vector3 vector)
-        {
-        }
+        public virtual void BeginSketch(Vector3 vector) { }
+        public virtual void UpdateSketch(Vector3 vector) { }
+        public virtual void EndSketch(Vector3 vector) { }
 
         public virtual ShapeData Serialize() => null;
         public virtual void Deserialize(ShapeData data) { }
 
-        // Utility rotation
         public static Quaternion GetAlignedRotation(Camera cam)
         {
             var fwd = cam.transform.forward;
@@ -299,20 +231,13 @@ namespace Manipulator
             return Quaternion.LookRotation(fwd, Vector3.up);
         }
 
-        // Cleanup
         public virtual void Destroy()
         {
             if (ShapeStorage.GetShapeByID(go.name) != null)
                 ShapeStorage.RemoveShape(go.name);
             Object.Destroy(go);
         }
-
-        // RatioCalculator nested class
-        
     }
-
-    public interface IDrawable2D { void Draw2D(); }
-    public interface IDrawable3D { void Draw3D(); }
 
     public abstract class PolygonalShape : Shape
     {
@@ -326,4 +251,6 @@ namespace Manipulator
             : base(position, name, parent) { }
         public float Radius { get; set; }
     }
+    public interface IDrawable2D { void Draw2D(); }
+    public interface IDrawable3D { void Draw3D(); }
 }

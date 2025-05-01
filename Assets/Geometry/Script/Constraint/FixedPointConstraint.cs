@@ -35,6 +35,11 @@ namespace Manipulator
 
             // subscribe event OnChanged của shape
             shape.OnChanged += OnDependentShapeChanged;
+            
+            AddShape(shape);
+            //   point di chuyển thì ApplyConstraint cũng sẽ được gọi
+            AddShape(pt);
+            
         }
 
         /// <summary>
@@ -54,7 +59,7 @@ namespace Manipulator
             _isApplying = false;
         }
 
-        #region — RatioCalculator nội tại —
+        #region — RatioCalculator —
         private class RatioCalculator
         {
             private readonly Point _pt;
@@ -90,7 +95,7 @@ namespace Manipulator
         }
         #endregion
 
-        public override void ApplyConstraint(Shape movedShape, Vector3 movement)
+        public override void ApplyConstraint(Shape movedShape, Vector3 movement = new Vector3())
         {
             foreach (var shape in GetLinkedShapes())
             {

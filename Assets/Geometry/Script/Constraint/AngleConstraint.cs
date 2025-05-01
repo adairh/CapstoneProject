@@ -1,137 +1,156 @@
-﻿// --- 2) Lớp AngleConstraint ---
-
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace Manipulator
 {
+    /// <summary>
+    /// MonoBehaviour constraint gắn lên một Point pivot để giữ góc cố định giữa
+    /// hai Segment. Phản hồi khi kéo pivot, segment hoặc endpoint.
+    /// </summary>
+    [RequireComponent(typeof(Collider))]
     public class AngleConstraint : Constraint
     {
-        private Segment segA, segB;
-        private Point pivot, freeA, freeB;
-        private float angleRad;               // lưu góc bằng radian
-        private Vector3 rotationAxis;         // trục xoay cố định
+        [Header("Segments & Pivot")]
+        [SerializeField] private Segment segmentA;
+        [SerializeField] private Segment segmentB;
+        [SerializeField] private Point pivot;
+
+        [Header("Target Angle (°)")]
+        [SerializeField] private float targetAngleDeg;
+
+        private Point freeA, freeB;
+        private Vector3 rotationAxis;
+        private bool initialized;
+        private bool applying;
 
         /// <summary>
-        /// Góc (độ) của constraint. Gán vào sẽ tự gọi Satisfy lại.
+        /// Cấu hình runtime nếu không dùng Inspector.
         /// </summary>
-        public float Angle
+        public void AddDependencies(Segment segA, Segment segB, Point pivotPoint, float angleDeg)
         {
-            get => angleRad * Mathf.Rad2Deg;
-            set
+            segmentA = segA;
+            segmentB = segB;
+            pivot = pivotPoint;
+            targetAngleDeg = angleDeg;
+            InitializeInternal();
+        }
+
+        private void Start()
+        {
+            if (!initialized)
             {
-                angleRad = value * Mathf.Deg2Rad;
-                UpdateSegmentB();  // giữ segA cố định, xoay segB theo góc mới
+                if (segmentA == null || segmentB == null || pivot == null)
+                {
+                    Debug.LogError("AngleConstraint: Assign segmentA, segmentB & pivot.", this);
+                    enabled = false;
+                    return;
+                }
+                InitializeInternal();
             }
         }
 
-        /// <param name="segA">Segment thứ nhất</param>
-        /// <param name="segB">Segment thứ hai</param>
-        /// <param name="initialAngleDegrees">Góc ban đầu (độ)</param>
-        public AngleConstraint(Segment segA, Segment segB, float initialAngleDegrees)
+        private void InitializeInternal()
         {
-            this.segA = segA;
-            this.segB = segB;
-            this.angleRad = initialAngleDegrees * Mathf.Deg2Rad;
-
-            // 1) Tìm điểm chung (pivot) và hai điểm tự do
-            if (segA.Start == segB.Start)
-            {
-                pivot = segA.Start; freeA = segA.End;   freeB = segB.End;
-            }
-            else if (segA.Start == segB.End)
-            {
-                pivot = segA.Start; freeA = segA.End;   freeB = segB.Start;
-            }
-            else if (segA.End   == segB.Start)
-            {
-                pivot = segA.End;   freeA = segA.Start; freeB = segB.End;
-            }
-            else if (segA.End   == segB.End)
-            {
-                pivot = segA.End;   freeA = segA.Start; freeB = segB.Start;
-            }
+            if (initialized) return;
+            freeA = segmentA.GetOtherEndpoint(pivot);
+            freeB = segmentB.GetOtherEndpoint(pivot);
+            
+            // Tính trục xoay
+            Vector3 dirA = (freeA.Position - pivot.Position).normalized;
+            Vector3 dirB = (freeB.Position - pivot.Position).normalized;
+            rotationAxis = Vector3.Cross(dirA, dirB);
+            if (rotationAxis.sqrMagnitude < Mathf.Epsilon)
+                rotationAxis = Vector3.up;
             else
-            {
-                throw new ArgumentException("Hai segment phải nối với nhau tại một điểm chung.");
-            }
+                rotationAxis.Normalize();
 
-            // 2) Xác định trục xoay (theo mặt phẳng chứa hai vector ban đầu)
-            Vector3 vA = (freeA.Position - pivot.Position).normalized;
-            Vector3 vB = (freeB.Position - pivot.Position).normalized;
-            rotationAxis = Vector3.Cross(vA, vB).normalized;
-            if (rotationAxis == Vector3.zero)
-                rotationAxis = Vector3.forward; // mặc định nếu thẳng hàng
-
-            // 3) Đăng ký shapes vào constraint và vào manager
+            // Đăng ký với ConstraintManager
             AddShape(pivot);
+            AddShape(segmentA);
+            AddShape(segmentB);
             AddShape(freeA);
             AddShape(freeB);
             ConstraintManager.Instance.RegisterConstraint(this);
 
-            // 4) Thiết lập ban đầu để hai segment khớp đúng góc
-            UpdateSegmentB();
+            initialized = true;
         }
+ 
 
-        /// <summary>
-        /// Mỗi khi một Shape trong linkedShapes di chuyển, ConstraintManager sẽ gọi vào đây.
-        /// movement là vector dịch chuyển của movedShape.
-        /// </summary>
         public override void ApplyConstraint(Shape movedShape, Vector3 movement)
         {
-            // a) Nếu di chuyển pivot: dịch cả hai đầu tự do theo để giữ nguyên hình học
-            if (movedShape == pivot)
+            if (!initialized || applying) return;
+            applying = true;
+            try
             {
-                freeA.Position += movement;
-                freeA.GO.transform.position += movement;
-                segA.ApplyTransform(false);
+                // 1) Pivot moved: translate both segments
+                if (movedShape == pivot)
+                {
+                    MoveEndpointInternal(freeA, movement, segmentA);
+                    MoveEndpointInternal(freeB, movement, segmentB);
+                    return;
+                }
 
-                freeB.Position += movement;
-                freeB.GO.transform.position += movement;
-                segB.ApplyTransform(false);
+                // 2) SegmentA or freeA moved → rotate segmentB
+                if (movedShape == segmentA || movedShape == freeA)
+                {
+                    RotateOther(segmentA, segmentB, false);
+                }
+                // 3) SegmentB or freeB moved → rotate segmentA opposite
+                else if (movedShape == segmentB || movedShape == freeB)
+                {
+                    RotateOther(segmentB, segmentA, true);
+                }
             }
-            // b) Nếu di chuyển freeA: xoay segB để giữ góc cố định
-            else if (movedShape == freeA)
+            finally
             {
-                UpdateSegmentB();
-            }
-            // c) Nếu di chuyển freeB: xoay segA theo chiều ngược lại
-            else if (movedShape == freeB)
-            {
-                UpdateSegmentA();
+                applying = false;
             }
         }
 
-        // Hàm xoay segment B quanh pivot theo góc đã lưu
-        private void UpdateSegmentB()
+        private void MoveEndpointInternal(Point endpoint, Vector3 movement, Segment seg)
         {
-            Vector3 dirA = (freeA.Position - pivot.Position);
-            float lenB = (freeB.Position - pivot.Position).magnitude;
-            if (lenB < Mathf.Epsilon) return;
-
-            Quaternion q = Quaternion.AngleAxis(angleRad * Mathf.Rad2Deg, rotationAxis);
-            Vector3 newDirB = q * dirA.normalized;
-            Vector3 newPosB = pivot.Position + newDirB * lenB;
-
-            freeB.Position = newPosB;
-            freeB.GO.transform.position = newPosB;
-            segB.ApplyTransform(false);
+            endpoint.Position += movement;
+            endpoint.GO.transform.position = endpoint.Position;
+            seg.ApplyTransform(false);
         }
 
-        // Hàm xoay segment A khi freeB di chuyển
-        private void UpdateSegmentA()
+        private void RotateOther(Segment moved, Segment other, bool reverseDelta)
         {
-            Vector3 dirB = (freeB.Position - pivot.Position);
-            float lenA = (freeA.Position - pivot.Position).magnitude;
-            if (lenA < Mathf.Epsilon) return;
+            Vector3 dirMoved = (moved.GetOtherEndpoint(pivot).Position - pivot.Position).normalized;
+            Vector3 dirOther = (other.GetOtherEndpoint(pivot).Position - pivot.Position).normalized;
 
-            Quaternion q = Quaternion.AngleAxis(-angleRad * Mathf.Rad2Deg, rotationAxis);
-            Vector3 newDirA = q * dirB.normalized;
-            Vector3 newPosA = pivot.Position + newDirA * lenA;
+            float current = Vector3.SignedAngle(dirMoved, dirOther, rotationAxis);
+            
+            //if (reverseDelta) targetAngleDeg = -targetAngleDeg;
+            
+            float delta = targetAngleDeg - current;
 
-            freeA.Position = newPosA;
-            freeA.GO.transform.position = newPosA;
-            segA.ApplyTransform(false);
+            // 👇 Chỉ đảo hướng xoay, không đảo current
+
+            if (Mathf.Abs(delta) < 0.01f)
+                return;
+
+            Point freePt = other.GetOtherEndpoint(pivot);
+            Vector3 offset = freePt.Position - pivot.Position;
+
+            offset = Quaternion.AngleAxis(delta, rotationAxis) * offset;
+            Vector3 newPos = pivot.Position + offset;
+
+            freePt.MoveToPosition(newPos, true);
+            other.ApplyTransform(false);
+        }
+
+
+
+    }
+
+    public static class SegmentExtensions
+    {
+        public static Point GetOtherEndpoint(this Segment seg, Point pivot)
+        {
+            if (seg.Start == pivot) return seg.End;
+            if (seg.End == pivot) return seg.Start;
+            throw new ArgumentException("Pivot isn't an endpoint of the segment.");
         }
     }
 }
