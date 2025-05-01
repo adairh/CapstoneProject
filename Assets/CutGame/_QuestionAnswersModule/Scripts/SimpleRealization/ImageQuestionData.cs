@@ -1,10 +1,12 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using _QuestionAnswersModule.Scripts.Base;
 using QuestBase._QuestionAnswersModule.Scripts.Static;
 using UnityEngine;
 
 namespace _QuestionAnswersModule.Scripts.SimpleRealization
 {
+    
     [CreateAssetMenu(fileName = "ImageQuestionData", menuName = "QASample/ImageQuestionData", order = 0)]
     public class ImageQuestionData : ScriptableObject
     {

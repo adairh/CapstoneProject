@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using _QuestionAnswersModule.Scripts.SimpleRealization;
 using UnityEngine;
 
 public class LevelData : MonoBehaviour
@@ -12,6 +13,8 @@ public class LevelData : MonoBehaviour
 
         public bool unlocked;
         public int rating;
+        
+        public QuestionSet QuestionDatas;
     }
 
 #if UNITY_EDITOR
@@ -22,6 +25,8 @@ public class LevelData : MonoBehaviour
     public List<Level> levels;
 
     private static char[] savedData = null;
+    public static Dictionary<QuestionSet, List<int>> appearedQuestion
+        = new Dictionary<QuestionSet, List<int>>();
 
     // Loads saved data (player progression)
     private void Awake()

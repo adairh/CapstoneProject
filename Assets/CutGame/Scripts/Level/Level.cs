@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using _QuestionAnswersModule.Scripts.SimpleRealization;
 using UnityEngine;
 
 public class Level : MonoBehaviour
@@ -9,7 +10,7 @@ public class Level : MonoBehaviour
 
     public event Action OnAllyDestroy;
     public event Action OnEnemyDestroy;
-
+ 
     // Initializes references in actors (destructibles)
     private void Start()
     {
@@ -22,6 +23,7 @@ public class Level : MonoBehaviour
         {
             virus.level = this;
         }
+ 
     }
 
     public void DestroyAlly()

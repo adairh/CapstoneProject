@@ -9,7 +9,7 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
 {
     public class ImageQuestionsUI : MonoBehaviour
     {
-        [SerializeField] private ImageQuestionData[] _questions;
+        private ImageQuestionData[] _questions;
         
         [Space]
         [SerializeField] private TextMeshProUGUI _questionNameText;
@@ -24,7 +24,7 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
         
         private void Awake()
         {
-            Assert.IsTrue(_questions.Length > 0, "_questions.Length > 0");
+            
             
             Assert.IsNotNull(_questionNameText, "_questionNameText != null");
             Assert.IsNotNull(_questionDescrText, "_questionDescrText != null");
@@ -37,10 +37,13 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
 
         private void Start()
         {
-            GoToNextQuestion();
+            _questions = LevelLoader.levelToLoad.QuestionDatas._list.ToArray();
+            Assert.IsTrue(_questions.Length > 0, "_questions.Length > 0");
+            GoToNextQuestion(LevelLoader.levelToLoad.QuestionDatas._isShuffleQuest);
         }
-
-        public void GoToNextQuestion()
+ 
+        
+        public void GoToNextQuestion(bool rand = false)
         {
             _currentQuestionIndex++;
 
@@ -51,6 +54,36 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
 
             _currentButtons.ForEach(b => Destroy(b.gameObject));
             _currentButtons.Clear();
+
+            if (rand)
+            {
+                // key là bộ câu hỏi hiện tại
+                var set = LevelLoader.levelToLoad.QuestionDatas;
+
+                // 1) Lấy hoặc khởi tạo list đã hiện
+                if (!LevelData.appearedQuestion.TryGetValue(set, out var appearedList))
+                {
+                    appearedList = new List<int>();
+                    LevelData.appearedQuestion[set] = appearedList;
+                }
+
+                // 2) Nếu đã thử hết, reset để bắt đầu vòng mới
+                if (appearedList.Count >= _questions.Length)
+                    appearedList.Clear();
+
+                // 3) Chọn index ngẫu nhiên chưa từng xuất hiện
+                int nextIndex;
+                do
+                {
+                    nextIndex = UnityEngine.Random.Range(0, _questions.Length);
+                }
+                while (appearedList.Contains(nextIndex));
+
+                // 4) Gán và đánh dấu đã xuất hiện
+                _currentQuestionIndex = nextIndex;
+                appearedList.Add(nextIndex);
+            }
+
             
             var questionData = _questions[_currentQuestionIndex];
             _currentQuestion = questionData.ConvertToQuestion();
