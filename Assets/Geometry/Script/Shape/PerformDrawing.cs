@@ -2,15 +2,11 @@
 using Unity.Netcode;
 using System.Collections.Generic;
 using System;
-using System.Collections;
-using System.Linq;
 
 namespace Manipulator
 {
     public class PerformDrawing : NetworkBehaviour
     {
-
-        public static PerformDrawing Instance;
         [SerializeField] private Camera mainCamera;
         [SerializeField] private GameObject shapeNetworkPrefab;
 
@@ -32,7 +28,6 @@ namespace Manipulator
 
         void OnEnable()
         {
-            Instance = this;
             ShapeButtonManager.OnShapeChanged += OnShapeButtonChanged;
         }
 
@@ -43,8 +38,6 @@ namespace Manipulator
             if (_isDrawing) CancelDrawing();
         }
 
-        public GameObject GetShapeNetwork() => shapeNetworkPrefab;
-        
         private void OnShapeButtonChanged(IShapeButton.ShapeType newShape)
         {
             // nếu đang vẽ dở và user chọn tool khác, hủy triệt để
@@ -69,22 +62,16 @@ namespace Manipulator
                 FinishDrawing(hitPoint);
         }
 
-        private Vector3                  _beginPoint;      // nhớ start point
-        private IShapeButton.ShapeType   _beginType;       // nhớ tool type
-        private ulong                    _activeWrapperId;
-
         private void BeginDrawing(Vector3 start)
         {
+            // nếu có draw dang dở thì dọn luôn trước
             if (_isDrawing) CancelDrawing();
 
-            
+            // bắt đầu track các Shape mới sinh
             _tempShapeIds.Clear();
             ShapeStorage.ShapeAdded += _onShapeAdded;
-            Debug.Log("[UNDO DEBUG] Subscribed to ShapeStorage.ShapeAdded");
 
-            _beginPoint   = start;
-            _beginType    = _currentShape;
-
+            // tạo network‐wrapper
             var go = Instantiate(shapeNetworkPrefab);
             _activeSync = go.GetComponent<ShapeNetworkSync>();
             _activeSync.shapeType.Value    = (ShapeNetworkSync.ShapeType)_currentShape;
@@ -93,79 +80,38 @@ namespace Manipulator
             _activeSync.isDrawing.Value    = true;
             _activeSync.isFinalized.Value  = false;
             _activeSync.ownerClientId.Value= NetworkManager.LocalClientId;
-
             var netObj = go.GetComponent<NetworkObject>();
             netObj.Spawn();
             _activeWrapperId = netObj.NetworkObjectId;
 
             _isDrawing = true;
-            
-            _onShapeAdded = id =>
-            {
-                Debug.Log($"[UNDO DEBUG] ShapeAdded event fired for ID: {id}");
-                _tempShapeIds.Add(id);
-            };
-
-// then, after your yield return null in FinishAndTrackCoroutine, just before you unsubscribe:
-            Debug.Log($"[UNDO DEBUG] About to unsubscribe.  Tracked IDs ({_tempShapeIds.Count}): {string.Join(", ", _tempShapeIds)}");
-
-// also dump the entire storage at that moment:
-            var allNames = ShapeStorage
-                .GetAllShapes()
-                .Select(s => s.Name)
-                .OrderBy(n => n)
-                .ToArray();
-            Debug.Log($"[UNDO DEBUG] ShapeStorage currently contains ({allNames.Length}): {string.Join(", ", allNames)}");
-
-            ShapeStorage.ShapeAdded -= _onShapeAdded;
-            
-            
         }
-        
+
         private void ContinueDrawing(Vector3 current)
         {
             _activeSync.currentPoint.Value = current;
         }
-        
-
-        // Trong PerformDrawing.cs
+        private ulong _activeWrapperId;
 
         private void FinishDrawing(Vector3 end)
         {
-            // 1) finalize network
+            // finalize network
             _activeSync.currentPoint.Value  = end;
             _activeSync.isDrawing.Value     = false;
             _activeSync.isFinalized.Value   = true;
 
-            // 2) trì hoãn unsubscribe & ghi undo đến cuối frame
-            StartCoroutine( FinishAndTrackCoroutine() );
-        }
-
-        private IEnumerator FinishAndTrackCoroutine()
-        {
-            // chờ 1 frame để ShapeNetworkSync.OnFinalizedChanged chạy xong,
-            // EndSketch tạo xong hẳn Segment + Point
-            yield return null;
-
-            // giờ mới tạm dừng track
+            // ngưng track shape IDs
             ShapeStorage.ShapeAdded -= _onShapeAdded;
 
-            // và push action
-            var action = new CreateShapeBatchAction(
-                _tempShapeIds,
-                _activeWrapperId,
-                _currentShape,
-                _beginPoint,
-                _activeSync.currentPoint.Value
-            );
+            // 1) Push undo‐action
+            var action = new CreateShapeBatchAction(_tempShapeIds, _activeWrapperId);
             UndoManager.Instance.Do(action);
 
-            // reset state
+            // 2) Reset trạng thái
             _isDrawing   = false;
             _activeSync  = null;
+            // (tool vẫn có thể giữ)
         }
-
-
 
 
 
