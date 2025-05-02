@@ -4,28 +4,30 @@ namespace Manipulator
 {
     public class ShapeClickHandler : MonoBehaviour
     {
-        private Shape shape;
-        private SpawnPanel panelSpawner;
+        private Shape _shape;
+        private SpawnPanel _panelSpawner;
 
         public void SetShape(Shape shape)
         {
-            this.shape = shape;
-            while (this.shape.Parent != null)
-            {
-                this.shape = this.shape.Parent;
-            }
+            // climb up to the root shape
+            _shape = shape;
+            while (_shape.Parent != null)
+                _shape = _shape.Parent;
         }
 
         private void Start()
         {
-            panelSpawner = new SpawnPanel();
+            // instantiate your helper; it will cache the Canvas for you
+            _panelSpawner = new SpawnPanel();
         }
 
-        private void OnMouseOver()
+        private void OnMouseDown()
         {
-            if (Input.GetMouseButtonDown(1)) // Right-click
+            // only on right-click, once
+            if (Input.GetMouseButtonDown(1))
             {
-                panelSpawner.SpawnPanelAtTop(shape);
+                Debug.Log($"[ShapeClick] spawning panel for {_shape.Name}");
+                _panelSpawner.SpawnPanelAtTop(_shape);
             }
         }
     }

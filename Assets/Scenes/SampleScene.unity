@@ -9755,8 +9755,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canvas: {fileID: 93738158}
-  canvasOnboarding: {fileID: 0}
-  canvasHome: {fileID: 1225205069}
   uiPrefabsList:
   - {fileID: 2319519329222963400, guid: f138a42fd3c25864d8296fe888b4b331, type: 3}
   - {fileID: 4358128846609832933, guid: ffa35137ee0618a4e955e6aa9f2d16e1, type: 3}

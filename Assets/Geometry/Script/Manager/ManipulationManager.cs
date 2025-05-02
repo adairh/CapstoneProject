@@ -62,12 +62,22 @@ namespace Manipulator
         private void Start()
         {
             InputManager.Instance.OnAction += HandleAction;
+            _panelSpawner = new SpawnPanel();
         }
         private void OnDestroy()
         {
             InputManager.Instance.OnAction -= HandleAction;
         }
- 
+        private Shape _shape;
+        private SpawnPanel _panelSpawner;
+
+        public void SetShape(Shape shape)
+        {
+            // climb up to the root shape
+            _shape = shape;
+            while (_shape.Parent != null)
+                _shape = _shape.Parent;
+        }
         private void HandleAction(UserAction action, Vector2 pos)
         {
             if (action == UserAction.LeftClick)
@@ -93,7 +103,11 @@ namespace Manipulator
             {
                 TryApplyAngleConstraint();
             }
-
+            else if (action == UserAction.Config)
+            {
+                SetShape(_shape);
+                _panelSpawner.SpawnPanelAtTop(_shape);
+            }
             // ... các case khác ...
         }
         

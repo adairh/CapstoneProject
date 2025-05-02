@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using System.Collections.Generic;
-using An_An;
 
 namespace Manipulator
 {
@@ -10,39 +7,28 @@ namespace Manipulator
     {
         public static UIManager Instance { get; private set; }
 
-        [SerializeField] private Transform canvas; // Main Canvas transform for UI instantiation
-        [SerializeField] private GameObject canvasOnboarding; // Onboarding screen with ShowHome button
-        [SerializeField] private GameObject canvasHome; // Home page for hosting/joining rooms
-        [SerializeField] private List<GameObject> uiPrefabsList; // List of UI prefabs set via editor
+        [Header("Canvas")]
+        [SerializeField] private Transform canvas;
 
-        /*public GameObject canvasPlaygame;
-        public GameObject popupJoinRoom;
-        public GameObject popupCreateRoom;
-        public GameObject darkOverlay;
-        public TMP_InputField joinRoomIDInput;
-        public TMP_InputField joinPasswordInput;
-        public TMP_InputField createRoomIDInput;
-        public TMP_InputField createPasswordInput;*/
+        [Header("UI Prefabs")]
+        [Tooltip("Drag in any UI prefab you want to register at startup")]
+        [SerializeField] private List<GameObject> uiPrefabsList;
 
-        private Dictionary<string, GameObject> uiPrefabs = new Dictionary<string, GameObject>(); // Storage for UI components
+        // Internal lookup of name → prefab
+        private Dictionary<string, GameObject> uiPrefabs = new Dictionary<string, GameObject>();
 
-        public Dictionary<string, GameObject> UIPrefabs
-        {
-            get { return uiPrefabs; }
-        }
-
-        public Transform GetCanvasTransform()
-        {
-            return canvas;
-        }
+        /// <summary>
+        /// Read-only access to registered prefabs.
+        /// </summary>
+        public IReadOnlyDictionary<string, GameObject> UIPrefabs => uiPrefabs;
 
         private void Awake()
         {
-            // Singleton setup
+            // --- singleton boilerplate ---
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject); // Optional: Persist across scenes
+                DontDestroyOnLoad(gameObject);
             }
             else
             {
@@ -50,159 +36,66 @@ namespace Manipulator
                 return;
             }
 
-            // Validate serialized fields
-            /*if (canvas == null) Debug.LogError("Main canvas Transform is not assigned in UIManager!");
-            if (canvasOnboarding == null) Debug.LogError("canvasOnboarding is not assigned in UIManager!");
-            if (canvasHome == null) Debug.LogError("canvasHome is not assigned in UIManager!");*/
-            if (uiPrefabsList == null || uiPrefabsList.Count == 0)
-                Debug.LogWarning("uiPrefabsList is empty or not assigned in UIManager!");
-
+            // load any prefabs assigned in inspector
             LoadUIComponentsFromList();
         }
 
-        private void Start()
-        {
-            // Initialize canvas states
-            /*if (canvasOnboarding != null)
-            {
-                canvasOnboarding.SetActive(true);
-                Debug.Log("canvasOnboarding activated");
-            }
-            else
-            {
-                Debug.LogError("Cannot activate canvasOnboarding: Not assigned!");
-            }*/
-
-            /*if (canvasHome != null)
-            {
-                canvasHome.SetActive(false);
-                Debug.Log("canvasHome deactivated");
-            }
-            else
-            {
-                Debug.LogError("Cannot deactivate canvasHome: Not assigned!");
-            }*/
-        }
-
-        public void ShowHome()
-        {
-            /*if (canvasOnboarding != null)
-            {
-                canvasOnboarding.SetActive(false);
-                Debug.Log("canvasOnboarding deactivated");
-            }
-            else
-            {
-                Debug.LogError("Cannot deactivate canvasOnboarding: Not assigned!");
-            }*/
-
-            /*if (canvasHome != null)
-            {
-                canvasHome.SetActive(true);
-                Debug.Log("canvasHome activated");
-            }
-            else
-            {
-                Debug.LogError("Cannot activate canvasHome: Not assigned!");
-            }*/
-
-            /*if (canvas != null)
-            {
-                canvas.gameObject.SetActive(false);
-                Debug.Log("canvas activated");
-            }
-            else
-            {
-                Debug.LogError("Cannot activate canvas: Not assigned!");
-            }*/
-        }
-
-        public void ShowOnboarding()
-        {
-            /*if (canvasHome != null)
-            {
-                canvasHome.SetActive(false);
-                Debug.Log("canvasHome deactivated");
-            }
-            else
-            {
-                Debug.LogError("Cannot deactivate canvasHome: Not assigned!");
-            }
-
-            if (canvasOnboarding != null)
-            {
-                canvasOnboarding.SetActive(true);
-                Debug.Log("canvasOnboarding activated");
-            }
-            else
-            {
-                Debug.LogError("Cannot activate canvasOnboarding: Not assigned!");
-            }*/
-        }
-
+        /// <summary>
+        /// Registers a prefab under a given key (use its name or your own).
+        /// </summary>
         public void RegisterUIComponent(string key, GameObject prefab)
         {
             if (prefab == null)
             {
-                Debug.LogWarning($"Attempted to register null prefab with key {key}");
+                Debug.LogWarning($"UIManager: Attempted to register null prefab under key '{key}'");
                 return;
             }
-
             if (!uiPrefabs.ContainsKey(key))
-            {
                 uiPrefabs[key] = prefab;
-                Debug.Log($"Registered UI component: {key}");
-            }
             else
-            {
-                Debug.LogWarning($"UI component with key {key} is already registered.");
-            }
+                Debug.LogWarning($"UIManager: Key '{key}' is already registered");
         }
 
+        /// <summary>
+        /// Returns the raw prefab registered under that key (or null).
+        /// </summary>
         public GameObject GetUIComponent(string key)
         {
-            if (uiPrefabs.TryGetValue(key, out GameObject prefab))
-            {
-                return prefab; // Return the original prefab
-            }
-
-            Debug.LogWarning($"UI component with key {key} not found.");
-            return null;
+            uiPrefabs.TryGetValue(key, out var prefab);
+            return prefab;
         }
 
+        /// <summary>
+        /// Instantiates the prefab under that key as a child of the main canvas.
+        /// Returns the instance or null if missing.
+        /// </summary>
         public GameObject InstantiateUIComponent(string key)
         {
-            GameObject prefab = GetUIComponent(key);
-            if (prefab != null && canvas != null)
+            var prefab = GetUIComponent(key);
+            if (prefab == null)
             {
-                GameObject instance = Instantiate(prefab, canvas);
-                Debug.Log($"Instantiated UI component: {key}");
-                return instance;
+                Debug.LogWarning($"UIManager: No prefab registered under '{key}'");
+                return null;
             }
-
-            Debug.LogWarning($"Failed to instantiate UI component: {key} (prefab or canvas missing)");
-            return null;
+            if (canvas == null)
+            {
+                Debug.LogWarning("UIManager: Canvas Transform is null, cannot instantiate UI");
+                return null;
+            }
+            return Instantiate(prefab, canvas);
         }
+
+        /// <summary>
+        /// For other systems to grab the canvas Transform reference.
+        /// </summary>
+        public Transform GetCanvasTransform() => canvas;
 
         private void LoadUIComponentsFromList()
         {
-            if (uiPrefabsList == null || uiPrefabsList.Count == 0)
-            {
-                Debug.LogWarning("uiPrefabsList is empty or not assigned in UIManager!");
-                return;
-            }
-
-            foreach (GameObject prefab in uiPrefabsList)
-            {
+            if (uiPrefabsList == null) return;
+            foreach (var prefab in uiPrefabsList)
                 if (prefab != null)
-                {
                     RegisterUIComponent(prefab.name, prefab);
-                }
-                else
-                {
-                    Debug.LogWarning("Null prefab found in uiPrefabsList!");
-                }
-            }
         }
     }
 }

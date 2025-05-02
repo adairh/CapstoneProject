@@ -13,7 +13,8 @@ namespace Manipulator
         Draw,
         OpenSettings,
         Select,
-        AngleCons
+        AngleCons,
+        Config
         // … thêm tùy bạn
     }
     
@@ -42,7 +43,7 @@ namespace Manipulator
             if (Input.GetMouseButtonDown(0))
                 OnAction?.Invoke(UserAction.LeftClick, Input.mousePosition);
             if (Input.GetMouseButtonDown(1))
-                OnAction?.Invoke(UserAction.RightClick, Input.mousePosition);
+                OnAction?.Invoke(UserAction.Config, Input.mousePosition);
             if (Input.GetMouseButton(0))
                 OnAction?.Invoke(UserAction.Drag, Input.mousePosition);
             
