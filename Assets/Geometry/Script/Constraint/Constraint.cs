@@ -8,6 +8,8 @@ namespace Manipulator
     {
         private List<Shape> linkedShapes = new List<Shape>();
         public Shape Owner { get; set; }
+        
+        public HologramLabel Holo { get; set; }
 
         public void AddShape(Shape shape)
         {
@@ -28,5 +30,8 @@ namespace Manipulator
         }
 
         public abstract void ApplyConstraint(Shape movedShape, Vector3 movement);
+
+
+        public abstract string GetLabelText();
     }
 }

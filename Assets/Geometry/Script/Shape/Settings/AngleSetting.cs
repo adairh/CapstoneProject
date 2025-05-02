@@ -9,12 +9,14 @@ namespace Manipulator
         private readonly GameObject _prefab;
         private GameObject _uiInstance;
 
-        public AngleSetting(AngleConstraint constraint) 
-            : base(constraint.GetAngle(), ISetting.SettingType.NUMERIC, typeof(Point))
+        public AngleSetting(AngleConstraint constraint, HologramLabel targetShape) 
+            : base(constraint.GetAngle(), ISetting.SettingType.NUMERIC, typeof(HologramLabel))
         {
             _constraint = constraint;
             // Lấy prefab từ UIManager (khai báo sẵn trong scene)
             _prefab = UIManager.Instance.GetUIComponent("AngleSettingPrefab");
+            Value = constraint.GetAngle();
+            this.targetShape = targetShape;
         }
 
         public override GameObject GetUI()
@@ -51,6 +53,10 @@ namespace Manipulator
         {
             // Đẩy giá trị mới vào constraint
             _constraint.SetAngle(Value);
+
+            AngleConstraint _angleConstraint = (AngleConstraint)((HologramLabel)targetShape).GetConstraint();
+            
+            _constraint.RotateOther(_angleConstraint.GetA(), _angleConstraint.GetB(), false);
         }
 
         public override void Update()

@@ -15,6 +15,12 @@ namespace Manipulator
         [SerializeField] private Segment segmentB;
         [SerializeField] private Point pivot;
 
+
+        public Segment GetA() => segmentA;
+        public Segment GetB() => segmentB;
+        public Point GetPivot() => pivot;
+        
+        
         [Header("Target Angle (°)")]
         [SerializeField] private float targetAngleDeg;
 
@@ -95,43 +101,16 @@ namespace Manipulator
 
         public override void ApplyConstraint(Shape movedShape, Vector3 movement)
         {
-            if (!initialized || applying) return;
-            if (!ConstraintContext.TryBegin()) return;
-
-            applying = true;
-            try
-            {
-                    /*// 1) Pivot moved: translate both segments
-                    if (movedShape == pivot)
-                    {
-                        MoveEndpointInternal(freeA, movement, segmentA);
-                        MoveEndpointInternal(freeB, movement, segmentB);
-                        return;
-                    }
-
-                    // 2) SegmentA or freeA moved → rotate segmentB
-                    if (movedShape == segmentA || movedShape == freeA)
-                    {
-                        RotateOther(segmentA, segmentB, false);
-                    }
-                    // 3) SegmentB or freeB moved → rotate segmentA opposite
-                    else if (movedShape == segmentB || movedShape == freeB)
-                    {
-                        RotateOther(segmentB, segmentA, true);
-                    }*/
-                    
-                    Vector3 dirMoved = (segmentA.GetOtherEndpoint(pivot).Position - pivot.Position).normalized;
-                    Vector3 dirOther = (segmentB.GetOtherEndpoint(pivot).Position - pivot.Position).normalized;
-
-                    targetAngleDeg = Vector3.SignedAngle(dirMoved, dirOther, rotationAxis);
-                    
-            }
-            finally
-            {
-                applying = false;
-                ConstraintContext.End();
-            }
+            targetAngleDeg = Vector3.Angle(
+                (segmentA.End.Position - segmentA.Start.Position),
+                (segmentB.End.Position - segmentB.Start.Position)
+            );
+            
+             Debug.LogError(((AngleConstraint)Holo.GetConstraint()).GetAngle());
+             Holo.SetText();
+         
         }
+
 
         private void MoveEndpointInternal(Point endpoint, Vector3 movement, Segment seg)
         {
@@ -154,7 +133,7 @@ namespace Manipulator
 
 
 
-        private void RotateOther(Segment moved, Segment other, bool reverseDelta)
+        public void RotateOther(Segment moved, Segment other, bool reverseDelta)
         {
             Vector3 dirMoved = (moved.GetOtherEndpoint(pivot).Position - pivot.Position).normalized;
             Vector3 dirOther = (other.GetOtherEndpoint(pivot).Position - pivot.Position).normalized;
@@ -192,16 +171,16 @@ namespace Manipulator
             Vector3 newDir = Quaternion.AngleAxis(delta, rotationAxis) * unitDir;
             Vector3 newPos = pivot.Position + newDir * len;
 
-            // Cập nhật
-            /*freePt.Position = newPos;
-            freePt.GO.transform.position = newPos;*/
-            
-            ConstraintContext.QueueMove(freePt, newPos);
-            
-            other.ApplyTransform(false, true);
+            freePt.MoveToPosition(newPos, /*silent=*/true);
+            other.ApplyTransform(updatePoints: false, silent: true);
+
         }
 
 
+        public override string GetLabelText()
+        {
+            return $"{GetAngle():F1}°";
+        }
 
     }
 

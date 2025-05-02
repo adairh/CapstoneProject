@@ -4,30 +4,41 @@ namespace Manipulator
 {
     public class ShapeClickHandler : MonoBehaviour
     {
-        private Shape _shape;
-        private SpawnPanel _panelSpawner;
+        private Shape shape;
+        private SpawnPanel panelSpawner;
 
         public void SetShape(Shape shape)
         {
-            // climb up to the root shape
-            _shape = shape;
-            while (_shape.Parent != null)
-                _shape = _shape.Parent;
+            // luôn lấy root shape (nếu có nested)
+            this.shape = shape;
+            while (this.shape.Parent != null)
+                this.shape = this.shape.Parent;
         }
 
         private void Start()
         {
-            // instantiate your helper; it will cache the Canvas for you
-            _panelSpawner = new SpawnPanel();
+            panelSpawner = new SpawnPanel();
         }
 
-        private void OnMouseDown()
+        private void Update()
         {
-            // only on right-click, once
+            // mỗi khung, nếu right-click
             if (Input.GetMouseButtonDown(1))
             {
-                Debug.Log($"[ShapeClick] spawning panel for {_shape.Name}");
-                _panelSpawner.SpawnPanelAtTop(_shape);
+                var cam = Camera.main;
+                if (cam == null) return;
+
+                Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out RaycastHit hit))
+                {
+                    // debug
+                    Debug.Log($"[ShapeClickHandler] Raycast hit: {hit.collider.gameObject.name}");
+                    if (hit.collider.gameObject == gameObject)
+                    {
+                        Debug.Log("[ShapeClickHandler] Right-click on shape!");
+                        panelSpawner.SpawnPanelAtTop(shape);
+                    }
+                }
             }
         }
     }

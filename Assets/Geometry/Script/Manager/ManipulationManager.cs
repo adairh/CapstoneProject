@@ -62,22 +62,12 @@ namespace Manipulator
         private void Start()
         {
             InputManager.Instance.OnAction += HandleAction;
-            _panelSpawner = new SpawnPanel();
         }
         private void OnDestroy()
         {
             InputManager.Instance.OnAction -= HandleAction;
-        }
-        private Shape _shape;
-        private SpawnPanel _panelSpawner;
+        } 
 
-        public void SetShape(Shape shape)
-        {
-            // climb up to the root shape
-            _shape = shape;
-            while (_shape.Parent != null)
-                _shape = _shape.Parent;
-        }
         private void HandleAction(UserAction action, Vector2 pos)
         {
             if (action == UserAction.LeftClick)
@@ -104,9 +94,8 @@ namespace Manipulator
                 TryApplyAngleConstraint();
             }
             else if (action == UserAction.Config)
-            {
-                SetShape(_shape);
-                _panelSpawner.SpawnPanelAtTop(_shape);
+            { 
+                
             }
             // ... các case khác ...
         }
@@ -333,40 +322,37 @@ namespace Manipulator
         
         private void TryApplyAngleConstraint()
         {
-            // Muốn đúng 2 shape được chọn
             if (selectedShapes.Count == 2)
             {
-                // Lọc chỉ lấy 2 Segment
                 var segments = selectedShapes.OfType<Segment>().ToList();
                 if (segments.Count == 2)
                 {
                     var segA = segments[0];
                     var segB = segments[1];
 
-                    // Tính góc hiện tại giữa 2 vector của 2 segment
                     float currentAngle = Vector3.Angle(
                         (segA.End.Position - segA.Start.Position),
                         (segB.End.Position - segB.Start.Position)
                     );
-                    
-                    GetSharedPivotPoints(segA, segB, out pivot, out freeA, out freeB);
-                    
-                    var ac = pivot.GO.AddComponent<AngleConstraint>();
-                    pivot.AppendSettings(new AngleSetting(ac));
-                    ac.Owner = pivot;
-                    ac.AddDependencies(segA, segB, pivot, currentAngle);
-                    
-                    
-                    // Tạo constraint và đăng ký luôn trong constructor
-                    // var constraint = new AngleConstraint(segA, segB, currentAngle);
 
+                    GetSharedPivotPoints(segA, segB, out pivot, out freeA, out freeB);
+
+                    // Tạo constraint và attach
+                    var angleConstraint = pivot.GO.AddComponent<AngleConstraint>();
+                    angleConstraint.Owner = pivot;
+                    angleConstraint.AddDependencies(segA, segB, pivot, currentAngle);
+
+                    // Spawn hologram để hiển thị thông tin của riêng constraint này
+                    var hologram = new HologramLabel(pivot.Position + Vector3.up * 0.2f, angleConstraint);
+                    hologram.SetText();
                     
+                    angleConstraint.Holo = hologram;
                     
-                    Debug.Log(
-                        $"<color=green>[AngleConstraint]</color> " +
-                        $"Áp dụng giữa {segA.Name} và {segB.Name} với góc ban đầu " +
-                        $"<color=green>{currentAngle:F1}°</color>"
-                    );
+                    hologram.AppendSettings(new AngleSetting(angleConstraint, hologram));
+                    // Liên kết setting vào hologram (không pivot nữa) 
+
+                    Debug.Log($"<color=green>[AngleConstraint]</color> Áp dụng giữa {segA.Name} và {segB.Name} " +
+                              $"với góc ban đầu <color=green>{currentAngle:F1}°</color>");
                 }
                 else
                 {
@@ -378,6 +364,7 @@ namespace Manipulator
                 Debug.Log("<color=yellow>[AngleConstraint]</color> Vui lòng chọn đúng 2 Shape để áp dụng.");
             }
         }
+
 
 
     }

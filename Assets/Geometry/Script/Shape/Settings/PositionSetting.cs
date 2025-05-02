@@ -68,11 +68,6 @@ namespace Manipulator
 
                     inputFields[2].text = tempValue.z + "";
                 });
-
-                inputFields[3].onEndEdit.AddListener(value =>
-                {
-                    inputFields[3].text = targetShape.Name;
-                });
             }
 
 

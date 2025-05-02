@@ -70,7 +70,10 @@ namespace Manipulator
             }
         }
 
-
+        public override string GetLabelText()
+        {
+            return $"";
+        }
         #region — RatioCalculator —
         private class RatioCalculator
         {

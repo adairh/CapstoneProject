@@ -114,6 +114,7 @@ namespace Manipulator
         {
             go.tag = Parent == null ? "Shape" : "Child";
             go.AddComponent<ShapeClickHandler>().SetShape(this);
+            //go.AddComponent<EditableShape>().SetShape(this);
             go.AddComponent<DraggableShape>().SetShape(this);
             go.AddComponent<HoverableShape>().SetShape(this);
             if (go.CompareTag("Shape"))
@@ -163,13 +164,37 @@ namespace Manipulator
         public virtual void MovePivots(Point movedPoint) { NotifyChange(); }
         public virtual void MovePivots(string pointName, Vector3 loc) { NotifyChange(); }
 
+        // Settings initialization and application
         protected abstract void InitializeSettings();
         public virtual void ApplySettings() { }
         public virtual void OnSettingChanged(ISetting setting) => ApplySettings();
 
-        public void UpdateSettings(ISetting setting) { /* ... */ NotifyChange(); }
-        public void AppendSettings(params ISetting[] newSettings) { /* ... */ NotifyChange(); }
-        public void ModifySetting<T>(ISetting setting, T value) { /* ... */ NotifyChange(); }
+        public void UpdateSettings(ISetting setting)
+        {
+            for (int i = 0; i < settings.Count; i++)
+            {
+                if (settings[i].GetType() == setting.GetType())
+                {
+                    settings[i] = setting;
+                    OnSettingChanged(setting);
+                    NotifyChange();
+                    return;
+                }
+            }
+            settings.Add(setting);
+            OnSettingChanged(setting);
+            NotifyChange();
+        }
+        public void AppendSettings(params ISetting[] newSettings)
+        {
+            settings.AddRange(newSettings);
+            NotifyChange();
+        }
+        public void ModifySetting<T>(ISetting setting, T value)
+        {
+            setting.SetValue(value);
+            UpdateSettings(setting);
+        }
 
         public abstract void Drawing();
         public abstract void UpdateHitbox();
