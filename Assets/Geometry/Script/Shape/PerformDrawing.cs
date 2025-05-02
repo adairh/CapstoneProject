@@ -80,7 +80,9 @@ namespace Manipulator
             _activeSync.isDrawing.Value    = true;
             _activeSync.isFinalized.Value  = false;
             _activeSync.ownerClientId.Value= NetworkManager.LocalClientId;
-            go.GetComponent<NetworkObject>().Spawn();
+            var netObj = go.GetComponent<NetworkObject>();
+            netObj.Spawn();
+            _activeWrapperId = netObj.NetworkObjectId;
 
             _isDrawing = true;
         }
@@ -89,25 +91,28 @@ namespace Manipulator
         {
             _activeSync.currentPoint.Value = current;
         }
+        private ulong _activeWrapperId;
 
         private void FinishDrawing(Vector3 end)
         {
-            // 1) finalize network
+            // finalize network
             _activeSync.currentPoint.Value  = end;
             _activeSync.isDrawing.Value     = false;
             _activeSync.isFinalized.Value   = true;
+
+            // ngưng track shape IDs
             ShapeStorage.ShapeAdded -= _onShapeAdded;
 
-            // 2) đẩy action undo
-            var batchIds = new List<string>(_tempShapeIds);
-            var createAction = new CreateShapeBatchAction(batchIds);
-            UndoManager.Instance.Do(createAction);
+            // 1) Push undo‐action
+            var action = new CreateShapeBatchAction(_tempShapeIds, _activeWrapperId);
+            UndoManager.Instance.Do(action);
 
-            // 3) reset state để user có thể vẽ tiếp
-            _isDrawing  = false;
-            _activeSync = null;
-            // (tool vẫn giữ nguyên nếu bạn muốn)
+            // 2) Reset trạng thái
+            _isDrawing   = false;
+            _activeSync  = null;
+            // (tool vẫn có thể giữ)
         }
+
 
 
         private void CancelDrawing()
