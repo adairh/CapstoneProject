@@ -79,17 +79,16 @@ namespace Manipulator
         // Bây giờ gọi ApplyConstraint với cả movedShape
         public void ApplyConstraints(Shape movedShape, Vector3 movement = new Vector3())
         {
-            if (!ConstraintContext.TryBegin()) return;
-
-            // Chạy tất cả constraint liên quan
-            foreach (var c in constraints)
+            ManipulationManager mm = ManipulationManager.Instance;
+            if (mm.IsDrawing()) return;
+            foreach (var constraint in constraints)
             {
-                if (c.HasShape(movedShape))
-                    c.ApplyConstraint(movedShape, movement);
+                if (constraint is not FixedPointConstraint)
+                {
+                    if (constraint.HasShape(movedShape))
+                        constraint.ApplyConstraint(movedShape, movement);
+                }
             }
-
-            // Khi TryBegin() → End() sẽ tự động Flush()
-            ConstraintContext.End();
         }
     }
 }

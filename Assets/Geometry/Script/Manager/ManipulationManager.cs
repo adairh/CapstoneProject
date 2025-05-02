@@ -338,6 +338,7 @@ namespace Manipulator
                     GetSharedPivotPoints(segA, segB, out pivot, out freeA, out freeB);
                     
                     var ac = pivot.GO.AddComponent<AngleConstraint>();
+                    pivot.AppendSettings(new AngleSetting(ac));
                     ac.Owner = pivot;
                     ac.AddDependencies(segA, segB, pivot, currentAngle);
                     

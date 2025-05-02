@@ -26,6 +26,17 @@ namespace Manipulator
         /// <summary>
         /// Cấu hình runtime nếu không dùng Inspector.
         /// </summary>
+
+        public float GetAngle()
+        {
+            return targetAngleDeg;
+        }
+
+        public void SetAngle(float angle)
+        {
+            targetAngleDeg = angle;
+        }
+        
         public void AddDependencies(Segment segA, Segment segB, Point pivotPoint, float angleDeg)
         {
             segmentA = segA;
@@ -90,7 +101,7 @@ namespace Manipulator
             applying = true;
             try
             {
-                    // 1) Pivot moved: translate both segments
+                    /*// 1) Pivot moved: translate both segments
                     if (movedShape == pivot)
                     {
                         MoveEndpointInternal(freeA, movement, segmentA);
@@ -107,7 +118,13 @@ namespace Manipulator
                     else if (movedShape == segmentB || movedShape == freeB)
                     {
                         RotateOther(segmentB, segmentA, true);
-                    }
+                    }*/
+                    
+                    Vector3 dirMoved = (segmentA.GetOtherEndpoint(pivot).Position - pivot.Position).normalized;
+                    Vector3 dirOther = (segmentB.GetOtherEndpoint(pivot).Position - pivot.Position).normalized;
+
+                    targetAngleDeg = Vector3.SignedAngle(dirMoved, dirOther, rotationAxis);
+                    
             }
             finally
             {
