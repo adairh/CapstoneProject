@@ -108,6 +108,9 @@ namespace Manipulator
             // In debug có màu: xanh nếu drag được, đỏ nếu không
             string color = canDrag ? "green" : "red";
             Debug.Log($"<color={color}>[StartDragging] Can drag {shape.name}? {canDrag}</color>");
+            Debug.Log($"[StartDragging] currentDraggingObject null? {currentDraggingObject == null}");
+            Debug.Log($"[StartDragging] DragState = {CurrentDragState}");
+            Debug.Log($"[StartDragging] IsDrawing? {IsDrawing()}");
 
             if (canDrag)
             {

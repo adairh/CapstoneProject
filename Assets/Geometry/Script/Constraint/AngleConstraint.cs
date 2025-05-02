@@ -48,12 +48,18 @@ namespace Manipulator
                 InitializeInternal();
             }
         }
-
+        
+        private float _lenA, _lenB;
+        
         private void InitializeInternal()
         {
             if (initialized) return;
             freeA = segmentA.GetOtherEndpoint(pivot);
             freeB = segmentB.GetOtherEndpoint(pivot);
+    
+            // Cố định khoảng cách ban đầu
+            _lenA = (freeA.Position - pivot.Position).magnitude;
+            _lenB = (freeB.Position - pivot.Position).magnitude;
             
             // Tính trục xoay
             Vector3 dirA = (freeA.Position - pivot.Position).normalized;
@@ -79,40 +85,57 @@ namespace Manipulator
         public override void ApplyConstraint(Shape movedShape, Vector3 movement)
         {
             if (!initialized || applying) return;
+            if (!ConstraintContext.TryBegin()) return;
+
             applying = true;
             try
             {
-                // 1) Pivot moved: translate both segments
-                if (movedShape == pivot)
-                {
-                    MoveEndpointInternal(freeA, movement, segmentA);
-                    MoveEndpointInternal(freeB, movement, segmentB);
-                    return;
-                }
+                    // 1) Pivot moved: translate both segments
+                    if (movedShape == pivot)
+                    {
+                        MoveEndpointInternal(freeA, movement, segmentA);
+                        MoveEndpointInternal(freeB, movement, segmentB);
+                        return;
+                    }
 
-                // 2) SegmentA or freeA moved → rotate segmentB
-                if (movedShape == segmentA || movedShape == freeA)
-                {
-                    RotateOther(segmentA, segmentB, false);
-                }
-                // 3) SegmentB or freeB moved → rotate segmentA opposite
-                else if (movedShape == segmentB || movedShape == freeB)
-                {
-                    RotateOther(segmentB, segmentA, true);
-                }
+                    // 2) SegmentA or freeA moved → rotate segmentB
+                    if (movedShape == segmentA || movedShape == freeA)
+                    {
+                        RotateOther(segmentA, segmentB, false);
+                    }
+                    // 3) SegmentB or freeB moved → rotate segmentA opposite
+                    else if (movedShape == segmentB || movedShape == freeB)
+                    {
+                        RotateOther(segmentB, segmentA, true);
+                    }
             }
             finally
             {
                 applying = false;
+                ConstraintContext.End();
             }
         }
 
         private void MoveEndpointInternal(Point endpoint, Vector3 movement, Segment seg)
         {
-            endpoint.Position += movement;
-            endpoint.GO.transform.position = endpoint.Position;
-            seg.ApplyTransform(false);
+            if (!ConstraintContext.TryBegin()) return;
+            try
+            {
+                // 1) Cập nhật dữ liệu
+                Vector3 newPos = endpoint.Position + movement;
+                endpoint.Position = newPos;
+                endpoint.GO.transform.position = newPos;
+        
+                // 2) Redraw segment
+                seg.ApplyTransform(false, true);
+            }
+            finally
+            {
+                ConstraintContext.End();
+            }
         }
+
+
 
         private void RotateOther(Segment moved, Segment other, bool reverseDelta)
         {
@@ -121,23 +144,44 @@ namespace Manipulator
 
             float current = Vector3.SignedAngle(dirMoved, dirOther, rotationAxis);
             
-            //if (reverseDelta) targetAngleDeg = -targetAngleDeg;
-            
-            float delta = targetAngleDeg - current;
+            // Reverse góc nếu cần
+            float target = reverseDelta ? -targetAngleDeg : targetAngleDeg;
+
+// Góc hiện tại giữa hai vector
+            float delta = target - current;
+
+// Debug thông tin
+            Debug.Log($"[AngleConstraint] target: {target}, current: {current}, delta: {delta}");
+
+            if (delta > 180f) delta -= 360f;
+            else if (delta < -180f) delta += 360f;
+
 
             // 👇 Chỉ đảo hướng xoay, không đảo current
 
-            if (Mathf.Abs(delta) < 0.01f)
-                return;
+            // Nếu delta quá nhỏ thì thôi
+            if (Mathf.Abs(delta) < 0.01f) return;
 
+            // Lấy free-point của “other”
             Point freePt = other.GetOtherEndpoint(pivot);
-            Vector3 offset = freePt.Position - pivot.Position;
 
-            offset = Quaternion.AngleAxis(delta, rotationAxis) * offset;
-            Vector3 newPos = pivot.Position + offset;
+            // Chọn chiều dài tương ứng
+            float len = (other == segmentA ? _lenA : _lenB);
 
-            freePt.MoveToPosition(newPos, true);
-            other.ApplyTransform(false);
+            // Tạo direction chuẩn
+            Vector3 unitDir = (freePt.Position - pivot.Position).normalized;
+
+            // Xoay direction rồi scale lại
+            Vector3 newDir = Quaternion.AngleAxis(delta, rotationAxis) * unitDir;
+            Vector3 newPos = pivot.Position + newDir * len;
+
+            // Cập nhật
+            /*freePt.Position = newPos;
+            freePt.GO.transform.position = newPos;*/
+            
+            ConstraintContext.QueueMove(freePt, newPos);
+            
+            other.ApplyTransform(false, true);
         }
 
 

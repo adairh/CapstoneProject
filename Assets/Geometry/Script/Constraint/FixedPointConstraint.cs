@@ -50,14 +50,26 @@ namespace Manipulator
         
         private void OnDependentShapeChanged(Shape movedShape)
         {
+            if (_isApplying || !ConstraintContext.TryBegin()) return;
+
             if (!_constraints.TryGetValue(movedShape, out var ratio)) 
+            {
+                ConstraintContext.End();
                 return;
-            if (_isApplying) return;    // đã đang apply → skip
+            }
+
             _isApplying = true;
-            // recalc vị trí của point
-            ratio.RecalculatePosition();
-            _isApplying = false;
+            try
+            {
+                ratio.RecalculatePosition();
+            }
+            finally
+            {
+                _isApplying = false;
+                ConstraintContext.End();
+            }
         }
+
 
         #region — RatioCalculator —
         private class RatioCalculator
@@ -90,13 +102,16 @@ namespace Manipulator
                     sum += pivot.Position + dir * dist;
                 }
                 // move point
-                _pt.MoveToPosition(sum / _pivots.Count, true);
+                //_pt.MoveToPosition(sum / _pivots.Count, true);
+                ConstraintContext.QueueMove(_pt, sum / _pivots.Count);
+
             }
         }
         #endregion
 
         public override void ApplyConstraint(Shape movedShape, Vector3 movement = new Vector3())
         {
+            
             foreach (var shape in GetLinkedShapes())
             {
                 shape.OnPointMoved((Point)Owner);

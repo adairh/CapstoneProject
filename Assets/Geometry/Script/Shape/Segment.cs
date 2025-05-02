@@ -50,7 +50,7 @@ namespace Manipulator
             End.Draw();
         }
 
-        public void ApplyTransform(bool updatePoints = true)
+        public void ApplyTransform(bool updatePoints = true, bool silent = false)
         {
             if (GO == null) return;
 
@@ -74,7 +74,7 @@ namespace Manipulator
                 DrawPoint();
             }
 
-            if (!mm.IsDrawing())
+            if (!mm.IsDrawing() || silent)
             {
                 NotifyChange();
             }
