@@ -1,124 +1,152 @@
 ﻿using UnityEngine;
 using Unity.Netcode;
-using System.Collections;
 using System.Collections.Generic;
-using Manipulator;
+using System;
 
 namespace Manipulator
 {
     public class PerformDrawing : NetworkBehaviour
     {
-        public Camera mainCamera; // Assign in Inspector
-        public GameObject shapeNetworkPrefab; // Assign ShapeNetworkSync prefab in Inspector
+        [SerializeField] private Camera mainCamera;
+        [SerializeField] private GameObject shapeNetworkPrefab;
 
-        private static IShapeButton.ShapeType currentShape = IShapeButton.ShapeType.None;
-        private ShapeNetworkSync currentShapeObject;
+        private static IShapeButton.ShapeType _currentShape = IShapeButton.ShapeType.None;
+        private ShapeNetworkSync    _activeSync;
+        private bool                _isDrawing;
 
-        private string LogPrefix => $"[{(IsHost ? "Host" : "Client")}:{NetworkManager.LocalClientId}]";
+        // Dùng để track tất cả Shape sinh ra trong 1 lần draw
+        private List<string>        _tempShapeIds;
+        private Action<string>      _onShapeAdded;
 
-        void Start()
+        void Awake()
         {
             if (mainCamera == null) mainCamera = Camera.main;
-            ShapeButtonManager.OnShapeChanged += HandleShapeChange;
-            //Debug.Log($"{LogPrefix} [PerformDrawing] Start - IsHost: {IsHost}, IsClient: {IsClient}, LocalClientId: {NetworkManager.LocalClientId}");
+            // chuẩn bị callback
+            _tempShapeIds  = new List<string>();
+            _onShapeAdded  = id => _tempShapeIds.Add(id);
         }
 
-        void OnDestroy()
+        void OnEnable()
         {
-            ShapeButtonManager.OnShapeChanged -= HandleShapeChange;
+            ShapeButtonManager.OnShapeChanged += OnShapeButtonChanged;
         }
 
-        void HandleShapeChange(IShapeButton.ShapeType newShape)
+        void OnDisable()
         {
-            //Debug.Log($"{LogPrefix} [PerformDrawing] Shape changed to: {newShape}");
-            currentShape = newShape;
+            ShapeButtonManager.OnShapeChanged -= OnShapeButtonChanged;
+            // nếu thoát scene trong lúc vẽ thì vẫn phải cleanup
+            if (_isDrawing) CancelDrawing();
+        }
+
+        private void OnShapeButtonChanged(IShapeButton.ShapeType newShape)
+        {
+            // nếu đang vẽ dở và user chọn tool khác, hủy triệt để
+            if (_isDrawing && newShape != _currentShape)
+                CancelDrawing();
+
+            _currentShape = newShape;
         }
 
         void Update()
         {
-            if (!IsOwner) return; // check mode online/offline trước
-            if (mainCamera == null) return;
-            if (currentShape == IShapeButton.ShapeType.None) return;
+            if (!IsOwner || _currentShape == IShapeButton.ShapeType.None) return;
 
-            Vector3 hitPoint = GetHitPoint();
-            if (hitPoint == Vector3.zero)
-            {
-                //Debug.LogWarning($"{LogPrefix} [PerformDrawing] Invalid hit point, skipping");
-                return;
-            }
+            Vector3 hitPoint = ComputeHitPointUnderCursor();
+            if (hitPoint == Vector3.zero) return;
 
-            if (Input.GetMouseButtonDown(0) && currentShapeObject == null)
-            {
-                StartDrawing(hitPoint);
-            }
-            else if (Input.GetMouseButton(0) && currentShapeObject != null)
-            {
-                UpdateDrawing(hitPoint);
-            }
-            else if (Input.GetMouseButtonUp(0) && currentShapeObject != null)
-            {
+            if (Input.GetMouseButtonDown(0))
+                BeginDrawing(hitPoint);
+            else if (Input.GetMouseButton(0) && _isDrawing)
+                ContinueDrawing(hitPoint);
+            else if (Input.GetMouseButtonUp(0) && _isDrawing)
                 FinishDrawing(hitPoint);
+        }
+
+        private void BeginDrawing(Vector3 start)
+        {
+            // nếu có draw dang dở thì dọn luôn trước
+            if (_isDrawing) CancelDrawing();
+
+            // bắt đầu track các Shape mới sinh
+            _tempShapeIds.Clear();
+            ShapeStorage.ShapeAdded += _onShapeAdded;
+
+            // tạo network‐wrapper
+            var go = Instantiate(shapeNetworkPrefab);
+            _activeSync = go.GetComponent<ShapeNetworkSync>();
+            _activeSync.shapeType.Value    = (ShapeNetworkSync.ShapeType)_currentShape;
+            _activeSync.startPoint.Value   = start;
+            _activeSync.currentPoint.Value = start;
+            _activeSync.isDrawing.Value    = true;
+            _activeSync.isFinalized.Value  = false;
+            _activeSync.ownerClientId.Value= NetworkManager.LocalClientId;
+            go.GetComponent<NetworkObject>().Spawn();
+
+            _isDrawing = true;
+        }
+
+        private void ContinueDrawing(Vector3 current)
+        {
+            _activeSync.currentPoint.Value = current;
+        }
+
+        private void FinishDrawing(Vector3 end)
+        {
+            // finalize data
+            _activeSync.currentPoint.Value  = end;
+            _activeSync.isDrawing.Value     = false;
+            _activeSync.isFinalized.Value   = true;
+
+            // dừng track, nhưng giữ lại tất cả Shape đã sinh
+            ShapeStorage.ShapeAdded -= _onShapeAdded;
+
+            _isDrawing  = false;
+            _activeSync = null;
+
+            // Giờ tool vẫn giữ nguyên cho phép user tái vẽ nếu muốn
+        }
+
+        private void CancelDrawing()
+        {
+            // 1) Hủy network object
+            if (_activeSync != null)
+            {
+                Destroy(_activeSync.gameObject);
+                _activeSync = null;
             }
+
+            // 2) Unsubscribe và dọn sạch tất cả Shape tạm
+            ShapeStorage.ShapeAdded -= _onShapeAdded;
+            foreach (var id in _tempShapeIds)
+            {
+                var s = ShapeStorage.GetShapeByID(id);
+                if (s != null)
+                {
+                    s.Destroy();           // gọi Destroy() để xoá GameObject + từ ShapeStorage
+                }
+            }
+            _tempShapeIds.Clear();
+
+            _isDrawing = false;
         }
 
-        public static void ResetShape()
-        {
-            currentShape = IShapeButton.ShapeType.None;
-            ShapeButtonManager.SetActiveShape(IShapeButton.ShapeType.None);
-        }
-
-        private void StartDrawing(Vector3 hitPoint)
-        {
-            GameObject shapeObj = Instantiate(shapeNetworkPrefab);
-            currentShapeObject = shapeObj.GetComponent<ShapeNetworkSync>();
-            currentShapeObject.shapeType.Value = (ShapeNetworkSync.ShapeType)currentShape;
-            currentShapeObject.startPoint.Value = hitPoint;
-            currentShapeObject.currentPoint.Value = hitPoint;
-            currentShapeObject.isDrawing.Value = true;
-            currentShapeObject.isFinalized.Value = false;
-            currentShapeObject.ownerClientId.Value = NetworkManager.LocalClientId;
-
-            NetworkObject netObj = shapeObj.GetComponent<NetworkObject>();
-            netObj.Spawn();
-            //Debug.Log($"{LogPrefix} [PerformDrawing] Spawned ShapeNetworkSync for {currentShape} at {hitPoint}");
-        }
-
-        private void UpdateDrawing(Vector3 hitPoint)
-        {
-            currentShapeObject.currentPoint.Value = hitPoint;
-            //Debug.Log($"{LogPrefix} [PerformDrawing] Updated currentPoint to {hitPoint}");
-        }
-
-        private void FinishDrawing(Vector3 hitPoint)
-        {
-            currentShapeObject.currentPoint.Value = hitPoint;
-            currentShapeObject.isDrawing.Value = false;
-            currentShapeObject.isFinalized.Value = true;
-            //Debug.Log($"{LogPrefix} [PerformDrawing] Finalized shape");
-            currentShapeObject = null;
-            ResetShape();
-        }
-
-        private Vector3 GetHitPoint()
+        private Vector3 ComputeHitPointUnderCursor()
         {
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-
-            if (Physics.Raycast(ray, out RaycastHit hit))
-            {
-                //Debug.Log($"{LogPrefix} [PerformDrawing] Raycast hit at {hit.point}");
+            if (Physics.Raycast(ray, out var hit))
                 return hit.point;
-            }
 
-            UnityEngine.Plane groundPlane = new UnityEngine.Plane(Vector3.up, Vector3.zero);
-            if (groundPlane.Raycast(ray, out float enter))
-            {
-                Vector3 point = ray.GetPoint(enter);
-                //Debug.Log($"{LogPrefix} [PerformDrawing] Ground plane hit at {point}");
-                return point;
-            }
+            var ground = new Plane(Vector3.up, Vector3.zero);
+            if (ground.Raycast(ray, out var enter))
+                return ray.GetPoint(enter);
 
-            //Debug.LogWarning($"{LogPrefix} [PerformDrawing] No hit detected");
             return Vector3.zero;
+        }
+        
+        public static void ResetShape()
+        {
+            _currentShape = IShapeButton.ShapeType.None;
+            ShapeButtonManager.SetActiveShape(IShapeButton.ShapeType.None);
         }
     }
 }
