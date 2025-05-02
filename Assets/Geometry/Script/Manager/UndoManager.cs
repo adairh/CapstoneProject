@@ -1,120 +1,133 @@
-﻿// UndoManager.cs
-
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 
 namespace Manipulator
 {
-    public interface IUndoableAction
-    {
-        void Execute();
-        void Undo();
-    }
-
-    [RequireComponent(typeof(NetworkObject))]
     public class UndoManager : NetworkBehaviour
     {
         public static UndoManager Instance { get; private set; }
-
         private readonly Stack<IUndoableAction> _undo = new();
         private readonly Stack<IUndoableAction> _redo = new();
 
         void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
-        }
-
-        public override void OnNetworkSpawn()
-        {
-            // Only the server actually needs to Spawn() this scene object.
-            if (IsServer && GetComponent<NetworkObject>() == null)
-                GetComponent<NetworkObject>().Spawn();
+            if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
+            else Destroy(gameObject);
         }
 
         void Update()
         {
             if (Input.GetKeyDown(KeyCode.Z) && Input.GetKey(KeyCode.LeftAlt))
-                Undo();
+            {
+                if (IsServer) PerformUndo();
+                else RequestUndoServerRpc();
+            }
             if (Input.GetKeyDown(KeyCode.Y) && Input.GetKey(KeyCode.LeftAlt))
-                Redo();
+            {
+                if (IsServer) PerformRedo();
+                else RequestRedoServerRpc();
+            }
         }
 
         public void Do(IUndoableAction action)
         {
+            // luôn chạy trên Server
+            if (!IsServer) return;
             action.Execute();
             _undo.Push(action);
             _redo.Clear();
         }
 
-        public void Undo()
+        private void PerformUndo()
         {
             if (_undo.Count == 0) return;
-            var action = _undo.Pop();
-            action.Undo();
-            _redo.Push(action);
+            var a = _undo.Pop();
+            a.Undo();
+            _redo.Push(a);
         }
 
-        public void Redo()
+        private void PerformRedo()
         {
             if (_redo.Count == 0) return;
-            var action = _redo.Pop();
-            action.Execute();
-            _undo.Push(action);
+            var a = _redo.Pop();
+            a.Execute();
+            _undo.Push(a);
         }
 
-        /// <summary>
-        /// Called on client to ask server to despawn the wrapper NetworkObject.
-        /// </summary>
+        [ServerRpc(RequireOwnership = false)]
+        private void RequestUndoServerRpc()
+            => PerformUndo();
+
+        [ServerRpc(RequireOwnership = false)]
+        private void RequestRedoServerRpc()
+            => PerformRedo();
+
+        // RPC để Server despawn wrapper
         [ServerRpc(RequireOwnership = false)]
         public void DespawnWrapperServerRpc(ulong networkObjectId)
         {
-            if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out var netObj))
-            {
+            if (NetworkManager.Singleton.SpawnManager
+                  .SpawnedObjects.TryGetValue(networkObjectId, out var netObj))
                 netObj.Despawn(true);
-            }
         }
-        
+
+        // in UndoManager.cs
+
         /// <summary>
-        /// ServerRpc: server despawn wrapper rồi broadcast xuống clients danh sách IDs dạng CSV.
+        /// The real “undo batch” routine: despawns the network wrapper
+        /// and tells every client to destroy the shapes by ID.
         /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        public void UndoShapesServerRpc(ulong wrapperNetworkObjectId, string shapeIdsCsv)
+        public void ProcessUndoBatch(ulong wrapperNetworkObjectId, string shapeIdsCsv)
         {
-            // 1) Despawn network wrapper
+            // 1) despawn the wrapper on *this* instance (server)
             if (NetworkManager.Singleton.SpawnManager.SpawnedObjects
                 .TryGetValue(wrapperNetworkObjectId, out var netObj))
             {
                 netObj.Despawn(true);
             }
 
-            // 2) Gửi cho các client khác (và cả host) xóa shapes
+            // 2) broadcast to all clients to destroy the real shapes
             DestroyShapesClientRpc(shapeIdsCsv);
         }
 
-        /// <summary>
-        /// ClientRpc: nhận string CSV, tách ra và Destroy từng Shape.
-        /// </summary>
+        [ServerRpc(RequireOwnership = false)]
+        public void UndoShapesServerRpc(ulong wrapperNetworkObjectId, string shapeIdsCsv)
+        {
+            // simply forward to the same logic
+            ProcessUndoBatch(wrapperNetworkObjectId, shapeIdsCsv);
+        }
+
         [ClientRpc]
         private void DestroyShapesClientRpc(string shapeIdsCsv)
         {
             if (string.IsNullOrEmpty(shapeIdsCsv)) return;
-
-            foreach (var id in shapeIdsCsv.Split(new[]{','}, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var id in shapeIdsCsv.Split(','))
             {
                 var s = ShapeStorage.GetShapeByID(id);
-                if (s != null)
-                    s.Destroy();
+                if (s != null) s.Destroy();
             }
+        }
+
+
+        // ServerRpc: khi Redo batch, spawn wrapper lại
+        [ServerRpc(RequireOwnership = false)]
+        public void SpawnWrapperServerRpc(
+            IShapeButton.ShapeType type,
+            Vector3 start,
+            Vector3 end,
+            ulong originalWrapperId)
+        {
+            var go   = Instantiate(PerformDrawing.Instance.GetShapeNetwork());
+            var sync = go.GetComponent<ShapeNetworkSync>();
+            sync.shapeType.Value    = (ShapeNetworkSync.ShapeType)type;
+            sync.startPoint.Value   = start;
+            sync.currentPoint.Value = end;
+            sync.isDrawing.Value    = false;
+            sync.isFinalized.Value  = true;
+            var netObj = go.GetComponent<NetworkObject>();
+            netObj.Spawn();
+            // (Nếu cần lưu lại _wrapperId mới ở server thì làm tương tự như CreateShapeBatchAction)
         }
     }
 }
