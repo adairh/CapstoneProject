@@ -1,43 +1,61 @@
-﻿using System.Collections.Generic;
+﻿// UndoRedoManager.cs
+using System.Collections.Generic;
+using UnityEngine;
+
 
 namespace Manipulator
 {
-    public interface IUndoableCommand
+    // IUndoableAction.cs
+    public interface IUndoableAction
     {
-        void Execute();   // Thực thi lệnh (Redo)
-        void Undo();      // Hoàn tác lệnh
+        void Execute();  // thực thi
+        void Undo();     // hoàn tác
     }
 
-    public class UndoManager
+    
+    public class UndoManager : MonoBehaviour
     {
-        private static UndoManager _instance;
-        public static UndoManager Instance => _instance ??= new UndoManager();
+        public static UndoManager Instance { get; private set; }
 
-        private readonly Stack<IUndoableCommand> _undoStack = new();
-        private readonly Stack<IUndoableCommand> _redoStack = new();
+        private readonly Stack<IUndoableAction> undoStack = new();
+        private readonly Stack<IUndoableAction> redoStack = new();
 
-        public void Do(IUndoableCommand cmd)
+        void Awake()
         {
-            cmd.Execute();
-            _undoStack.Push(cmd);
-            _redoStack.Clear();
+            if (Instance == null) Instance = this;
+            else Destroy(gameObject);
+        }
+
+        void Update()
+        {
+            // Ctrl+Z để undo, Ctrl+Y để redo
+            if (Input.GetKeyDown(KeyCode.Z) && Input.GetKey(KeyCode.LeftAlt))
+                Undo();
+            if (Input.GetKeyDown(KeyCode.Y) && Input.GetKey(KeyCode.LeftAlt))
+                Redo();
+        }
+
+        public void Do(IUndoableAction action)
+        {
+            action.Execute();
+            undoStack.Push(action);
+            redoStack.Clear();
         }
 
         public void Undo()
         {
-            if (_undoStack.Count == 0) return;
-            var cmd = _undoStack.Pop();
-            cmd.Undo();
-            _redoStack.Push(cmd);
+            if (undoStack.Count == 0) return;
+            var action = undoStack.Pop();
+            action.Undo();
+            redoStack.Push(action);
         }
 
         public void Redo()
         {
-            if (_redoStack.Count == 0) return;
-            var cmd = _redoStack.Pop();
-            cmd.Execute();
-            _undoStack.Push(cmd);
+            if (redoStack.Count == 0) return;
+            var action = redoStack.Pop();
+            action.Execute();
+            undoStack.Push(action);
         }
     }
-
 }

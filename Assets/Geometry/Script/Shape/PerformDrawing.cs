@@ -92,19 +92,23 @@ namespace Manipulator
 
         private void FinishDrawing(Vector3 end)
         {
-            // finalize data
+            // 1) finalize network
             _activeSync.currentPoint.Value  = end;
             _activeSync.isDrawing.Value     = false;
             _activeSync.isFinalized.Value   = true;
-
-            // dừng track, nhưng giữ lại tất cả Shape đã sinh
             ShapeStorage.ShapeAdded -= _onShapeAdded;
 
+            // 2) đẩy action undo
+            var batchIds = new List<string>(_tempShapeIds);
+            var createAction = new CreateShapeBatchAction(batchIds);
+            UndoManager.Instance.Do(createAction);
+
+            // 3) reset state để user có thể vẽ tiếp
             _isDrawing  = false;
             _activeSync = null;
-
-            // Giờ tool vẫn giữ nguyên cho phép user tái vẽ nếu muốn
+            // (tool vẫn giữ nguyên nếu bạn muốn)
         }
+
 
         private void CancelDrawing()
         {
