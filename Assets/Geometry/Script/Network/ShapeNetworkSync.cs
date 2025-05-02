@@ -195,63 +195,110 @@ public class ShapeNetworkSync : NetworkBehaviour
 
     // ==============================================================================================
     
-    public override void OnNetworkSpawn()
-    { 
-        Debug.Log($"{LogPrefix} [ShapeNetworkSync] OnNetworkSpawn - Local IsHost: {IsHost}, LocalClientId: {NetworkManager.LocalClientId}, OwnerClientId: {ownerClientId.Value}");
-        shapeType.OnValueChanged += OnShapeChanged;
-        startPoint.OnValueChanged += OnShapeChanged;
-        currentPoint.OnValueChanged += OnShapeChanged;
-        isDrawing.OnValueChanged += OnDrawingChanged;
-        isFinalized.OnValueChanged += OnFinalizedChanged;
+    private bool _hasFinalizedRun = false;
 
-        if (isDrawing.Value && !mm.IsDrawing())
+    public override void OnNetworkSpawn()
+    {
+        // 1) Subscribe các event
+        shapeType.OnValueChanged    += OnShapeChanged;
+        startPoint.OnValueChanged   += OnShapeChanged;
+        currentPoint.OnValueChanged += OnShapeChanged;
+        isDrawing.OnValueChanged    += OnDrawingChanged;
+        isFinalized.OnValueChanged  += OnFinalizedChanged;
+
+        // 2) Xử lý ngay lập tức tuỳ trạng thái currentValue
+        if (isDrawing.Value)
+        {
+            // nếu wrapper đang ở giai đoạn preview
+            _hasStarted = true;
             StartShape();
-        UpdateShape();
+            // cho chắc, cập nhật một lần để preview phản ánh startPoint→currentPoint
+            UpdateShape();
+        }
+        else if (isFinalized.Value)
+        {
+            // wrapper vừa được Spawn ở trạng thái finalized (thường là redo)
+            _hasStarted   = true;
+            _hasFinalized = true;
+            StartShape();
+            UpdateShape();
+            FinalizeShape();
+        }
     }
 
     public override void OnNetworkDespawn()
     {
-        shapeType.OnValueChanged -= OnShapeChanged;
-        startPoint.OnValueChanged -= OnShapeChanged;
+        // reset flags để lần sau mà spawn lại ko dính state cũ
+        _hasStarted   = false;
+        _hasFinalized = false;
+        // unsubscribe
+        shapeType.OnValueChanged    -= OnShapeChanged;
+        startPoint.OnValueChanged   -= OnShapeChanged;
         currentPoint.OnValueChanged -= OnShapeChanged;
-        isDrawing.OnValueChanged -= OnDrawingChanged;
-        isFinalized.OnValueChanged -= OnFinalizedChanged;
-
-        if (currentShape != null && currentShape.GO != null)
-            Destroy(currentShape.GO);
-    }
-
-    private void OnShapeChanged<T>(T oldValue, T newValue)
-    {
-        if (!isDrawing.Value || isFinalized.Value) return;
-        UpdateShape();
+        isDrawing.OnValueChanged    -= OnDrawingChanged;
+        isFinalized.OnValueChanged  -= OnFinalizedChanged;
     }
 
     private void OnDrawingChanged(bool oldValue, bool newValue)
     {
-        if (newValue)
+        if (newValue && !_hasStarted)
+        {
+            _hasStarted = true;
             StartShape();
-        else if (!isFinalized.Value)
+        }
+    } 
+
+    private bool _hasStarted = false;
+    private bool _hasFinalized = false;
+
+    private void OnShapeChanged<T>(T oldValue, T newValue)
+    {
+        // chỉ update khi đang vẽ
+        if (isDrawing.Value && _hasStarted)
             UpdateShape();
     }
 
     private void OnFinalizedChanged(bool oldValue, bool newValue)
     {
-        if (newValue)
+        if (newValue && !_hasFinalized)
+        {
+            _hasFinalized = true;
+            if (!_hasStarted)
+            {
+                _hasStarted = true;
+                StartShape();
+            }
+            UpdateShape();
             FinalizeShape();
+        }
     }
+
+    private void TryHandleFinalize()
+    {
+        if (_hasFinalizedRun) return;   // chỉ chạy 1 lần
+        _hasFinalizedRun = true;
+
+        // 1) Tạo đối tượng Shape (giống StartShape)
+        StartShape();
+        // 2) Cập nhật preview đến điểm cuối
+        UpdateShape();
+        // 3) Chốt hẳn, tạo ra Point/Segment thật
+        FinalizeShape();
+    }
+
 
     private void StartShape()
     {
-        //Segment.BeginSketch(startPoint.Value);
         currentShape = new Segment(startPoint.Value);
         currentShape.AssignSyncer(this);
-        if (currentShape is ISynchronizedShape)
-        {
-            ISynchronizedShape iSync = (ISynchronizedShape)currentShape;
+
+        // ⬇️ Parent thẳng dưới cái GameObject của NetworkBehaviour
+        currentShape.GO.transform.SetParent(this.transform, worldPositionStays: false);
+
+        if (currentShape is ISynchronizedShape iSync)
             iSync.BeginSketch(startPoint.Value);
-        }
     }
+
     private void UpdateShape()
     {
         //Segment.UpdateSketch(currentPoint.Value);
@@ -271,8 +318,8 @@ public class ShapeNetworkSync : NetworkBehaviour
             ISynchronizedShape iSync = (ISynchronizedShape)currentShape;
             iSync.EndSketch(currentPoint.Value);
         }
-    }
-    
+    } 
+
     /*private void StartShape()
     {
         if (currentShape != null && currentShape.GO != null)
