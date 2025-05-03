@@ -1460,8 +1460,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   quickJoinButton: {fileID: 1994534612}
   createLobbyButton: {fileID: 1144546612}
+  statusText: {fileID: 0}
   createPopupUI: {fileID: 0}
   joinPopupUI: {fileID: 0}
+  statusPopupPrefab: {fileID: 0}
 --- !u!1 &319154263
 GameObject:
   m_ObjectHideFlags: 0
