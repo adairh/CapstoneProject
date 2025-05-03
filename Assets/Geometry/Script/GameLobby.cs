@@ -623,7 +623,7 @@ public class GameLobby : MonoBehaviour
         Debug.Log($"OnClientConnected called with Client ID: {clientId}, IsHost: {IsHost}");
         if (IsHost)
         {
-            // Skip the host's clientId (0)
+            
             if (clientId == NetworkManager.Singleton.LocalClientId)
             {
                 Debug.Log($"Skipping notification for host's Client ID: {clientId}");
@@ -693,7 +693,7 @@ public class GameLobby : MonoBehaviour
 
         // Initial wait to give the client time to update their data
         Debug.Log($"Waiting for client to update lobby data for Client ID: {clientId}...");
-        await Task.Delay(3000); // Initial wait of 3s
+        await Task.Delay(3000); // wait of 3s
 
         // Refresh the lobby once
         try
@@ -725,7 +725,7 @@ public class GameLobby : MonoBehaviour
             if (attempt < 3)
             {
                 Debug.Log($"PlayerId for Client ID: {clientId} not found on attempt {attempt}, retrying after delay...");
-                await Task.Delay(2000); // Shorter delay of 2s for retries
+                await Task.Delay(2000); // Shorter delay of 2s 
             }
         }
 
