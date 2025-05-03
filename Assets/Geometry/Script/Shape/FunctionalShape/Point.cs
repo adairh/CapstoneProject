@@ -42,6 +42,19 @@ namespace Manipulator
 
         
     }
+    
+    public override ShapeData Serialize() => new PointData {
+        Name     = Name,
+        Position = Position
+    };
+
+    public override void Deserialize(ShapeData data) {
+        var pd = (PointData)data;
+        Name     = pd.Name;
+        MoveToPosition(pd.Position, silent: true);
+    }
+    
+    
 
     public override void Destroy()
     {

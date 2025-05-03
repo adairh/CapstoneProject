@@ -97,12 +97,37 @@ namespace Manipulator
             { 
                 
             }
+            // tại chỗ bạn xử lý UserAction.Delete:
             else if (action == UserAction.Delete)
-            { 
-                var toDelete = new List<Shape> (selectedShapes);
-                var act = new DeleteAction(toDelete);
+            {
+                // 1) Lấy những shape user đã chọn
+                var toDelete = new HashSet<Shape>(selectedShapes);
+
+                // 2) Với mỗi segment, xem điểm đầu-cuối (Point) có còn 
+                //    gắn với segment khác không, nếu không thì cũng phải xóa
+                foreach (var s in selectedShapes.OfType<Segment>())
+                {
+                    foreach (var pt in new[]{ s.Start, s.End })
+                    {
+                        bool usedElsewhere = ShapeStorage.GetAllShapes()
+                            .OfType<Segment>()
+                            .Any(seg => seg != s && (seg.Start == pt || seg.End == pt));
+                        if (!usedElsewhere)
+                            toDelete.Add(pt);
+                    }
+                }
+
+                // 3) Gom các constraint liên quan:
+                var toDeleteConstraints = ConstraintManager.Instance
+                    .GetAllConstraints()
+                    .Where(c => toDelete.Contains(c.Owner))
+                    .ToList();
+
+                // 4) Tạo action và đẩy vào UndoManager
+                var act = new DeleteShapeBatchAction(toDelete, toDeleteConstraints);
                 UndoManager.Instance.Do(act);
             }
+
             // ... các case khác ...
         }
         

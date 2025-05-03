@@ -44,6 +44,13 @@ namespace Manipulator
             targetAngleDeg = angle;
         }
         
+        public override ConstraintData Serialize() => new AngleConstraintData {
+            PivotName      = pivot.Name,
+            SegmentAName   = segmentA.Name,
+            SegmentBName   = segmentB.Name,
+            TargetAngleDeg = targetAngleDeg
+        };
+        
         public void AddDependencies(Segment segA, Segment segB, Point pivotPoint, float angleDeg)
         {
             segmentA = segA;

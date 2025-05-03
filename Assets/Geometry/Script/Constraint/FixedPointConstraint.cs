@@ -74,6 +74,12 @@ namespace Manipulator
         {
             return $"";
         }
+
+        public override ConstraintData Serialize()
+        {
+            return null;
+        }
+
         #region — RatioCalculator —
         private class RatioCalculator
         {

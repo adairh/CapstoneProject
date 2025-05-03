@@ -218,6 +218,25 @@ namespace Manipulator
             collider.convex = false; // Keep non-convex for accuracy
         }
 
+        
+        public override ShapeData Serialize() => new SegmentData {
+            Name            = Name,
+            Position        = Position,
+            StartPointName  = Start.Name,
+            EndPointName    = End.Name
+        };
+
+        public override void Deserialize(ShapeData data) {
+            var sd = (SegmentData)data;
+            Name     = sd.Name;
+            // pivot points phải đã tồn tại trong ShapeStorage
+            Start    = (Point)ShapeStorage.GetShapeByID(sd.StartPointName);
+            End      = (Point)ShapeStorage.GetShapeByID(sd.EndPointName);
+            MoveToPosition(sd.Position, silent: true);
+            ApplyTransform();
+        }
+        
+        
 
         public void Draw2D()
         {
@@ -330,16 +349,7 @@ namespace Manipulator
             //Debug.Log($"{Name} updated because {movedPoint.Name} moved.");
             ReloadToConstraint(movedPoint);
             
-        }
-
-        public ShapeData Serialize()
-        {
-            return null;
-        }
-
-        public void Deserialize(ShapeData data)
-        {
-        }
+        }  
         
         
     }

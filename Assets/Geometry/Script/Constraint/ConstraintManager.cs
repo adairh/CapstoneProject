@@ -117,5 +117,10 @@ namespace Manipulator
                 }
             }
         }
+
+        public List<Constraint> GetAllConstraints()
+        {
+            return constraints;
+        }
     }
 }

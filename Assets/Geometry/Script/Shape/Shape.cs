@@ -282,6 +282,15 @@ namespace Manipulator
         public virtual void BeginSketch(Vector3 vector) { }
         public virtual void UpdateSketch(Vector3 vector) { }
         public virtual void EndSketch(Vector3 vector) { }
+        Data.ShapeData ISynchronizedShape.Serialize()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Deserialize(Data.ShapeData data)
+        {
+            throw new NotImplementedException();
+        }
 
         public virtual ShapeData Serialize() => null;
         public virtual void Deserialize(ShapeData data) { }

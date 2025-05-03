@@ -39,5 +39,6 @@ namespace Manipulator
 
 
         public abstract string GetLabelText();
+        public abstract ConstraintData Serialize();
     }
 }
