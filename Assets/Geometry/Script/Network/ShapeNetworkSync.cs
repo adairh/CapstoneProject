@@ -6,7 +6,7 @@ using Manipulator;
 using UnityEngine;
 using Unity.Netcode;
 
-
+// Tạm đóng lại branch này vì Redo chưa work
 public class ShapeNetworkSync : NetworkBehaviour
 {
     private ManipulationManager mm = ManipulationManager.Instance;
