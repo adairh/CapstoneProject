@@ -15,7 +15,7 @@ MonoBehaviour:
   _questName: Question 5
   _questDescription: "H\xECnh n\xE0o bi\u1EC3u th\u1ECB b\xE1n k\xEDnh c\u1EE7a h\xECnh
     tr\xF2n?"
-  _questSprite: {fileID: 21300000, guid: b08677a203720df4a9461486cae37c7a, type: 3}
+  _questSprite: {fileID: 21300000, guid: fdaf62099988c4f41bff4bf2e7fc77c1, type: 3}
   _correctAnswer: {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

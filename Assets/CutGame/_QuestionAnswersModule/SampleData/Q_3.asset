@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _questName: Question 3
   _questDescription: "H\xECnh n\xE0o d\u01B0\u1EDBi \u0111\xE2y l\xE0 h\xECnh thang?"
-  _questSprite: {fileID: 21300000, guid: c17212efb93f5c94ba74bceac6d48f16, type: 3}
+  _questSprite: {fileID: 21300000, guid: 6536579508a5ade47971938a5ef07899, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

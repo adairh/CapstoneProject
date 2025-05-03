@@ -15,7 +15,7 @@ MonoBehaviour:
   _questName: Question 10
   _questDescription: "Gi\xE1 tr\u1ECB c\u1EE7a g\xF3c Z trong h\xECnh b\xEAn d\u01B0\u1EDBi
     l\xE0 bao nhi\xEAu?"
-  _questSprite: {fileID: 21300000, guid: 16b472c2eddb78546b12851899ae38b7, type: 3}
+  _questSprite: {fileID: 21300000, guid: 26690b67a1d8eaf48948e9620696459f, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

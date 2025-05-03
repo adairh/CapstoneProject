@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Q_16
   m_EditorClassIdentifier: 
   _questName: Question 16
-  _questDescription: "\u0110\u1EC3 ba \u0111i\u1EC3m M, N, C th\u1EB3ng h\xE0ng th\xEC:\r\nA.
-    x = 1     B. x = 3     C. x = 5     D. x = 7\r\n"
-  _questSprite: {fileID: 21300000, guid: ff415c1e9eed82442a112e7f536b1c47, type: 3}
+  _questDescription: "Cho h\xECnh b\xECnh h\xE0nh ABCD v\xE0 c\xE1c \u0111i\u1EC3m
+    M, N th\u1ECFa m\xE3n"
+  _questSprite: {fileID: 21300000, guid: 513b817de9bd73747aac92d6c04d4fbd, type: 3}
   _correctAnswer: {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

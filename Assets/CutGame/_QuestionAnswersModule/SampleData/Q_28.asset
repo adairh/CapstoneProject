@@ -16,7 +16,7 @@ MonoBehaviour:
   _questDescription: "Tam gi\xE1c ABC c\xF3 AB = 4, BC = 6, AC = 2\u221A7. \u0110i\u1EC3m
     M thu\u1ED9c \u0111o\u1EA1n BC sao cho MC = 2MB. T\xEDnh \u0111\u1ED9 d\xE0i
     c\u1EA1nh AM."
-  _questSprite: {fileID: 21300000, guid: bc417d9bae70f7f4480d107e4a3123d9, type: 3}
+  _questSprite: {fileID: 21300000, guid: dc35941ccf2d86f4a95fe01917b75e18, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

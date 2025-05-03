@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _questName: Question 30
   _questDescription: "Cho h\xECnh ch\u1EEF nh\u1EADt ABCD c\xF3 AB = 3, AD = 4. "
-  _questSprite: {fileID: 21300000, guid: 37c1ed99b7fbaba45a638388ddb40952, type: 3}
+  _questSprite: {fileID: 21300000, guid: 9040947def95e8d48a1a59732dc431c4, type: 3}
   _correctAnswer: {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

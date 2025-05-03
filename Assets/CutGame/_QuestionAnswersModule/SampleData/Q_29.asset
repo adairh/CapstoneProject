@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _questName: Question 29
   _questDescription: "Cho tam gi\xE1c vu\xF4ng c\xE2n ABC c\u1EA1nh huy\u1EC1n b\u1EB1ng
-    a. \r\nkhi \u0111\xF3 gi\xE1 tr\u1ECB c\u1EE7a bi\u1EC3u th\u1EE9c t\xEDch v\xF4
+    a. Khi \u0111\xF3 gi\xE1 tr\u1ECB c\u1EE7a bi\u1EC3u th\u1EE9c t\xEDch v\xF4
     h\u01B0\u1EDBng\r"
-  _questSprite: {fileID: 21300000, guid: 29b23fc6b68c0c0419563c3315b26cde, type: 3}
+  _questSprite: {fileID: 21300000, guid: b69b7d7a4bac8094ea0ac1be02925a81, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

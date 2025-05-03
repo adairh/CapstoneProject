@@ -15,7 +15,7 @@ MonoBehaviour:
   _questName: Question 9
   _questDescription: "Gi\xE1 tr\u1ECB c\u1EE7a g\xF3c X h\xECnh b\xEAn d\u01B0\u1EDBi
     l\xE0 bao nhi\xEAu?"
-  _questSprite: {fileID: 21300000, guid: 432031dd6ec02de4ba91b8f4776f47c7, type: 3}
+  _questSprite: {fileID: 21300000, guid: c26714f61b3924345afac57ec18a09f4, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
