@@ -94,6 +94,43 @@ namespace Manipulator
                 SetupGameObject();
             }
         }
+        /// <summary>
+        /// Đánh dấu shape đã bị soft-delete (ẩn).
+        /// </summary>
+        public bool IsDeleted { get; private set; }
+
+        /// <summary>
+        /// Ẩn Shape (soft delete)
+        /// </summary>
+        public void SoftDelete()
+        {
+            if (IsDeleted) return;
+            IsDeleted = true;
+            GO.SetActive(false);
+
+            // Tháo khỏi ConstraintManager
+            ConstraintManager.Instance.UnregisterShape(this);
+
+            // (nếu cần) đưa ra khỏi ShapeStorage
+            ShapeStorage.RemoveShape(Name);
+        }
+
+        /// <summary>
+        /// Khôi phục Shape vừa bị xóa mềm
+        /// </summary>
+        public void Restore()
+        {
+            if (!IsDeleted) return;
+            IsDeleted = false;
+            GO.SetActive(true);
+
+            // Đăng ký trở lại
+            ConstraintManager.Instance.RegisterShape(this);
+
+            // Thêm lại vào ShapeStorage
+            ShapeStorage.AddShape(Name, this);
+        }
+        
 
         protected Shape(Vector3 position, string baseName, Shape parent)
         {

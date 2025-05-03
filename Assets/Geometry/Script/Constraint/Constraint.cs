@@ -4,6 +4,12 @@ using UnityEngine;
 
 namespace Manipulator
 {
+    interface IConstraintSnapshot
+    {
+        void Remove();           // gỡ constraint khỏi scene
+        void Restore();          // tạo lại và đăng ký constraint với chính xác các tham số cũ
+    }
+    
     public abstract class Constraint : MonoBehaviour
     {
         private List<Shape> linkedShapes = new List<Shape>();

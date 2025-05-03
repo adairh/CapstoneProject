@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Manipulator
 {
@@ -193,4 +194,34 @@ namespace Manipulator
             throw new ArgumentException("Pivot isn't an endpoint of the segment.");
         }
     }
+    
+    class AngleConstraintSnapshot : IConstraintSnapshot
+    {
+        private readonly Segment _a, _b;
+        private readonly Point   _pivot;
+        private readonly float   _angle;
+
+        // constructor chụp trạng thái:
+        public AngleConstraintSnapshot(AngleConstraint c)
+        {
+            _a     = c.GetA();
+            _b     = c.GetB();
+            _pivot = c.GetPivot();
+            _angle = c.GetAngle();
+        }
+
+        public void Remove()
+        {
+            Object.Destroy(_pivot.GO.GetComponent<AngleConstraint>());
+        }
+
+        public void Restore()
+        {
+            var c = _pivot.GO.AddComponent<AngleConstraint>();
+            c.AddDependencies(_a, _b, _pivot, _angle);
+            c.Owner = _pivot;
+        }
+    }
+    
+    
 }

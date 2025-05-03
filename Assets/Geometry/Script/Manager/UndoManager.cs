@@ -7,12 +7,6 @@ using Unity.Netcode;
 
 namespace Manipulator
 {
-    public interface IUndoableAction
-    {
-        void Execute();
-        void Undo();
-    }
-
     [RequireComponent(typeof(NetworkObject))]
     public class UndoManager : NetworkBehaviour
     {

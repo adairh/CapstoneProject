@@ -76,6 +76,33 @@ namespace Manipulator
             }
         }
 
+        public void UnregisterConstraint(Constraint constraint)
+        {
+            if (constraints.Contains(constraint))
+            {
+                constraints.Remove(constraint);
+            }
+        }
+        
+        /// <summary>
+        /// Khi một shape bị soft-delete, ta cũng cần unregister nó khỏi danh sách.
+        /// </summary>
+        public void UnregisterShape(Shape s)
+        {
+            foreach (var c in constraints.ToArray())
+            {
+                if (c.HasShape(s))
+                    UnregisterConstraint(c);
+            }
+        }
+
+        public void RegisterShape(Shape s)
+        {
+            // Nếu có constraint nào gắn trên s trước đó, bạn có thể gọi lại RegisterConstraint tương ứng.
+            // Với ví dụ đơn giản này, chúng ta chỉ cho phép các constraint đã đăng ký trở lại.
+        }
+        
+
         // Bây giờ gọi ApplyConstraint với cả movedShape
         public void ApplyConstraints(Shape movedShape, Vector3 movement = new Vector3())
         {

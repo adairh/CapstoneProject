@@ -97,6 +97,12 @@ namespace Manipulator
             { 
                 
             }
+            else if (action == UserAction.Delete)
+            { 
+                var toDelete = new List<Shape> (selectedShapes);
+                var act = new DeleteAction(toDelete);
+                UndoManager.Instance.Do(act);
+            }
             // ... các case khác ...
         }
         

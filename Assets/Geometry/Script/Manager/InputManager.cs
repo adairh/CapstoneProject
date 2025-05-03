@@ -14,7 +14,8 @@ namespace Manipulator
         OpenSettings,
         Select,
         AngleCons,
-        Config
+        Config, 
+        Delete,
         // … thêm tùy bạn
     }
     
@@ -54,6 +55,10 @@ namespace Manipulator
             if (Input.GetKeyDown(KeyCode.A))
             {
                 OnAction?.Invoke(UserAction.AngleCons, Input.mousePosition);
+            }
+            if (Input.GetKeyDown(KeyCode.Delete))
+            {
+                OnAction?.Invoke(UserAction.Delete, Input.mousePosition);
             }
             
             
