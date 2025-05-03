@@ -874,6 +874,34 @@ public class GameLobby : MonoBehaviour
         }
     }
 
+    public async void ToggleLobbyPrivacy()
+    {
+        if (joinedLobby == null)
+        {
+            Debug.LogWarning("No joined lobby to toggle.");
+            return;
+        }
+
+        try
+        {
+            bool newPrivacyStatus = !joinedLobby.IsPrivate;
+            var updatedLobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions
+            {
+                IsPrivate = newPrivacyStatus
+            });
+
+            joinedLobby = updatedLobby; // Keep your reference up to date
+            Debug.Log($"Lobby privacy updated. New status: {(newPrivacyStatus ? "Private" : "Public")}");
+            LobbyUI.Instance?.UpdateStatus($"Lobby is now {(newPrivacyStatus ? "Private" : "Public")}");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to toggle lobby privacy: {ex.Message}");
+            LobbyUI.Instance?.UpdateStatus("Failed to update lobby privacy.");
+        }
+    }
+
+
     public Unity.Services.Lobbies.Models.Lobby GetJoinedLobby()
     {
         return joinedLobby;
