@@ -15,24 +15,55 @@ using Manipulator;
 using Khoa;
 /// <summary>
 /// By Khoa
-/// Không xoá code comment ỏ dưới
-/// Không xoá code comment ỏ dưới
-/// Không xoá code comment ỏ dưới
+
 /// </summary>
-/*public class GameLobby : MonoBehaviour
+
+
+public class GameLobby : MonoBehaviour
 {
     public static GameLobby Instance { get; private set; }
     public const int max_user_amount = 40;
     private Unity.Services.Lobbies.Models.Lobby joinedLobby;
     private string profileId;
+    private Dictionary<ulong, string> clientIdToPlayerIdMap = new Dictionary<ulong, string>();
 
-    *//*private void Start()
+    [SerializeField] private GameObject notificationPrefab;
+
+    private bool hasReportedError = false; // Flag to prevent duplicate error reports
+
+    private void Awake()
+    {
+        Debug.Log("GameLobby Awake - This instance: " + this);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            Debug.Log("GameLobby Instance set successfully.");
+            if (NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+                Debug.Log("OnClientConnectedCallback registered in Awake");
+            }
+            else
+            {
+                Debug.LogWarning("NetworkManager.Singleton is null in Awake!");
+            }
+            InitializeUnityAuthentication();
+        }
+        else
+        {
+            Debug.LogWarning("GameLobby already exists, destroying duplicate!");
+            Destroy(gameObject);
+        }
+    }
+
+    private void Start()
     {
         if (IsHost)
         {
-            InvokeRepeating(nameof(SendHeartbeat), 10f, 10f); // Heartbeat every 10s
+            InvokeRepeating(nameof(SendHeartbeat), 10f, 10f);
         }
-    }*//*
+    }
 
     private bool IsHost
     {
@@ -40,6 +71,126 @@ using Khoa;
         {
             return NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
         }
+    }
+
+    private async void OnClientConnected(ulong clientId)
+    {
+        Debug.Log($"OnClientConnected called with Client ID: {clientId}, IsHost: {IsHost}");
+        if (IsHost)
+        {
+            if (clientId == NetworkManager.Singleton.LocalClientId)
+            {
+                Debug.Log($"Skipping notification for host's Client ID: {clientId}");
+                return;
+            }
+
+            string playerId = await GetPlayerIdFromClientId(clientId);
+            if (string.IsNullOrEmpty(playerId))
+            {
+                Debug.LogWarning($"Could not find PlayerId for Client ID: {clientId}");
+                playerId = $"Unknown_{clientId}";
+            }
+
+            clientIdToPlayerIdMap[clientId] = playerId;
+            Debug.Log($"Client connected with ID: {clientId}, PlayerId: {playerId}");
+
+            ShowNotification($"Client Joined: {playerId}");
+        }
+    }
+
+    private void ShowNotification(string message)
+    {
+        if (notificationPrefab == null)
+        {
+            Debug.LogError("NotificationPrefab is not assigned in GameLobby!");
+            return;
+        }
+
+        GameObject notification = Instantiate(notificationPrefab, Vector3.zero, Quaternion.identity);
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas != null)
+        {
+            notification.transform.SetParent(canvas.transform, false);
+            RectTransform rect = notification.GetComponent<RectTransform>();
+            rect.anchoredPosition = new Vector2(0, 100);
+            rect.localScale = Vector3.one;
+            Debug.Log("User joined notification parented to Canvas at position (0, 100)");
+        }
+        else
+        {
+            Debug.LogError("No Canvas found in the scene to parent the notification!");
+            Destroy(notification);
+            return;
+        }
+
+        NotificationPopup popup = notification.GetComponent<NotificationPopup>();
+        if (popup != null)
+        {
+            popup.SetMessage(message);
+        }
+        else
+        {
+            Debug.LogError("NotificationPopup component not found on the notification prefab!");
+            Destroy(notification);
+        }
+    }
+
+    private async Task<string> GetPlayerIdFromClientId(ulong clientId)
+    {
+        if (joinedLobby == null || joinedLobby.Players == null)
+        {
+            Debug.LogWarning("Joined lobby or players list is null");
+            return null;
+        }
+
+        Debug.Log($"Waiting for client to update lobby data for Client ID: {clientId}...");
+        await Task.Delay(3000);
+
+        try
+        {
+            joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
+            Debug.Log($"Refreshed lobby, player count: {joinedLobby.Players.Count}");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to refresh lobby: {e.Message}");
+            return null;
+        }
+
+        for (int attempt = 1; attempt <= 3; attempt++)
+        {
+            foreach (var player in joinedLobby.Players)
+            {
+                if (player.Data != null && player.Data.TryGetValue("ClientId", out var clientIdData))
+                {
+                    if (ulong.TryParse(clientIdData.Value, out ulong storedClientId) && storedClientId == clientId)
+                    {
+                        Debug.Log($"Found PlayerId: {player.Id} for Client ID: {clientId} on attempt {attempt}");
+                        return player.Id;
+                    }
+                }
+            }
+
+            if (attempt < 3)
+            {
+                Debug.Log($"PlayerId for Client ID: {clientId} not found on attempt {attempt}, retrying after delay...");
+                await Task.Delay(2000);
+            }
+        }
+
+        Debug.LogWarning($"No PlayerId found for Client ID: {clientId} after all retries, attempting fallback...");
+        string hostPlayerId = AuthenticationService.Instance.PlayerId;
+        foreach (var player in joinedLobby.Players)
+        {
+            if (player.Id != hostPlayerId)
+            {
+                Debug.Log($"Fallback: Using PlayerId: {player.Id} for Client ID: {clientId}");
+                return player.Id;
+            }
+        }
+
+        Debug.LogWarning($"Fallback failed: No suitable PlayerId found for Client ID: {clientId}");
+        return null;
     }
 
     private async void SendHeartbeat()
@@ -50,7 +201,6 @@ using Khoa;
             {
                 try
                 {
-                    // Validate authentication state
                     if (!AuthenticationService.Instance.IsSignedIn || !AuthenticationService.Instance.SessionTokenExists)
                     {
                         Debug.Log($"Authentication invalid before heartbeat for Profile: {profileId}. Re-authenticating...");
@@ -72,23 +222,6 @@ using Khoa;
                     await Task.Delay(2000);
                 }
             }
-        }
-    }
-
-    private void Awake()
-    {
-        Debug.Log("GameLobby Awake - This instance: " + this);
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            Debug.Log("GameLobby Instance set successfully.");
-            InitializeUnityAuthentication();
-        }
-        else
-        {
-            Debug.LogWarning("GameLobby already exists, destroying duplicate!");
-            Destroy(gameObject);
         }
     }
 
@@ -143,7 +276,7 @@ using Khoa;
 
     private async void MonitorRelayAllocation()
     {
-        await Task.Delay(30 * 60 * 1000); // 30 minutes
+        await Task.Delay(30 * 60 * 1000);
         if (joinedLobby != null && IsHost)
         {
             try
@@ -177,8 +310,6 @@ using Khoa;
         }
     }
 
-    
-
     public async void CreateLobby(string lobbyName, string password, bool isPrivate)
     {
         try
@@ -204,17 +335,16 @@ using Khoa;
             lobbyName = lobbyName.Trim().ToLower();
             password = password.Trim();
 
-            // Before creating, check for duplicate lobby name
             QueryResponse existingLobbies = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
             {
                 Filters = new List<QueryFilter>
-            {
-                new QueryFilter(
-                    field: QueryFilter.FieldOptions.Name,
-                    value: lobbyName,
-                    op: QueryFilter.OpOptions.EQ
-                )
-            }
+                {
+                    new QueryFilter(
+                        field: QueryFilter.FieldOptions.Name,
+                        value: lobbyName,
+                        op: QueryFilter.OpOptions.EQ
+                    )
+                }
             });
 
             if (existingLobbies.Results.Count > 0)
@@ -238,10 +368,10 @@ using Khoa;
             {
                 IsPrivate = isPrivate,
                 Data = new Dictionary<string, DataObject>
-            {
-                { "JoinCode", new DataObject(DataObject.VisibilityOptions.Public, joinCode) },
-                { "Password", new DataObject(DataObject.VisibilityOptions.Public, password) }
-            }
+                {
+                    { "JoinCode", new DataObject(DataObject.VisibilityOptions.Public, joinCode) },
+                    { "Password", new DataObject(DataObject.VisibilityOptions.Public, password) }
+                }
             };
 
             joinedLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, max_user_amount, options);
@@ -265,11 +395,11 @@ using Khoa;
             );
 
             Debug.Log("Starting host...");
-            NetworkManager.Singleton.StartHost();
-            Debug.Log("Host started successfully.");
+            bool hostStarted = NetworkManager.Singleton.StartHost();
+            Debug.Log($"Host started: {hostStarted}, IsHost: {NetworkManager.Singleton.IsHost}");
 
             InvokeRepeating(nameof(SendHeartbeat), 10f, 10f);
-            KeepLobbyAlive(); // NEW!
+            KeepLobbyAlive();
 
             if (LobbyUI.Instance != null)
             {
@@ -298,9 +428,9 @@ using Khoa;
                 var updateOptions = new UpdateLobbyOptions
                 {
                     Data = new Dictionary<string, DataObject>
-                {
-                    { "Heartbeat", new DataObject(DataObject.VisibilityOptions.Public, System.DateTime.UtcNow.ToString()) }
-                }
+                    {
+                        { "Heartbeat", new DataObject(DataObject.VisibilityOptions.Public, System.DateTime.UtcNow.ToString()) }
+                    }
                 };
                 await LobbyService.Instance.UpdateLobbyAsync(joinedLobby.Id, updateOptions);
                 Debug.Log("Sent lobby keep-alive update.");
@@ -309,12 +439,15 @@ using Khoa;
             {
                 Debug.LogWarning($"Failed to send keep-alive update: {e.Message}");
             }
-            await Task.Delay(10000); // 10 seconds
+            await Task.Delay(15000);
         }
     }
 
     public async void JoinLobbyByNameAndPassword(string lobbyName, string password)
     {
+        // Reset error flag at the start of each join attempt
+        hasReportedError = false;
+
         try
         {
             if (UnityServices.State != ServicesInitializationState.Initialized)
@@ -361,21 +494,12 @@ using Khoa;
                     if (attempt == maxRetries)
                     {
                         Debug.LogError($"Failed to query lobbies after {maxRetries} attempts: {e.Message}");
-                        if (LobbyUI.Instance != null)
+                        if (LobbyUI.Instance != null && !hasReportedError)
                         {
-                            LobbyUI.Instance.UpdateStatus($"Error: Failed to query lobbies: {e.Message}");
+                            hasReportedError = true;
+                            LobbyUI.Instance.UpdateStatus($"Error: Failed to query lobbies for {lobbyName}: {e.Message}");
                         }
-                        // Fallback query without filters
-                        try
-                        {
-                            queryResponse = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions());
-                            Debug.Log($"Fallback query found {queryResponse.Results.Count} lobbies: {string.Join(", ", queryResponse.Results.Select(l => l.Name))}");
-                        }
-                        catch (System.Exception ex)
-                        {
-                            Debug.LogError($"Fallback query failed: {ex.Message}");
-                        }
-                        return;
+                        return; // Exit after setting the error status
                     }
                     await Task.Delay(3000);
                 }
@@ -383,8 +507,9 @@ using Khoa;
             if (queryResponse == null || queryResponse.Results.Count == 0)
             {
                 Debug.LogError($"No lobbies found with name: {lobbyName}");
-                if (LobbyUI.Instance != null)
+                if (LobbyUI.Instance != null && !hasReportedError)
                 {
+                    hasReportedError = true;
                     LobbyUI.Instance.UpdateStatus($"Error: No lobby named {lobbyName}");
                 }
                 return;
@@ -394,26 +519,29 @@ using Khoa;
             {
                 if (passwordData.Value != password)
                 {
-                    Debug.LogError("Wrong password!");
-                    if (LobbyUI.Instance != null)
+                    Debug.LogError($"Wrong password for lobby {lobbyName}");
+                    if (LobbyUI.Instance != null && !hasReportedError)
                     {
-                        LobbyUI.Instance.UpdateStatus("Error: Incorrect password!");
+                        hasReportedError = true;
+                        LobbyUI.Instance.UpdateStatus($"Error: Incorrect password for lobby {lobbyName}");
                     }
                     return;
                 }
             }
-            joinedLobby = await Lobbies.Instance.JoinLobbyByIdAsync(lobby.Id);
+
+            JoinLobbyByIdOptions joinOptions = new JoinLobbyByIdOptions
+            {
+                Player = new Player
+                {
+                    Data = new Dictionary<string, PlayerDataObject>
+                    {
+                        { "PlayerId", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, AuthenticationService.Instance.PlayerId) }
+                    }
+                }
+            };
+            joinedLobby = await Lobbies.Instance.JoinLobbyByIdAsync(lobby.Id, joinOptions);
             Debug.Log($"Successfully joined lobby: {joinedLobby.Name}, ID: {joinedLobby.Id}, IsPrivate: {joinedLobby.IsPrivate}");
-            
-            //  Show popup notification
-            *//*if (JoinNotifier.Instance != null)
-            {
-                JoinNotifier.Instance.ShowNotification(AuthenticationService.Instance.PlayerId);
-            }
-            else
-            {
-                Debug.LogWarning("JoinNotifier instance is missing. Cannot show join popup.");
-            }*//*
+
             if (lobby.Data.TryGetValue("JoinCode", out var joinCodeData))
             {
                 string joinCode = joinCodeData.Value;
@@ -433,9 +561,10 @@ using Khoa;
                         if (attempt == maxRetries)
                         {
                             Debug.LogError($"Failed to join Relay allocation after {maxRetries} attempts: {e.Message}");
-                            if (LobbyUI.Instance != null)
+                            if (LobbyUI.Instance != null && !hasReportedError)
                             {
-                                LobbyUI.Instance.UpdateStatus($"Error: Failed to join Relay: {e.Message}");
+                                hasReportedError = true;
+                                LobbyUI.Instance.UpdateStatus($"Error: Failed to join Relay for {lobbyName}: {e.Message}");
                             }
                             return;
                         }
@@ -446,6 +575,11 @@ using Khoa;
                 if (transport == null)
                 {
                     Debug.LogError("UnityTransport not found on NetworkManager!");
+                    if (LobbyUI.Instance != null && !hasReportedError)
+                    {
+                        hasReportedError = true;
+                        LobbyUI.Instance.UpdateStatus($"Error: UnityTransport not found for {lobbyName}");
+                    }
                     return;
                 }
                 transport.ConnectTimeoutMS = 15000;
@@ -460,15 +594,47 @@ using Khoa;
                 );
                 try
                 {
-                    NetworkManager.Singleton.StartClient();
-                    Debug.Log("Client started successfully.");
+                    bool clientStarted = NetworkManager.Singleton.StartClient();
+                    Debug.Log($"Client started: {clientStarted}, IsClient: {NetworkManager.Singleton.IsClient}");
+                    if (clientStarted)
+                    {
+                        await Task.Delay(2000);
+                        string clientId = NetworkManager.Singleton.LocalClientId.ToString();
+                        var updatePlayerOptions = new UpdatePlayerOptions
+                        {
+                            Data = new Dictionary<string, PlayerDataObject>
+                            {
+                                { "ClientId", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, clientId) }
+                            }
+                        };
+                        for (int attempt = 1; attempt <= 5; attempt++)
+                        {
+                            try
+                            {
+                                joinedLobby = await LobbyService.Instance.UpdatePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId, updatePlayerOptions);
+                                Debug.Log($"Updated player data with ClientId: {clientId} for PlayerId: {AuthenticationService.Instance.PlayerId} on attempt {attempt}");
+                                break;
+                            }
+                            catch (System.Exception e)
+                            {
+                                Debug.LogWarning($"UpdatePlayerAsync attempt {attempt} failed: {e.Message}");
+                                if (attempt == 5)
+                                {
+                                    Debug.LogError($"Failed to update player data after 5 attempts: {e.Message}");
+                                    break;
+                                }
+                                await Task.Delay(2000);
+                            }
+                        }
+                    }
                 }
                 catch (System.Exception e)
                 {
                     Debug.LogError($"Failed to start client: {e.Message}");
-                    if (LobbyUI.Instance != null)
+                    if (LobbyUI.Instance != null && !hasReportedError)
                     {
-                        LobbyUI.Instance.UpdateStatus($"Error: Failed to start client: {e.Message}");
+                        hasReportedError = true;
+                        LobbyUI.Instance.UpdateStatus($"Error: Failed to start client for {lobbyName}: {e.Message}");
                     }
                     return;
                 }
@@ -485,18 +651,20 @@ using Khoa;
             else
             {
                 Debug.LogError("No join code found in lobby data.");
-                if (LobbyUI.Instance != null)
+                if (LobbyUI.Instance != null && !hasReportedError)
                 {
-                    LobbyUI.Instance.UpdateStatus("Error: No join code found!");
+                    hasReportedError = true;
+                    LobbyUI.Instance.UpdateStatus($"Error: No join code found for {lobbyName}");
                 }
             }
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to join lobby: {e.Message}");
-            if (LobbyUI.Instance != null)
+            if (LobbyUI.Instance != null && !hasReportedError)
             {
-                LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
+                hasReportedError = true;
+                LobbyUI.Instance.UpdateStatus($"Error: Failed to join lobby {lobbyName}: {e.Message}");
             }
         }
     }
@@ -541,32 +709,12 @@ using Khoa;
     {
         return joinedLobby;
     }
-}*/
+}
 
 
-/// /// Không xoá code ở trên
-/// /// Không xoá code ở trên
-/// /// Không xoá code ở trên
-/// /// Không xoá code ở trên
-/// /// Không xoá code ở trên
-
-using System.Collections.Generic;
-using UnityEngine;
-using Unity.Services.Authentication;
-using Unity.Services.Core;
-using Unity.Services.Lobbies;
-using Unity.Services.Lobbies.Models;
-using Unity.Services.Relay;
-using Unity.Services.Relay.Models;
-using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
-using System.Threading.Tasks;
-using System.Linq;
-using An_An;
-using Manipulator;
 
 
-public class GameLobby : MonoBehaviour
+/*public class GameLobby : MonoBehaviour
 {
     public static GameLobby Instance { get; private set; }
     public const int max_user_amount = 40;
@@ -1256,4 +1404,4 @@ public class GameLobby : MonoBehaviour
     {
         return joinedLobby;
     }
-}
+}*/

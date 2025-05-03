@@ -5,8 +5,8 @@ using UnityEngine;
 public class StatusPopup : MonoBehaviour
 {
     public TextMeshProUGUI statusText;
-    private float displayTime = 2f;
-    private float fadeTime = 1f;
+    public float displayTime = 2f;
+    public float fadeTime = 1f;
     private CanvasGroup canvasGroup;
 
     private void EnsureCanvasGroupInitialized()
