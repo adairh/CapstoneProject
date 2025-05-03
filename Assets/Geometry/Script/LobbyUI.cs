@@ -10,7 +10,7 @@ public class LobbyUI : MonoBehaviour
     //[SerializeField] private Button mainMenuButton;
     [SerializeField] private Button quickJoinButton;
     [SerializeField] private Button createLobbyButton;
-    //[SerializeField] private TextMeshProUGUI statusText;
+    [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private CreatePopupUI createPopupUI;
     [SerializeField] private JoinPopupUI joinPopupUI;
 
@@ -35,7 +35,7 @@ public class LobbyUI : MonoBehaviour
         if (createLobbyButton == null) Debug.LogError("CreateLobbyButton is not assigned!");
         if (createPopupUI == null) Debug.LogError("createPopupUI is not assigned!");
         if (joinPopupUI == null) Debug.LogError("joinPopupUI is not assigned!");
-        //if (statusText == null) Debug.LogWarning("StatusText is not assigned (optional).");
+        if (statusText == null) Debug.LogWarning("StatusText is not assigned (optional).");
 
         /*mainMenuButton.onClick.AddListener(() =>
         {

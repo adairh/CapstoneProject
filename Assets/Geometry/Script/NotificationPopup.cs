@@ -11,6 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 namespace Khoa
 {
+
     public class NotificationPopup : MonoBehaviour
     {
         public TextMeshProUGUI clientNameText;
@@ -28,7 +29,7 @@ namespace Khoa
         {
             if (clientNameText != null)
             {
-                clientNameText.text = $"Client Joined: {playerId}";
+                clientNameText.text = $"User Joined With ID: {playerId}";
                 Debug.Log($"Notification set with PlayerId: {playerId}");
             }
             else
