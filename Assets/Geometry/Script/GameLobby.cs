@@ -565,6 +565,7 @@ using System.Linq;
 using An_An;
 using Manipulator;
 
+
 public class GameLobby : MonoBehaviour
 {
     public static GameLobby Instance { get; private set; }
@@ -622,26 +623,11 @@ public class GameLobby : MonoBehaviour
         Debug.Log($"OnClientConnected called with Client ID: {clientId}, IsHost: {IsHost}");
         if (IsHost)
         {
-            // Skip the host's clientId (0)
+
             if (clientId == NetworkManager.Singleton.LocalClientId)
             {
                 Debug.Log($"Skipping notification for host's Client ID: {clientId}");
                 return;
-            }
-
-            // Fetch the updated lobby to get the latest player list
-            if (joinedLobby != null)
-            {
-                try
-                {
-                    joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
-                    Debug.Log($"Updated lobby player count: {joinedLobby.Players.Count}");
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogError($"Failed to update lobby: {e.Message}");
-                    return;
-                }
             }
 
             // Try to map the clientId to PlayerId
@@ -654,7 +640,46 @@ public class GameLobby : MonoBehaviour
 
             clientIdToPlayerIdMap[clientId] = playerId;
             Debug.Log($"Client connected with ID: {clientId}, PlayerId: {playerId}");
-            ShowNotification(playerId);
+
+            // Show the user joined notification using GameLobby's own method
+            ShowNotification($"Client Joined: {playerId}");
+        }
+    }
+
+    private void ShowNotification(string message)
+    {
+        if (notificationPrefab == null)
+        {
+            Debug.LogError("NotificationPrefab is not assigned in GameLobby!");
+            return;
+        }
+
+        GameObject notification = Instantiate(notificationPrefab, Vector3.zero, Quaternion.identity);
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas != null)
+        {
+            notification.transform.SetParent(canvas.transform, false);
+            RectTransform rect = notification.GetComponent<RectTransform>();
+            rect.anchoredPosition = new Vector2(0, 100);
+            rect.localScale = Vector3.one;
+            Debug.Log("User joined notification parented to Canvas at position (0, 100)");
+        }
+        else
+        {
+            Debug.LogError("No Canvas found in the scene to parent the notification!");
+            Destroy(notification);
+            return;
+        }
+
+        NotificationPopup popup = notification.GetComponent<NotificationPopup>();
+        if (popup != null)
+        {
+            popup.SetMessage(message);
+        }
+        else
+        {
+            Debug.LogError("NotificationPopup component not found on the notification prefab!");
+            Destroy(notification);
         }
     }
 
@@ -666,7 +691,23 @@ public class GameLobby : MonoBehaviour
             return null;
         }
 
-        // Retry up to 3 times with a longer delay
+        // Initial wait to give the client time to update their data
+        Debug.Log($"Waiting for client to update lobby data for Client ID: {clientId}...");
+        await Task.Delay(3000); // wait of 3s
+
+        // Refresh the lobby once
+        try
+        {
+            joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
+            Debug.Log($"Refreshed lobby, player count: {joinedLobby.Players.Count}");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to refresh lobby: {e.Message}");
+            return null;
+        }
+
+        // Retry up to 2 more times with a shorter delay
         for (int attempt = 1; attempt <= 3; attempt++)
         {
             foreach (var player in joinedLobby.Players)
@@ -681,17 +722,10 @@ public class GameLobby : MonoBehaviour
                 }
             }
 
-            Debug.Log($"PlayerId for Client ID: {clientId} not found on attempt {attempt}, retrying after delay...");
-            await Task.Delay(5000); // Increased delay to 5s
-            try
+            if (attempt < 3)
             {
-                joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
-                Debug.Log($"Refreshed lobby on attempt {attempt}, player count: {joinedLobby.Players.Count}");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to refresh lobby on attempt {attempt}: {e.Message}");
-                return null;
+                Debug.Log($"PlayerId for Client ID: {clientId} not found on attempt {attempt}, retrying after delay...");
+                await Task.Delay(2000); // Shorter delay of 2s 
             }
         }
 
@@ -709,44 +743,6 @@ public class GameLobby : MonoBehaviour
 
         Debug.LogWarning($"Fallback failed: No suitable PlayerId found for Client ID: {clientId}");
         return null;
-    }
-
-    private void ShowNotification(string playerId)
-    {
-        if (notificationPrefab == null)
-        {
-            Debug.LogError("Notification Prefab is not assigned in GameLobby!");
-            return;
-        }
-
-        Debug.Log("Instantiating notification prefab...");
-        GameObject notification = Instantiate(notificationPrefab, Vector3.zero, Quaternion.identity);
-        Canvas canvas = FindObjectOfType<Canvas>();
-        if (canvas != null)
-        {
-            notification.transform.SetParent(canvas.transform, false);
-            RectTransform rect = notification.GetComponent<RectTransform>();
-            rect.anchoredPosition = new Vector2(0, 100);
-            rect.localScale = Vector3.one;
-            Debug.Log("Notification parented to Canvas");
-        }
-        else
-        {
-            Debug.LogError("No Canvas found in the scene to parent the notification!");
-            Destroy(notification);
-            return;
-        }
-
-        NotificationPopup popup = notification.GetComponent<NotificationPopup>();
-        if (popup != null)
-        {
-            popup.SetPlayerId(playerId);
-        }
-        else
-        {
-            Debug.LogError("NotificationPopup component not found on the notification prefab!");
-            Destroy(notification);
-        }
     }
 
     private async void SendHeartbeat()
@@ -995,7 +991,7 @@ public class GameLobby : MonoBehaviour
             {
                 Debug.LogWarning($"Failed to send keep-alive update: {e.Message}");
             }
-            await Task.Delay(10000);
+            await Task.Delay(15000);
         }
     }
 
@@ -1151,6 +1147,8 @@ public class GameLobby : MonoBehaviour
                     Debug.Log($"Client started: {clientStarted}, IsClient: {NetworkManager.Singleton.IsClient}");
                     if (clientStarted)
                     {
+                        // Wait a bit to ensure the client is fully connected before updating lobby data
+                        await Task.Delay(2000); // Wait 2s after starting the client
                         string clientId = NetworkManager.Singleton.LocalClientId.ToString();
                         var updatePlayerOptions = new UpdatePlayerOptions
                         {
@@ -1159,7 +1157,7 @@ public class GameLobby : MonoBehaviour
                                 { "ClientId", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, clientId) }
                             }
                         };
-                        for (int attempt = 1; attempt <= 5; attempt++) // Increased retries
+                        for (int attempt = 1; attempt <= 5; attempt++)
                         {
                             try
                             {
@@ -1175,7 +1173,7 @@ public class GameLobby : MonoBehaviour
                                     Debug.LogError($"Failed to update player data after 5 attempts: {e.Message}");
                                     break;
                                 }
-                                await Task.Delay(2000); // Increased delay to 2s
+                                await Task.Delay(2000);
                             }
                         }
                     }
