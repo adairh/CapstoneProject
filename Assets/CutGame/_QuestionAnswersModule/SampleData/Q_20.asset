@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _questName: Question 20
   _questDescription: "Cho c\xE1c \u0111i\u1EC3m A, B, C, D, E, F. Khi \u0111\xF3"
-  _questSprite: {fileID: 21300000, guid: 13a13573810cefb459bb479f6793aef0, type: 3}
+  _questSprite: {fileID: 21300000, guid: a47a4314ce0f78e438a097b8d48bc800, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

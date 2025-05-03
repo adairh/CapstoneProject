@@ -13,16 +13,8 @@ MonoBehaviour:
   m_Name: Q_23
   m_EditorClassIdentifier: 
   _questName: Question 23
-  _questDescription: 'A. x = - 15
-
-    B. x = 3
-
-    C. x = 15
-
-    D. x = 5
-
-'
-  _questSprite: {fileID: 21300000, guid: e4ce908ec2f293c4fbdd372c2e47aa9f, type: 3}
+  _questDescription: "T\xECm gi\xE1 tr\u1ECB x"
+  _questSprite: {fileID: 21300000, guid: 4ae6220cec8457b4eb1bd01c5b90ad03, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

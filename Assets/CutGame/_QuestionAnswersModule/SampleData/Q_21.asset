@@ -14,10 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _questName: Question 21
   _questDescription: "Cho h\xECnh vu\xF4ng ABCD c\xF3 t\u1ECDa \u0111\u1ED9 \u0111\u1EC9nh
-    A(1;2) v\xE0 t\xE2m h\xECnh vu\xF4ng l\xE0 I(-1; -4). Khi \u0111\xF3 ph\u01B0\u01A1ng
-    tr\xECnh c\u1EE7a \u0111\u01B0\u1EDDng ch\xE9o BD l\xE0:\r\nA. x + 3y + 13 =
-    0\r\nB. 3x \u2013 y + 1 = 0\r\nC. x \u2013 y \u2013 3 = 0\r\nD. x + y + 5 = 0\r\n"
-  _questSprite: {fileID: 0}
+    A (1;2) v\xE0 t\xE2m h\xECnh vu\xF4ng l\xE0 I (-1; -4). Khi \u0111\xF3 ph\u01B0\u01A1ng
+    tr\xECnh c\u1EE7a \u0111\u01B0\u1EDDng ch\xE9o BD l\xE0\r"
+  _questSprite: {fileID: 21300000, guid: ac115f72d63e00049a542fdb6b9f2f25, type: 3}
   _correctAnswer: {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

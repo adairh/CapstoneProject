@@ -16,9 +16,8 @@ MonoBehaviour:
   _questDescription: "Trong h\u1EC7 t\u1ECDa \u0111\u1ED9 Oxy, cho h\xECnh ch\u1EEF
     nh\u1EADt ABCD c\xF3 A(0 ; 3) ; D(2 ; 1) v\xE0 I( -1 ; 0) l\xE0 t\xE2m c\u1EE7a
     h\xECnh ch\u1EEF nh\u1EADt. T\xECm t\u1ECDa \u0111\u1ED9 tung \u0111i\u1EC3m
-    c\u1EE7a c\u1EA1nh BC\r\nA. (1 ; 2)\r\nB. (-2; -3)\r\nC. (-3 ; -2)\r\nD. (- 4
-    ; -1)\r\n"
-  _questSprite: {fileID: 0}
+    c\u1EE7a c\u1EA1nh BC"
+  _questSprite: {fileID: 21300000, guid: d2b077bbfc86b074f947a67ddaf26d34, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
