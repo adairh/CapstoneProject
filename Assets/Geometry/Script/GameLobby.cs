@@ -565,6 +565,7 @@ using System.Linq;
 using An_An;
 using Manipulator;
 
+
 public class GameLobby : MonoBehaviour
 {
     public static GameLobby Instance { get; private set; }
@@ -639,7 +640,46 @@ public class GameLobby : MonoBehaviour
 
             clientIdToPlayerIdMap[clientId] = playerId;
             Debug.Log($"Client connected with ID: {clientId}, PlayerId: {playerId}");
-            ShowNotification(playerId);
+
+            // Show the user joined notification using GameLobby's own method
+            ShowNotification($"Client Joined: {playerId}");
+        }
+    }
+
+    private void ShowNotification(string message)
+    {
+        if (notificationPrefab == null)
+        {
+            Debug.LogError("NotificationPrefab is not assigned in GameLobby!");
+            return;
+        }
+
+        GameObject notification = Instantiate(notificationPrefab, Vector3.zero, Quaternion.identity);
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas != null)
+        {
+            notification.transform.SetParent(canvas.transform, false);
+            RectTransform rect = notification.GetComponent<RectTransform>();
+            rect.anchoredPosition = new Vector2(0, 100);
+            rect.localScale = Vector3.one;
+            Debug.Log("User joined notification parented to Canvas at position (0, 100)");
+        }
+        else
+        {
+            Debug.LogError("No Canvas found in the scene to parent the notification!");
+            Destroy(notification);
+            return;
+        }
+
+        NotificationPopup popup = notification.GetComponent<NotificationPopup>();
+        if (popup != null)
+        {
+            popup.SetMessage(message);
+        }
+        else
+        {
+            Debug.LogError("NotificationPopup component not found on the notification prefab!");
+            Destroy(notification);
         }
     }
 
@@ -703,44 +743,6 @@ public class GameLobby : MonoBehaviour
 
         Debug.LogWarning($"Fallback failed: No suitable PlayerId found for Client ID: {clientId}");
         return null;
-    }
-
-    private void ShowNotification(string playerId)
-    {
-        if (notificationPrefab == null)
-        {
-            Debug.LogError("Notification Prefab is not assigned in GameLobby!");
-            return;
-        }
-
-        Debug.Log("Instantiating notification prefab...");
-        GameObject notification = Instantiate(notificationPrefab, Vector3.zero, Quaternion.identity);
-        Canvas canvas = FindObjectOfType<Canvas>();
-        if (canvas != null)
-        {
-            notification.transform.SetParent(canvas.transform, false);
-            RectTransform rect = notification.GetComponent<RectTransform>();
-            rect.anchoredPosition = new Vector2(0, 100);
-            rect.localScale = Vector3.one;
-            Debug.Log("Notification parented to Canvas");
-        }
-        else
-        {
-            Debug.LogError("No Canvas found in the scene to parent the notification!");
-            Destroy(notification);
-            return;
-        }
-
-        NotificationPopup popup = notification.GetComponent<NotificationPopup>();
-        if (popup != null)
-        {
-            popup.SetPlayerId(playerId);
-        }
-        else
-        {
-            Debug.LogError("NotificationPopup component not found on the notification prefab!");
-            Destroy(notification);
-        }
     }
 
     private async void SendHeartbeat()
@@ -989,7 +991,7 @@ public class GameLobby : MonoBehaviour
             {
                 Debug.LogWarning($"Failed to send keep-alive update: {e.Message}");
             }
-            await Task.Delay(15000); // Increased to 15s to reduce API calls
+            await Task.Delay(15000);
         }
     }
 

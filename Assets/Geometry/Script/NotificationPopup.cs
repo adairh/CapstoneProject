@@ -25,12 +25,12 @@ namespace Khoa
             canvasGroup.alpha = 1f;
         }
 
-        public void SetPlayerId(string playerId)
+        public void SetMessage(string message)
         {
             if (clientNameText != null)
             {
-                clientNameText.text = $"User Joined With ID: {playerId}";
-                Debug.Log($"Notification set with PlayerId: {playerId}");
+                clientNameText.text = message;
+                Debug.Log($"Notification set with message: {message}");
             }
             else
             {
