@@ -15,10 +15,7 @@ using Manipulator;
 using Khoa;
 /// <summary>
 /// By Khoa
-
 /// </summary>
-
-
 public class GameLobby : MonoBehaviour
 {
     public static GameLobby Instance { get; private set; }
@@ -515,15 +512,28 @@ public class GameLobby : MonoBehaviour
                 return;
             }
             Lobby lobby = queryResponse.Results[0];
-            if (lobby.Data.TryGetValue("Password", out var passwordData))
+            if (lobby.IsPrivate)
             {
-                if (passwordData.Value != password)
+                if (lobby.Data.TryGetValue("Password", out var passwordData))
                 {
-                    Debug.LogError($"Wrong password for lobby {lobbyName}");
+                    if (passwordData.Value != password)
+                    {
+                        Debug.LogError($"Wrong password for lobby {lobbyName}");
+                        if (LobbyUI.Instance != null && !hasReportedError)
+                        {
+                            hasReportedError = true;
+                            LobbyUI.Instance.UpdateStatus($"Error: Incorrect password for lobby {lobbyName}");
+                        }
+                        return;
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"Private lobby {lobbyName} has no password data");
                     if (LobbyUI.Instance != null && !hasReportedError)
                     {
                         hasReportedError = true;
-                        LobbyUI.Instance.UpdateStatus($"Error: Incorrect password for lobby {lobbyName}");
+                        LobbyUI.Instance.UpdateStatus($"Error: Private lobby {lobbyName} has no password");
                     }
                     return;
                 }

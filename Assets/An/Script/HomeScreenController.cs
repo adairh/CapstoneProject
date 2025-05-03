@@ -113,11 +113,11 @@ public class HomeScreenController : MonoBehaviour
     {
         // Không đụng - KHoa
         SceneManager.LoadScene("SampleScene");
-        /*popupJoinRoom.SetActive(true);
-        popupCreateRoom.SetActive(false);
+        //popupJoinRoom.SetActive(false);
+       // popupCreateRoom.SetActive(true);
        
-        darkOverlay.SetActive(true);
-        canvasHome.SetActive(true);*/
+        //darkOverlay.SetActive(true);
+        
         /*canvasPlaygame.SetActive(false);
         canvasOnboarding.SetActive(false);*/ // Hide onboarding screen if it's active
     }
