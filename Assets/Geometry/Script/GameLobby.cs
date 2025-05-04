@@ -390,7 +390,7 @@ public class GameLobby : MonoBehaviour
                 {
                     LobbyUI.Instance.UpdateStatus($"Error: Lobby '{lobbyName}' already exists!");
                 }
-                return;
+                throw new System.Exception($"Lobby '{lobbyName}' already exists!");
             }
 
             Debug.Log($"Creating lobby: Name={lobbyName}, Password={password}, IsPrivate={isPrivate}");
@@ -452,6 +452,7 @@ public class GameLobby : MonoBehaviour
             {
                 LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
             }
+            throw; // Re-throw the exception to be caught by the caller
         }
     }
 
@@ -477,6 +478,64 @@ public class GameLobby : MonoBehaviour
             }
             await Task.Delay(15000);
         }
+    }
+
+    public async void CreateRandomLobby()
+    {
+        const int maxRetries = 3;
+        string roomId = "";
+        string password = "";
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                // Generate random 4-character room ID and password using GUID for better uniqueness
+                roomId = GenerateRandomString(4);
+                password = GenerateRandomString(4);
+
+                // Create lobby with random values, set as private by default
+                CreateLobby(roomId, password, true);
+
+                if (LobbyUI.Instance != null)
+                {
+                    LobbyUI.Instance.UpdateStatus($"Created Private Lobby: {roomId}, Password: {password}");
+                }
+                return; // Successfully created the lobby, exit the method
+            }
+            catch (System.Exception e)
+            {
+                if (e.Message.Contains("already exists"))
+                {
+                    Debug.LogWarning($"Room ID {roomId} already exists, retrying (attempt {attempt}/{maxRetries})...");
+                    if (attempt == maxRetries)
+                    {
+                        Debug.LogError($"Failed to create random lobby after {maxRetries} attempts: Room ID collision.");
+                        if (LobbyUI.Instance != null)
+                        {
+                            LobbyUI.Instance.UpdateStatus($"Error: Failed to create lobby after {maxRetries} attempts (Room ID collision).");
+                        }
+                        return;
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"Failed to create random lobby: {e.Message}");
+                    if (LobbyUI.Instance != null)
+                    {
+                        LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
+                    }
+                    return;
+                }
+            }
+        }
+    }
+
+    private string GenerateRandomString(int length)
+    {
+        // Use GUID for better uniqueness, then truncate to the desired length
+        string guid = System.Guid.NewGuid().ToString().Replace("-", "").ToUpper();
+        return guid.Substring(0, length);
     }
 
     public async void JoinLobbyByNameAndPassword(string lobbyName, string password)
