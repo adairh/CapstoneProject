@@ -13,6 +13,7 @@ public class HomeScreenController : MonoBehaviour
     public GameObject canvasPlaygame;
     public GameObject canvasOnboarding; // Onboarding screen with ShowHome button
     public GameObject canvas; // Main Canvas transform for UI instantiation
+    public GameObject overPlayCanvas;
 
     [Header("Popups")]
     public GameObject popupJoinRoom;
@@ -48,6 +49,7 @@ public class HomeScreenController : MonoBehaviour
     {   
         // Không đụng 
         //mac dinh hien canvasHome, an canvasPlaygame
+        overPlayCanvas.SetActive(false);
         ConfigureUIBasedOnScene();
         canvasHome.SetActive(true);
         canvasPlaygame.SetActive(false);
@@ -113,11 +115,14 @@ public class HomeScreenController : MonoBehaviour
     {
         // Không đụng - KHoa
         SceneManager.LoadScene("SampleScene");
-        //popupJoinRoom.SetActive(false);
-       // popupCreateRoom.SetActive(true);
-       
-        //darkOverlay.SetActive(true);
+        //canvasHome.SetActive(false);
         
+        
+        //popupJoinRoom.SetActive(false);
+        // popupCreateRoom.SetActive(true);
+
+        //darkOverlay.SetActive(true);
+
         /*canvasPlaygame.SetActive(false);
         canvasOnboarding.SetActive(false);*/ // Hide onboarding screen if it's active
     }
