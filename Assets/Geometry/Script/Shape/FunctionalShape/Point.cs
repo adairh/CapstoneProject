@@ -1,140 +1,135 @@
-﻿using System.Collections.Generic;
-using Unity.Netcode; 
-using UnityEngine;
+﻿using UnityEngine; 
+using Unity.Netcode;
 
 namespace Manipulator
 {
+    [RequireComponent(typeof(SphereCollider))]
     public class Point : Shape
-{
-    private int pointNO;
-    private SphereCollider collider;
-    
-    private FixedPointConstraint constraint; // Composition 
-
-    public Point(Vector3 position) : this(position, null) { }
-
-    public Point(Vector3 position, Shape parent) : base(position, "Pivot " + AlphabetCounter.Next(), parent)
     {
-        this.pointNO = AlphabetCounter.CurrentValue();
-        SetupGameObject();
-    }
+        private const float Radius = 0.1f;
 
-    private NetworkObject segmentNetObj = null;
-    
-    private void SetupGameObject()
-    {
-        GO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        GO.name = Name;
-        GO.transform.localScale = Vector3.one * 0.1f;
-        GO.transform.position = Position;
+        private SphereCollider collider;
+        private FixedPointConstraint constraint;
+        private NetworkPositionSync positionSync;
 
-        if (Parent != null)
-            GO.transform.SetParent(Parent.GO.transform, true);
+        public event System.Action<Point> OnChanged;
 
-        collider = GO.GetComponent<SphereCollider>() ?? GO.AddComponent<SphereCollider>();
-        UpdateHitbox();
+        #region INIT
 
-        constraint = GO.AddComponent<FixedPointConstraint>();
-        constraint.Owner = this;
-        ConstraintManager.Instance.RegisterConstraint(constraint);
-        
-        
-
-        
-    }
-    
-    public override ShapeData Serialize() => new PointData {
-        Name     = Name,
-        Position = Position
-    };
-
-    public override void Deserialize(ShapeData data) {
-        var pd = (PointData)data;
-        Name     = pd.Name;
-        MoveToPosition(pd.Position, silent: true);
-    }
-    
-    
-
-    public override void Destroy()
-    {
-        base.Destroy();
-    }
-
-    public FixedPointConstraint GetPointConstraint() => constraint;
-    
-    public void AttachProcess()
-    {
-        var mm = ManipulationManager.Instance;
-        var shape = mm.GetPinnedShape();
-            
-        
-        if (shape != null && shape != this && !(shape is Point))
+        protected override void Awake()
         {
-            constraint.AddDepend(this, shape);
+            base.Awake();
+
+            name = $"Point_{ShapeId}";
+
+            // Add mesh
+            var mf = gameObject.AddComponent<MeshFilter>();
+            var mr = gameObject.AddComponent<MeshRenderer>();
+            mf.mesh = MeshGenerator.CreateSphere(Radius);
+            mr.material = MaterialLibrary.Get(MaterialType.Default);
+
+            // Collider
+            collider = GetComponent<SphereCollider>();
+            collider.radius = Radius;
+            collider.center = Vector3.zero;
+
+            // Constraint
+            constraint = gameObject.AddComponent<FixedPointConstraint>();
+            constraint.Owner = this;
+            ConstraintManager.Instance.RegisterConstraint(constraint);
+
+            // Network sync
+            if (!TryGetComponent(out positionSync))
+                positionSync = gameObject.AddComponent<NetworkPositionSync>();
+
+            // Settings (position)
+            AppendSettings(new PositionSetting(transform.position, this));
         }
+
+        #endregion
+
+        #region MOVE
+
+        /// <summary>
+        /// Di chuyển point đến vị trí mới. Nếu silent = true, không gửi sự kiện NotifyChanged.
+        /// </summary>
+        public override void MoveTo(Vector3 newPosition, bool silent = false)
+        {
+            if (!NetworkManager.Singleton.IsServer) return; // Chỉ server được phép gọi
+
+            Vector3 oldPosition = transform.position;
+            transform.position = newPosition;
+            positionSync.syncedPosition.Value = newPosition;
+            UpdateDataFromTransform();
+
+            constraint.ApplyConstraint(this);
+            ConstraintManager.Instance.ApplyConstraints(this);
+
+            if (!silent)
+            {
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(new MoveShapeAction(ShapeId, oldPosition, newPosition));
+                NotifyChanged();
+            }
+        }
+
+        public Vector3 GetCurrentPosition() => transform.position;
+
+        #endregion
+
+        #region SERIALIZATION
+
+        public override ShapeData Serialize()
+        {
+            var data = base.Serialize();
+            data.Type = "Point";
+            return data;
+        }
+
+        public override void Deserialize(ShapeData data)
+        {
+            base.Deserialize(data);
+        }
+
+        #endregion
+
+        #region ATTACH
+
+        public void AttachProcess()
+        {
+            var mm = ManipulationManager.Instance;
+            var shape = mm.GetPinnedShape();
+
+            if (shape != null && shape != this && !(shape is Point))
+            {
+                constraint.AddDepend(this, shape);
+            }
+        }
+
+        public FixedPointConstraint GetPointConstraint() => constraint;
+
+        #endregion
+
+        #region OVERRIDES
+
+        public override void CompleteDraw()
+        {
+            base.CompleteDraw();
+            UpdateHitbox();
+        }
+
+        public override void UpdateHitbox()
+        {
+            if (collider == null)
+                collider = GetComponent<SphereCollider>();
+        }
+
+        public override void NotifyChanged(bool silent = false)
+        {
+            base.NotifyChanged(silent);
+            if (!silent)
+                OnChanged?.Invoke(this);
+        }
+
+        #endregion
     }
-
-    public override void Drawing()
-    {
-        UpdateTransform();
-    }
-
-    private void UpdateTransform()
-    {
-        if (GO == null) return;
-
-        GO.transform.position = Position;
-        GO.transform.localScale = Vector3.one * 0.1f;
-
-        // Notify shapes that depend on this point
-        constraint.ApplyConstraint(this);
-        ConstraintManager.Instance.ApplyConstraints(this);
-
-    }
-
-    public void MoveTo(Vector3 newPosition)
-    {
-        Position = newPosition;
-        UpdateTransform();
-    }
-
-    public override void OnPointMoved(Point movedPoint)
-    {
-        // Ignore
-    }
-
-    public override void UpdateHitbox()
-    {
-        if (collider == null) return;
-        collider.center = Vector3.zero;
-    }
-
-    protected override void InitializeSettings()
-    {
-        AppendSettings(new PositionSetting(Position, this));
-    }
-
-    public override GameObject[] Components()
-    {
-        return new[] { GO };
-    }
-
-    public void Draw2D() { }
- 
-    public override void CompleteDraw()
-    {
-        UpdateHitbox();
-        base.CompleteDraw();
-    }
-
-    public void AttachToShape(Shape shape)
-    {
-        if (!constraint.GetLinkedShapes().Contains(shape))
-            constraint.AddShape(shape);
-    }
-
-    public List<Shape> AttachedShapes => constraint.GetLinkedShapes();
-}
-
 }

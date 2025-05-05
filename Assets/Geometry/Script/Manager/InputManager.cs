@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Manipulator
 {
-
-
     public enum UserAction
     {
         LeftClick,
@@ -14,12 +12,12 @@ namespace Manipulator
         OpenSettings,
         Select,
         AngleCons,
-        Config, 
+        Config,
         Delete,
         // … thêm tùy bạn
     }
-    
-    [DefaultExecutionOrder(-100)] 
+
+    [DefaultExecutionOrder(-100)]
     public class InputManager : MonoBehaviour
     {
         public static InputManager Instance { get; private set; }
@@ -39,46 +37,47 @@ namespace Manipulator
 
         private void Update()
         {
-            
 #if UNITY_EDITOR || UNITY_STANDALONE
             if (Input.GetMouseButtonDown(0))
                 OnAction?.Invoke(UserAction.LeftClick, Input.mousePosition);
+
             if (Input.GetMouseButtonDown(1))
                 OnAction?.Invoke(UserAction.Config, Input.mousePosition);
+
             if (Input.GetMouseButton(0))
                 OnAction?.Invoke(UserAction.Drag, Input.mousePosition);
-            
-            
+
             if (Input.GetMouseButtonDown(1) && Input.GetKeyDown(KeyCode.LeftControl))
                 OnAction?.Invoke(UserAction.Select, Input.mousePosition);
-            
-            if (Input.GetKeyDown(KeyCode.A))
-            {
-                OnAction?.Invoke(UserAction.AngleCons, Input.mousePosition);
-            }
-            if (Input.GetKeyDown(KeyCode.Delete))
-            {
-                OnAction?.Invoke(UserAction.Delete, Input.mousePosition);
-            }
-            
-            
-#elif UNITY_IOS || UNITY_ANDROID
-        if (Input.touchCount > 0)
-        {
-            var t = Input.GetTouch(0);
-            if (t.phase == TouchPhase.Began)
-                OnAction?.Invoke(UserAction.LeftClick, t.position);
-            else if (t.phase == TouchPhase.Moved || t.phase == TouchPhase.Stationary)
-                OnAction?.Invoke(UserAction.Drag, t.position);
-            else if (t.phase == TouchPhase.Ended)
-                OnAction?.Invoke(UserAction.Draw, t.position);
-        }
-#endif
-            
 
-            // Ví dụ phím mở setting
-            if (Input.GetKeyDown(KeyCode.Escape))
-                OnAction?.Invoke(UserAction.OpenSettings, Vector2.zero);
+            if (Input.GetKeyDown(KeyCode.A))
+                OnAction?.Invoke(UserAction.AngleCons, Input.mousePosition);
+
+            if (Input.GetKeyDown(KeyCode.Delete))
+                OnAction?.Invoke(UserAction.Delete, Input.mousePosition);
+
+            if (Input.GetKeyDown(KeyCode.Z) && Input.GetKey(KeyCode.LeftControl))
+                UndoRedoManager.Instance.Undo();
+
+            if (Input.GetKeyDown(KeyCode.Y) && Input.GetKey(KeyCode.LeftControl))
+                UndoRedoManager.Instance.Redo();
+
+            if (Input.GetKeyDown(KeyCode.S) && Input.GetKey(KeyCode.LeftControl))
+                SaveManager.SaveScene();
+
+            if (Input.GetKeyDown(KeyCode.L) && Input.GetKey(KeyCode.LeftControl))
+                SaveManager.LoadScene();
+
+#elif UNITY_IOS || UNITY_ANDROID
+            if (Input.touchCount > 0)
+            {
+                var t = Input.GetTouch(0);
+                if (t.phase == TouchPhase.Began)
+                    OnAction?.Invoke(UserAction.LeftClick, t.position);
+                else if (t.phase == TouchPhase.Moved)
+                    OnAction?.Invoke(UserAction.Drag, t.position);
+            }
+#endif
         }
     }
 }

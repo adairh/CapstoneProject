@@ -1,413 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Unity.Netcode;
-using Unity.VisualScripting;
-using UnityEngine;
+﻿using UnityEngine; 
 
 namespace Manipulator
 {
     public class ManipulationManager : MonoBehaviour
     {
-        public GameObject shapeNetworkPrefab;
         public static ManipulationManager Instance { get; private set; }
 
-        
-        private float refreshTimer = 0f;
-        private float refreshInterval = 1f;
- 
-        // === Dragging ===
-        public enum DragState
-        {
-            XZ,
-            Y,
-            None
-        }
+        private Shape selectedShape;
 
-        public DragState CurrentDragState;
-        private DraggableShape currentDraggingObject = null;
-
-        // === Hovering ===
-        public bool AllHoverMode = false;
-        private HashSet<HoverableShape> hoveredObjects = new HashSet<HoverableShape>();
-        private Shape pinnedShape = null;
-
-        // === Drawing ===
-
-        private bool drawing = false;
-        
-        // === Temp / Straight Mode ===
-        public enum Straight
-        {
-            X,
-            Y,
-            Z
-        }
-
-        public Straight ModeStraight;
-
-        // === Init ===
         private void Awake()
         {
-            if (Instance == null)
-                Instance = this;
-            else
-                Destroy(gameObject);
+            if (Instance == null) Instance = this;
+            else Destroy(gameObject);
         }
 
-        
-        // === InputManager ===
-        
-        
-        private void Start()
+        private void OnEnable()
         {
             InputManager.Instance.OnAction += HandleAction;
         }
-        private void OnDestroy()
+
+        private void OnDisable()
         {
             InputManager.Instance.OnAction -= HandleAction;
-        } 
+        }
 
-        private void HandleAction(UserAction action, Vector2 pos)
+        private void HandleAction(UserAction action, Vector2 screenPos)
         {
+            if (action == UserAction.Delete)
+            {
+                if (selectedShape != null)
+                {
+                    UndoRedoManager.Instance.Do(new DeleteShapeAction(selectedShape));
+                    selectedShape = null;
+                }
+            }
+
             if (action == UserAction.LeftClick)
             {
-                bool ctrl = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-                Ray ray = Camera.main.ScreenPointToRay(pos);
-
-                if (ctrl)
+                Ray ray = Camera.main.ScreenPointToRay(screenPos);
+                if (Physics.Raycast(ray, out RaycastHit hit))
                 {
-                    // Việc chọn đã được xử lý trong ClickableShape.OnMouseDown.
-                    // Không cần làm gì thêm nếu muốn giữ OnMouseDown.
-                }
-                else
-                {
-                    // Nếu click vùng trống (không hit collider nào), clear selection
-                    if (!Physics.Raycast(ray, out _))
-                    {
-                        ClearSelection();
-                    }
-                }
-            }
-            else if (action == UserAction.AngleCons)
-            {
-                TryApplyAngleConstraint();
-            }
-            else if (action == UserAction.Config)
-            { 
-                
-            }
-            // tại chỗ bạn xử lý UserAction.Delete:
-            else if (action == UserAction.Delete)
-            {
-                // 1) Lấy những shape user đã chọn
-                var toDelete = new HashSet<Shape>(selectedShapes);
-
-                // 2) Với mỗi segment, xem điểm đầu-cuối (Point) có còn 
-                //    gắn với segment khác không, nếu không thì cũng phải xóa
-                foreach (var s in selectedShapes.OfType<Segment>())
-                {
-                    foreach (var pt in new[]{ s.Start, s.End })
-                    {
-                        bool usedElsewhere = ShapeStorage.GetAllShapes()
-                            .OfType<Segment>()
-                            .Any(seg => seg != s && (seg.Start == pt || seg.End == pt));
-                        if (!usedElsewhere)
-                            toDelete.Add(pt);
-                    }
-                }
-
-                // 3) Gom các constraint liên quan:
-                var toDeleteConstraints = ConstraintManager.Instance
-                    .GetAllConstraints()
-                    .Where(c => toDelete.Contains(c.Owner))
-                    .ToList();
-
-                // 4) Tạo action và đẩy vào UndoManager
-                var act = new DeleteShapeBatchAction(toDelete, toDeleteConstraints);
-                UndoManager.Instance.Do(act);
-            }
-
-            // ... các case khác ...
-        }
-        
-        
-        // === Drag Methods ===
-        public bool StartDragging(DraggableShape shape)
-        {
-            bool canDrag = currentDraggingObject == null 
-                           && CurrentDragState != DragState.None 
-                           && !IsDrawing();
-
-            // In debug có màu: xanh nếu drag được, đỏ nếu không
-            string color = canDrag ? "green" : "red";
-            Debug.Log($"<color={color}>[StartDragging] Can drag {shape.name}? {canDrag}</color>");
-            Debug.Log($"[StartDragging] currentDraggingObject null? {currentDraggingObject == null}");
-            Debug.Log($"[StartDragging] DragState = {CurrentDragState}");
-            Debug.Log($"[StartDragging] IsDrawing? {IsDrawing()}");
-
-            if (canDrag)
-            {
-                currentDraggingObject = shape;
-                return true;
-            }
-            return false;
-        }
-
-
-        public void StopDragging(DraggableShape shape)
-        {
-            if (currentDraggingObject == shape)
-            {
-                currentDraggingObject = null;
-            }
-        }
-
-        public Vector3 GetAllowedDragAxis()
-        {
-            switch (CurrentDragState)
-            {
-                case DragState.XZ: return new Vector3(1, 0, 1);
-                case DragState.Y: return new Vector3(0, 1, 0);
-                default: return Vector3.zero;
-            }
-        }
-
-        // === Hover Methods ===
-        public void RegisterHoveredObject(HoverableShape obj)
-        {
-            hoveredObjects.Add(obj);
-        }
-
-        public void ResetAllHoveredObjects()
-        {
-            foreach (HoverableShape obj in hoveredObjects)
-            {
-                if (obj != null)
-                    obj.ResetHover();
-            }
-            hoveredObjects.Clear();
-        }
-
-        public void PinShape(Shape shape)
-        {
-            pinnedShape = shape;
-        }
-
-        public void UnpinShape()
-        {
-            pinnedShape = null;
-        }
-
-        public Shape GetPinnedShape()
-        {
-            return pinnedShape;
-        }
-        
-        
-        // === Drawing Methods ===
-
-
-        public void SetDrawing(bool toggle)
-        {
-            drawing = toggle;
-        }
-
-        public bool IsDrawing()
-        {
-            return drawing;
-        }
-        
-        
-        
-        // === Select ===
-        
-        public bool IsShapeOrParentSelected(Shape shape)
-        {
-            return selectedShapes.Contains(shape)
-                   || (shape.Parent != null && selectedShapes.Contains(shape.Parent))
-                   || (shape is Point p && p.AttachedShapes.Any(s => selectedShapes.Contains(s)));
-        }
-
-        private HashSet<Shape> selectedShapes = new HashSet<Shape>();
-        public IReadOnlyCollection<Shape> SelectedShapes => selectedShapes;
-
-        /// <summary>
-        /// Toggle chọn / bỏ chọn một shape.
-        /// </summary>
-        public void ToggleSelection(Shape shape)
-        {
-            // 1) Xác định tất cả target cần toggle
-            var targets = new List<Shape>();
-
-            if (shape.Parent != null)
-            {
-                // Nếu là child, chọn parent
-                targets.Add(shape.Parent);
-            }
-            else if (shape is Point p && p.AttachedShapes.Count > 0)
-            {
-                // Nếu là Point và có nhiều shape gắn vào, chọn hết
-                targets.AddRange(p.AttachedShapes);
-            }
-            else
-            {
-                // Không có parent hay attached shapes → chọn chính nó
-                targets.Add(shape);
-            }
-
-            // 2) Với mỗi target, toggle và đổi màu
-            foreach (var target in targets)
-            {
-                bool nowSelected = !selectedShapes.Contains(target);
-                if (nowSelected)
-                    selectedShapes.Add(target);
-                else
-                    selectedShapes.Remove(target);
-
-                // Chọn material tương ứng
-                var mat = MaterialLibrary.Get(nowSelected 
-                    ? MaterialType.Select 
-                    : MaterialType.Default);
-
-                // Áp lên tất cả component của target
-                foreach (var go in target.Components())
-                {
-                    if (go.TryGetComponent<Renderer>(out var rend))
-                        rend.material = mat;
+                    var shape = hit.collider.GetComponentInParent<Shape>();
+                    if (shape != null)
+                        selectedShape = shape;
                 }
             }
         }
 
-
-
-        
-        /// <summary>
-        /// Clear hết selection khi ctrl không giữ và click vùng trống.
-        /// </summary>
-        public void ClearSelection()
-        {
-            foreach (var shape in selectedShapes)
-            {
-                shape.Components().ForEach(go =>
-                {
-                    if (go.TryGetComponent<Renderer>(out var rend))
-                        rend.material = MaterialLibrary.Get(MaterialType.Default);
-                });
-            }
-            selectedShapes.Clear();
-        }
- 
-
-        
-        // === Constraint
-        
-        // === Angle
-        
-        /// <summary>
-        /// Tìm điểm chung (pivot) và hai đầu còn lại (freeA, freeB) của hai segment.
-        /// </summary>
-        /// <param name="segA">Segment A</param>
-        /// <param name="segB">Segment B</param>
-        /// <param name="pivot">(out) điểm chung</param>
-        /// <param name="freeA">(out) đầu tự do thuộc segA</param>
-        /// <param name="freeB">(out) đầu tự do thuộc segB</param>
-        public static void GetSharedPivotPoints(
-            Segment segA,
-            Segment segB,
-            out Point pivot,
-            out Point freeA,
-            out Point freeB)
-        {
-            if (segA.Start == segB.Start)
-            {
-                pivot = segA.Start;
-                freeA = segA.End;
-                freeB = segB.End;
-            }
-            else if (segA.Start == segB.End)
-            {
-                pivot = segA.Start;
-                freeA = segA.End;
-                freeB = segB.Start;
-            }
-            else if (segA.End == segB.Start)
-            {
-                pivot = segA.End;
-                freeA = segA.Start;
-                freeB = segB.End;
-            }
-            else if (segA.End == segB.End)
-            {
-                pivot = segA.End;
-                freeA = segA.Start;
-                freeB = segB.Start;
-            }
-            else
-            {
-                throw new InvalidOperationException("Hai segment không có điểm chung!");
-            }
-        }
-        
-        private Point pivot, freeA, freeB;
-        
-        private void TryApplyAngleConstraint()
-        {
-            if (selectedShapes.Count == 2)
-            {
-                var segments = selectedShapes.OfType<Segment>().ToList();
-                if (segments.Count == 2)
-                {
-                    var segA = segments[0];
-                    var segB = segments[1];
-
-                    float currentAngle = Vector3.Angle(
-                        (segA.End.Position - segA.Start.Position),
-                        (segB.End.Position - segB.Start.Position)
-                    );
-
-                    GetSharedPivotPoints(segA, segB, out pivot, out freeA, out freeB);
-
-                    // Tạo constraint và attach
-                    var angleConstraint = pivot.GO.AddComponent<AngleConstraint>();
-                    angleConstraint.Owner = pivot;
-                    angleConstraint.AddDependencies(segA, segB, pivot, currentAngle);
-
-                    // Spawn hologram để hiển thị thông tin của riêng constraint này
-                    var hologram = new HologramLabel(pivot.Position + Vector3.up * 0.2f, angleConstraint);
-                    hologram.SetText();
-                    
-                    angleConstraint.Holo = hologram;
-                    
-                    hologram.AppendSettings(new AngleSetting(angleConstraint, hologram));
-                    // Liên kết setting vào hologram (không pivot nữa) 
-
-                    Debug.Log($"<color=green>[AngleConstraint]</color> Áp dụng giữa {segA.Name} và {segB.Name} " +
-                              $"với góc ban đầu <color=green>{currentAngle:F1}°</color>");
-                }
-                else
-                {
-                    Debug.Log("<color=red>[AngleConstraint]</color> Phải chọn chính xác 2 Segment!");
-                }
-            }
-            else
-            {
-                Debug.Log("<color=yellow>[AngleConstraint]</color> Vui lòng chọn đúng 2 Shape để áp dụng.");
-            }
-        }
-
-
-
+        public Shape GetPinnedShape() => selectedShape;
     }
-    
-    
-    public static class Extensions
-    {
-        public static void ForEach<T>(this IEnumerable<T> src, System.Action<T> act)
-        {
-            foreach (var x in src) act(x);
-        }
-    }
-    
-    
 }

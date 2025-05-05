@@ -2,8 +2,8 @@
 {
     public interface IUndoableAction
     {
-        void Execute();
-        void Undo(); 
+        void Undo();
+        void Redo();
     }
 
 

@@ -1,161 +1,125 @@
-﻿using UnityEngine;
-using Unity.Netcode;
-using System.Collections.Generic;
-using System;
+﻿using UnityEngine; 
 
 namespace Manipulator
 {
-    public class PerformDrawing : NetworkBehaviour
+    public class PerformDrawing : MonoBehaviour
     {
-        [SerializeField] private Camera mainCamera;
-        [SerializeField] private GameObject shapeNetworkPrefab;
+        [SerializeField] private Camera cam;
 
-        private static IShapeButton.ShapeType _currentShape = IShapeButton.ShapeType.None;
-        private ShapeNetworkSync    _activeSync;
-        private bool                _isDrawing;
-
-        // Dùng để track tất cả Shape sinh ra trong 1 lần draw
-        private List<string>        _tempShapeIds;
-        private Action<string>      _onShapeAdded;
-
-        void Awake()
-        {
-            if (mainCamera == null) mainCamera = Camera.main;
-            // chuẩn bị callback
-            _tempShapeIds  = new List<string>();
-            _onShapeAdded  = id => _tempShapeIds.Add(id);
-        }
-
-        void OnEnable()
-        {
-            ShapeButtonManager.OnShapeChanged += OnShapeButtonChanged;
-        }
-
-        void OnDisable()
-        {
-            ShapeButtonManager.OnShapeChanged -= OnShapeButtonChanged;
-            // nếu thoát scene trong lúc vẽ thì vẫn phải cleanup
-            if (_isDrawing) CancelDrawing();
-        }
-
-        private void OnShapeButtonChanged(IShapeButton.ShapeType newShape)
-        {
-            // nếu đang vẽ dở và user chọn tool khác, hủy triệt để
-            if (_isDrawing && newShape != _currentShape)
-                CancelDrawing();
-
-            _currentShape = newShape;
-        }
+        private Point currentStartPoint;
+        private Segment currentPreviewSegment;
 
         void Update()
         {
-            if (!IsOwner || _currentShape == IShapeButton.ShapeType.None) return;
-
-            Vector3 hitPoint = ComputeHitPointUnderCursor();
-            if (hitPoint == Vector3.zero) return;
-
             if (Input.GetMouseButtonDown(0))
-                BeginDrawing(hitPoint);
-            else if (Input.GetMouseButton(0) && _isDrawing)
-                ContinueDrawing(hitPoint);
-            else if (Input.GetMouseButtonUp(0) && _isDrawing)
-                FinishDrawing(hitPoint);
+                TryStartDrawing();
+
+            if (currentPreviewSegment != null)
+                UpdatePreviewSegment();
+
+            if (Input.GetMouseButtonUp(0))
+                FinishDrawing();
         }
 
-        private void BeginDrawing(Vector3 start)
+        void TryStartDrawing()
         {
-            // nếu có draw dang dở thì dọn luôn trước
-            if (_isDrawing) CancelDrawing();
+            if (!RaycastMouse(out Vector3 pos)) return;
 
-            // bắt đầu track các Shape mới sinh
-            _tempShapeIds.Clear();
-            ShapeStorage.ShapeAdded += _onShapeAdded;
-
-            // tạo network‐wrapper
-            var go = Instantiate(shapeNetworkPrefab);
-            _activeSync = go.GetComponent<ShapeNetworkSync>();
-            _activeSync.shapeType.Value    = (ShapeNetworkSync.ShapeType)_currentShape;
-            _activeSync.startPoint.Value   = start;
-            _activeSync.currentPoint.Value = start;
-            _activeSync.isDrawing.Value    = true;
-            _activeSync.isFinalized.Value  = false;
-            _activeSync.ownerClientId.Value= NetworkManager.LocalClientId;
-            var netObj = go.GetComponent<NetworkObject>();
-            netObj.Spawn();
-            _activeWrapperId = netObj.NetworkObjectId;
-
-            _isDrawing = true;
-        }
-
-        private void ContinueDrawing(Vector3 current)
-        {
-            _activeSync.currentPoint.Value = current;
-        }
-        private ulong _activeWrapperId;
-
-        private void FinishDrawing(Vector3 end)
-        {
-            // finalize network
-            _activeSync.currentPoint.Value  = end;
-            _activeSync.isDrawing.Value     = false;
-            _activeSync.isFinalized.Value   = true;
-
-            // ngưng track shape IDs
-            ShapeStorage.ShapeAdded -= _onShapeAdded;
-
-            // 1) Push undo‐action
-            var action = new CreateShapeBatchAction(_tempShapeIds, _activeWrapperId);
-            UndoManager.Instance.Do(action);
-
-            // 2) Reset trạng thái
-            _isDrawing   = false;
-            _activeSync  = null;
-            // (tool vẫn có thể giữ)
-        }
-
-
-
-        private void CancelDrawing()
-        {
-            // 1) Hủy network object
-            if (_activeSync != null)
+            if (!RaycastPoint(out Point existing))
             {
-                Destroy(_activeSync.gameObject);
-                _activeSync = null;
-            }
-
-            // 2) Unsubscribe và dọn sạch tất cả Shape tạm
-            ShapeStorage.ShapeAdded -= _onShapeAdded;
-            foreach (var id in _tempShapeIds)
-            {
-                var s = ShapeStorage.GetShapeByID(id);
-                if (s != null)
+                var pointData = new ShapeData
                 {
-                    s.Destroy();           // gọi Destroy() để xoá GameObject + từ ShapeStorage
-                }
+                    Id = System.Guid.NewGuid().ToString(),
+                    Type = "Point",
+                    Position = pos,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new System.Collections.Generic.List<string>(),
+                    Settings = new System.Collections.Generic.Dictionary<string, string>()
+                };
+
+                NetworkShapeSpawner.Instance.CreateShapeNetworked(pointData);
+                existing = ShapeStorage.GetById(pointData.Id) as Point; // may not resolve immediately on client
             }
-            _tempShapeIds.Clear();
 
-            _isDrawing = false;
+            currentStartPoint = existing;
+
+            var segData = new ShapeData
+            {
+                Id = System.Guid.NewGuid().ToString(),
+                Type = "Segment",
+                Position = pos,
+                Rotation = Quaternion.identity,
+                Scale = Vector3.one,
+                ConnectedPoints = new System.Collections.Generic.List<string> { existing.ShapeId, existing.ShapeId },
+                Settings = new System.Collections.Generic.Dictionary<string, string>()
+            };
+
+            NetworkShapeSpawner.Instance.CreateShapeNetworked(segData);
+            currentPreviewSegment = ShapeStorage.GetById(segData.Id) as Segment;
         }
 
-        private Vector3 ComputeHitPointUnderCursor()
+        void UpdatePreviewSegment()
         {
-            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out var hit))
-                return hit.point;
-
-            var ground = new Plane(Vector3.up, Vector3.zero);
-            if (ground.Raycast(ray, out var enter))
-                return ray.GetPoint(enter);
-
-            return Vector3.zero;
+            if (!RaycastMouse(out Vector3 pos)) return;
+            currentPreviewSegment.EndPoint.MoveTo(pos);
         }
-        
-        public static void ResetShape()
+
+        void FinishDrawing()
         {
-            _currentShape = IShapeButton.ShapeType.None;
-            ShapeButtonManager.SetActiveShape(IShapeButton.ShapeType.None);
+            if (currentStartPoint == null || currentPreviewSegment == null)
+                return;
+
+            Point end;
+            if (!RaycastPoint(out end))
+            {
+                if (!RaycastMouse(out Vector3 pos)) return;
+
+                var endPointData = new ShapeData
+                {
+                    Id = System.Guid.NewGuid().ToString(),
+                    Type = "Point",
+                    Position = pos,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new System.Collections.Generic.List<string>(),
+                    Settings = new System.Collections.Generic.Dictionary<string, string>()
+                };
+
+                NetworkShapeSpawner.Instance.CreateShapeNetworked(endPointData);
+                end = ShapeStorage.GetById(endPointData.Id) as Point;
+            }
+
+            currentPreviewSegment.SetEndpoints(currentStartPoint, end);
+
+            currentStartPoint = null;
+            currentPreviewSegment = null;
+        }
+
+        bool RaycastMouse(out Vector3 pos)
+        {
+            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                pos = hit.point;
+                return true;
+            }
+
+            pos = Vector3.zero;
+            return false;
+        }
+
+        bool RaycastPoint(out Point point)
+        {
+            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                point = hit.collider.GetComponent<Point>();
+                return point != null;
+            }
+
+            point = null;
+            return false;
         }
     }
 }
