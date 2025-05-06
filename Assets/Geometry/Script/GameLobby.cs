@@ -67,7 +67,7 @@ public class GameLobby : MonoBehaviour
         }
     }
 
-    private bool IsHost
+    public bool IsHost
     {
         get
         {
