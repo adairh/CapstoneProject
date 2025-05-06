@@ -14,39 +14,45 @@ namespace Manipulator
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void RequestCreateShapeServerRpc(string jsonShapeData)
+        private void RequestCreateShapeServerRpc(string json)
         {
-            ShapeData data = JsonUtility.FromJson<ShapeData>(jsonShapeData);
-            SpawnShapeForAllClients(data);
+            var data = JsonUtility.FromJson<ShapeData>(json);
+            ShapeFactory.CreateFromData(data);
+            SpawnShapeForAllClientsClientRpc(json);
         }
 
-        [ClientRpc]
-        private void SpawnShapeForAllClients(ShapeData data)
-        {
-            if (IsServer) return; // server tự tạo shape rồi
 
+        [ClientRpc]
+        private void SpawnShapeForAllClientsClientRpc(string json)
+        {
+            if (IsServer) return; // Server đã tự tạo shape rồi
+
+            var data = JsonUtility.FromJson<ShapeData>(json);
             var shape = ShapeFactory.CreateFromData(data);
 
-            if (shape is Segment segment && data.ConnectedPointIds.Count == 2)
+            if (shape is Segment segment && data.ConnectedPoints.Count == 2)
             {
-                var a = ShapeStorage.GetPointById(data.ConnectedPointIds[0]);
-                var b = ShapeStorage.GetPointById(data.ConnectedPointIds[1]);
+                var a = ShapeStorage.GetById(data.ConnectedPoints[0]) as Point;
+                var b = ShapeStorage.GetById(data.ConnectedPoints[1]) as Point;
                 if (a && b) segment.SetEndpoints(a, b);
             }
         }
 
+
         public void CreateShapeNetworked(ShapeData data)
         {
+            string json = JsonUtility.ToJson(data);
+
             if (IsServer)
             {
                 ShapeFactory.CreateFromData(data);
-                SpawnShapeForAllClients(data);
+                SpawnShapeForAllClientsClientRpc(json);
             }
             else
             {
-                string json = JsonUtility.ToJson(data);
                 RequestCreateShapeServerRpc(json);
             }
         }
+
     }
 }

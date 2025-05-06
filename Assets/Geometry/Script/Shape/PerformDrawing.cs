@@ -5,6 +5,10 @@ namespace Manipulator
     public class PerformDrawing : MonoBehaviour
     {
         [SerializeField] private Camera cam;
+        void Start() {
+            if (cam == null)
+                cam = Camera.main;
+        }
 
         private Point currentStartPoint;
         private Segment currentPreviewSegment;

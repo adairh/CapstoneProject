@@ -59,6 +59,19 @@ namespace Manipulator
             var data = JsonUtility.FromJson<ShapeData>(json);
             ShapeFactory.CreateFromData(data);
         }
+        
+        [ServerRpc(RequireOwnership = false)]
+        public void RequestUndoServerRpc()
+        {
+            UndoRedoManager.Instance.Undo();
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void RequestRedoServerRpc()
+        {
+            UndoRedoManager.Instance.Redo();
+        }
+
     }
  
 }

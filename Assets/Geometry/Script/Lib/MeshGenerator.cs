@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Manipulator
 {
@@ -40,6 +41,33 @@ namespace Manipulator
             return scaledMesh;
         }
 
+        public static Mesh CreatePlane(List<Point> points)
+        
+        {
+            if (points == null || points.Count < 3)
+            {
+                Debug.LogError("[MeshGenerator] A plane requires at least 3 points.");
+                return new Mesh();
+            }
+
+            Vector3[] vertices = new Vector3[3];
+            for (int i = 0; i < 3; i++)
+            {
+                vertices[i] = points[i].transform.position;
+            }
+
+            int[] triangles = { 0, 1, 2 };
+            Vector3 normal = Vector3.Cross(vertices[1] - vertices[0], vertices[2] - vertices[0]).normalized;
+            Vector3[] normals = { normal, normal, normal };
+
+            Mesh mesh = new Mesh();
+            mesh.vertices = vertices;
+            mesh.triangles = triangles;
+            mesh.normals = normals;
+
+            return mesh;
+        }
+        
         // TODO: Add CreateTorus() or custom meshes as needed
     }
 }

@@ -63,11 +63,18 @@ namespace Manipulator
                 UndoRedoManager.Instance.Redo();
 
             if (Input.GetKeyDown(KeyCode.S) && Input.GetKey(KeyCode.LeftControl))
-                SaveManager.SaveScene();
+                SaveLoadManager.SaveAll();
 
             if (Input.GetKeyDown(KeyCode.L) && Input.GetKey(KeyCode.LeftControl))
-                SaveManager.LoadScene();
+                SaveLoadManager.LoadAll();
 
+            if (Input.GetKeyDown(KeyCode.Z))
+                UndoRedoNetworkBridge.Instance.RequestUndoServerRpc();
+
+            if (Input.GetKeyDown(KeyCode.Y))
+                UndoRedoNetworkBridge.Instance.RequestRedoServerRpc();
+
+            
 #elif UNITY_IOS || UNITY_ANDROID
             if (Input.touchCount > 0)
             {

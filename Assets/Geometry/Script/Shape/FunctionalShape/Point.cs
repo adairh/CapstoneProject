@@ -35,15 +35,14 @@ namespace Manipulator
 
             // Constraint
             constraint = gameObject.AddComponent<FixedPointConstraint>();
-            constraint.Owner = this;
-            ConstraintManager.Instance.RegisterConstraint(constraint);
+            constraint.Owner = this; // Register sẽ được gọi từ OnEnable()
 
             // Network sync
             if (!TryGetComponent(out positionSync))
                 positionSync = gameObject.AddComponent<NetworkPositionSync>();
 
             // Settings (position)
-            AppendSettings(new PositionSetting(transform.position, this));
+            //AppendSettings(new PositionSetting(transform.position, this));
         }
 
         #endregion
@@ -58,12 +57,16 @@ namespace Manipulator
             if (!NetworkManager.Singleton.IsServer) return; // Chỉ server được phép gọi
 
             Vector3 oldPosition = transform.position;
+            Vector3 delta = newPosition - oldPosition;
+
             transform.position = newPosition;
             positionSync.syncedPosition.Value = newPosition;
             UpdateDataFromTransform();
 
-            constraint.ApplyConstraint(this);
-            ConstraintManager.Instance.ApplyConstraints(this);
+// ✅ Apply constraint với delta đúng
+            constraint.ApplyConstraint(this, delta);
+            ConstraintManager.Instance.ApplyConstraints(this, delta);
+
 
             if (!silent)
             {

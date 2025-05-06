@@ -1,14 +1,13 @@
-
 using UnityEngine;
 
 namespace Manipulator
 {
     public class GridAndAxisSystem : MonoBehaviour
     {
-        [Header("Grid Settings")] public int gridSize = 20; // Total grid size
-        public float gridSpacing = 1f; // Space between grid lines
-        public Color primaryGridColor = Color.gray; // Color for primary lines
-        public Color secondaryGridColor = new Color(0.8f, 0.8f, 0.8f, 0.5f); // Lighter color for secondary lines
+        [Header("Grid Settings")] public int gridSize = 20;
+        public float gridSpacing = 1f;
+        public Color primaryGridColor = Color.gray;
+        public Color secondaryGridColor = new Color(0.8f, 0.8f, 0.8f, 0.5f);
 
         [Header("Axis Settings")] public float axisLength = 10f;
         public float axisThickness = 0.1f;
@@ -20,13 +19,11 @@ namespace Manipulator
         public Material highlightMaterial;
 
         private Material lineMaterial;
-        private GameObject xAxis, yAxis, zAxis;
 
         void OnDrawGizmos()
         {
             DrawGridGizmos();
             DrawAxesGizmos();
-            DrawAxisLabels();
         }
 
         void DrawGridGizmos()
@@ -35,13 +32,11 @@ namespace Manipulator
             {
                 Gizmos.color = (i % 5 == 0) ? primaryGridColor : secondaryGridColor;
 
-                // Lines parallel to X-axis
                 Gizmos.DrawLine(new Vector3(-gridSize * gridSpacing, 0, i * gridSpacing),
-                    new Vector3(gridSize * gridSpacing, 0, i * gridSpacing));
+                                new Vector3(gridSize * gridSpacing, 0, i * gridSpacing));
 
-                // Lines parallel to Z-axis
                 Gizmos.DrawLine(new Vector3(i * gridSpacing, 0, -gridSize * gridSpacing),
-                    new Vector3(i * gridSpacing, 0, gridSize * gridSpacing));
+                                new Vector3(i * gridSpacing, 0, gridSize * gridSpacing));
             }
         }
 
@@ -57,93 +52,46 @@ namespace Manipulator
             Gizmos.DrawLine(Vector3.zero, Vector3.forward * axisLength);
         }
 
-        void DrawAxisLabels()
-        {
-            GUIStyle labelStyle = new GUIStyle
-                { normal = { textColor = Color.black }, fontSize = 12, alignment = TextAnchor.MiddleCenter };
-
-            for (int i = 1; i <= axisLength; i++)
-            {
-                //Handles.Label(new Vector3(i, 0.1f, 0.1f), i.ToString(), labelStyle);
-                //Handles.Label(new Vector3(0.1f, i, 0.1f), i.ToString(), labelStyle);
-                //Handles.Label(new Vector3(0.1f, 0.1f, i), i.ToString(), labelStyle);
-            }
-        }
-
         void Start()
         {
-            DrawPlane();
-            DrawAxisLabelsPivot();
+            DrawAxisMarkers();
+            CreateGridPlane();
             CreateLineMaterial();
-            DrawAxes();
         }
 
-        void DrawPlane()
+        void DrawAxisMarkers()
         {
-            Vector3[][] planePoints = new Vector3[][]
+            for (int i = 1; i <= axisLength; i++)
             {
-                new Vector3[] { new Vector3(0, 0, 0), new Vector3(1, 0, 0), new Vector3(0, 1, 0) },
-                new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1) },
-                new Vector3[] { new Vector3(0, 0, 0), new Vector3(1, 0, 0), new Vector3(0, 0, 1) }
-            };
-
-            foreach (var points in planePoints)
-            {
-                GroupShape gs = new GroupShape();
-                ShapePlane shapePlane = new ShapePlane(new Point[]
-                {
-                    new Point(points[0], gs),
-                    new Point(points[1], gs),
-                    new Point(points[2], gs)
-                }, gridSize, gs);
-                shapePlane.GO.AddComponent<WorldComponents>();
+                CreatePoint(new Vector3(i, 0, 0), xAxisColor, $"X-{i}");
+                CreatePoint(new Vector3(0, i, 0), yAxisColor, $"Y-{i}");
+                CreatePoint(new Vector3(0, 0, i), zAxisColor, $"Z-{i}");
             }
         }
 
-// Draw labels for each axis at specified intervals
-        void DrawAxisLabelsPivot()
+        void CreatePoint(Vector3 pos, Color color, string name)
         {
-            // Draw labels on X-axis
-            for (int i = 1; i <= axisLength; i++)
+            var point = ShapeFactory.CreateShape("Point", pos);
+            point.name = name;
+            var renderer = point.GetComponent<MeshRenderer>();
+            if (renderer != null)
             {
-                CreatePoint(new Vector3(i, 0, 0), Color.red, "Label-X-" + i);
-            }
-
-            // Draw labels on Y-axis
-            for (int i = 1; i <= axisLength; i++)
-            {
-                GameObject go = CreatePoint(new Vector3(0, i, 0), Color.green, "Label-Y-" + i);
-                go.transform.rotation = Quaternion.Euler(90, 0, 0);
-            }
-
-            // Draw labels on Z-axis
-            for (int i = 1; i <= axisLength; i++)
-            {
-                CreatePoint(new Vector3(0, 0, i), Color.blue, "Label-Z-" + i);
+                renderer.material = new Material(defaultMaterial);
+                renderer.material.color = color;
             }
         }
 
-        GameObject CreatePoint(Vector3 pos, Color color, string name)
+        void CreateGridPlane()
         {
-            GameObject axis = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            axis.name = name;
-            axis.transform.parent = this.transform;
+            var p1 = (Point)ShapeFactory.CreateShape("Point", new Vector3(1, 0, 0));
+            var p2 = (Point)ShapeFactory.CreateShape("Point", new Vector3(0, 0, 1));
+            var p3 = (Point)ShapeFactory.CreateShape("Point", new Vector3(0, 0, 0));
 
-            // Position and scale the axis
-            axis.transform.localScale = Vector3.one * (0.1f);
-            axis.transform.position = pos;
-
-            // Apply material
-            Renderer renderer = axis.GetComponent<Renderer>();
-            renderer.material = new Material(defaultMaterial);
-            renderer.material.color = color;
-
-            // Add hover interaction
-            AxisHover hoverScript = axis.AddComponent<AxisHover>();
-            hoverScript.defaultMaterial = renderer.material;
-            hoverScript.highlightMaterial = highlightMaterial;
-
-            return axis;
+            var plane = (PlaneShape)ShapeFactory.CreateShape("Plane", Vector3.zero);
+            plane.AddPivot(p1);
+            plane.AddPivot(p2);
+            plane.AddPivot(p3);
+            plane.CompleteDraw();
         }
 
         void OnRenderObject()
@@ -160,14 +108,12 @@ namespace Manipulator
         void CreateLineMaterial()
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            //lineMaterial.renderQueue = 2000; // Default opaque queue
             lineMaterial = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
             lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             lineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
             lineMaterial.SetInt("_ZWrite", 0);
             lineMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
-            //lineMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
         }
 
         void DrawGrid()
@@ -181,52 +127,7 @@ namespace Manipulator
                 GL.Vertex(new Vector3(i * gridSpacing, 0, -gridSize * gridSpacing));
                 GL.Vertex(new Vector3(i * gridSpacing, 0, gridSize * gridSpacing));
             }
-
             GL.End();
-        }
-
-        void DrawAxes()
-        {
-            xAxis = CreateAxis(Vector3.right * axisLength, xAxisColor, "X-Axis");
-            yAxis = CreateAxis(Vector3.up * axisLength, yAxisColor, "Y-Axis");
-            zAxis = CreateAxis(Vector3.forward * axisLength, zAxisColor, "Z-Axis");
-        }
-
-        GameObject CreateAxis(Vector3 direction, Color color, string name)
-        {
-            GameObject axis = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            axis.name = name;
-            axis.transform.parent = this.transform;
-            axis.transform.localScale = new Vector3(axisThickness, direction.magnitude, axisThickness);
-            axis.transform.position = direction / 2;
-            axis.transform.up = direction.normalized;
-
-            Renderer renderer = axis.GetComponent<Renderer>();
-            renderer.material = new Material(defaultMaterial) { color = color };
-
-            AxisHover hoverScript = axis.AddComponent<AxisHover>();
-            hoverScript.defaultMaterial = renderer.material;
-            hoverScript.highlightMaterial = highlightMaterial;
-
-
-            return axis;
-        }
-
-        public class AxisHover : MonoBehaviour
-        {
-            public Material defaultMaterial;
-            public Material highlightMaterial;
-
-            void OnMouseEnter()
-            {
-                GetComponent<Renderer>().material = highlightMaterial;
-                GetComponent<Renderer>().material.color = defaultMaterial.color;
-            }
-
-            void OnMouseExit()
-            {
-                GetComponent<Renderer>().material = defaultMaterial;
-            }
         }
     }
 }
