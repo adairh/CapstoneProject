@@ -56,16 +56,16 @@ namespace Manipulator
             if (Input.GetKeyDown(KeyCode.Delete))
                 OnAction?.Invoke(UserAction.Delete, Input.mousePosition);
 
-            if (Input.GetKeyDown(KeyCode.Z) && Input.GetKey(KeyCode.LeftControl))
+            if (Input.GetKeyDown(KeyCode.Z) && Input.GetKey(KeyCode.LeftAlt))
                 UndoRedoManager.Instance.Undo();
 
-            if (Input.GetKeyDown(KeyCode.Y) && Input.GetKey(KeyCode.LeftControl))
+            if (Input.GetKeyDown(KeyCode.Y) && Input.GetKey(KeyCode.LeftAlt))
                 UndoRedoManager.Instance.Redo();
 
-            if (Input.GetKeyDown(KeyCode.S) && Input.GetKey(KeyCode.LeftControl))
+            if (Input.GetKeyDown(KeyCode.S) && Input.GetKey(KeyCode.LeftAlt))
                 SaveLoadManager.SaveAll();
 
-            if (Input.GetKeyDown(KeyCode.L) && Input.GetKey(KeyCode.LeftControl))
+            if (Input.GetKeyDown(KeyCode.L) && Input.GetKey(KeyCode.LeftAlt))
                 SaveLoadManager.LoadAll();
 
             if (Input.GetKeyDown(KeyCode.Z))

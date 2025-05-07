@@ -1,4 +1,5 @@
-﻿using UnityEngine; 
+﻿using System;
+using UnityEngine; 
 using Unity.Netcode;
 
 namespace Manipulator
@@ -21,7 +22,7 @@ namespace Manipulator
             base.Awake();
 
             name = $"Point_{ShapeId}";
-
+ 
             // Add mesh
             var mf = gameObject.AddComponent<MeshFilter>();
             var mr = gameObject.AddComponent<MeshRenderer>();
@@ -30,7 +31,7 @@ namespace Manipulator
 
             // Collider
             collider = GetComponent<SphereCollider>();
-            collider.radius = Radius;
+            //collider.radius = Radius;
             collider.center = Vector3.zero;
 
             // Constraint
@@ -43,6 +44,7 @@ namespace Manipulator
 
             // Settings (position)
             //AppendSettings(new PositionSetting(transform.position, this));
+            ShapeStorage.Register(this);
         }
 
         #endregion
@@ -52,28 +54,32 @@ namespace Manipulator
         /// <summary>
         /// Di chuyển point đến vị trí mới. Nếu silent = true, không gửi sự kiện NotifyChanged.
         /// </summary>
-        public override void MoveTo(Vector3 newPosition, bool silent = false)
+        public virtual void MoveTo(Vector3 newPosition, bool silent = false)
         {
-            if (!NetworkManager.Singleton.IsHost) return; // Chỉ server được phép gọi
+            if (transform.position == newPosition) return;
 
             Vector3 oldPosition = transform.position;
-            Vector3 delta = newPosition - oldPosition;
-
             transform.position = newPosition;
-            positionSync.syncedPosition.Value = newPosition;
-            UpdateDataFromTransform();
-
+            
+            Vector3 delta = newPosition - oldPosition;
 // ✅ Apply constraint với delta đúng
-            constraint.ApplyConstraint(this, delta);
-            ConstraintManager.Instance.ApplyConstraints(this, delta);
+            // constraint.ApplyConstraint(this, delta);
+            // ConstraintManager.Instance.ApplyConstraints(this, delta);
+            
+            // Gửi sync vị trí nếu là host
+            if (!silent && IsHost && TryGetComponent<NetworkPositionSync>(out var sync))
+            {
+                sync.syncedPosition.Value = newPosition;
+            }
 
-
+            // Ghi undo và thông báo thay đổi
             if (!silent)
             {
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(new MoveShapeAction(ShapeId, oldPosition, newPosition));
                 NotifyChanged();
             }
         }
+
 
         public Vector3 GetCurrentPosition() => transform.position;
 
@@ -134,5 +140,40 @@ namespace Manipulator
         }
 
         #endregion
+        
+        
+        
+        public static class Drawer
+        {
+            public static void UpdatePointInput()
+            {
+                if (!NetworkManager.Singleton.IsHost) return;
+
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
+
+                    string id = Guid.NewGuid().ToString();
+                    var data = new ShapeData
+                    {
+                        Id = id,
+                        Type = "Point",
+                        Position = pos,
+                        Rotation = Quaternion.identity,
+                        Scale = Vector3.one,
+                        ConnectedPoints = new(),
+                        Settings = new()
+                    };
+                    NetworkShapeSpawner.Instance.CreateShapeNetworked(data, out Shape p);
+
+                    PerformDrawing.ResetMode();
+                }
+            }
+        }
+        
+        
     }
+    
+    
+    
 }

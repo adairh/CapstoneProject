@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class Shape : MonoBehaviour
+    public class Shape : NetworkBehaviour
     {
         public string ShapeId { get; protected set; }
 
@@ -51,7 +52,8 @@ namespace Manipulator
                 ConnectedPoints = new List<string>(),
                 Settings = new Dictionary<string, string>()
             };
-
+ 
+            
             ApplyDataToTransform(Data);
             ShapeStorage.Register(this);
         }

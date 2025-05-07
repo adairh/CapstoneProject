@@ -18,7 +18,7 @@
 
         public void Redo()
         {
-            NetworkShapeSpawner.Instance.CreateShapeNetworked(Data);
+            NetworkShapeSpawner.Instance.CreateShapeNetworked(Data, out Shape s);
         }
     }
 }

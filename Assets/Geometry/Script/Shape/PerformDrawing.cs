@@ -1,137 +1,74 @@
-﻿using UnityEngine; 
+﻿// Refactored PerformDrawing.cs to support drawing mode via enum selector
+
+using UnityEngine;
+using System;
+using System.Collections.Generic;
+using Unity.Netcode;
 
 namespace Manipulator
 {
     public class PerformDrawing : MonoBehaviour
     {
-        [SerializeField] private Camera cam;
-        void Start() {
-            if (cam == null)
-                cam = Camera.main;
+        public static PerformDrawing Instance { get; private set; }
+
+        public enum DrawingMode
+        {
+            None,
+            Point,
+            Segment
         }
 
+        [Header("Drawing Mode")]
+        public DrawingMode drawingMode = DrawingMode.Segment;
+
+        private enum DragState { None, Dragging }
+        private DragState currentState = DragState.None;
+
+        private string pendingStartPointId;
         private Point currentStartPoint;
-        private Segment currentPreviewSegment;
+        private Segment previewSegment;
 
-        void Update()
+        private void Awake()
         {
-            if (Input.GetMouseButtonDown(0))
-                TryStartDrawing();
-
-            if (currentPreviewSegment != null)
-                UpdatePreviewSegment();
-
-            if (Input.GetMouseButtonUp(0))
-                FinishDrawing();
+            Debug.Log("PerformDrawing Awake on: " + gameObject.name);
+            Instance = this;
         }
 
-        void TryStartDrawing()
+
+        private void Update()
         {
-            if (!RaycastMouse(out Vector3 pos)) return;
+            if (!NetworkManager.Singleton.IsHost) return;
 
-
-            bool b = RaycastPoint(out Point existing);
-            
-            Debug.LogError(b);
-            
-            if (!b)
+            switch (drawingMode)
             {
-                var pointData = new ShapeData
-                {
-                    Id = System.Guid.NewGuid().ToString(),
-                    Type = "Point",
-                    Position = pos,
-                    Rotation = Quaternion.identity,
-                    Scale = Vector3.one,
-                    ConnectedPoints = new System.Collections.Generic.List<string>(),
-                    Settings = new System.Collections.Generic.Dictionary<string, string>()
-                };
-
-                NetworkShapeSpawner.Instance.CreateShapeNetworked(pointData);
-                existing = ShapeStorage.GetById(pointData.Id) as Point; // may not resolve immediately on client
-                
-                currentStartPoint = existing;
+                case DrawingMode.Point:
+                    Point.Drawer.UpdatePointInput();
+                    break;
+                case DrawingMode.Segment:
+                    Segment.Drawer.UpdateSegmentInput();
+                    break;
             }
-
-            var segData = new ShapeData
-            {
-                Id = System.Guid.NewGuid().ToString(),
-                Type = "Segment",
-                Position = pos,
-                Rotation = Quaternion.identity,
-                Scale = Vector3.one,
-                ConnectedPoints =
-                    new System.Collections.Generic.List<string> { existing.ShapeId, existing.ShapeId },
-                Settings = new System.Collections.Generic.Dictionary<string, string>()
-            };
-            NetworkShapeSpawner.Instance.CreateShapeNetworked(segData);
-            currentPreviewSegment = ShapeStorage.GetById(segData.Id) as Segment;
-            
         }
 
-        void UpdatePreviewSegment()
+        public static bool RaycastMouse(out Vector3 hitPos)
         {
-            if (!RaycastMouse(out Vector3 pos)) return;
-            currentPreviewSegment.EndPoint.MoveTo(pos);
-        }
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition); 
 
-        void FinishDrawing()
-        {
-            if (currentStartPoint == null || currentPreviewSegment == null)
-                return;
-
-            Point end;
-            if (!RaycastPoint(out end))
-            {
-                if (!RaycastMouse(out Vector3 pos)) return;
-
-                var endPointData = new ShapeData
-                {
-                    Id = System.Guid.NewGuid().ToString(),
-                    Type = "Point",
-                    Position = pos,
-                    Rotation = Quaternion.identity,
-                    Scale = Vector3.one,
-                    ConnectedPoints = new System.Collections.Generic.List<string>(),
-                    Settings = new System.Collections.Generic.Dictionary<string, string>()
-                };
-
-                NetworkShapeSpawner.Instance.CreateShapeNetworked(endPointData);
-                end = ShapeStorage.GetById(endPointData.Id) as Point;
-            }
-
-            currentPreviewSegment.SetEndpoints(currentStartPoint, end);
-
-            currentStartPoint = null;
-            currentPreviewSegment = null;
-        }
-
-        bool RaycastMouse(out Vector3 pos)
-        {
-            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                pos = hit.point;
+                hitPos = hit.point;
                 return true;
             }
 
-            pos = Vector3.zero;
+            hitPos = Vector3.zero;
             return false;
         }
 
-        bool RaycastPoint(out Point point)
-        {
-            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
-            {
-                point = hit.collider.GetComponent<Point>();
-                if (point != null)
-                    return true;
-                else return false;
-            }
 
-            point = null;
-            return false;
+        public static void ResetMode()
+        {
+            if (Instance != null)
+                Instance.drawingMode = DrawingMode.None;
         }
     }
 }

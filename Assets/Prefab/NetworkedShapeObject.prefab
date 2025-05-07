@@ -11,8 +11,6 @@ GameObject:
   - component: {fileID: 6989000157711788913}
   - component: {fileID: 3460690264371863147}
   - component: {fileID: 3652175504686388098}
-  - component: {fileID: -4429213596704368000}
-  - component: {fileID: -3651156360514498103}
   m_Layer: 0
   m_Name: NetworkedShapeObject
   m_TagString: Untagged
@@ -70,27 +68,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncedPosition:
     m_InternalValue: {x: 0, y: 0, z: 0}
---- !u!114 &-4429213596704368000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7128279299386033603}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 18c2abbc81564293b09bcfa7a78b89b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &-3651156360514498103
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7128279299386033603}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 676a1653122d4d6b81cc1e6945f364d7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

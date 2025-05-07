@@ -23,12 +23,12 @@ namespace Manipulator
 
         public override void OnNetworkSpawn()
         {
-            Debug.Log($"[NetworkShapeSpawner] Spawned. IsServer: {IsServer}, IsClient: {IsClient}, IsHost: {IsHost}");
+            Debug.Log($"[NetworkShapeSpawner] Spawned. IsServer: {IsHost}, IsClient: {IsClient}, IsHost: {IsHost}");
         }
 
         private void Start()
         {
-            if (!IsSpawned && NetworkManager.Singleton.IsServer)
+            if (!IsSpawned && NetworkManager.Singleton.IsHost)
             {
                 // Nếu object này được đặt sẵn trong scene, thì cần gọi spawn bằng tay
                 var netObj = GetComponent<NetworkObject>();
@@ -51,7 +51,7 @@ namespace Manipulator
         [ClientRpc]
         private void SpawnShapeForAllClientsClientRpc(string json)
         {
-            if (IsServer) return; // Server đã có shape rồi
+            if (IsHost) return; // Server đã có shape rồi
             var data = JsonUtility.FromJson<ShapeData>(json);
             var shape = ShapeFactory.CreateFromData(data);
 
@@ -59,23 +59,30 @@ namespace Manipulator
             {
                 var a = ShapeStorage.GetById(data.ConnectedPoints[0]) as Point;
                 var b = ShapeStorage.GetById(data.ConnectedPoints[1]) as Point;
-                if (a && b) segment.SetEndpoints(a, b);
+                if (a && b) {
+                    segment.SetStartPoint(a);  
+                    segment.SetEndPoint(b);  
+                }
             }
         }
 
-        public void CreateShapeNetworked(ShapeData data)
+        public void CreateShapeNetworked(ShapeData data, out Shape shape)
         {
             string json = JsonUtility.ToJson(data);
 
-            if (IsServer)
+            Shape temp = null;
+            
+            if (IsHost)
             {
-                ShapeFactory.CreateFromData(data);
+                temp = ShapeFactory.CreateFromData(data);
                 SpawnShapeForAllClientsClientRpc(json);
             }
             else
             {
                 RequestCreateShapeServerRpc(json);
             }
+
+            shape = temp;
         }
     }
 }
