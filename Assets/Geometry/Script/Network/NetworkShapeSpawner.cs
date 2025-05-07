@@ -1,5 +1,5 @@
 ﻿using Unity.Netcode;
-using UnityEngine; 
+using UnityEngine;
 
 namespace Manipulator
 {
@@ -9,8 +9,35 @@ namespace Manipulator
 
         private void Awake()
         {
-            if (Instance == null) Instance = this;
-            else Destroy(gameObject);
+            if (Instance == null)
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
+            else
+            {
+                Destroy(gameObject);
+                return;
+            }
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            Debug.Log($"[NetworkShapeSpawner] Spawned. IsServer: {IsServer}, IsClient: {IsClient}, IsHost: {IsHost}");
+        }
+
+        private void Start()
+        {
+            if (!IsSpawned && NetworkManager.Singleton.IsServer)
+            {
+                // Nếu object này được đặt sẵn trong scene, thì cần gọi spawn bằng tay
+                var netObj = GetComponent<NetworkObject>();
+                if (netObj != null && !netObj.IsSpawned)
+                {
+                    netObj.Spawn();
+                    Debug.Log("[NetworkShapeSpawner] Manually spawned in Start().");
+                }
+            }
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -21,12 +48,10 @@ namespace Manipulator
             SpawnShapeForAllClientsClientRpc(json);
         }
 
-
         [ClientRpc]
         private void SpawnShapeForAllClientsClientRpc(string json)
         {
-            if (IsServer) return; // Server đã tự tạo shape rồi
-
+            if (IsServer) return; // Server đã có shape rồi
             var data = JsonUtility.FromJson<ShapeData>(json);
             var shape = ShapeFactory.CreateFromData(data);
 
@@ -37,7 +62,6 @@ namespace Manipulator
                 if (a && b) segment.SetEndpoints(a, b);
             }
         }
-
 
         public void CreateShapeNetworked(ShapeData data)
         {
@@ -53,6 +77,5 @@ namespace Manipulator
                 RequestCreateShapeServerRpc(json);
             }
         }
-
     }
 }

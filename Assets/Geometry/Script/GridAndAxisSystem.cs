@@ -4,130 +4,75 @@ namespace Manipulator
 {
     public class GridAndAxisSystem : MonoBehaviour
     {
-        [Header("Grid Settings")] public int gridSize = 20;
+        [Header("Grid Settings")] public int gridSize = 10;
         public float gridSpacing = 1f;
-        public Color primaryGridColor = Color.gray;
-        public Color secondaryGridColor = new Color(0.8f, 0.8f, 0.8f, 0.5f);
+        public Material planeMaterial;
+        public Material axisMaterial;
+        public Material axisHighlightMaterial;
+        public Material markerMaterial;
 
-        [Header("Axis Settings")] public float axisLength = 10f;
-        public float axisThickness = 0.1f;
-        public Color xAxisColor = Color.red;
-        public Color yAxisColor = Color.green;
-        public Color zAxisColor = Color.blue;
+        [Header("Colors")]
+        public Color xColor = Color.red;
+        public Color yColor = Color.green;
+        public Color zColor = Color.blue;
 
-        public Material defaultMaterial;
-        public Material highlightMaterial;
-
-        private Material lineMaterial;
-
-        void OnDrawGizmos()
+        private void Start()
         {
-            DrawGridGizmos();
-            DrawAxesGizmos();
+            CreateAxisWithMarkers(Vector3.right, xColor, "X-Axis");
+            CreateAxisWithMarkers(Vector3.up, yColor, "Y-Axis");
+            CreateAxisWithMarkers(Vector3.forward, zColor, "Z-Axis");
+
+            CreatePlane(Vector3.right, Vector3.forward, "Plane_OXY");
+            CreatePlane(Vector3.up, Vector3.forward, "Plane_OYZ");
+            CreatePlane(Vector3.right, Vector3.up, "Plane_OXZ");
         }
 
-        void DrawGridGizmos()
+        void CreateAxisWithMarkers(Vector3 direction, Color color, string name)
         {
+            var axis = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            axis.name = name;
+            axis.transform.SetParent(transform);
+            axis.transform.position = new Vector3(0, 0, 0);
+            axis.transform.up = direction;
+            axis.transform.localScale = new Vector3(0.05f, gridSize, 0.05f);
+
+            var renderer = axis.GetComponent<Renderer>();
+            renderer.material = new Material(axisMaterial) { color = color };
+
             for (int i = -gridSize; i <= gridSize; i++)
             {
-                Gizmos.color = (i % 5 == 0) ? primaryGridColor : secondaryGridColor;
-
-                Gizmos.DrawLine(new Vector3(-gridSize * gridSpacing, 0, i * gridSpacing),
-                                new Vector3(gridSize * gridSpacing, 0, i * gridSpacing));
-
-                Gizmos.DrawLine(new Vector3(i * gridSpacing, 0, -gridSize * gridSpacing),
-                                new Vector3(i * gridSpacing, 0, gridSize * gridSpacing));
+                var marker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                marker.name = name + "_Marker_" + i;
+                marker.transform.SetParent(transform);
+                marker.transform.position = direction * i;
+                marker.transform.localScale = Vector3.one * 0.1f;
+                var mr = marker.GetComponent<Renderer>();
+                mr.material = new Material(markerMaterial) { color = color };
             }
         }
 
-        void DrawAxesGizmos()
+        void CreatePlane(Vector3 axis1, Vector3 axis2, string name)
         {
-            Gizmos.color = xAxisColor;
-            Gizmos.DrawLine(Vector3.zero, Vector3.right * axisLength);
+            Vector3 p1 = Vector3.zero;
+            Vector3 p2 = axis1 * gridSize;
+            Vector3 p3 = axis2 * gridSize;
 
-            Gizmos.color = yAxisColor;
-            Gizmos.DrawLine(Vector3.zero, Vector3.up * axisLength);
-
-            Gizmos.color = zAxisColor;
-            Gizmos.DrawLine(Vector3.zero, Vector3.forward * axisLength);
-        }
-
-        void Start()
-        {
-            DrawAxisMarkers();
-            CreateGridPlane();
-            CreateLineMaterial();
-        }
-
-        void DrawAxisMarkers()
-        {
-            for (int i = 1; i <= axisLength; i++)
-            {
-                CreatePoint(new Vector3(i, 0, 0), xAxisColor, $"X-{i}");
-                CreatePoint(new Vector3(0, i, 0), yAxisColor, $"Y-{i}");
-                CreatePoint(new Vector3(0, 0, i), zAxisColor, $"Z-{i}");
-            }
-        }
-
-        void CreatePoint(Vector3 pos, Color color, string name)
-        {
-            var point = ShapeFactory.CreateShape("Point", pos);
-            point.name = name;
-            var renderer = point.GetComponent<MeshRenderer>();
-            if (renderer != null)
-            {
-                renderer.material = new Material(defaultMaterial);
-                renderer.material.color = color;
-            }
-        }
-
-        void CreateGridPlane()
-        {
-            var p1 = (Point)ShapeFactory.CreateShape("Point", new Vector3(1, 0, 0));
-            var p2 = (Point)ShapeFactory.CreateShape("Point", new Vector3(0, 0, 1));
-            var p3 = (Point)ShapeFactory.CreateShape("Point", new Vector3(0, 0, 0));
+            var point1 = (Point)ShapeFactory.CreateShape("Point", p1);
+            var point2 = (Point)ShapeFactory.CreateShape("Point", p2);
+            var point3 = (Point)ShapeFactory.CreateShape("Point", p3);
 
             var plane = (PlaneShape)ShapeFactory.CreateShape("Plane", Vector3.zero);
-            plane.AddPivot(p1);
-            plane.AddPivot(p2);
-            plane.AddPivot(p3);
+            plane.name = name;
+            plane.AddPivot(point1);
+            plane.AddPivot(point2);
+            plane.AddPivot(point3);
             plane.CompleteDraw();
-        }
 
-        void OnRenderObject()
-        {
-            if (!lineMaterial) CreateLineMaterial();
-
-            lineMaterial.SetPass(0);
-            GL.PushMatrix();
-            GL.MultMatrix(transform.localToWorldMatrix);
-            DrawGrid();
-            GL.PopMatrix();
-        }
-
-        void CreateLineMaterial()
-        {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            lineMaterial = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
-            lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            lineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-            lineMaterial.SetInt("_ZWrite", 0);
-            lineMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
-        }
-
-        void DrawGrid()
-        {
-            GL.Begin(GL.LINES);
-            for (int i = -gridSize; i <= gridSize; i++)
+            var renderer = plane.GetComponent<MeshRenderer>();
+            if (renderer)
             {
-                GL.Color((i % 5 == 0) ? primaryGridColor : secondaryGridColor);
-                GL.Vertex(new Vector3(-gridSize * gridSpacing, 0, i * gridSpacing));
-                GL.Vertex(new Vector3(gridSize * gridSpacing, 0, i * gridSpacing));
-                GL.Vertex(new Vector3(i * gridSpacing, 0, -gridSize * gridSpacing));
-                GL.Vertex(new Vector3(i * gridSpacing, 0, gridSize * gridSpacing));
+                renderer.material = new Material(planeMaterial);
             }
-            GL.End();
         }
     }
 }

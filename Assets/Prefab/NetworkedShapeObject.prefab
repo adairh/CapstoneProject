@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 6989000157711788913}
   - component: {fileID: 3460690264371863147}
   - component: {fileID: 3652175504686388098}
+  - component: {fileID: -4429213596704368000}
+  - component: {fileID: -3651156360514498103}
   m_Layer: 0
   m_Name: NetworkedShapeObject
   m_TagString: Untagged
@@ -45,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 529133309
+  GlobalObjectIdHash: 108254581
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -66,15 +68,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fced4546d2833f147b7b4c6d64036155, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shapeType:
-    m_InternalValue: 0
-  startPoint:
+  syncedPosition:
     m_InternalValue: {x: 0, y: 0, z: 0}
-  currentPoint:
-    m_InternalValue: {x: 0, y: 0, z: 0}
-  isDrawing:
-    m_InternalValue: 0
-  isFinalized:
-    m_InternalValue: 0
-  ownerClientId:
-    m_InternalValue: 18446744073709551615
+--- !u!114 &-4429213596704368000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7128279299386033603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18c2abbc81564293b09bcfa7a78b89b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-3651156360514498103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7128279299386033603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 676a1653122d4d6b81cc1e6945f364d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

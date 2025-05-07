@@ -16,7 +16,7 @@ namespace Manipulator
 
         private void Update()
         {
-            if (IsServer)
+            if (IsHost)
             {
                 syncedPosition.Value = target.position;
             }

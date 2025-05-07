@@ -54,7 +54,7 @@ namespace Manipulator
         /// </summary>
         public override void MoveTo(Vector3 newPosition, bool silent = false)
         {
-            if (!NetworkManager.Singleton.IsServer) return; // Chỉ server được phép gọi
+            if (!NetworkManager.Singleton.IsHost) return; // Chỉ server được phép gọi
 
             Vector3 oldPosition = transform.position;
             Vector3 delta = newPosition - oldPosition;

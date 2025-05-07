@@ -18,7 +18,7 @@ namespace Manipulator
         {
             UndoRedoManager.Instance.Do(action);
 
-            if (IsServer)
+            if (IsHost)
             {
                 switch (action)
                 {
@@ -38,7 +38,7 @@ namespace Manipulator
         [ClientRpc]
         private void BroadcastMoveShapeClientRpc(string shapeId, Vector3 pos)
         {
-            if (IsServer) return;
+            if (IsHost) return;
             var shape = ShapeStorage.GetById(shapeId);
             shape?.MoveTo(pos, silent: true);
         }
@@ -46,7 +46,7 @@ namespace Manipulator
         [ClientRpc]
         private void BroadcastDeleteShapeClientRpc(string shapeId)
         {
-            if (IsServer) return;
+            if (IsHost) return;
             var shape = ShapeStorage.GetById(shapeId);
             if (shape != null)
                 shape.DestroyShape();
@@ -55,7 +55,7 @@ namespace Manipulator
         [ClientRpc]
         private void BroadcastCreateShapeClientRpc(string json)
         {
-            if (IsServer) return;
+            if (IsHost) return;
             var data = JsonUtility.FromJson<ShapeData>(json);
             ShapeFactory.CreateFromData(data);
         }

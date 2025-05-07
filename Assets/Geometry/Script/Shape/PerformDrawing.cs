@@ -29,7 +29,12 @@ namespace Manipulator
         {
             if (!RaycastMouse(out Vector3 pos)) return;
 
-            if (!RaycastPoint(out Point existing))
+
+            bool b = RaycastPoint(out Point existing);
+            
+            Debug.LogError(b);
+            
+            if (!b)
             {
                 var pointData = new ShapeData
                 {
@@ -44,9 +49,9 @@ namespace Manipulator
 
                 NetworkShapeSpawner.Instance.CreateShapeNetworked(pointData);
                 existing = ShapeStorage.GetById(pointData.Id) as Point; // may not resolve immediately on client
+                
+                currentStartPoint = existing;
             }
-
-            currentStartPoint = existing;
 
             var segData = new ShapeData
             {
@@ -55,12 +60,13 @@ namespace Manipulator
                 Position = pos,
                 Rotation = Quaternion.identity,
                 Scale = Vector3.one,
-                ConnectedPoints = new System.Collections.Generic.List<string> { existing.ShapeId, existing.ShapeId },
+                ConnectedPoints =
+                    new System.Collections.Generic.List<string> { existing.ShapeId, existing.ShapeId },
                 Settings = new System.Collections.Generic.Dictionary<string, string>()
             };
-
             NetworkShapeSpawner.Instance.CreateShapeNetworked(segData);
             currentPreviewSegment = ShapeStorage.GetById(segData.Id) as Segment;
+            
         }
 
         void UpdatePreviewSegment()
@@ -119,7 +125,9 @@ namespace Manipulator
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 point = hit.collider.GetComponent<Point>();
-                return point != null;
+                if (point != null)
+                    return true;
+                else return false;
             }
 
             point = null;

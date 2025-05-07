@@ -383,12 +383,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!1 &98838646 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7128279299386033603, guid: fca09b510ce0e1e41857f2e41013a9be,
-    type: 3}
-  m_PrefabInstance: {fileID: 5501393593742880859}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &120214204
 GameObject:
   m_ObjectHideFlags: 0
@@ -4824,15 +4818,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridSize: 20
   gridSpacing: 1
-  primaryGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  secondaryGridColor: {r: 0.8, g: 0.8, b: 0.8, a: 0.5}
-  axisLength: 20
-  axisThickness: 0.1
-  xAxisColor: {r: 1, g: 0, b: 0, a: 1}
-  yAxisColor: {r: 0, g: 1, b: 0, a: 1}
-  zAxisColor: {r: 0, g: 0, b: 1, a: 1}
-  defaultMaterial: {fileID: 2100000, guid: 5d39cac8ee656894cb45fee43590af2d, type: 2}
-  highlightMaterial: {fileID: 2100000, guid: 67192b62f4b2e2a439bb87ae307700c0, type: 2}
+  planeMaterial: {fileID: 2100000, guid: a0dfaf0497ab5334a99165f16b697e6e, type: 3}
+  axisMaterial: {fileID: 2100006, guid: 06c4131835f65024586454416f6b1f66, type: 3}
+  axisHighlightMaterial: {fileID: 2100008, guid: c49b578c54f48fd47aca6b1eda6be743,
+    type: 3}
+  markerMaterial: {fileID: 2100006, guid: 598a1f45fefa08846b93be35e98f166e, type: 3}
+  xColor: {r: 1, g: 0, b: 0, a: 1}
+  yColor: {r: 0, g: 1, b: 0, a: 1}
+  zColor: {r: 0, g: 0, b: 1, a: 1}
 --- !u!4 &857008726
 Transform:
   m_ObjectHideFlags: 0
@@ -5894,8 +5887,8 @@ GameObject:
   - component: {fileID: 1045046958}
   - component: {fileID: 1045046959}
   - component: {fileID: 1045046960}
-  - component: {fileID: 1045046962}
-  - component: {fileID: 1045046961}
+  - component: {fileID: 1045046964}
+  - component: {fileID: 1045046963}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -5955,10 +5948,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0642ab912fa05a043a444da1028672f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shapeNetworkPrefab: {fileID: 98838646}
-  CurrentDragState: 0
-  AllHoverMode: 0
-  ModeStraight: 0
 --- !u!114 &1045046960
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5971,7 +5960,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79f20140dbc34bc4a520904f9aee1856, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1045046961
+--- !u!114 &1045046963
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5980,10 +5969,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1045046952}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 163c04cb8f7643cb9e25161c938efcde, type: 3}
+  m_Script: {fileID: 11500000, guid: f74d005065a042d79cc1072693451fe0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1045046962
+--- !u!114 &1045046964
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5992,18 +5981,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1045046952}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Script: {fileID: 11500000, guid: 4061d6855daf4357a5286ced493d69c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 570832160
-  InScenePlacedSourceGlobalObjectIdHash: 0
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 1
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
 --- !u!1 &1052545173
 GameObject:
   m_ObjectHideFlags: 0
@@ -10948,53 +10928,15 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1749356545}
-  - component: {fileID: 1749356544}
   - component: {fileID: 1749356546}
+  - component: {fileID: 1749356547}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1749356544
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1749356543}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 593a2fe42fa9d37498c96f9a383b6521, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  NetworkConfig:
-    ProtocolVersion: 0
-    NetworkTransport: {fileID: 1749356546}
-    PlayerPrefab: {fileID: 4787831756258306898, guid: e6222ea919b23564b966676b4a1d06c9,
-      type: 3}
-    Prefabs:
-      NetworkPrefabsLists:
-      - {fileID: 11400000, guid: d8532799bf3d49f4eb2a3475e55bd199, type: 2}
-    TickRate: 30
-    ClientConnectionBufferTimeout: 10
-    ConnectionApproval: 0
-    ConnectionData: 
-    EnableTimeResync: 0
-    TimeResyncInterval: 30
-    EnsureNetworkVariableLengthSafety: 0
-    EnableSceneManagement: 1
-    ForceSamePrefabs: 1
-    RecycleNetworkIds: 1
-    NetworkIdRecycleDelay: 120
-    RpcHashSize: 0
-    LoadSceneTimeOut: 120
-    SpawnTimeout: 10
-    EnableNetworkLogs: 1
-    OldPrefabList: []
-  RunInBackground: 1
-  LogLevel: 1
+  m_IsActive: 0
 --- !u!4 &1749356545
 Transform:
   m_ObjectHideFlags: 0
@@ -11037,6 +10979,43 @@ MonoBehaviour:
     PacketDelayMS: 0
     PacketJitterMS: 0
     PacketDropRate: 0
+--- !u!114 &1749356547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1749356543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 593a2fe42fa9d37498c96f9a383b6521, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  NetworkConfig:
+    ProtocolVersion: 0
+    NetworkTransport: {fileID: 0}
+    PlayerPrefab: {fileID: 0}
+    Prefabs:
+      NetworkPrefabsLists:
+      - {fileID: 11400000, guid: d8532799bf3d49f4eb2a3475e55bd199, type: 2}
+    TickRate: 30
+    ClientConnectionBufferTimeout: 10
+    ConnectionApproval: 0
+    ConnectionData: 
+    EnableTimeResync: 0
+    TimeResyncInterval: 30
+    EnsureNetworkVariableLengthSafety: 0
+    EnableSceneManagement: 1
+    ForceSamePrefabs: 1
+    RecycleNetworkIds: 1
+    NetworkIdRecycleDelay: 120
+    RpcHashSize: 0
+    LoadSceneTimeOut: 120
+    SpawnTimeout: 10
+    EnableNetworkLogs: 1
+    OldPrefabList: []
+  RunInBackground: 1
+  LogLevel: 1
 --- !u!1 &1762687294
 GameObject:
   m_ObjectHideFlags: 0
@@ -11659,6 +11638,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1983399150}
   - component: {fileID: 1983399149}
+  - component: {fileID: 1983399151}
+  - component: {fileID: 1983399152}
   m_Layer: 0
   m_Name: GameLobby
   m_TagString: Untagged
@@ -11695,6 +11676,70 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1983399151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1983399148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 593a2fe42fa9d37498c96f9a383b6521, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  NetworkConfig:
+    ProtocolVersion: 0
+    NetworkTransport: {fileID: 1983399152}
+    PlayerPrefab: {fileID: 0}
+    Prefabs:
+      NetworkPrefabsLists:
+      - {fileID: 11400000, guid: d8532799bf3d49f4eb2a3475e55bd199, type: 2}
+    TickRate: 30
+    ClientConnectionBufferTimeout: 10
+    ConnectionApproval: 0
+    ConnectionData: 
+    EnableTimeResync: 0
+    TimeResyncInterval: 30
+    EnsureNetworkVariableLengthSafety: 0
+    EnableSceneManagement: 1
+    ForceSamePrefabs: 1
+    RecycleNetworkIds: 1
+    NetworkIdRecycleDelay: 120
+    RpcHashSize: 0
+    LoadSceneTimeOut: 120
+    SpawnTimeout: 10
+    EnableNetworkLogs: 1
+    OldPrefabList: []
+  RunInBackground: 1
+  LogLevel: 1
+--- !u!114 &1983399152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1983399148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6960e84d07fb87f47956e7a81d71c4e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ProtocolType: 0
+  m_MaxPacketQueueSize: 128
+  m_MaxPayloadSize: 6144
+  m_HeartbeatTimeoutMS: 500
+  m_ConnectTimeoutMS: 1000
+  m_MaxConnectAttempts: 60
+  m_DisconnectTimeoutMS: 30000
+  ConnectionData:
+    Address: 127.0.0.1
+    Port: 7777
+    ServerListenAddress: 127.0.0.1
+  DebugSimulator:
+    PacketDelayMS: 0
+    PacketJitterMS: 0
+    PacketDropRate: 0
 --- !u!1001 &1984488534
 PrefabInstance:
   m_ObjectHideFlags: 0
