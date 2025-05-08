@@ -14,9 +14,9 @@ namespace Manipulator
             else Destroy(gameObject);
         }
 
-        public void DoAndBroadcast(IUndoableAction action)
+        public void DoAndBroadcast(IUndoableAction action, bool queue = true)
         {
-            UndoRedoManager.Instance.Do(action);
+            if (queue) UndoRedoManager.Instance.Do(action);
 
             if (IsHost)
             {
@@ -29,7 +29,7 @@ namespace Manipulator
                         BroadcastDeleteShapeClientRpc(dsa.GetShape().ShapeId);
                         break;
                     case CreateShapeAction csa:
-                        BroadcastCreateShapeClientRpc(JsonUtility.ToJson(csa.Data));
+                        BroadcastCreateShapeClientRpc(JsonUtility.ToJson(csa.data));
                         break;
                 }
             }

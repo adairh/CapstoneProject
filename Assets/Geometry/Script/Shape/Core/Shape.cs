@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Animations;
 
 namespace Manipulator
 {
@@ -63,6 +64,29 @@ namespace Manipulator
             ShapeStorage.Unregister(this);
         }
 
+        public virtual void Dispose()
+        {
+            // 1. Gỡ khỏi storage
+            ShapeStorage.Unregister(this);
+
+            /*// 2. Gỡ tất cả pivot listeners (nếu có)
+            foreach (var pivot in pivotPoints)
+            {
+                pivot.OnPositionChanged -= OnPivotChanged;
+            }
+
+            // 3. Cleanup constraints (nếu có)
+            if (this is IConstraint constraint)
+            {
+                ConstraintManager.Instance.RemoveConstraint(constraint);
+            }*/
+
+            // 4. Hủy GameObject
+            if (gameObject != null)
+                GameObject.Destroy(gameObject);
+        }
+        
+        
         
         #endregion
 
@@ -70,6 +94,7 @@ namespace Manipulator
 
         protected virtual void ApplyDataToTransform(ShapeData data)
         {
+            ShapeId = data.Id; 
             transform.position = data.Position;
             transform.rotation = data.Rotation;
             transform.localScale = data.Scale;
@@ -178,14 +203,14 @@ namespace Manipulator
 
         public bool isInternalMove = false;
 
-        public virtual void MoveTo(Vector3 newPosition, bool silent = false)
+        public virtual void MoveTo(Vector3 newPosition, bool silent = false, bool queue = true)
         {
             if (transform.position == newPosition) return;
 
             if (!silent && !isInternalMove)
             {
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(
-                    new MoveShapeAction(ShapeId, transform.position, newPosition)
+                    new MoveShapeAction(ShapeId, transform.position, newPosition), queue
                 );
             }
 
@@ -199,5 +224,9 @@ namespace Manipulator
 
 
         #endregion
+
+        
+        
+
     }
 }

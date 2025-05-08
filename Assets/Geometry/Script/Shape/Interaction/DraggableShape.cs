@@ -63,7 +63,7 @@ namespace Manipulator
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 Vector3 targetPos = hit.point + offset;
-                shape.MoveTo(targetPos);
+                shape.MoveTo(targetPos, queue: false);
                 //Debug.Log($"[DraggableShape] Dragging shape ID={shape.ShapeId} to {targetPos}");
             }
             else

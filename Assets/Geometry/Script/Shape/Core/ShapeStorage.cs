@@ -29,6 +29,9 @@ namespace Manipulator
         }
 
         
+        public static bool Contains(string id) =>
+            idLookup.ContainsKey(id);
+
         public static Shape GetById(string id) =>
             idLookup.TryGetValue(id, out var s) ? s : null;
 
