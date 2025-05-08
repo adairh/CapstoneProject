@@ -31,6 +31,18 @@ namespace Manipulator
             var go = new GameObject(type);
             var shape = go.AddComponent<T>();
             shape.InitializeNew(type, position);
+            if (type == "Plane") return shape;
+            
+            var drag = go.AddComponent<DraggableShape>();
+            if (drag == null)
+            {
+                Debug.LogError($"[Create] Failed to add DraggableShape to {type}");
+            }
+            else
+            {
+                drag.SetShape(shape);
+            }
+ 
             return shape;
         }
 

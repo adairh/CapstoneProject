@@ -24,9 +24,14 @@ namespace Manipulator
 
         public void Redo()
         {
-            var shape = ShapeStorage.GetById(ShapeId);
-            shape?.MoveTo(NewPosition, silent: true);
+            Shape shape = ShapeStorage.GetById(ShapeId);
+            if (shape == null) return;
+
+            shape.isInternalMove = true;
+            shape.MoveTo(NewPosition, silent: true);
+            shape.isInternalMove = false;
         }
+
     }
 
 }

@@ -1,4 +1,4 @@
-﻿// Refactored Segment.cs — ADD DEBUG LOGGING FOR DRAWING FLOW
+﻿// Refactored Segment.cs — ADD DEBUG LOGGING FOR DRAWING FLOW with SNAP POINTS
 
 using UnityEngine;
 using Unity.Netcode;
@@ -14,24 +14,18 @@ namespace Manipulator
 
         private GameObject visual;
         private bool isPreview = false;
-        private NetworkPositionSync positionSync;
 
         protected override void Awake()
         {
             base.Awake();
             visual = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             visual.transform.SetParent(transform);
-            visual.GetComponent<Renderer>().material = MaterialLibrary.Get(MaterialType.Default); 
-            
-            if (!TryGetComponent(out positionSync))
-                positionSync = gameObject.AddComponent<NetworkPositionSync>();
-            //DestroyImmediate(visual.GetComponent<Collider>());
-            ShapeStorage.Register(this);
+            visual.GetComponent<Renderer>().material = MaterialLibrary.Get(MaterialType.Default);
+            DestroyImmediate(visual.GetComponent<Collider>());
         }
 
         private void Update()
         {
-            Debug.Log($"[Segment.Update] SEG ID={ShapeId}, isPreview={isPreview}, Start={StartPoint != null}, End={EndPoint != null}");
             if (!isPreview || StartPoint == null || visual == null) return;
 
             Vector3 a = StartPoint.transform.position;
@@ -44,21 +38,14 @@ namespace Manipulator
             visual.transform.rotation = Quaternion.LookRotation(dir);
             visual.transform.Rotate(90, 0, 0);
             visual.transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
-
-            Debug.Log($"[Segment.Update] visual.position={visual.transform.position}, scale={visual.transform.localScale}");
         }
 
-        public void MarkAsPreview()
-        {
-            isPreview = true;
-            Debug.Log($"[Segment.MarkAsPreview] Called on segment ID = {ShapeId}");
-        }
+        public void MarkAsPreview() => isPreview = true;
 
         public void SetStartPoint(Point a)
         {
             StartPoint = a;
             AddPivot(a);
-            Debug.Log($"[Segment.SetStartPoint] Segment {ShapeId} -> StartPoint = {a.ShapeId}");
         }
 
         public void SetEndPoint(Point b)
@@ -66,9 +53,7 @@ namespace Manipulator
             EndPoint = b;
             AddPivot(b);
             UpdateVisual();
-            Debug.Log($"[Segment.SetEndPoint] Segment {ShapeId} -> EndPoint = {b.ShapeId}");
         }
-
 
         private void UpdateVisual()
         {
@@ -84,8 +69,6 @@ namespace Manipulator
             visual.transform.rotation = Quaternion.LookRotation(dir);
             visual.transform.Rotate(90, 0, 0);
             visual.transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
-
-            Debug.Log($"[Segment.UpdateVisual] updated segment between {a} and {b}, scale={length}");
         }
 
         protected override void OnPivotChanged(Point pt)
@@ -98,9 +81,10 @@ namespace Manipulator
         {
             var a = ShapeStorage.GetById(Data.ConnectedPoints[0]) as Point;
             var b = ShapeStorage.GetById(Data.ConnectedPoints[1]) as Point;
-            if (a != null && b != null) {
-                SetStartPoint(a);  
-                SetEndPoint(b);  
+            if (a != null && b != null)
+            {
+                SetStartPoint(a);
+                SetEndPoint(b);
             }
         }
 
@@ -119,24 +103,21 @@ namespace Manipulator
         public override void Deserialize(ShapeData data)
         {
             base.Deserialize(data);
-            ShapeId = data.Id; // Ensure ID consistency across network
+            ShapeId = data.Id;
             ReconnectFromIds();
         }
-        
+
         public void SetRaycastIgnore(bool ignore)
         {
             int layer = ignore ? 2 : 0;
             gameObject.layer = layer;
 
             foreach (Transform child in transform)
-            {
                 child.gameObject.layer = layer;
-            }
 
             StartPoint.gameObject.layer = layer;
             EndPoint.gameObject.layer = layer;
         }
-
 
         public static class Drawer
         {
@@ -150,13 +131,13 @@ namespace Manipulator
             private enum State { None, Dragging }
             private static State current = State.None;
 
+            private const float SnapDistance = 0.3f;
+
             public static void UpdateSegmentInput()
             {
-                var mm = ManipulationManager.Instance;
-                Debug.Log($"[Drawer.Update] frame={Time.frameCount}, state={current}");
-                if (Input.GetMouseButtonDown(0) && !mm.IsDrawing) Start();
-                else if (Input.GetMouseButton(0) && mm.IsDrawing) Update();
-                else if (Input.GetMouseButtonUp(0) && mm.IsDrawing) End();
+                if (Input.GetMouseButtonDown(0)) Start();
+                else if (Input.GetMouseButton(0)) Update();
+                else if (Input.GetMouseButtonUp(0)) End();
             }
 
             private static void Start()
@@ -169,8 +150,6 @@ namespace Manipulator
                 pendingStartId = Guid.NewGuid().ToString();
                 pendingEndId = Guid.NewGuid().ToString();
                 pendingSegId = Guid.NewGuid().ToString();
-
-                Debug.Log($"[Drawer.Start] Begin draw at pos={pos}, pendingSegId={pendingSegId}");
 
                 NetworkShapeSpawner.Instance.CreateShapeNetworked(new ShapeData
                 {
@@ -210,35 +189,40 @@ namespace Manipulator
                 preview = seg as Segment;
                 current = State.Dragging;
 
-                Debug.Log($"[Drawer.Start] Preview SegID={preview?.ShapeId}, StartID={startPoint?.ShapeId}, EndID={endPoint?.ShapeId}");
-
                 preview?.SetStartPoint(startPoint);
                 preview?.SetEndPoint(endPoint);
                 preview?.MarkAsPreview();
                 preview?.SetRaycastIgnore(true);
-
-                
             }
 
             private static void Update()
             {
-                Debug.Log($"[Drawer.Drag] isPreview={preview!= null}, Start={startPoint != null}, End={endPoint != null}");
                 if (current != State.Dragging || startPoint == null || endPoint == null) return;
                 if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
 
-                Debug.Log($"[Drawer.Update] Dragging segment, moving endpoint to {pos}");
-                endPoint.MoveTo(pos, true);
-                //preview.SetEndPoint(endPoint);
+                Point snap = FindNearbyPoint(pos, exclude: startPoint);
+                endPoint.MoveTo((snap != null) ? snap.transform.position : pos);
+ 
             }
 
             private static void End()
             {
                 if (current != State.Dragging) return;
-
-                Debug.Log("[Drawer.End] Finished drawing");
+                
+                PerformDrawing.RaycastMouse(out Vector3 pos);
+                
                 ManipulationManager.Instance.IsDrawing = false;
                 current = State.None;
                 PerformDrawing.ResetMode();
+                
+                Point snap = FindNearbyPoint(pos, exclude: startPoint);
+                endPoint.MoveTo((snap != null) ? snap.transform.position : pos);
+
+                if (snap != null)
+                {
+                    preview.SetEndPoint(snap);
+                    //endPoint.DestroyShape();
+                }
 
                 preview?.SetRaycastIgnore(false);
                 startPoint = null;
@@ -249,30 +233,18 @@ namespace Manipulator
                 pendingSegId = null;
             }
 
-             
 
-            
-            
-            public static void OnStartPointReady(Point p)
+            private static Point FindNearbyPoint(Vector3 pos, Point exclude = null)
             {
-                Debug.Log($"[Drawer.OnStartPointReady] id={p.ShapeId}, segId={pendingSegId}");
-
-                if (p.ShapeId == pendingStartId)
-                    startPoint = p;
-                else if (p.ShapeId == pendingEndId)
-                    endPoint = p;
-
-                if (startPoint != null && endPoint != null && preview == null)
+                foreach (var shape in ShapeStorage.GetAllShapes())
                 {
-                    preview = ShapeStorage.GetById(pendingSegId) as Segment;
-                    Debug.Log($"[Drawer.OnStartPointReady] found preview segment: {preview != null}");
-                    if (preview != null)
+                    if (shape is Point pt && pt != exclude)
                     {
-                        preview.SetStartPoint(startPoint);
-                        preview.SetEndPoint(endPoint);
-                        preview.MarkAsPreview();
+                        if (Vector3.Distance(pos, pt.transform.position) < SnapDistance)
+                            return pt;
                     }
                 }
+                return null;
             }
         }
     }

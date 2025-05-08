@@ -176,11 +176,27 @@ namespace Manipulator
             Destroy(gameObject);
         }
 
-        public virtual void MoveTo(Vector3 newPos, bool silent = false)
+        public bool isInternalMove = false;
+
+        public virtual void MoveTo(Vector3 newPosition, bool silent = false)
         {
-            transform.position = newPos;
-            NotifyChanged(silent);
+            if (transform.position == newPosition) return;
+
+            if (!silent && !isInternalMove)
+            {
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(
+                    new MoveShapeAction(ShapeId, transform.position, newPosition)
+                );
+            }
+
+            isInternalMove = true;
+            transform.position = newPosition;
+            isInternalMove = false;
+
+            if (!silent)
+                NotifyChanged();
         }
+
 
         #endregion
     }

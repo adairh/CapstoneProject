@@ -31,7 +31,7 @@ namespace Manipulator
 
             // Collider
             collider = GetComponent<SphereCollider>();
-            //collider.radius = Radius;
+            collider.radius = Radius;
             collider.center = Vector3.zero;
 
             // Constraint
