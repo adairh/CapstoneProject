@@ -15,7 +15,7 @@ MonoBehaviour:
   _questName: Question 19
   _questDescription: "Cho h\xECnh ch\u1EEF nh\u1EADt ABCD. Kh\u1EB3ng \u0111\u1ECBnh
     n\xE0o sau \u0111\xE2y \u0111\xFAng?"
-  _questSprite: {fileID: 21300000, guid: 446bdbf0844bc024fad2d7d4d33a3982, type: 3}
+  _questSprite: {fileID: 21300000, guid: c0e235646af258f4a9509b1f85b8b801, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

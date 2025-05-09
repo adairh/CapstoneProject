@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _questName: Question 8
   _questDescription: "Th\u1EBF n\xE0o l\xE0 2 g\xF3c k\u1EC1 b\xF9?"
-  _questSprite: {fileID: 21300000, guid: b6f30861a696d17488f112f22d553166, type: 3}
+  _questSprite: {fileID: 21300000, guid: af6c34f8adc38ee4b8617b09d0ae6f5c, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}

@@ -15,7 +15,7 @@ MonoBehaviour:
   _questName: Question 11
   _questDescription: "K\xFD t\u1EF1 n\xE0o \u0111\u1EA1i di\u1EC7n cho c\u1EA1nh
     huy\u1EC1n c\u1EE7a h\xECnh tam gi\xE1c vu\xF4ng b\xEAn d\u01B0\u1EDBi?"
-  _questSprite: {fileID: 21300000, guid: d480ce43b2127924dae34ce89fe80468, type: 3}
+  _questSprite: {fileID: 21300000, guid: 9a31085ad6a58df4bbbc2fc6fdcba721, type: 3}
   _correctAnswer: {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
   _answers:
   - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
