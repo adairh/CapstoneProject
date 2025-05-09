@@ -938,11 +938,11 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
-  cloudProjectId: d4817081-230c-4d45-aed4-238e694effb1
+  cloudProjectId: 80e60a70-4dae-4e3e-bcf9-fee796431b98
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: CapstoneProject
-  organizationId: huyyhoangg150203
+  projectName: CapstoneProject (2)
+  organizationId: bimbimcute05
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
