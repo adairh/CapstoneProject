@@ -14,10 +14,10 @@ using System.Linq;
 using An_An;
 using Manipulator;
 using Khoa;
+
 /// <summary>
 /// By Khoa
 /// </summary>
-
 public class GameLobby : MonoBehaviour
 {
     public static GameLobby Instance { get; private set; }
@@ -30,7 +30,12 @@ public class GameLobby : MonoBehaviour
 
     private bool hasReportedError = false; // Flag to prevent duplicate error reports
     private float lastLobbyRefreshTime = 0f;
-    private const float LOBBY_REFRESH_INTERVAL = 5f; // Refresh lobby data every 5 seconds
+    private const float LOBBY_REFRESH_INTERVAL = 10f; // Increased from 5f to reduce API calls
+    private float lastLobbyCreateTime = 0f; // Track last CreateLobby call
+    private const float LOBBY_CREATE_COOLDOWN = 5f; // 5-second cooldown for CreateLobby
+    private Dictionary<string, bool> lobbyNameCache = new Dictionary<string, bool>(); // Cache for lobby name queries
+    private Dictionary<string, float> lobbyNameCacheTimestamps = new Dictionary<string, float>(); // Cache timestamps
+    private const float CACHE_EXPIRY_TIME = 30f; // Cache expires after 30 seconds
 
     private void Awake()
     {
@@ -62,8 +67,8 @@ public class GameLobby : MonoBehaviour
     {
         if (IsHost)
         {
-            InvokeRepeating(nameof(SendHeartbeat), 10f, 10f);
-            InvokeRepeating(nameof(RefreshLobbyData), 0f, LOBBY_REFRESH_INTERVAL); // Start periodic lobby refresh
+            InvokeRepeating(nameof(SendHeartbeat), 15f, 15f); // Increased from 10f to reduce API calls
+            InvokeRepeating(nameof(RefreshLobbyData), 0f, LOBBY_REFRESH_INTERVAL);
         }
     }
 
@@ -348,111 +353,173 @@ public class GameLobby : MonoBehaviour
 
     public async void CreateLobby(string lobbyName, string password, bool isPrivate)
     {
-        try
+        // Enforce cooldown to prevent rapid CreateLobby calls
+        if (Time.time - lastLobbyCreateTime < LOBBY_CREATE_COOLDOWN)
         {
-            if (UnityServices.State == ServicesInitializationState.Uninitialized)
+            Debug.LogWarning("Lobby creation on cooldown. Please wait.");
+            if (LobbyUI.Instance != null)
             {
-                Debug.Log("Initializing Unity Services...");
-                profileId = $"default_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
-                InitializationOptions initOptions = new InitializationOptions();
-                initOptions.SetProfile(profileId);
-                await UnityServices.InitializeAsync(initOptions);
-                await SignInAnonymouslyWithRetry();
+                LobbyUI.Instance.UpdateStatus("Please wait before creating another lobby.");
             }
+            return;
+        }
 
-            if (!AuthenticationService.Instance.IsSignedIn || !AuthenticationService.Instance.SessionTokenExists)
+        lastLobbyCreateTime = Time.time;
+
+        const int maxRetries = 3;
+        const float baseRetryDelay = 2f;
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
             {
-                Debug.Log("Not signed in or invalid session, attempting to sign in...");
-                await SignInAnonymouslyWithRetry();
-            }
-
-            Debug.Log($"Unity Services ready. Proceeding to Create Lobby with Profile: {profileId}");
-
-            lobbyName = lobbyName.Trim().ToLower();
-            password = password.Trim();
-
-            QueryResponse existingLobbies = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
-            {
-                Filters = new List<QueryFilter>
+                if (UnityServices.State == ServicesInitializationState.Uninitialized)
                 {
-                    new QueryFilter(
-                        field: QueryFilter.FieldOptions.Name,
-                        value: lobbyName,
-                        op: QueryFilter.OpOptions.EQ
-                    )
+                    Debug.Log("Initializing Unity Services...");
+                    profileId = $"default_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
+                    InitializationOptions initOptions = new InitializationOptions();
+                    initOptions.SetProfile(profileId);
+                    await UnityServices.InitializeAsync(initOptions);
+                    await SignInAnonymouslyWithRetry();
                 }
-            });
 
-            if (existingLobbies.Results.Count > 0)
-            {
-                Debug.LogError($"Lobby with name {lobbyName} already exists! Aborting creation.");
+                if (!AuthenticationService.Instance.IsSignedIn || !AuthenticationService.Instance.SessionTokenExists)
+                {
+                    Debug.Log("Not signed in or invalid session, attempting to sign in...");
+                    await SignInAnonymouslyWithRetry();
+                }
+
+                Debug.Log($"Unity Services ready. Proceeding to Create Lobby with Profile: {profileId}");
+
+                lobbyName = lobbyName.Trim().ToLower();
+                password = password.Trim();
+
+                // Check cache for recent query result
+                if (lobbyNameCache.TryGetValue(lobbyName, out bool exists) &&
+                    lobbyNameCacheTimestamps.TryGetValue(lobbyName, out float timestamp) &&
+                    Time.time - timestamp < CACHE_EXPIRY_TIME)
+                {
+                    if (exists)
+                    {
+                        Debug.LogError($"Cached: Lobby with name {lobbyName} already exists!");
+                        if (LobbyUI.Instance != null)
+                        {
+                            LobbyUI.Instance.UpdateStatus($"Error: Lobby '{lobbyName}' already exists!");
+                        }
+                        throw new System.Exception($"Lobby '{lobbyName}' already exists!");
+                    }
+                }
+                else
+                {
+                    Debug.Log($"Querying lobbies for {lobbyName} at {Time.time}");
+                    QueryResponse existingLobbies = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
+                    {
+                        Filters = new List<QueryFilter>
+                        {
+                            new QueryFilter(
+                                field: QueryFilter.FieldOptions.Name,
+                                value: lobbyName,
+                                op: QueryFilter.OpOptions.EQ
+                            )
+                        }
+                    });
+
+                    bool lobbyExists = existingLobbies.Results.Count > 0;
+                    lobbyNameCache[lobbyName] = lobbyExists;
+                    lobbyNameCacheTimestamps[lobbyName] = Time.time;
+
+                    if (lobbyExists)
+                    {
+                        Debug.LogError($"Lobby with name {lobbyName} already exists!");
+                        if (LobbyUI.Instance != null)
+                        {
+                            LobbyUI.Instance.UpdateStatus($"Error: Lobby '{lobbyName}' already exists!");
+                        }
+                        throw new System.Exception($"Lobby '{lobbyName}' already exists!");
+                    }
+                }
+
+                Debug.Log($"Creating lobby: Name={lobbyName}, Password={password}, IsPrivate={isPrivate}");
+
+                Debug.Log("Creating Relay allocation...");
+                Allocation allocation = await RelayService.Instance.CreateAllocationAsync(max_user_amount);
+                string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+                Debug.Log($"Relay allocation created: JoinCode={joinCode}");
+
+                CreateLobbyOptions options = new CreateLobbyOptions
+                {
+                    IsPrivate = isPrivate,
+                    Data = new Dictionary<string, DataObject>
+                    {
+                        { "JoinCode", new DataObject(DataObject.VisibilityOptions.Public, joinCode) },
+                        { "Password", new DataObject(DataObject.VisibilityOptions.Public, password) }
+                    }
+                };
+
+                joinedLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, max_user_amount, options);
+                Debug.Log($"Lobby created: {joinedLobby.Name}, ID: {joinedLobby.Id}");
+
+                var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+                if (transport == null)
+                {
+                    Debug.LogError("UnityTransport not found!");
+                    return;
+                }
+
+                transport.ConnectTimeoutMS = 15000;
+                transport.DisconnectTimeoutMS = 30000;
+                transport.SetHostRelayData(
+                    allocation.RelayServer.IpV4,
+                    (ushort)allocation.RelayServer.Port,
+                    allocation.AllocationIdBytes,
+                    allocation.Key,
+                    allocation.ConnectionData
+                );
+
+                Debug.Log("Starting host...");
+                bool hostStarted = NetworkManager.Singleton.StartHost();
+                Debug.Log($"Host started: {hostStarted}, IsHost: {NetworkManager.Singleton.IsHost}");
+
+                InvokeRepeating(nameof(SendHeartbeat), 15f, 15f);
+                KeepLobbyAlive();
+
                 if (LobbyUI.Instance != null)
                 {
-                    LobbyUI.Instance.UpdateStatus($"Error: Lobby '{lobbyName}' already exists!");
+                    LobbyUI.Instance.UpdateStatus("Host Started");
+                    LobbyUI.Instance.Hide();
                 }
-                throw new System.Exception($"Lobby '{lobbyName}' already exists!");
+
+                MonitorRelayAllocation();
+                return; // Success, exit the method
             }
-
-            Debug.Log($"Creating lobby: Name={lobbyName}, Password={password}, IsPrivate={isPrivate}");
-
-            Debug.Log("Creating Relay allocation...");
-            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(max_user_amount);
-            string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
-            Debug.Log($"Relay allocation created: JoinCode={joinCode}");
-
-            CreateLobbyOptions options = new CreateLobbyOptions
+            catch (LobbyServiceException e) when (e.Message.Contains("Rate limit has been exceeded"))
             {
-                IsPrivate = isPrivate,
-                Data = new Dictionary<string, DataObject>
+                if (attempt == maxRetries)
                 {
-                    { "JoinCode", new DataObject(DataObject.VisibilityOptions.Public, joinCode) },
-                    { "Password", new DataObject(DataObject.VisibilityOptions.Public, password) }
+                    Debug.LogError($"Failed to create lobby after {maxRetries} attempts: {e.Message}");
+                    if (LobbyUI.Instance != null)
+                    {
+                        LobbyUI.Instance.UpdateStatus("Error: Rate limit exceeded. Please try again later.");
+                    }
+                    throw;
                 }
-            };
-
-            joinedLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, max_user_amount, options);
-            Debug.Log($"Lobby created: {joinedLobby.Name}, ID: {joinedLobby.Id}");
-
-            var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-            if (transport == null)
-            {
-                Debug.LogError("UnityTransport not found!");
-                return;
+                float retryDelay = baseRetryDelay * Mathf.Pow(2, attempt - 1); // Exponential backoff: 2s, 4s, 8s
+                Debug.Log($"Rate limit exceeded, retrying in {retryDelay} seconds...");
+                if (LobbyUI.Instance != null)
+                {
+                    LobbyUI.Instance.UpdateStatus($"Rate limit reached, retrying...");
+                }
+                await Task.Delay((int)(retryDelay * 1000));
             }
-
-            transport.ConnectTimeoutMS = 15000;
-            transport.DisconnectTimeoutMS = 30000;
-            transport.SetHostRelayData(
-                allocation.RelayServer.IpV4,
-                (ushort)allocation.RelayServer.Port,
-                allocation.AllocationIdBytes,
-                allocation.Key,
-                allocation.ConnectionData
-            );
-
-            Debug.Log("Starting host...");
-            bool hostStarted = NetworkManager.Singleton.StartHost();
-            Debug.Log($"Host started: {hostStarted}, IsHost: {NetworkManager.Singleton.IsHost}");
-
-            InvokeRepeating(nameof(SendHeartbeat), 10f, 10f);
-            KeepLobbyAlive();
-
-            if (LobbyUI.Instance != null)
+            catch (System.Exception e)
             {
-                LobbyUI.Instance.UpdateStatus("Host Started");
-                LobbyUI.Instance.Hide();
+                Debug.LogError($"Failed to create lobby: {e.Message}");
+                if (LobbyUI.Instance != null)
+                {
+                    LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
+                }
+                throw;
             }
-
-            MonitorRelayAllocation();
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Failed to create lobby: {e.Message}");
-            if (LobbyUI.Instance != null)
-            {
-                LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
-            }
-            throw; // Re-throw the exception to be caught by the caller
         }
     }
 
