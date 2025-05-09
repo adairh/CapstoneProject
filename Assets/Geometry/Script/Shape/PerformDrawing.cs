@@ -10,16 +10,8 @@ namespace Manipulator
     public class PerformDrawing : MonoBehaviour
     {
         public static PerformDrawing Instance { get; private set; }
-
-        public enum DrawingMode
-        {
-            None,
-            Point,
-            Segment
-        }
-
-        [Header("Drawing Mode")]
-        public DrawingMode drawingMode = DrawingMode.Segment;
+ 
+ 
 
         private enum DragState { None, Dragging }
         private DragState currentState = DragState.None;
@@ -39,12 +31,12 @@ namespace Manipulator
         {
             if (!NetworkManager.Singleton.IsHost) return;
 
-            switch (drawingMode)
+            switch (ShapeButtonManager.ActiveType)
             {
-                case DrawingMode.Point:
+                case IShapeButton.ShapeType.Point:
                     Point.Drawer.UpdatePointInput();
                     break;
-                case DrawingMode.Segment:
+                case IShapeButton.ShapeType.Segment:
                     Segment.Drawer.UpdateSegmentInput();
                     break;
             }
@@ -67,8 +59,7 @@ namespace Manipulator
 
         public static void ResetMode()
         {
-            if (Instance != null)
-                Instance.drawingMode = DrawingMode.None;
+            ShapeButtonManager.SetActiveShape(IShapeButton.ShapeType.None);
         }
     }
 }

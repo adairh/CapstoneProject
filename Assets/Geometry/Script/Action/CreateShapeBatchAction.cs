@@ -1,39 +1,51 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Manipulator
 {
     public class CreateShapeBatchAction : IUndoableAction
     {
-        private readonly List<ShapeData> datas = new();
-        private readonly List<string> createdIds = new();
+        private readonly List<ShapeData> shapeDataList;
+        private readonly List<Shape> createdShapes = new();
 
-        public void Add(ShapeData data) => datas.Add(data);
+        public Action<Shape> OnShapeSpawned; // 👈 ADD THIS LINE
+
+        public CreateShapeBatchAction(List<ShapeData> shapeDataList)
+        {
+            this.shapeDataList = shapeDataList;
+        }
 
         public void Redo()
         {
-            createdIds.Clear();
-            foreach (var data in datas)
+            foreach (var data in shapeDataList)
             {
-                Shape shape = ShapeFactory.CreateFromData(data);
-                createdIds.Add(shape.ShapeId);
+                UndoRedoNetworkBridge.Instance.SpawnFromData(data, shape =>
+                {
+                    if (shape == null)
+                    {
+                        Debug.LogError($"[CreateShapeBatchAction] Failed to create shape of type {data.Type}");
+                        return;
+                    }
 
-                // Gọi callback
-                if (shape is Point pt)
-                    Segment.Drawer.OnStartPointReady(pt);
-                else if (shape is Segment seg)
-                    Segment.Drawer.OnSegmentReady(seg);
+                    shape.ShapeId = data.Id;
+                    shape.Deserialize(data);
+                    ShapeStorage.Register(shape);
+
+                    createdShapes.Add(shape);
+                    OnShapeSpawned?.Invoke(shape);
+                });
             }
         }
+
 
         public void Undo()
         {
-            foreach (string id in createdIds)
-            {
-                var shape = ShapeStorage.GetById(id);
-                if (shape != null)
-                    shape.DestroyShape();
-            }
+            foreach (var shape in createdShapes)
+                shape.DestroyShape();
+            createdShapes.Clear();
         }
     }
-
+    
 }
+

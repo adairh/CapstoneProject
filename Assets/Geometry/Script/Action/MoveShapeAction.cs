@@ -19,18 +19,32 @@ namespace Manipulator
         public void Undo()
         {
             var shape = ShapeStorage.GetById(ShapeId);
-            shape?.MoveTo(OldPosition, silent: true);
+
+            foreach (var a in ShapeStorage.GetAllShapes())
+            {
+                Debug.LogError($"[MoveShapeAction-All] {a.ShapeId}");
+            }
+            
+            Debug.LogError($"[MoveShapeAction] {ShapeId}");
+            Debug.LogError($"[MoveShapeAction] {shape != null}");
+            Debug.LogError($"[MoveShapeAction] {shape.transform.position}");
+            Debug.LogError($"[MoveShapeAction] {NewPosition}");
+            Debug.LogError($"[MoveShapeAction] {OldPosition}");
+            
+            shape?.MoveTo(OldPosition, silent: false, queue: false); // 🔥 sửa thành false để update transform
+            
         }
 
         public void Redo()
         {
-            Shape shape = ShapeStorage.GetById(ShapeId);
+            var shape = ShapeStorage.GetById(ShapeId);
             if (shape == null) return;
 
             shape.isInternalMove = true;
-            shape.MoveTo(NewPosition, silent: true);
+            shape.MoveTo(NewPosition, silent: false); // 🔥 sửa thành false
             shape.isInternalMove = false;
         }
+
 
     }
 

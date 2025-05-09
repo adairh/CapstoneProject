@@ -1,10 +1,11 @@
-﻿// Refactored Segment.cs — ADD DEBUG LOGGING FOR DRAWING FLOW with SNAP POINTS and UNDO-SAFE SPAWN + RECONNECT SYNC FIX
+﻿// Refactored Segment.cs — ADD DEBUG LOGGING FOR DRAWING FLOW with SNAP POINTS and UNDO-SAFE SPAWN + RECONNECT SYNC FIX + SAFE DESTROY HANDLING
 
 using UnityEngine;
 using Unity.Netcode;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Manipulator
 {
@@ -117,10 +118,21 @@ namespace Manipulator
             gameObject.layer = layer;
 
             foreach (Transform child in transform)
-                child.gameObject.layer = layer;
+                if (child != null)
+                    child.gameObject.layer = layer;
 
-            if (StartPoint != null) StartPoint.gameObject.layer = layer;
-            if (EndPoint != null) EndPoint.gameObject.layer = layer;
+            if (StartPoint != null && StartPoint.gameObject != null)
+                StartPoint.gameObject.layer = layer;
+
+            if (EndPoint != null && EndPoint.gameObject != null)
+                EndPoint.gameObject.layer = layer;
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            if (ShapeStorage.Contains(this.ShapeId))
+                ShapeStorage.Unregister(this);
         }
 
         public static class Drawer
@@ -151,8 +163,12 @@ namespace Manipulator
                 if (mm.IsDrawing) return;
                 mm.IsDrawing = true;
 
+                List<ShapeData> datas = new();
+
                 Point snap = FindNearbyPoint(pos);
-                if (snap != null)
+                bool usingSnap = snap != null;
+
+                if (usingSnap)
                 {
                     startPoint = snap;
                     pendingStartId = snap.ShapeId;
@@ -160,22 +176,36 @@ namespace Manipulator
                 else
                 {
                     pendingStartId = Guid.NewGuid().ToString();
-                    var data = new ShapeData { Id = pendingStartId, Type = "Point", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new(), Settings = new() };
-                    UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeAction(data));
+                    var p1Data = new ShapeData { Id = pendingStartId, Type = "Point", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new(), Settings = new() };
+                    datas.Add(p1Data);
                 }
 
                 pendingEndId = Guid.NewGuid().ToString();
                 pendingSegId = Guid.NewGuid().ToString();
 
                 var p2Data = new ShapeData { Id = pendingEndId, Type = "Point", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new(), Settings = new() };
-                
-                UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeAction(p2Data));
-                
                 var segData = new ShapeData { Id = pendingSegId, Type = "Segment", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new() { pendingStartId, pendingEndId }, Settings = new() };
 
-                UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeAction(segData));
+                datas.Add(p2Data);
+                datas.Add(segData);
 
-                current = State.Dragging;  
+                var batch = new CreateShapeBatchAction(datas);
+                batch.OnShapeSpawned = shape =>
+                {
+                    if (shape is Point pt)
+                    {
+                        if (pt.ShapeId == pendingStartId || pt.ShapeId == pendingEndId)
+                            OnStartPointReady(pt);
+                    }
+                    else if (shape is Segment s && s.ShapeId == pendingSegId)
+                    {
+                        OnSegmentReady(s);
+                    }
+                };
+
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
+
+                current = State.Dragging;
             }
 
             private static void Update()
@@ -186,8 +216,11 @@ namespace Manipulator
                 Point snap = FindNearbyPoint(pos, exclude: startPoint);
                 endPoint.MoveTo((snap != null) ? snap.transform.position : pos, queue: false);
 
-                if (snap != null)
+                if (snap != null && snap != endPoint)
+                {
+                    endPoint.DestroyShape();
                     preview.SetEndPoint(snap);
+                }
             }
 
             private static void End()
@@ -207,92 +240,50 @@ namespace Manipulator
             }
 
             public static void OnStartPointReady(Point p)
-            {/*
-                Debug.LogError($"[OnStartPointReady] Called with Point ID = {p.ShapeId}");
-                Debug.LogError($"[OnStartPointReady] Current pendingStartId = {pendingStartId}, pendingEndId = {pendingEndId}");
-                */
+            {
+                //Debug.LogError($"[OnStartPointReady] Called with Point ID = {p.ShapeId}");
+                //Debug.LogError($"[OnStartPointReady] Current pendingStartId = {pendingStartId}, pendingEndId = {pendingEndId}");
 
                 if (p.ShapeId == pendingStartId)
-                {
                     startPoint = p;
-                    //Debug.LogError("[OnStartPointReady] Assigned as StartPoint");
-                }
                 else if (p.ShapeId == pendingEndId)
-                {
                     endPoint = p;
-                    //Debug.LogError("[OnStartPointReady] Assigned as EndPoint");
-                }
                 else
-                {
                     //Debug.LogError("[OnStartPointReady] Point ID does not match any pending ID");
-                }
 
                 if (preview != null)
                 {
-                    //Debug.LogError("[OnStartPointReady] Preview exists, attempting to assign points");
-
-                    if (startPoint != null)
-                    {
-                        preview.SetStartPoint(startPoint);
-                        //Debug.LogError($"[OnStartPointReady] Set StartPoint for preview segment to {startPoint.ShapeId}");
-                    }
-
-                    if (endPoint != null)
-                    {
-                        preview.SetEndPoint(endPoint);
-                        //Debug.LogError($"[OnStartPointReady] Set EndPoint for preview segment to {endPoint.ShapeId}");
-                    }
-                }
-                else
-                {
-                    //Debug.LogError("[OnStartPointReady] Preview is still null, waiting for OnSegmentReady");
+                    if (startPoint != null) preview.SetStartPoint(startPoint);
+                    if (endPoint != null) preview.SetEndPoint(endPoint);
                 }
             }
 
-
             public static void OnSegmentReady(Segment s)
             {
-                //Debug.LogError($"[OnSegmentReady] Incoming segment ID = {s.ShapeId}, Expected = {pendingSegId}");
+                //Debug.LogError($"[OnSegmentReady] Called with Segment ID = {s.ShapeId}");
+                //Debug.LogError($"[OnSegmentReady] Pending ID = {pendingSegId}");
 
                 if (s.ShapeId != pendingSegId)
                 {
-                    //Debug.LogError($"[OnSegmentReady] Skipped: Mismatched ID (got {s.ShapeId}, expected {pendingSegId})");
+                    //Debug.LogError("[OnSegmentReady] Segment ID does not match");
                     return;
                 }
 
                 preview = s;
-                //Debug.LogError($"[OnSegmentReady] Assigned preview segment (ID = {preview.ShapeId})");
 
-                if (startPoint != null)
-                {
-                    preview.SetStartPoint(startPoint);
-                    //Debug.LogError($"[OnSegmentReady] StartPoint set to ID = {startPoint.ShapeId}");
-                }
-                else
-                {
-                    //Debug.LogError("[OnSegmentReady] StartPoint is null");
-                }
-
-                if (endPoint != null)
-                {
-                    preview.SetEndPoint(endPoint);
-                    //Debug.LogError($"[OnSegmentReady] EndPoint set to ID = {endPoint.ShapeId}");
-                }
-                else
-                {
-                    //Debug.LogError("[OnSegmentReady] EndPoint is null");
-                }
+                if (startPoint != null) preview.SetStartPoint(startPoint);
+                if (endPoint != null) preview.SetEndPoint(endPoint);
 
                 preview.MarkAsPreview();
                 preview.SetRaycastIgnore(true);
-                //Debug.LogError("[OnSegmentReady] Marked as preview and raycast ignored");
             }
-
 
             private static Point FindNearbyPoint(Vector3 pos, Point exclude = null)
             {
                 foreach (var shape in ShapeStorage.GetAllShapes())
                 {
+                    if (shape == null || shape.gameObject == null) continue;
+
                     if (shape is Point pt && pt != exclude)
                     {
                         if (Vector3.Distance(pos, pt.transform.position) < SnapDistance)

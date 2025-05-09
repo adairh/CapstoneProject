@@ -8,7 +8,7 @@ namespace Manipulator
 {
     public class Shape : NetworkBehaviour
     {
-        public string ShapeId { get; protected set; }
+        public string ShapeId { get; set; }
 
         [SerializeField] private string shapeType;
         public string ShapeType => shapeType;

@@ -72,6 +72,38 @@ namespace Manipulator
             UndoRedoManager.Instance.Redo();
         }
 
+        public void SpawnFromData(ShapeData data, Action<Shape> onCreated)
+        {
+            CreateShapeNetworked(data, out Shape shape);
+            onCreated?.Invoke(shape);
+        }
+
+        
+        public void CreateShapeNetworked(ShapeData data, out Shape shape)
+        {
+            shape = ShapeFactory.CreateFromData(data); // Factory sẽ gán đúng prefab, type, component
+            if (shape == null)
+            {
+                Debug.LogError($"[CreateShapeNetworked] Failed to create shape for type={data.Type}");
+                return;
+            }
+
+            shape.ShapeId = data.Id; // Đảm bảo giữ ID gốc để match Undo/Redo
+            shape.Deserialize(data);
+            ShapeStorage.Register(shape);
+
+            if (shape.TryGetComponent(out NetworkObject netObj))
+            {
+                if (!netObj.IsSpawned)
+                    netObj.Spawn();
+            }
+            else
+            {
+                Debug.LogWarning($"[CreateShapeNetworked] Created shape {shape.ShapeId} has no NetworkObject");
+            }
+        }
+
+        
     }
  
 }

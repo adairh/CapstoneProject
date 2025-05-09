@@ -23,9 +23,21 @@ namespace Manipulator
             }
 
             shapeWasAlreadyPresent = false;
-            createdShape = ShapeFactory.CreateFromData(data);
+            //createdShape = ShapeFactory.CreateFromData(data);
             
-            if (createdShape is Point pt)
+            
+            UndoRedoNetworkBridge.Instance.SpawnFromData(data, shape =>
+            {
+                createdShape = shape;
+
+                if (shape is Point pt)
+                    Segment.Drawer.OnStartPointReady(pt);
+                else if (shape is Segment seg)
+                    Segment.Drawer.OnSegmentReady(seg);
+            });
+            
+            
+            /*if (createdShape is Point pt)
             {
                 Segment.Drawer.OnStartPointReady(pt);
             }
@@ -33,7 +45,7 @@ namespace Manipulator
             {
                 Segment.Drawer.OnSegmentReady(seg);
                 Debug.LogError($"Start point {seg.StartPoint != null} ; End point {seg.EndPoint != null}");
-            }
+            }*/
 
 
         }

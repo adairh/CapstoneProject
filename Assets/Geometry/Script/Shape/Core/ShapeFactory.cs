@@ -21,12 +21,12 @@ namespace Manipulator
                 if (instance != null) return instance;
             }
 
-            Debug.LogError($"[ShapeFactory] Unknown shape type: {type}");
+            //Debug.LogError($"[ShapeFactory] Unknown shape type: {type}");
             return null;
         }
 
 
-        private static T Create<T>(string type, Vector3 position) where T : Shape
+        public static T Create<T>(string type, Vector3 position) where T : Shape
         { 
             var go = new GameObject(type);
             var shape = go.AddComponent<T>();
@@ -36,7 +36,7 @@ namespace Manipulator
             var drag = go.AddComponent<DraggableShape>();
             if (drag == null)
             {
-                Debug.LogError($"[Create] Failed to add DraggableShape to {type}");
+                //Debug.LogError($"[Create] Failed to add DraggableShape to {type}");
             }
             else
             {
@@ -100,19 +100,20 @@ namespace Manipulator
         
         public static Shape CreateFromData(ShapeData data)
         {
-            var shape = CreateShape(data.Type, data.Position); 
-            if (shape == null)
-            {
-                Debug.LogError($"[ShapeFactory] Failed to create shape from data with unknown type: {data.Type}");
-                return null;
-            }
-
-            if (shape != null)
-            {
-                shape.Deserialize(data);
-            }
-
+            var shape = CreateShape(data.Type, data.Position);
+            if (shape == null) return null;
+            
+            // ❗ Unregister tạm vì shape đang nằm dưới ShapeId cũ
+            ShapeStorage.Unregister(shape);
+            
+            // ⬇ Gán đúng ID và dữ liệu từ server
+            shape.Deserialize(data);
+            
+            // ✅ Re-register lại đúng ShapeId
+            ShapeStorage.Register(shape);
+            
             return shape;
+
         }
     }
 }
