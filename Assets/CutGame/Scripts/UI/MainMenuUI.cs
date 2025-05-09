@@ -125,9 +125,9 @@ namespace An_An
         {
             AudioManager.Play(SFX.Click);
             
-            Application.Quit();
+            //Application.Quit();
 
-            SceneManager.LoadScene("Main"); // quay ve scene Main
+            SceneManager.LoadScene("MAIN"); // quay ve scene Main
 
     }
 }
