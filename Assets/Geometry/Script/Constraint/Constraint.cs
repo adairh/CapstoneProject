@@ -1,32 +1,57 @@
-﻿using System.Collections.Generic;
-using Manipulator;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
+    /// <summary>
+    /// Base class cho tất cả constraint. Mỗi constraint nên kế thừa từ đây.
+    /// </summary>
     public abstract class Constraint : MonoBehaviour
     {
-        private List<Shape> linkedShapes = new List<Shape>();
-        public Shape Owner { get; set; }
+        public string ConstraintId { get; private set; }
 
-        public void AddShape(Shape shape)
+        protected virtual void Awake()
         {
-            if (!linkedShapes.Contains(shape))
-            {
-                linkedShapes.Add(shape);
-            }
+            ConstraintId = Guid.NewGuid().ToString();
         }
 
-        public bool HasShape(Shape shape)
+        protected virtual void OnEnable()
         {
-            return linkedShapes.Contains(shape);
+            if (ConstraintManager.Instance != null)
+                ConstraintManager.Instance.RegisterConstraint(this);
         }
 
-        public List<Shape> GetLinkedShapes()
+        protected virtual void OnDisable()
         {
-            return new List<Shape>(linkedShapes); // Return a copy to avoid modification
+            if (ConstraintManager.Instance != null)
+                ConstraintManager.Instance.UnregisterConstraint(this);
         }
 
-        public abstract void ApplyConstraint(Shape movedShape, Vector3 movement);
+        /// <summary>
+        /// Xác định constraint có liên quan tới shape này không.
+        /// </summary>
+        public abstract bool HasShape(Shape shape);
+
+        /// <summary>
+        /// Gọi khi có shape di chuyển hoặc thay đổi.
+        /// </summary>
+        public abstract void ApplyConstraint(Shape changedShape, Vector3 delta);
+
+        /// <summary>
+        /// Serialize constraint về dạng dữ liệu lưu trữ được.
+        /// </summary>
+        public abstract ConstraintData Serialize();
+
+        /// <summary>
+        /// Xóa toàn bộ sự kiện và liên kết.
+        /// </summary>
+        public virtual void Cleanup() { }
+
+        /// <summary>
+        /// Danh sách các Shape liên quan.
+        /// </summary>
+        public abstract IEnumerable<Shape> GetRelatedShapes();
     }
-}
+ 
+} 

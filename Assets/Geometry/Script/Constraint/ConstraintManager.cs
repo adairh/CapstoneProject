@@ -6,30 +6,50 @@ namespace Manipulator
     public class ConstraintManager : MonoBehaviour
     {
         public static ConstraintManager Instance { get; private set; }
-        private List<Constraint> constraints = new List<Constraint>();
+
+        private readonly List<Constraint> allConstraints = new();
 
         private void Awake()
         {
-            if (Instance == null) Instance = this;
-            else Destroy(gameObject);
+            if (Instance != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
         }
 
         public void RegisterConstraint(Constraint constraint)
         {
-            if (!constraints.Contains(constraint))
+            if (!allConstraints.Contains(constraint))
+                allConstraints.Add(constraint);
+        }
+
+        public void UnregisterConstraint(Constraint constraint)
+        {
+            allConstraints.Remove(constraint);
+        }
+
+        public void ApplyConstraints(Shape changedShape, Vector3 delta)
+        {
+            foreach (var constraint in allConstraints)
             {
-                constraints.Add(constraint);
+                if (constraint.HasShape(changedShape))
+                    constraint.ApplyConstraint(changedShape, delta);
             }
         }
 
-        // Bây giờ gọi ApplyConstraint với cả movedShape
-        public void ApplyConstraints(Shape movedShape, Vector3 movement)
+        public IEnumerable<ConstraintData> SerializeAll()
         {
-            foreach (var constraint in constraints)
-            {
-                if (constraint.HasShape(movedShape))
-                    constraint.ApplyConstraint(movedShape, movement);
-            }
+            foreach (var constraint in allConstraints)
+                yield return constraint.Serialize();
+        }
+
+        public void ClearAll()
+        {
+            foreach (var constraint in allConstraints)
+                constraint.Cleanup();
+            allConstraints.Clear();
         }
     }
 }
