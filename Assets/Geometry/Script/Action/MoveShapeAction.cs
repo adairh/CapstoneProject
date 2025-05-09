@@ -22,14 +22,14 @@ namespace Manipulator
 
             foreach (var a in ShapeStorage.GetAllShapes())
             {
-                Debug.LogError($"[MoveShapeAction-All] {a.ShapeId}");
+                //Debug.LogError($"[MoveShapeAction-All] {a.ShapeId}");
             }
             
-            Debug.LogError($"[MoveShapeAction] {ShapeId}");
-            Debug.LogError($"[MoveShapeAction] {shape != null}");
-            Debug.LogError($"[MoveShapeAction] {shape.transform.position}");
-            Debug.LogError($"[MoveShapeAction] {NewPosition}");
-            Debug.LogError($"[MoveShapeAction] {OldPosition}");
+            //Debug.LogError($"[MoveShapeAction] {ShapeId}");
+            //Debug.LogError($"[MoveShapeAction] {shape != null}");
+            //Debug.LogError($"[MoveShapeAction] {shape.transform.position}");
+            //Debug.LogError($"[MoveShapeAction] {NewPosition}");
+            //Debug.LogError($"[MoveShapeAction] {OldPosition}");
             
             shape?.MoveTo(OldPosition, silent: false, queue: false); // 🔥 sửa thành false để update transform
             

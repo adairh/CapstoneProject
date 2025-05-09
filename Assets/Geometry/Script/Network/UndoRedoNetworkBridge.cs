@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Unity.Netcode; 
 using System;
+using System.Collections.Generic;
 
 namespace Manipulator
 {
@@ -18,6 +19,7 @@ namespace Manipulator
         {
             if (queue) UndoRedoManager.Instance.Do(action);
 
+            Debug.LogError($"[DoAndBroadcast] IsHost: {IsHost}");
             if (IsHost)
             {
                 switch (action)
@@ -29,19 +31,68 @@ namespace Manipulator
                         BroadcastDeleteShapeClientRpc(dsa.GetShape().ShapeId);
                         break;
                     case CreateShapeAction csa:
+                        Debug.LogError($"[DoAndBroadcast] {csa.data.Id}");
                         BroadcastCreateShapeClientRpc(JsonUtility.ToJson(csa.data));
+                        break;
+                    case CreateShapeBatchAction csba:
+                        var wrapper = new ShapeDataListWrapper { Shapes = csba.shapeDataList };
+                        string json = JsonUtility.ToJson(wrapper);
+                        BroadcastCreateShapeBatchClientRpc(json);
+                        break;
+                    default:
+                        Debug.LogError($"[DoAndBroadcast] Type: {action.GetType()}");
                         break;
                 }
             }
         }
 
         [ClientRpc]
+        public void BroadcastCreateShapeBatchClientRpc(string json)
+        {
+            if (IsHost) return; // tránh host nhận lại
+
+            var wrapper = JsonUtility.FromJson<ShapeDataListWrapper>(json);
+
+            foreach (var data in wrapper.Shapes)
+            {
+                var shape = ShapeFactory.CreateFromData(data);
+                if (shape == null)
+                {
+                    Debug.LogError($"[ClientBatchCreate] Failed to create shape of type {data.Type}");
+                    continue;
+                }
+
+                shape.ShapeId = data.Id;
+                shape.Deserialize(data);
+                ShapeStorage.Register(shape);
+            }
+        }
+
+
+        [Serializable]
+        public class ShapeDataListWrapper
+        {
+            public List<ShapeData> Shapes;
+        }
+
+        
+        [ClientRpc]
         private void BroadcastMoveShapeClientRpc(string shapeId, Vector3 pos)
         {
             if (IsHost) return;
+
+            Debug.LogError($"[BroadcastMoveShapeClientRpc] shapeId={shapeId} to={pos}");
+
             var shape = ShapeStorage.GetById(shapeId);
-            shape?.MoveTo(pos, silent: true);
+            if (shape == null)
+            {
+                Debug.LogError($"[BroadcastMoveShapeClientRpc] shape NOT found in ShapeStorage");
+                return;
+            }
+
+            shape.MoveTo(pos, silent: true);
         }
+
 
         [ClientRpc]
         private void BroadcastDeleteShapeClientRpc(string shapeId)
@@ -55,6 +106,7 @@ namespace Manipulator
         [ClientRpc]
         private void BroadcastCreateShapeClientRpc(string json)
         {
+            Debug.LogError($"[BroadcastCreateShapeClientRpc] {IsHost}");
             if (IsHost) return;
             var data = JsonUtility.FromJson<ShapeData>(json);
             ShapeFactory.CreateFromData(data);

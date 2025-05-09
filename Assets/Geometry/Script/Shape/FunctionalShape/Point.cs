@@ -14,6 +14,7 @@ namespace Manipulator
         private NetworkPositionSync positionSync;
 
         public event System.Action<Point> OnChanged;
+        public event Action<Point> OnPositionChanged;
 
         #region INIT
 
@@ -54,7 +55,7 @@ namespace Manipulator
         /// <summary>
         /// Di chuyển point đến vị trí mới. Nếu silent = true, không gửi sự kiện NotifyChanged.
         /// </summary>
-        public virtual void MoveTo(Vector3 newPosition, bool silent = false)
+        public override void MoveTo(Vector3 newPosition, bool silent = false, bool queue = true)
         {
             if (transform.position == newPosition) return;
 
@@ -67,6 +68,12 @@ namespace Manipulator
             // ConstraintManager.Instance.ApplyConstraints(this, delta);
             
             // Gửi sync vị trí nếu là host
+
+            Debug.LogError($"[Point Move To] {newPosition}");
+            
+            OnPositionChanged?.Invoke(this);
+
+
             if (!silent && IsHost && TryGetComponent<NetworkPositionSync>(out var sync))
             {
                 sync.syncedPosition.Value = newPosition;
@@ -75,7 +82,7 @@ namespace Manipulator
             // Ghi undo và thông báo thay đổi
             if (!silent)
             {
-                UndoRedoNetworkBridge.Instance.DoAndBroadcast(new MoveShapeAction(ShapeId, oldPosition, newPosition));
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(new MoveShapeAction(ShapeId, oldPosition, newPosition), queue);
                 NotifyChanged();
             }
         }

@@ -204,7 +204,8 @@ namespace Manipulator
         public bool isInternalMove = false;
 
         public virtual void MoveTo(Vector3 newPosition, bool silent = false, bool queue = true)
-        {
+        { 
+            Debug.LogError($"[Shape Move To] {newPosition}");
             if (transform.position == newPosition) return;
 
             if (!silent && !isInternalMove)

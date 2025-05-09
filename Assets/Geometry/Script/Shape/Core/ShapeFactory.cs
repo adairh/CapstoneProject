@@ -15,9 +15,13 @@ namespace Manipulator
 
         public static Shape CreateShape(string type, Vector3 position)
         {
+            //Debug.LogError($"[CreateShape] {position}");
+
             if (creators.TryGetValue(type, out var ctor))
             {
                 var instance = ctor(position);
+                //Debug.LogError($"[CreateShape] {instance != null}");
+
                 if (instance != null) return instance;
             }
 
@@ -100,7 +104,11 @@ namespace Manipulator
         
         public static Shape CreateFromData(ShapeData data)
         {
+            //Debug.LogError($"[CreateFromData] {data.Id}");
+
             var shape = CreateShape(data.Type, data.Position);
+            //Debug.LogError($"[CreateFromData] {shape != null}");
+
             if (shape == null) return null;
             
             // ❗ Unregister tạm vì shape đang nằm dưới ShapeId cũ

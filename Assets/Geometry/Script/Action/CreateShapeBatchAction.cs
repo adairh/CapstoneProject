@@ -4,9 +4,15 @@ using UnityEngine;
 
 namespace Manipulator
 {
+    [Serializable]
+    public class ShapeDataListWrapper
+    {
+        public List<ShapeData> list;
+    }
+
     public class CreateShapeBatchAction : IUndoableAction
     {
-        private readonly List<ShapeData> shapeDataList;
+        public readonly List<ShapeData> shapeDataList;
         private readonly List<Shape> createdShapes = new();
 
         public Action<Shape> OnShapeSpawned; // 👈 ADD THIS LINE
@@ -18,23 +24,30 @@ namespace Manipulator
 
         public void Redo()
         {
-            foreach (var data in shapeDataList)
+            if (UndoRedoNetworkBridge.Instance.IsHost)
             {
-                UndoRedoNetworkBridge.Instance.SpawnFromData(data, shape =>
+                foreach (var data in shapeDataList)
                 {
-                    if (shape == null)
+                    UndoRedoNetworkBridge.Instance.SpawnFromData(data, shape =>
                     {
-                        Debug.LogError($"[CreateShapeBatchAction] Failed to create shape of type {data.Type}");
-                        return;
-                    }
+                        if (shape == null)
+                        {
+                            Debug.LogError($"[CreateShapeBatchAction] Failed to create shape of type {data.Type}");
+                            return;
+                        }
 
-                    shape.ShapeId = data.Id;
-                    shape.Deserialize(data);
-                    ShapeStorage.Register(shape);
+                        shape.ShapeId = data.Id;
+                        shape.Deserialize(data);
+                        ShapeStorage.Register(shape);
 
-                    createdShapes.Add(shape);
-                    OnShapeSpawned?.Invoke(shape);
-                });
+                        createdShapes.Add(shape);
+                        OnShapeSpawned?.Invoke(shape);
+                    });
+                }
+
+                // Gửi xuống client
+                string batchJson = JsonUtility.ToJson(new ShapeDataListWrapper { list = shapeDataList });
+                UndoRedoNetworkBridge.Instance.BroadcastCreateShapeBatchClientRpc(batchJson);
             }
         }
 
@@ -46,6 +59,4 @@ namespace Manipulator
             createdShapes.Clear();
         }
     }
-    
 }
-

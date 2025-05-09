@@ -39,12 +39,16 @@ namespace Manipulator
 
         public void Redo()
         {
-            if (redoStack.Count > 0)
-            {
-                var action = redoStack.Pop();
-                action.Redo();
-                undoStack.Push(action);
-            }
+            if (redoStack.Count == 0) return;
+
+            var action = redoStack.Pop();
+            action.Redo();
+            undoStack.Push(action);
+
+            // 🔧 Add this:
+            if (NetworkManager.Singleton.IsHost)
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(action, false); // false: không push lại queue
         }
+
     }
 }

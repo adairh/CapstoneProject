@@ -11,6 +11,7 @@ namespace Manipulator
 {
     public class Segment : Shape
     {
+        private NetworkPositionSync positionSync;
         public Point StartPoint { get; private set; }
         public Point EndPoint { get; private set; }
 
@@ -24,6 +25,10 @@ namespace Manipulator
             visual.transform.SetParent(transform);
             visual.GetComponent<Renderer>().material = MaterialLibrary.Get(MaterialType.Default);
             DestroyImmediate(visual.GetComponent<Collider>());
+            
+            // Network sync
+            if (!TryGetComponent(out positionSync))
+                positionSync = gameObject.AddComponent<NetworkPositionSync>();
         }
 
         private void Update()
@@ -48,21 +53,36 @@ namespace Manipulator
         {
             StartPoint = a;
             AddPivot(a);
+            a.OnPositionChanged += OnPivotMoved; // 👈 thêm dòng này
+            UpdateVisual();
         }
 
         public void SetEndPoint(Point b)
         {
             EndPoint = b;
             AddPivot(b);
+            b.OnPositionChanged += OnPivotMoved; // 👈 thêm dòng này
             UpdateVisual();
+        }
+        
+        private void OnPivotMoved(Point moved)
+        {
+            UpdateVisual(); // 👈 tự cập nhật lại visual khi point di chuyển
         }
 
         private void UpdateVisual()
         {
-            if (StartPoint == null || EndPoint == null || visual == null) return;
+            if (StartPoint == null || EndPoint == null || visual == null)
+            {
+                Debug.LogError($"[UpdateVisual] Invalid call — Start={StartPoint}, End={EndPoint}, visual={visual}");
+                return;
+            }
 
             Vector3 a = StartPoint.transform.position;
             Vector3 b = EndPoint.transform.position;
+
+            Debug.LogError($"[UpdateVisual] A = {a}, B = {b}, Segment = {ShapeId}");
+
             Vector3 mid = (a + b) / 2;
             Vector3 dir = b - a;
             float length = dir.magnitude;
@@ -72,6 +92,7 @@ namespace Manipulator
             visual.transform.Rotate(90, 0, 0);
             visual.transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
         }
+
 
         protected override void OnPivotChanged(Point pt)
         {
@@ -133,6 +154,8 @@ namespace Manipulator
             base.OnDestroy();
             if (ShapeStorage.Contains(this.ShapeId))
                 ShapeStorage.Unregister(this);
+            if (StartPoint != null) StartPoint.OnPositionChanged -= OnPivotMoved;
+            if (EndPoint != null) EndPoint.OnPositionChanged -= OnPivotMoved;
         }
 
         public static class Drawer
@@ -143,6 +166,8 @@ namespace Manipulator
             private static string pendingStartId;
             private static string pendingEndId;
             private static string pendingSegId;
+
+            private static CreateShapeBatchAction batch;
 
             private enum State { None, Dragging }
             private static State current = State.None;
@@ -189,7 +214,7 @@ namespace Manipulator
                 datas.Add(p2Data);
                 datas.Add(segData);
 
-                var batch = new CreateShapeBatchAction(datas);
+                batch = new CreateShapeBatchAction(datas);
                 batch.OnShapeSpawned = shape =>
                 {
                     if (shape is Point pt)
