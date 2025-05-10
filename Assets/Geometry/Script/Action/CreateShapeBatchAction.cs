@@ -15,64 +15,51 @@ namespace Manipulator
         public readonly List<ShapeData> shapeDataList;
         private readonly List<Shape> createdShapes = new();
 
-        public Action<Shape> OnShapeSpawned;
+        public Action<Shape> OnShapeSpawned; // 👈 ADD THIS LINE
 
         public CreateShapeBatchAction(List<ShapeData> shapeDataList)
         {
             this.shapeDataList = shapeDataList;
         }
 
-        private bool isPreview = false;
-
-        public void Redo(bool preview)
-        {
-            isPreview = preview;
-            Redo();
-        }
-
         public void Redo()
         {
-            if (!UndoRedoNetworkBridge.Instance.IsHost) return;
-
-            foreach (var data in shapeDataList)
+            if (UndoRedoNetworkBridge.Instance.IsHost)
             {
-                UndoRedoNetworkBridge.Instance.SpawnFromData(data, shape =>
+                foreach (var data in shapeDataList)
                 {
-                    if (shape == null)
+                    UndoRedoNetworkBridge.Instance.SpawnFromData(data, shape =>
                     {
-                        Debug.LogError($"[CreateShapeBatchAction] Failed to create shape of type {data.Type}");
-                        return;
-                    }
+                        if (shape == null)
+                        {
+                            //Debug.LogError($"[CreateShapeBatchAction] Failed to create shape of type {data.Type}");
+                            return;
+                        }
 
-                    shape.ShapeId = data.Id;
-                    shape.Deserialize(data);
-                    ShapeStorage.Register(shape);
+                        shape.ShapeId = data.Id;
+                        shape.Deserialize(data);
+                        ShapeStorage.Register(shape);
 
-                    createdShapes.Add(shape);
-                    OnShapeSpawned?.Invoke(shape);
-                });
+                        createdShapes.Add(shape);
+                        OnShapeSpawned?.Invoke(shape);
+                    });
+                }
+
+                // Gửi xuống client
+                string batchJson = JsonUtility.ToJson(new ShapeDataListWrapper { list = shapeDataList });
+                UndoRedoNetworkBridge.Instance.BroadcastCreateShapeBatchClientRpc(batchJson);
             }
-
-            string batchJson = JsonUtility.ToJson(new ShapeDataListWrapper { list = shapeDataList });
-            UndoRedoNetworkBridge.Instance.BroadcastCreateShapeBatchClientRpc(batchJson);
-
-            if (isPreview)
-            {
-                // Replace preview in queue with actual on commit
-                UndoRedoManager.Instance.ReplaceLast(this);
-            }
-            else
-            {
-                UndoRedoManager.Instance.Do(this);
-            }
-
-            isPreview = false;
         }
+
 
         public void Undo()
         {
             foreach (var shape in createdShapes)
+            {
+                UndoRedoNetworkBridge.Instance.BroadcastDeleteShapeClientRpc(shape.ShapeId);
                 shape.DestroyShape();
+            }
+
             createdShapes.Clear();
         }
     }

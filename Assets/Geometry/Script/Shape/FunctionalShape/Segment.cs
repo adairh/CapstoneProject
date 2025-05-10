@@ -247,6 +247,22 @@ namespace Manipulator
                 current = State.None;
                 PerformDrawing.ResetMode();
 
+                batch = UndoRedoManager.Instance.LastStack() as CreateShapeBatchAction;
+                //Debug.LogError($"[Segment] Batch {batch != null}");
+
+                if (endPoint != null && batch != null)
+                {
+                    var p2Data = batch.shapeDataList.Find(d => d.Id == pendingEndId);
+                    //Debug.LogError($"[Segment] p2Data {p2Data != null}");
+
+                    if (p2Data != null)
+                    {
+                        p2Data.Position = endPoint.transform.position;
+                        var a = batch.shapeDataList.Find(d => d.Id == pendingEndId);
+                        //Debug.LogError($"[Segment] {p2Data.Position} --- {a.Position}");
+                    }
+                }
+
                 if (preview != null) preview.SetRaycastIgnore(false);
 
                 if (endPoint != null)

@@ -95,7 +95,7 @@ namespace Manipulator
 
 
         [ClientRpc]
-        private void BroadcastDeleteShapeClientRpc(string shapeId)
+        public void BroadcastDeleteShapeClientRpc(string shapeId)
         {
             if (IsHost) return;
             var shape = ShapeStorage.GetById(shapeId);

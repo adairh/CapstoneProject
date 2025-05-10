@@ -50,17 +50,23 @@ namespace Manipulator
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(action, false); // false: không push lại queue
         }
 
-        
-        public void ReplaceLast(IUndoableAction action)
+
+        public IUndoableAction LastStack()
         {
-            if (undoStack.Count > 0 && undoStack.Peek() is CreateShapeBatchAction)
-            {
-                undoStack.Pop();
-            }
+            if (undoStack.Count == 0) return null;
+
+            var action = undoStack.Peek();
+
+            return action;
+        }
+
+        public void ReplaceStack(IUndoableAction action)
+        {
+            if (undoStack.Count == 0) return;
+
+            undoStack.Pop();
             undoStack.Push(action);
         }
 
-        
-        
     }
 }
