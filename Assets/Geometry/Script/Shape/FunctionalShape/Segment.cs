@@ -1,8 +1,11 @@
-﻿using UnityEngine;
+﻿// Refactored Segment.cs — ADD DEBUG LOGGING FOR DRAWING FLOW with SNAP POINTS and UNDO-SAFE SPAWN + RECONNECT SYNC FIX + SAFE DESTROY HANDLING
+
+using UnityEngine;
 using Unity.Netcode;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Manipulator
 {
@@ -22,7 +25,8 @@ namespace Manipulator
             visual.transform.SetParent(transform);
             visual.GetComponent<Renderer>().material = MaterialLibrary.Get(MaterialType.Default);
             DestroyImmediate(visual.GetComponent<Collider>());
-
+            
+            // Network sync
             if (!TryGetComponent(out positionSync))
                 positionSync = gameObject.AddComponent<NetworkPositionSync>();
         }
@@ -49,7 +53,7 @@ namespace Manipulator
         {
             StartPoint = a;
             AddPivot(a);
-            a.OnPositionChanged += OnPivotMoved;
+            a.OnPositionChanged += OnPivotMoved; // 👈 thêm dòng này
             UpdateVisual();
         }
 
@@ -57,18 +61,28 @@ namespace Manipulator
         {
             EndPoint = b;
             AddPivot(b);
-            b.OnPositionChanged += OnPivotMoved;
+            b.OnPositionChanged += OnPivotMoved; // 👈 thêm dòng này
             UpdateVisual();
         }
-
-        private void OnPivotMoved(Point moved) => UpdateVisual();
+        
+        private void OnPivotMoved(Point moved)
+        {
+            UpdateVisual(); // 👈 tự cập nhật lại visual khi point di chuyển
+        }
 
         private void UpdateVisual()
         {
-            if (StartPoint == null || EndPoint == null || visual == null) return;
+            if (StartPoint == null || EndPoint == null || visual == null)
+            {
+                Debug.LogError($"[UpdateVisual] Invalid call — Start={StartPoint}, End={EndPoint}, visual={visual}");
+                return;
+            }
 
             Vector3 a = StartPoint.transform.position;
             Vector3 b = EndPoint.transform.position;
+
+            Debug.LogError($"[UpdateVisual] A = {a}, B = {b}, Segment = {ShapeId}");
+
             Vector3 mid = (a + b) / 2;
             Vector3 dir = b - a;
             float length = dir.magnitude;
@@ -78,6 +92,7 @@ namespace Manipulator
             visual.transform.Rotate(90, 0, 0);
             visual.transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
         }
+
 
         protected override void OnPivotChanged(Point pt)
         {
@@ -127,9 +142,10 @@ namespace Manipulator
                 if (child != null)
                     child.gameObject.layer = layer;
 
-            if (StartPoint != null)
+            if (StartPoint != null && StartPoint.gameObject != null)
                 StartPoint.gameObject.layer = layer;
-            if (EndPoint != null)
+
+            if (EndPoint != null && EndPoint.gameObject != null)
                 EndPoint.gameObject.layer = layer;
         }
 
@@ -141,8 +157,6 @@ namespace Manipulator
             if (StartPoint != null) StartPoint.OnPositionChanged -= OnPivotMoved;
             if (EndPoint != null) EndPoint.OnPositionChanged -= OnPivotMoved;
         }
-
-        // ------------------ DRAWER INNER CLASS ------------------ //
 
         public static class Drawer
         {
@@ -170,11 +184,11 @@ namespace Manipulator
             private static void Start()
             {
                 if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
-                if (ManipulationManager.Instance.IsDrawing) return;
+                var mm = ManipulationManager.Instance;
+                if (mm.IsDrawing) return;
+                mm.IsDrawing = true;
 
-                ManipulationManager.Instance.IsDrawing = true;
-
-                var datas = new List<ShapeData>();
+                List<ShapeData> datas = new();
 
                 Point snap = FindNearbyPoint(pos);
                 bool usingSnap = snap != null;
@@ -187,23 +201,15 @@ namespace Manipulator
                 else
                 {
                     pendingStartId = Guid.NewGuid().ToString();
-                    var p1Data = new ShapeData { Id = pendingStartId, Type = "Point", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one };
+                    var p1Data = new ShapeData { Id = pendingStartId, Type = "Point", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new(), Settings = new() };
                     datas.Add(p1Data);
                 }
 
                 pendingEndId = Guid.NewGuid().ToString();
                 pendingSegId = Guid.NewGuid().ToString();
 
-                var p2Data = new ShapeData { Id = pendingEndId, Type = "Point", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one };
-                var segData = new ShapeData
-                {
-                    Id = pendingSegId,
-                    Type = "Segment",
-                    Position = pos,
-                    Rotation = Quaternion.identity,
-                    Scale = Vector3.one,
-                    ConnectedPoints = new List<string> { pendingStartId, pendingEndId }
-                };
+                var p2Data = new ShapeData { Id = pendingEndId, Type = "Point", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new(), Settings = new() };
+                var segData = new ShapeData { Id = pendingSegId, Type = "Segment", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new() { pendingStartId, pendingEndId }, Settings = new() };
 
                 datas.Add(p2Data);
                 datas.Add(segData);
@@ -217,10 +223,12 @@ namespace Manipulator
                             OnStartPointReady(pt);
                     }
                     else if (shape is Segment s && s.ShapeId == pendingSegId)
+                    {
                         OnSegmentReady(s);
+                    }
                 };
 
-                batch.Redo(preview: true); // Tạo bản preview cho tất cả client thấy nhưng chưa ghi vào undo stack
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
 
                 current = State.Dragging;
             }
@@ -231,7 +239,7 @@ namespace Manipulator
                 if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
 
                 Point snap = FindNearbyPoint(pos, exclude: startPoint);
-                endPoint.MoveTo(snap != null ? snap.transform.position : pos, queue: false);
+                endPoint.MoveTo((snap != null) ? snap.transform.position : pos, queue: false);
 
                 if (snap != null && snap != endPoint)
                 {
@@ -264,17 +272,6 @@ namespace Manipulator
                 }
 
                 if (preview != null) preview.SetRaycastIgnore(false);
-
-                if (endPoint != null)
-                {
-                    var p2Data = batch.shapeDataList.Find(d => d.Id == pendingEndId);
-                    if (p2Data != null)
-                        p2Data.Position = endPoint.transform.position;
-                }
-
-                // ✅ Cập nhật preview thành hành động thật sự
-                UndoRedoManager.Instance.ReplaceLast(batch);
-
                 startPoint = null;
                 endPoint = null;
                 preview = null;
@@ -285,10 +282,15 @@ namespace Manipulator
 
             public static void OnStartPointReady(Point p)
             {
+                //Debug.LogError($"[OnStartPointReady] Called with Point ID = {p.ShapeId}");
+                //Debug.LogError($"[OnStartPointReady] Current pendingStartId = {pendingStartId}, pendingEndId = {pendingEndId}");
+
                 if (p.ShapeId == pendingStartId)
                     startPoint = p;
                 else if (p.ShapeId == pendingEndId)
                     endPoint = p;
+                else
+                    //Debug.LogError("[OnStartPointReady] Point ID does not match any pending ID");
 
                 if (preview != null)
                 {
@@ -299,9 +301,17 @@ namespace Manipulator
 
             public static void OnSegmentReady(Segment s)
             {
-                if (s.ShapeId != pendingSegId) return;
+                //Debug.LogError($"[OnSegmentReady] Called with Segment ID = {s.ShapeId}");
+                //Debug.LogError($"[OnSegmentReady] Pending ID = {pendingSegId}");
+
+                if (s.ShapeId != pendingSegId)
+                {
+                    //Debug.LogError("[OnSegmentReady] Segment ID does not match");
+                    return;
+                }
 
                 preview = s;
+
                 if (startPoint != null) preview.SetStartPoint(startPoint);
                 if (endPoint != null) preview.SetEndPoint(endPoint);
 
@@ -313,9 +323,13 @@ namespace Manipulator
             {
                 foreach (var shape in ShapeStorage.GetAllShapes())
                 {
+                    if (shape == null || shape.gameObject == null) continue;
+
                     if (shape is Point pt && pt != exclude)
+                    {
                         if (Vector3.Distance(pos, pt.transform.position) < SnapDistance)
                             return pt;
+                    }
                 }
                 return null;
             }
