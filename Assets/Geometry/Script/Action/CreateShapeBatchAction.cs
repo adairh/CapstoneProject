@@ -13,7 +13,7 @@ namespace Manipulator
     public class CreateShapeBatchAction : IUndoableAction
     {
         public readonly List<ShapeData> shapeDataList;
-        private readonly List<Shape> createdShapes = new();
+        public readonly List<Shape> createdShapes = new();
 
         public Action<Shape> OnShapeSpawned; // 👈 ADD THIS LINE
 
@@ -56,6 +56,20 @@ namespace Manipulator
         {
             foreach (var shape in createdShapes)
             {
+                if (shape is Point pt)
+                {
+                    int referenceCount = 0;
+                    foreach (var s in ShapeStorage.GetAllShapes())
+                    {
+
+                        if (s is Segment seg && (seg.StartPoint == pt || seg.EndPoint == pt))
+                        {
+                            referenceCount++;
+                        }
+                    }
+                    Debug.LogError($"[UNDO] Ref {pt.ShapeId} - {referenceCount}");
+                }
+                
                 UndoRedoNetworkBridge.Instance.BroadcastDeleteShapeClientRpc(shape.ShapeId);
                 shape.DestroyShape();
             }

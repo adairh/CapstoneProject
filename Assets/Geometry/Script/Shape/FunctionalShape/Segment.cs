@@ -15,21 +15,30 @@ namespace Manipulator
         public Point StartPoint { get; private set; }
         public Point EndPoint { get; private set; }
 
+        [SerializeField] private string IDS, IDE;
+
         private GameObject visual;
         private bool isPreview = false;
 
         protected override void Awake()
         {
             base.Awake();
-            visual = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            visual.transform.SetParent(transform);
-            visual.GetComponent<Renderer>().material = MaterialLibrary.Get(MaterialType.Default);
-            DestroyImmediate(visual.GetComponent<Collider>());
+
+            // Gán hình trụ trực tiếp cho gameObject
+            var meshFilter = gameObject.AddComponent<MeshFilter>();
+            var temp = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            meshFilter.sharedMesh = temp.GetComponent<MeshFilter>().sharedMesh;
+            DestroyImmediate(temp);
             
-            // Network sync
+            var meshRenderer = gameObject.AddComponent<MeshRenderer>();
+            meshRenderer.material = MaterialLibrary.Get(MaterialType.Default);
+
+            //DestroyImmediate(gameObject.GetComponent<Collider>()); // Optional: không cần collider nếu không tương tác
+
             if (!TryGetComponent(out positionSync))
                 positionSync = gameObject.AddComponent<NetworkPositionSync>();
         }
+
 
         private void Update()
         {
@@ -72,25 +81,28 @@ namespace Manipulator
 
         private void UpdateVisual()
         {
-            if (StartPoint == null || EndPoint == null || visual == null)
+            if (StartPoint == null || EndPoint == null)
             {
-                Debug.LogError($"[UpdateVisual] Invalid call — Start={StartPoint}, End={EndPoint}, visual={visual}");
+                //Debug.LogError($"[UpdateVisual] Invalid call — Start={StartPoint}, End={EndPoint}, visual={visual}");
                 return;
             }
 
+            IDS = StartPoint.ShapeId;
+            IDE = EndPoint.ShapeId;
+            
             Vector3 a = StartPoint.transform.position;
             Vector3 b = EndPoint.transform.position;
 
-            Debug.LogError($"[UpdateVisual] A = {a}, B = {b}, Segment = {ShapeId}");
+            //Debug.LogError($"[UpdateVisual] A = {a}, B = {b}, Segment = {ShapeId}");
 
             Vector3 mid = (a + b) / 2;
             Vector3 dir = b - a;
             float length = dir.magnitude;
 
-            visual.transform.position = mid;
-            visual.transform.rotation = Quaternion.LookRotation(dir);
-            visual.transform.Rotate(90, 0, 0);
-            visual.transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
+            transform.position = mid;
+            transform.rotation = Quaternion.LookRotation(dir);
+            transform.Rotate(90, 0, 0);
+            transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
         }
 
 
@@ -241,11 +253,11 @@ namespace Manipulator
                 Point snap = FindNearbyPoint(pos, exclude: startPoint);
                 endPoint.MoveTo((snap != null) ? snap.transform.position : pos, queue: false);
 
-                if (snap != null && snap != endPoint)
-                {
-                    endPoint.DestroyShape();
-                    preview.SetEndPoint(snap);
-                }
+                // if (snap != null && snap != endPoint)
+                // {
+                //     endPoint.DestroyShape();
+                //     preview.SetEndPoint(snap);
+                // }
             }
 
             private static void End()
@@ -254,8 +266,70 @@ namespace Manipulator
                 ManipulationManager.Instance.IsDrawing = false;
                 current = State.None;
                 PerformDrawing.ResetMode();
+                
+                var pos = endPoint.transform.position;
+                Point snap = FindNearbyPoint(pos, exclude: startPoint);
+                endPoint.MoveTo((snap != null) ? snap.transform.position : pos, queue: false);
 
                 batch = UndoRedoManager.Instance.LastStack() as CreateShapeBatchAction;
+                
+                if (snap != null && snap != endPoint)
+                {
+                    endPoint.DestroyShape();
+                    preview.SetEndPoint(snap);
+                    
+                    Debug.LogError($"[Segment - new] {snap.ShapeId}");
+                    
+                    if (batch != null)
+                    {
+                        var p2Data = batch.shapeDataList.Find(d => d.Id == pendingEndId);
+                        //Debug.LogError($"[Segment] p2Data {p2Data != null}");
+
+                        if (p2Data != null)
+                        {
+                            Debug.LogError($"[Segment - old] {p2Data.Id}");
+
+
+                            foreach (var i in batch.shapeDataList)
+                            {
+                                Debug.LogError($"[Segment - before] {i.Id}");
+
+                            }
+                            if (p2Data.Id != snap.ShapeId)
+                            {
+                                batch.shapeDataList.Remove(p2Data);
+                                batch.shapeDataList.Add(snap.Data);
+
+                                batch.createdShapes.Remove(endPoint);
+                                batch.createdShapes.Remove(snap);
+                                
+                                var seg = batch.shapeDataList.Find(d => d.Id == pendingSegId);
+
+                                foreach (var i in seg.ConnectedPoints)
+                                {
+                                    Debug.LogError($"[SegmentCon - before] {i}");
+
+                                }
+                                
+                                List<string> conn = new() { pendingStartId, snap.ShapeId };
+                                seg.ConnectedPoints = conn;
+
+                                foreach (var i in seg.ConnectedPoints)
+                                {
+                                    Debug.LogError($"[SegmentCon - after] {i}");
+
+                                }
+                            }
+                            
+                            foreach (var i in batch.shapeDataList)
+                            {
+                                Debug.LogError($"[Segment - after] {i.Id}");
+
+                            }
+                        }
+                    }
+                }
+                
                 //Debug.LogError($"[Segment] Batch {batch != null}");
 
                 if (endPoint != null && batch != null)
@@ -270,6 +344,8 @@ namespace Manipulator
                         //Debug.LogError($"[Segment] {p2Data.Position} --- {a.Position}");
                     }
                 }
+
+                UndoRedoManager.Instance.ReplaceStack(batch);
 
                 if (preview != null) preview.SetRaycastIgnore(false);
                 startPoint = null;

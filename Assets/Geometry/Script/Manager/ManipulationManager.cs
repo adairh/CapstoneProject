@@ -45,8 +45,16 @@ namespace Manipulator
                 {
                     var shape = hit.collider.GetComponentInParent<Shape>();
                     if (shape != null)
+                    {
                         selectedShape = shape;
+                        var select = selectedShape.GetComponent<SelectableShape>();
+                        if (select != null)
+                        {
+                            select.SetSelected(!select.IsSelected());
+                        }
+                    }
                 }
+                
             }
         }
 

@@ -46,6 +46,9 @@ namespace Manipulator
             {
                 drag.SetShape(shape);
             }
+
+            go.AddComponent<HoverableShape>();
+            go.AddComponent<SelectableShape>().SetShape(shape);
  
             return shape;
         }
@@ -106,6 +109,8 @@ namespace Manipulator
         {
             //Debug.LogError($"[CreateFromData] {data.Id}");
 
+            if (ShapeStorage.GetById(data.Id) != null) return null;
+            
             var shape = CreateShape(data.Type, data.Position);
             //Debug.LogError($"[CreateFromData] {shape != null}");
 
