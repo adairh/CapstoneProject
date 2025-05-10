@@ -69,7 +69,7 @@ namespace Manipulator
             
             // Gửi sync vị trí nếu là host
 
-            Debug.LogError($"[Point Move To] {newPosition}");
+            //Debug.LogError($"[Point Move To] {newPosition}");
             
             OnPositionChanged?.Invoke(this);
 
