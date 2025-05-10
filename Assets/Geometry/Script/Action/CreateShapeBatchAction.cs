@@ -32,7 +32,7 @@ namespace Manipulator
                     {
                         if (shape == null)
                         {
-                            Debug.LogError($"[CreateShapeBatchAction] Failed to create shape of type {data.Type}");
+                            //Debug.LogError($"[CreateShapeBatchAction] Failed to create shape of type {data.Type}");
                             return;
                         }
 
@@ -55,7 +55,11 @@ namespace Manipulator
         public void Undo()
         {
             foreach (var shape in createdShapes)
+            {
+                UndoRedoNetworkBridge.Instance.BroadcastDeleteShapeClientRpc(shape.ShapeId);
                 shape.DestroyShape();
+            }
+
             createdShapes.Clear();
         }
     }
