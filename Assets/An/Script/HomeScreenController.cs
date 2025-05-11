@@ -13,6 +13,7 @@ public class HomeScreenController : MonoBehaviour
     public GameObject canvasPlaygame;
     public GameObject canvasOnboarding; // Onboarding screen with ShowHome button
     public GameObject canvas; // Main Canvas transform for UI instantiation
+    public GameObject overPlayCanvas;
 
     [Header("Popups")]
     public GameObject popupJoinRoom;
@@ -43,24 +44,50 @@ public class HomeScreenController : MonoBehaviour
         }
     }
 
-   
+    // ===================== KHONG BO =====================
     void Start()
-    {   
+    {
         // Không đụng 
         //mac dinh hien canvasHome, an canvasPlaygame
+        overPlayCanvas.SetActive(false);
         ConfigureUIBasedOnScene();
         canvasHome.SetActive(true);
         canvasPlaygame.SetActive(false);
-        //canvasOnboarding.SetActive(false); // Hide onboarding screen if it's active
-        //canvas.SetActive(false); // an canvas chinh khi bat dau
+        canvasOnboarding.SetActive(false); // Hide onboarding screen if it's active
+        canvas.SetActive(false); // an canvas chinh khi bat dau
 
         // dam bao cac popup + overlay duoc an ngay khi lo bat trong editor
         if (popupJoinRoom != null) popupJoinRoom.SetActive(false);
         if (popupCreateRoom != null) popupCreateRoom.SetActive(false);
         if (darkOverlay != null) darkOverlay.SetActive(false);
         // Configure UI based on the current scene
-        
+
     }
+    // ===================== kHONG BO =====================
+    //void Start()
+    //{
+    //    ConfigureUIBasedOnScene();
+
+    //    // An popup vA overlay
+    //    if (popupJoinRoom != null) popupJoinRoom.SetActive(false);
+    //    if (popupCreateRoom != null) popupCreateRoom.SetActive(false);
+    //    if (darkOverlay != null) darkOverlay.SetActive(false);
+
+    //    // Xu ly giao dien khoi đau theo tinh huong
+    //    if (returnFromGame)
+    //    {
+    //        canvasHome.SetActive(false);
+    //        canvasPlaygame.SetActive(true);
+    //        returnFromGame = false;
+    //    }
+    //    else
+    //    {
+    //        canvasHome.SetActive(true);         // truong hop mac dinh
+    //        canvasPlaygame.SetActive(false);
+    //        canvasOnboarding.SetActive(false); // Hide onboarding screen if it's active
+    //        canvas.SetActive(false); // an canvas chinh khi bat dau
+    //    }
+    //}
 
     private void ConfigureUIBasedOnScene()
     {
@@ -85,6 +112,8 @@ public class HomeScreenController : MonoBehaviour
     }
     // ===================== PLAY GAME =====================
 
+    
+
     public void OnPlayGamesButton()
     {
         canvasHome.SetActive(false);
@@ -99,12 +128,12 @@ public class HomeScreenController : MonoBehaviour
 
     public void OnPlayGame1()
     {
-        SceneManager.LoadScene("Game1");
+        SceneManager.LoadScene("Menu");
     }
 
     public void OnPlayGame2()
     {
-        SceneManager.LoadScene("Game2");
+        SceneManager.LoadScene("GameScene");
     }
 
     // ===================== JOIN ROOM =====================
@@ -113,11 +142,14 @@ public class HomeScreenController : MonoBehaviour
     {
         // Không đụng - KHoa
         SceneManager.LoadScene("SampleScene");
-        /*popupJoinRoom.SetActive(true);
-        popupCreateRoom.SetActive(false);
-       
-        darkOverlay.SetActive(true);
-        canvasHome.SetActive(true);*/
+        //canvasHome.SetActive(false);
+        
+        
+        //popupJoinRoom.SetActive(false);
+        // popupCreateRoom.SetActive(true);
+
+        //darkOverlay.SetActive(true);
+
         /*canvasPlaygame.SetActive(false);
         canvasOnboarding.SetActive(false);*/ // Hide onboarding screen if it's active
     }

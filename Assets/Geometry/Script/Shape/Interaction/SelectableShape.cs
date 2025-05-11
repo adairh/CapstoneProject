@@ -1,27 +1,54 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Manipulator
 {
-    //[RequireComponent(typeof(Collider))]
-    public class SelectableShape : MonoBehaviour
+    public class SelectableShape : ShapeBehaviourBase
     {
-        private Shape _shape;
+        private Renderer rend;
+        private Material defaultMat;
+        private Material selectedMat;
+        private bool isSelected = false;
 
-        /// <summary>
-        /// Phải gọi ngay sau khi Instantiate shape: shapeGO.GetComponent<SelectableShape>().SetShape(myShape);
-        /// </summary>
-        public void SetShape(Shape shape)
+        private void Awake()
         {
-            _shape = shape;
+            rend = GetComponentInChildren<Renderer>();
+            defaultMat = MaterialLibrary.Get(MaterialType.Default);
+            selectedMat = MaterialLibrary.Get(MaterialType.Select);
+            //SetSelected(false);
         }
 
-        private void OnMouseDown()
+        public override void SetShape(Shape s)
         {
-            // Chỉ xử lý khi nhấn Ctrl + click
-            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+            base.SetShape(s);
+        }
+
+        private void Update()
+        {
+            foreach (var s in shape.GetDependentShapesForDelete())
             {
-                ManipulationManager.Instance.ToggleSelection(_shape);
+                var select = s.GetComponent<SelectableShape>();
+                if (select != null)
+                {
+                    select.SetSelected(shape.GetComponent<SelectableShape>().IsSelected());
+                }
             }
         }
+
+        public void SetSelected(bool selected)
+        {
+            if (ManipulationManager.Instance.IsDrawing) return;
+            isSelected = selected;
+            if (rend != null)
+            {
+                rend.material = isSelected ? selectedMat : defaultMat;
+                OnSelectedChanged?.Invoke(this);
+            }
+        }
+
+        public bool IsSelected() => isSelected;
+        
+        public event Action<SelectableShape> OnSelectedChanged;
+
     }
 }

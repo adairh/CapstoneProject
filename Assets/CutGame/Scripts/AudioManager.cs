@@ -11,12 +11,22 @@ public class AudioManager : MonoBehaviour
 
     private void Awake()
     {
-        DontDestroyOnLoad(gameObject);
+        //DontDestroyOnLoad(gameObject);
 
+        //if (instance == null)
+        //    instance = this;
+        //else
+        //    Destroy(gameObject);
         if (instance == null)
+        {
             instance = this;
+        }
         else
+        {
             Destroy(gameObject);
+            return;
+        }
+
     }
 
     // Switches sound volume between 0 and 1

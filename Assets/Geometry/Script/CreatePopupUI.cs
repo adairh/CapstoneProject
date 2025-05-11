@@ -3,37 +3,42 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using UnityEngine.SceneManagement;
-
 using An_An;
 using Manipulator;
+using Khoa;
 
 public class CreatePopupUI : MonoBehaviour
 {
     [SerializeField] private TMP_InputField lobbyNameInputField;
     [SerializeField] private TMP_InputField passwordInputField;
+    [SerializeField] private Toggle privateToggle; // New Toggle for private/public setting
+    
     [SerializeField] private Button confirmButton;
     [SerializeField] private Button cancelButton;
     [SerializeField] private GameObject darkOverlay; // Optional: for dimming background when popup is active
 
-    private Action<string, string> onConfirm;
+    private Action<string, string, bool> onConfirm; // Updated callback to include isPrivate
+
     private void Awake()
     {
-        if (lobbyNameInputField == null) Debug.LogError("LobbyNameInputField is not assigned in LobbyPopupUI!");
-        if (passwordInputField == null) Debug.LogError("PasswordInputField is not assigned in LobbyPopupUI!");
-        if (confirmButton == null) Debug.LogError("ConfirmButton is not assigned in LobbyPopupUI!");
-        if (cancelButton == null) Debug.LogError("CancelButton is not assigned in LobbyPopupUI!");
+        if (lobbyNameInputField == null) Debug.LogError("LobbyNameInputField is not assigned in CreatePopupUI!");
+        if (passwordInputField == null) Debug.LogError("PasswordInputField is not assigned in CreatePopupUI!");
+        if (privateToggle == null) Debug.LogError("PrivateToggle is not assigned in CreatePopupUI!");
+        if (confirmButton == null) Debug.LogError("ConfirmButton is not assigned in CreatePopupUI!");
+        if (cancelButton == null) Debug.LogError("CancelButton is not assigned in CreatePopupUI!");
 
         confirmButton.onClick.AddListener(() =>
         {
             string lobbyName = lobbyNameInputField.text?.Trim();
             string password = passwordInputField.text?.Trim();
-            Debug.Log($"Popup Input: Name={lobbyName}, Password={password}");
+            bool isPrivate = privateToggle.isOn; // Get the state of the toggle (true = private, false = public)
+            Debug.Log($"Popup Input: Name={lobbyName}, Password={password}, IsPrivate={isPrivate}");
             if (string.IsNullOrEmpty(lobbyName) || string.IsNullOrEmpty(password))
             {
                 Debug.LogWarning("Lobby name and password cannot be empty!");
                 return;
             }
-            onConfirm?.Invoke(lobbyName, password);
+            onConfirm?.Invoke(lobbyName, password, isPrivate);
             Debug.Log("Confirm Clicked: Checking GameLobby.Instance...");
             if (GameLobby.Instance == null)
             {
@@ -42,7 +47,7 @@ public class CreatePopupUI : MonoBehaviour
             else
             {
                 Debug.Log("GameLobby.Instance is valid: " + GameLobby.Instance);
-                GameLobby.Instance.CreateLobby(lobbyName, password, false);
+                GameLobby.Instance.CreateLobby(lobbyName, password, isPrivate);
             }
             Hide();
         });
@@ -55,11 +60,12 @@ public class CreatePopupUI : MonoBehaviour
         });
     }
 
-    public void Show(Action<string, string> confirmCallback)
+    public void Show(Action<string, string, bool> confirmCallback)
     {
         gameObject.SetActive(true);
         lobbyNameInputField.text = "";
         passwordInputField.text = "";
+        privateToggle.isOn = false; // Default to public (unchecked)
         onConfirm = confirmCallback;
     }
 

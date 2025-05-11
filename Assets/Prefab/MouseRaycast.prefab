@@ -81,9 +81,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d076cb8e59b94fb6b35bb5601c1525ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainCamera: {fileID: 0}
-  shapeNetworkPrefab: {fileID: 7128279299386033603, guid: fca09b510ce0e1e41857f2e41013a9be,
-    type: 3}
+  drawingMode: 0
 --- !u!114 &3685893081418092115
 MonoBehaviour:
   m_ObjectHideFlags: 0
