@@ -15,7 +15,7 @@ namespace Manipulator
             rend = GetComponentInChildren<Renderer>();
             defaultMat = MaterialLibrary.Get(MaterialType.Default);
             selectedMat = MaterialLibrary.Get(MaterialType.Select);
-            SetSelected(false);
+            //SetSelected(false);
         }
 
         public override void SetShape(Shape s)
@@ -23,8 +23,21 @@ namespace Manipulator
             base.SetShape(s);
         }
 
+        private void Update()
+        {
+            foreach (var s in shape.GetDependentShapesForDelete())
+            {
+                var select = s.GetComponent<SelectableShape>();
+                if (select != null)
+                {
+                    select.SetSelected(shape.GetComponent<SelectableShape>().IsSelected());
+                }
+            }
+        }
+
         public void SetSelected(bool selected)
         {
+            if (ManipulationManager.Instance.IsDrawing) return;
             isSelected = selected;
             if (rend != null)
             {

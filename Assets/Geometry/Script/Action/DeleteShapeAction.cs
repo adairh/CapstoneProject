@@ -4,23 +4,33 @@ namespace Manipulator
 {
     public class DeleteShapeAction : IUndoableAction
     {
-        private readonly Shape shape;
+        private readonly ShapeData shapeData;
+        private Shape shape;
 
         public DeleteShapeAction(Shape shape)
         {
             this.shape = shape;
+            this.shapeData = shape.Serialize();
         }
 
         public void Undo()
         {
-            shape.gameObject.SetActive(true);
-            ShapeStorage.Register(shape);
+            if (shape == null)
+            {
+                shape = ShapeFactory.CreateFromData(shapeData);
+                shape.ShapeId = shapeData.Id;
+                shape.Deserialize(shapeData);
+                ShapeStorage.Register(shape);
+            }
         }
 
         public void Redo()
         {
-            shape.gameObject.SetActive(false);
-            ShapeStorage.Unregister(shape);
+            if (shape != null)
+            {
+                shape.DestroyShape();
+                shape = null;
+            }
         }
 
         public Shape GetShape() => shape;

@@ -43,6 +43,10 @@ namespace Manipulator
                         foreach (var move in mma.GetSubActions())
                             BroadcastMoveShapeClientRpc(move.ShapeId, move.NewPosition);
                         break;
+                    case DeleteShapeBatchAction dsba:
+                        foreach (var s in dsba.shapes) // nếu cần broadcast từng shape
+                            BroadcastDeleteShapeClientRpc(s.ShapeId);
+                        break;
 
 
                     default:

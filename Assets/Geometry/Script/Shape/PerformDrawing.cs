@@ -39,6 +39,12 @@ namespace Manipulator
                 case IShapeButton.ShapeType.Segment:
                     Segment.Drawer.UpdateSegmentInput();
                     break;
+                case IShapeButton.ShapeType.Line:
+                    Line.Drawer.UpdateLineInput();
+                    break;
+                case IShapeButton.ShapeType.RayShape:
+                    RayShape.Drawer.UpdateRayShapeInput();
+                    break;
             }
         }
 

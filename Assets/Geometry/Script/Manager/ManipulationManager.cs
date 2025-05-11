@@ -1,4 +1,5 @@
-﻿using UnityEngine; 
+﻿using System.Collections.Generic;
+using UnityEngine; 
 
 namespace Manipulator
 {
@@ -7,8 +8,7 @@ namespace Manipulator
         public static ManipulationManager Instance { get; private set; }
         
         public bool IsDrawing { get; set; }
-
-        private Shape selectedShape;
+ 
 
         private void Awake()
         {
@@ -31,10 +31,16 @@ namespace Manipulator
         {
             if (action == UserAction.Delete)
             {
-                if (selectedShape != null)
+                if (SelectedShape().Count > 0)
                 {
-                    UndoRedoManager.Instance.Do(new DeleteShapeAction(selectedShape));
-                    selectedShape = null;
+                    foreach (var s in SelectedShape())
+                    {
+                        if (ShapeStorage.Contains(s.ShapeId))
+                        {
+                            UndoRedoManager.Instance.Do(
+                                new DeleteShapeBatchAction(s.GetDependentShapesForDelete()));
+                        }
+                    }
                 }
             }
 
@@ -45,12 +51,14 @@ namespace Manipulator
                 {
                     var shape = hit.collider.GetComponentInParent<Shape>();
                     if (shape != null)
-                    {
-                        selectedShape = shape;
-                        var select = selectedShape.GetComponent<SelectableShape>();
-                        if (select != null)
+                    { 
+                        foreach (var s in shape.GetDependentShapesForDelete())
                         {
-                            select.SetSelected(!select.IsSelected());
+                            var select = s.GetComponent<SelectableShape>();
+                            if (select != null)
+                            {
+                                select.SetSelected(!shape.GetComponent<SelectableShape>().IsSelected());
+                            }
                         }
                     }
                 }
@@ -58,6 +66,20 @@ namespace Manipulator
             }
         }
 
-        public Shape GetPinnedShape() => selectedShape;
+        public List<Shape> SelectedShape()
+        {
+            List<Shape> ret = new();
+            foreach (var s in ShapeStorage.GetAllShapes())
+            {
+                var select = s.GetComponent<SelectableShape>();
+                if (select != null)
+                    if (select.IsSelected())
+                        ret.Add(s);
+            }
+
+            return ret;
+        }
+
+        public List<Shape> GetPinnedShapes() => SelectedShape();
     }
 }

@@ -1,4 +1,4 @@
-﻿// Refactored Segment.cs — ADD DEBUG LOGGING FOR DRAWING FLOW with SNAP POINTS and UNDO-SAFE SPAWN + RECONNECT SYNC FIX + SAFE DESTROY HANDLING
+﻿// Refactored RayShape.cs — ADD DEBUG LOGGING FOR DRAWING FLOW with SNAP POINTS and UNDO-SAFE SPAWN + RECONNECT SYNC FIX + SAFE DESTROY HANDLING
 
 using UnityEngine;
 using Unity.Netcode;
@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Manipulator
 {
-    public class Segment : Shape
+    public class RayShape : Shape
     {
         private NetworkPositionSync positionSync;
         public Point StartPoint { get; private set; }
@@ -139,12 +139,16 @@ namespace Manipulator
             Vector3 a = StartPoint.transform.position;
             Vector3 b = EndPoint.transform.position;
 
-            Vector3 mid = (a + b) / 2;
-            Vector3 dir = b - a;
-            float length = dir.magnitude;
+            Vector3 dir = (b - a).normalized;
+
+            // Kéo dài 100 đơn vị mỗi phía (vô cực mô phỏng) 
+            Vector3 farB = b + dir * 50f;
+
+            Vector3 mid = (a + farB) / 2;
+            float length = Vector3.Distance(a, farB);
 
             transform.position = mid;
-            transform.rotation = Quaternion.LookRotation(dir);
+            transform.rotation = Quaternion.LookRotation(farB - a);
             transform.Rotate(90, 0, 0); // Align cylinder Y-axis to world Z-axis (optional)
             transform.localScale = new Vector3(1f, length, 1f); // y là height do mesh tạo sẵn là 1
 
@@ -161,7 +165,7 @@ namespace Manipulator
         public override ShapeData Serialize()
         {
             var data = base.Serialize();
-            data.Type = "Segment";
+            data.Type = "Ray";
             data.ConnectedPoints = new List<string>
             {
                 StartPoint.ShapeId,
@@ -220,7 +224,7 @@ namespace Manipulator
         {
             private static Point startPoint;
             private static Point endPoint;
-            private static Segment preview;
+            private static RayShape preview;
             private static string pendingStartId;
             private static string pendingEndId;
             private static string pendingSegId;
@@ -232,7 +236,7 @@ namespace Manipulator
 
             private const float SnapDistance = 0.3f;
 
-            public static void UpdateSegmentInput()
+            public static void UpdateRayShapeInput()
             {
                 if (Input.GetMouseButtonDown(0)) Start();
                 else if (Input.GetMouseButton(0)) Update();
@@ -267,7 +271,7 @@ namespace Manipulator
                 pendingSegId = Guid.NewGuid().ToString();
 
                 var p2Data = new ShapeData { Id = pendingEndId, Type = "Point", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new(), Settings = new() };
-                var segData = new ShapeData { Id = pendingSegId, Type = "Segment", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new() { pendingStartId, pendingEndId }, Settings = new() };
+                var segData = new ShapeData { Id = pendingSegId, Type = "Ray", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new() { pendingStartId, pendingEndId }, Settings = new() };
 
                 datas.Add(p2Data);
                 datas.Add(segData);
@@ -280,9 +284,9 @@ namespace Manipulator
                         if (pt.ShapeId == pendingStartId || pt.ShapeId == pendingEndId)
                             OnStartPointReady(pt);
                     }
-                    else if (shape is Segment s && s.ShapeId == pendingSegId)
+                    else if (shape is RayShape s && s.ShapeId == pendingSegId)
                     {
-                        OnSegmentReady(s);
+                        OnRayShapeReady(s);
                     }
                 };
 
@@ -324,21 +328,21 @@ namespace Manipulator
                     endPoint.DestroyShape();
                     preview.SetEndPoint(snap);
                     
-                    //Debug.LogError($"[Segment - new] {snap.ShapeId}");
+                    //Debug.LogError($"[RayShape - new] {snap.ShapeId}");
                     
                     if (batch != null)
                     {
                         var p2Data = batch.shapeDataList.Find(d => d.Id == pendingEndId);
-                        //Debug.LogError($"[Segment] p2Data {p2Data != null}");
+                        //Debug.LogError($"[RayShape] p2Data {p2Data != null}");
 
                         if (p2Data != null)
                         {
-                            /*Debug.LogError($"[Segment - old] {p2Data.Id}");
+                            /*Debug.LogError($"[RayShape - old] {p2Data.Id}");
 
 
                             foreach (var i in batch.shapeDataList)
                             {
-                                Debug.LogError($"[Segment - before] {i.Id}");
+                                Debug.LogError($"[RayShape - before] {i.Id}");
 
                             }*/
                             if (p2Data.Id != snap.ShapeId)
@@ -353,7 +357,7 @@ namespace Manipulator
 
                                 /*foreach (var i in seg.ConnectedPoints)
                                 {
-                                    Debug.LogError($"[SegmentCon - before] {i}");
+                                    Debug.LogError($"[RayShapeCon - before] {i}");
 
                                 }*/
                                 
@@ -362,32 +366,32 @@ namespace Manipulator
 
                                 /*foreach (var i in seg.ConnectedPoints)
                                 {
-                                    Debug.LogError($"[SegmentCon - after] {i}");
+                                    Debug.LogError($"[RayShapeCon - after] {i}");
 
                                 }*/
                             }
                             
                             /*foreach (var i in batch.shapeDataList)
                             {
-                                Debug.LogError($"[Segment - after] {i.Id}");
+                                Debug.LogError($"[RayShape - after] {i.Id}");
 
                             }*/
                         }
                     }
                 }
                 
-                //Debug.LogError($"[Segment] Batch {batch != null}");
+                //Debug.LogError($"[RayShape] Batch {batch != null}");
 
                 if (endPoint != null && batch != null)
                 {
                     var p2Data = batch.shapeDataList.Find(d => d.Id == pendingEndId);
-                    //Debug.LogError($"[Segment] p2Data {p2Data != null}");
+                    //Debug.LogError($"[RayShape] p2Data {p2Data != null}");
 
                     if (p2Data != null)
                     {
                         p2Data.Position = endPoint.transform.position;
                         var a = batch.shapeDataList.Find(d => d.Id == pendingEndId);
-                        //Debug.LogError($"[Segment] {p2Data.Position} --- {a.Position}");
+                        //Debug.LogError($"[RayShape] {p2Data.Position} --- {a.Position}");
                     }
                 }
 
@@ -421,14 +425,14 @@ namespace Manipulator
                 }
             }
 
-            public static void OnSegmentReady(Segment s)
+            public static void OnRayShapeReady(RayShape s)
             {
-                //Debug.LogError($"[OnSegmentReady] Called with Segment ID = {s.ShapeId}");
-                //Debug.LogError($"[OnSegmentReady] Pending ID = {pendingSegId}");
+                //Debug.LogError($"[OnRayShapeReady] Called with RayShape ID = {s.ShapeId}");
+                //Debug.LogError($"[OnRayShapeReady] Pending ID = {pendingSegId}");
 
                 if (s.ShapeId != pendingSegId)
                 {
-                    //Debug.LogError("[OnSegmentReady] Segment ID does not match");
+                    //Debug.LogError("[OnRayShapeReady] RayShape ID does not match");
                     return;
                 }
 
