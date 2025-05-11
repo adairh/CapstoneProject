@@ -49,7 +49,7 @@ public class AudioManager : MonoBehaviour
     // Plays certain sound effect
     public static void Play(SFX effectName)
     {
-        instance.sfx[(int)effectName].Play();
+        //instance.sfx[(int)effectName].Play();
     }
 }
 
