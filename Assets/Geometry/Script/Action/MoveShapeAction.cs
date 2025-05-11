@@ -33,7 +33,7 @@ namespace Manipulator
             
             shape?.MoveTo(OldPosition, silent: false, queue: false); // 🔥 sửa thành false để update transform
             
-        }
+        } 
 
         public void Redo()
         {

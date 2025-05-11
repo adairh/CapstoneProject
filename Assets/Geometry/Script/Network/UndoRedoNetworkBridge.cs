@@ -19,7 +19,7 @@ namespace Manipulator
         {
             if (queue) UndoRedoManager.Instance.Do(action);
 
-            Debug.LogError($"[DoAndBroadcast] IsHost: {IsHost}");
+            //.LogError($"[DoAndBroadcast] IsHost: {IsHost}");
             if (IsHost)
             {
                 switch (action)
@@ -31,7 +31,7 @@ namespace Manipulator
                         BroadcastDeleteShapeClientRpc(dsa.GetShape().ShapeId);
                         break;
                     case CreateShapeAction csa:
-                        Debug.LogError($"[DoAndBroadcast] {csa.data.Id}");
+                        //Debug.LogError($"[DoAndBroadcast] {csa.data.Id}");
                         BroadcastCreateShapeClientRpc(JsonUtility.ToJson(csa.data));
                         break;
                     case CreateShapeBatchAction csba:
@@ -39,8 +39,18 @@ namespace Manipulator
                         string json = JsonUtility.ToJson(wrapper);
                         BroadcastCreateShapeBatchClientRpc(json);
                         break;
+                    case MultiMoveShapeAction mma:
+                        foreach (var move in mma.GetSubActions())
+                            BroadcastMoveShapeClientRpc(move.ShapeId, move.NewPosition);
+                        break;
+                    case DeleteShapeBatchAction dsba:
+                        foreach (var s in dsba.shapes) // nếu cần broadcast từng shape
+                            BroadcastDeleteShapeClientRpc(s.ShapeId);
+                        break;
+
+
                     default:
-                        Debug.LogError($"[DoAndBroadcast] Type: {action.GetType()}");
+                        //Debug.LogError($"[DoAndBroadcast] Type: {action.GetType()}");
                         break;
                 }
             }
@@ -58,7 +68,7 @@ namespace Manipulator
                 var shape = ShapeFactory.CreateFromData(data);
                 if (shape == null)
                 {
-                    Debug.LogError($"[ClientBatchCreate] Failed to create shape of type {data.Type}");
+                    //Debug.LogError($"[ClientBatchCreate] Failed to create shape of type {data.Type}");
                     continue;
                 }
 
@@ -81,12 +91,12 @@ namespace Manipulator
         {
             if (IsHost) return;
 
-            Debug.LogError($"[BroadcastMoveShapeClientRpc] shapeId={shapeId} to={pos}");
+            //Debug.LogError($"[BroadcastMoveShapeClientRpc] shapeId={shapeId} to={pos}");
 
             var shape = ShapeStorage.GetById(shapeId);
             if (shape == null)
             {
-                Debug.LogError($"[BroadcastMoveShapeClientRpc] shape NOT found in ShapeStorage");
+                //Debug.LogError($"[BroadcastMoveShapeClientRpc] shape NOT found in ShapeStorage");
                 return;
             }
 
@@ -106,7 +116,7 @@ namespace Manipulator
         [ClientRpc]
         private void BroadcastCreateShapeClientRpc(string json)
         {
-            Debug.LogError($"[BroadcastCreateShapeClientRpc] {IsHost}");
+            //Debug.LogError($"[BroadcastCreateShapeClientRpc] {IsHost}");
             if (IsHost) return;
             var data = JsonUtility.FromJson<ShapeData>(json);
             ShapeFactory.CreateFromData(data);
@@ -136,7 +146,7 @@ namespace Manipulator
             shape = ShapeFactory.CreateFromData(data); // Factory sẽ gán đúng prefab, type, component
             if (shape == null)
             {
-                Debug.LogError($"[CreateShapeNetworked] Failed to create shape for type={data.Type}");
+                //Debug.LogError($"[CreateShapeNetworked] Failed to create shape for type={data.Type}");
                 return;
             }
 

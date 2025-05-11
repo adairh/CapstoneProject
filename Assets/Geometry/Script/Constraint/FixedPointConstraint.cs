@@ -12,6 +12,7 @@ namespace Manipulator
     {
         public string PointId;
         public string TargetShapeId;
+        //public List<Shape> BelongTo = new();
 
         public override void Restore()
         {

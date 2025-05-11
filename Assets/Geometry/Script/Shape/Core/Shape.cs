@@ -8,7 +8,7 @@ namespace Manipulator
 {
     public class Shape : NetworkBehaviour
     {
-        public string ShapeId { get; set; }
+        [SerializeField] public string ShapeId;
 
         [SerializeField] private string shapeType;
         public string ShapeType => shapeType;
@@ -126,6 +126,8 @@ namespace Manipulator
                 p.OnChanged -= pt => OnPivotChanged((Point)pt);
         }
 
+
+        
         protected virtual void OnPivotChanged(Point pt)
         {
             NotifyChanged();
@@ -208,7 +210,7 @@ namespace Manipulator
             Debug.LogError($"[Shape Move To] {newPosition}");
             if (transform.position == newPosition) return;
 
-            if (!silent && !isInternalMove)
+            if (!silent && !isInternalMove && !UndoRedoManager.SuppressRecording)
             {
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(
                     new MoveShapeAction(ShapeId, transform.position, newPosition), queue
@@ -225,6 +227,12 @@ namespace Manipulator
 
 
         #endregion
+        
+        
+        public virtual IEnumerable<Shape> GetDependentShapesForDelete()
+        {
+            yield return this; // default: chỉ chính nó
+        }
 
         
         

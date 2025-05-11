@@ -11,6 +11,8 @@ namespace Manipulator
     {
         public static UndoRedoManager Instance { get; private set; }
 
+        public static bool SuppressRecording { get; set; } = false;
+        
         private readonly Stack<IUndoableAction> undoStack = new();
         private readonly Stack<IUndoableAction> redoStack = new();
 
@@ -20,8 +22,11 @@ namespace Manipulator
             Instance = this;
         }
 
+        
         public void Do(IUndoableAction action)
         {
+            if (SuppressRecording) return;
+
             action.Redo();
             undoStack.Push(action);
             redoStack.Clear();

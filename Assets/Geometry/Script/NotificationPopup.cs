@@ -30,7 +30,7 @@ namespace Khoa
             if (clientNameText != null)
             {
                 clientNameText.text = message;
-                Debug.Log($"Notification set with message: {message}");
+                //Debug.Log($"Notification set with message: {message}");
             }
             else
             {

@@ -61,8 +61,11 @@ namespace Manipulator
                 int referenceCount = 0;
                 foreach (var shape in ShapeStorage.GetAllShapes())
                 {
+
                     if (shape is Segment seg && (seg.StartPoint == pt || seg.EndPoint == pt))
+                    {
                         referenceCount++;
+                    }
                 }
 
                 if (referenceCount > 0)
@@ -72,7 +75,7 @@ namespace Manipulator
                 }
             }
 
-            createdShape.Dispose(); // Should deregister and destroy
+            createdShape.DestroyShape(); // Should deregister and destroy
             createdShape = null;
         }
     }

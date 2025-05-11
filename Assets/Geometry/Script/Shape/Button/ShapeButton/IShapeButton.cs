@@ -12,7 +12,9 @@ namespace Manipulator
             Rectangle,
             Triangle,
             Segment,
-            StraightLine
+            StraightLine,
+            Line,
+            RayShape
         }
     }
 }

@@ -10,6 +10,8 @@ namespace Manipulator
         {
             {"Point", pos => Create<Point>("Point", pos)},
             {"Segment", pos => Create<Segment>("Segment", pos)},
+            {"Line", pos => Create<Line>("Line", pos)},
+            {"Ray", pos => CreateWithCollider<RayShape>("Ray", pos)},
             {"Plane", pos => CreateWithCollider<PlaneShape>("Plane", pos)}
         };
 
@@ -46,6 +48,9 @@ namespace Manipulator
             {
                 drag.SetShape(shape);
             }
+
+            go.AddComponent<HoverableShape>().SetShape(shape);
+            go.AddComponent<SelectableShape>().SetShape(shape);
  
             return shape;
         }
@@ -106,6 +111,8 @@ namespace Manipulator
         {
             //Debug.LogError($"[CreateFromData] {data.Id}");
 
+            if (ShapeStorage.GetById(data.Id) != null) return null;
+            
             var shape = CreateShape(data.Type, data.Position);
             //Debug.LogError($"[CreateFromData] {shape != null}");
 

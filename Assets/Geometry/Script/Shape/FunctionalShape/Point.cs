@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine; 
 using Unity.Netcode;
 
@@ -110,6 +112,7 @@ namespace Manipulator
 
         #region ATTACH
 
+        /*
         public void AttachProcess()
         {
             var mm = ManipulationManager.Instance;
@@ -119,7 +122,7 @@ namespace Manipulator
             {
                 constraint.AddDepend(this, shape);
             }
-        }
+        }*/
 
         public FixedPointConstraint GetPointConstraint() => constraint;
 
@@ -145,6 +148,8 @@ namespace Manipulator
             if (!silent)
                 OnChanged?.Invoke(this);
         }
+        
+
 
         #endregion
         
@@ -177,8 +182,14 @@ namespace Manipulator
                 }
             }
         }
-        
-        
+
+
+        public bool IsOnlyConnectedTo(Shape shape)
+        {
+            return ShapeStorage.GetAllShapes().OfType<Segment>()
+                .Count(seg => seg.StartPoint == this || seg.EndPoint == this) == 1;
+        }
+
     }
     
     
