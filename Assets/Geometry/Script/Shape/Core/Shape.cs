@@ -214,7 +214,7 @@ namespace Manipulator
             Debug.LogError($"[Shape Move To] {newPosition}");
             if (transform.position == newPosition) return;
 
-            if (!silent && !isInternalMove)
+            if (!silent && !isInternalMove && !UndoRedoManager.SuppressRecording)
             {
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(
                     new MoveShapeAction(ShapeId, transform.position, newPosition), queue

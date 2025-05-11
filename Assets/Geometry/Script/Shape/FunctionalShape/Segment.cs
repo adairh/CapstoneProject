@@ -97,8 +97,13 @@ namespace Manipulator
             StartPoint.isInternalMove = true;
             EndPoint.isInternalMove = true;
 
+            UndoRedoManager.SuppressRecording = true;
+
             StartPoint.MoveTo(StartPoint.transform.position + delta, silent);
             EndPoint.MoveTo(EndPoint.transform.position + delta, silent);
+
+            UndoRedoManager.SuppressRecording = false;
+
 
             StartPoint.isInternalMove = false;
             EndPoint.isInternalMove = false;
