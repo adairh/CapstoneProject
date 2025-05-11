@@ -24,20 +24,23 @@ namespace Manipulator
         {
             base.Awake();
 
-            // Gán hình trụ trực tiếp cho gameObject
             var meshFilter = gameObject.AddComponent<MeshFilter>();
-            var temp = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            meshFilter.sharedMesh = temp.GetComponent<MeshFilter>().sharedMesh;
-            DestroyImmediate(temp);
-            
             var meshRenderer = gameObject.AddComponent<MeshRenderer>();
+            var meshCollider = gameObject.AddComponent<MeshCollider>();
+
+// Create a cylinder mesh with height = 1
+            var mesh = MeshGenerator.CreateCylinder(1f, 0.05f);
+            meshFilter.sharedMesh = mesh;
+            meshCollider.sharedMesh = mesh;
+            meshCollider.convex = true;
+
             meshRenderer.material = MaterialLibrary.Get(MaterialType.Default);
 
-            //DestroyImmediate(gameObject.GetComponent<Collider>()); // Optional: không cần collider nếu không tương tác
 
             if (!TryGetComponent(out positionSync))
                 positionSync = gameObject.AddComponent<NetworkPositionSync>();
         }
+
 
 
         private void Update()
@@ -55,7 +58,53 @@ namespace Manipulator
             visual.transform.Rotate(90, 0, 0);
             visual.transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
         }
+        
+        public override void UpdateHitbox()
+        {
+            if (TryGetComponent(out MeshCollider col))
+            {
+                col.sharedMesh = MeshGenerator.CreateCylinder(1f, 0.05f);
+                col.convex = true;
+            }
+        }
 
+        
+        public override IEnumerable<Point> GetDraggablePoints()
+        {
+            if (StartPoint != null) yield return StartPoint;
+            if (EndPoint != null) yield return EndPoint;
+        }
+
+        
+        public override void MoveTo(Vector3 newPosition, bool silent = false, bool queue = true)
+        {
+            Vector3 delta = newPosition - transform.position;
+
+            if (StartPoint == null || EndPoint == null) return;
+
+            var moves = new List<(string, Vector3, Vector3)>
+            {
+                (StartPoint.ShapeId, StartPoint.transform.position, StartPoint.transform.position + delta),
+                (EndPoint.ShapeId, EndPoint.transform.position, EndPoint.transform.position + delta)
+            };
+
+            if (!silent && !isInternalMove)
+            {
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(new MultiMoveShapeAction(moves), queue);
+            }
+
+            // Di chuyển các point luôn
+            StartPoint.isInternalMove = true;
+            EndPoint.isInternalMove = true;
+
+            StartPoint.MoveTo(StartPoint.transform.position + delta, silent);
+            EndPoint.MoveTo(EndPoint.transform.position + delta, silent);
+
+            StartPoint.isInternalMove = false;
+            EndPoint.isInternalMove = false;
+        }
+
+        
         public void MarkAsPreview() => isPreview = true;
 
         public void SetStartPoint(Point a)
@@ -81,19 +130,13 @@ namespace Manipulator
 
         private void UpdateVisual()
         {
-            if (StartPoint == null || EndPoint == null)
-            {
-                //Debug.LogError($"[UpdateVisual] Invalid call — Start={StartPoint}, End={EndPoint}, visual={visual}");
-                return;
-            }
+            if (StartPoint == null || EndPoint == null) return;
 
             IDS = StartPoint.ShapeId;
             IDE = EndPoint.ShapeId;
-            
+
             Vector3 a = StartPoint.transform.position;
             Vector3 b = EndPoint.transform.position;
-
-            //Debug.LogError($"[UpdateVisual] A = {a}, B = {b}, Segment = {ShapeId}");
 
             Vector3 mid = (a + b) / 2;
             Vector3 dir = b - a;
@@ -101,9 +144,13 @@ namespace Manipulator
 
             transform.position = mid;
             transform.rotation = Quaternion.LookRotation(dir);
-            transform.Rotate(90, 0, 0);
-            transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
+            transform.Rotate(90, 0, 0); // Align cylinder Y-axis to world Z-axis (optional)
+            transform.localScale = new Vector3(1f, length, 1f); // y là height do mesh tạo sẵn là 1
+
+
+            UpdateHitbox();
         }
+
 
 
         protected override void OnPivotChanged(Point pt)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine; 
 using Unity.Netcode;
 
@@ -145,6 +146,12 @@ namespace Manipulator
             if (!silent)
                 OnChanged?.Invoke(this);
         }
+        
+        public override IEnumerable<Point> GetDraggablePoints()
+        {
+            yield return this;
+        }
+
 
         #endregion
         

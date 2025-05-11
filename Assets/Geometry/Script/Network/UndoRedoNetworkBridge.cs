@@ -39,6 +39,12 @@ namespace Manipulator
                         string json = JsonUtility.ToJson(wrapper);
                         BroadcastCreateShapeBatchClientRpc(json);
                         break;
+                    case MultiMoveShapeAction mma:
+                        foreach (var move in mma.GetSubActions())
+                            BroadcastMoveShapeClientRpc(move.ShapeId, move.NewPosition);
+                        break;
+
+
                     default:
                         //Debug.LogError($"[DoAndBroadcast] Type: {action.GetType()}");
                         break;

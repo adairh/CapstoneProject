@@ -126,6 +126,12 @@ namespace Manipulator
                 p.OnChanged -= pt => OnPivotChanged((Point)pt);
         }
 
+        public virtual IEnumerable<Point> GetDraggablePoints()
+        {
+            yield break;
+        }
+
+        
         protected virtual void OnPivotChanged(Point pt)
         {
             NotifyChanged();
