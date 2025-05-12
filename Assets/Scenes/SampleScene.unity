@@ -2688,8 +2688,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 279536527}
   m_HandleRect: {fileID: 279536526}
   m_Direction: 0
-  m_Value: 1
-  m_Size: 0.9999999
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4220,7 +4220,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2088822274}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.90266216
+  m_Size: 0.9026622
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4987,7 +4987,7 @@ GameObject:
   - component: {fileID: 820935938}
   - component: {fileID: 820935937}
   - component: {fileID: 820935936}
-  - component: {fileID: 820935935}
+  - component: {fileID: 820935939}
   m_Layer: 5
   m_Name: StraightLine
   m_TagString: Untagged
@@ -5015,18 +5015,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 90, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &820935935
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 820935933}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8e3d06e3e0204c62823f3964e781fd29, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &820935936
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5109,6 +5097,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 820935933}
   m_CullTransparentMesh: 0
+--- !u!114 &820935939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 820935933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a82b8a5d6eb844779cf8eae48ec579a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &824072506
 GameObject:
   m_ObjectHideFlags: 0
@@ -11641,6 +11641,8 @@ MonoBehaviour:
   - {fileID: 8031773933480352750, guid: 84d23b28977915e46b6e5e324b394ab5, type: 3}
   - {fileID: 8031773933480352750, guid: cdae6e816b1ca374ab8ce0de5a6f6f90, type: 3}
   - {fileID: 8031773933480352750, guid: 9f11276aac6ea2440bf3a70a69acdfc5, type: 3}
+  - {fileID: 2319519329222963400, guid: ac6eb87969327064d8b40bc6c85619cb, type: 3}
+  - {fileID: 8031773933480352750, guid: cddbfa6330f2af34caa9147befd441b9, type: 3}
 --- !u!4 &1929378518
 Transform:
   m_ObjectHideFlags: 0

@@ -12,7 +12,8 @@ namespace Manipulator
         public SpawnPanel()
         {
             Debug.Log("[SpawnPanel] Constructor");
-            canvas = Object.FindObjectOfType<Canvas>();
+            //canvas = Object.FindObjectOfType<Canvas>();
+            canvas = UIManager.Instance.CanvasSetting;
             if (canvas != null)
             {
                 canvasRect = canvas.GetComponent<RectTransform>();

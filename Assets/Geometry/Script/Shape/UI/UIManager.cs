@@ -10,9 +10,13 @@ namespace Manipulator
         [Header("Canvas")]
         [SerializeField] private Transform canvas;
 
+        public Canvas CanvasSetting;
+
         [Header("UI Prefabs")]
         [Tooltip("Drag in any UI prefab you want to register at startup")]
         [SerializeField] private List<GameObject> uiPrefabsList;
+        
+        
 
         // Internal lookup of name → prefab
         private Dictionary<string, GameObject> uiPrefabs = new Dictionary<string, GameObject>();

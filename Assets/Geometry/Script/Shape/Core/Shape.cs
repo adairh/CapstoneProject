@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -78,7 +79,23 @@ namespace Manipulator
             gameObject.AddComponent<SelectableShape>().SetShape(this);
             gameObject.AddComponent<ShapeClickHandler>().SetShape(this);
             gameObject.AddComponent<DraggableShape>().SetShape(this);
-            
+
+            if (this is Point)
+            {
+                var label = UIManager.Instance.GetUIComponent("LabelDisplayPrefab");
+                if (label != null)
+                {
+                    var go = Instantiate(label, transform);
+                    go.transform.localPosition = new Vector3(0, 0.5f, 0);
+                    var disp = go.GetComponentInChildren<LabelDisplay>();
+                    var s = LabelGenerator.Next();
+                    disp.SetLabel(s);
+                    if (disp != null && s != null)
+                        disp.Initialize(s);
+                    
+                }
+            }
+
             ApplyDataToTransform(Data);
             ShapeStorage.Register(this);
         }
