@@ -49,7 +49,7 @@ public class HomeScreenController : MonoBehaviour
     {
         // Không đụng 
         //mac dinh hien canvasHome, an canvasPlaygame
-        overPlayCanvas.SetActive(false);
+        //overPlayCanvas.SetActive(false);
         ConfigureUIBasedOnScene();
         canvasHome.SetActive(true);
         canvasPlaygame.SetActive(false);
