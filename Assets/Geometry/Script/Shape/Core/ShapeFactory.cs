@@ -13,7 +13,7 @@ namespace Manipulator
             {"Line", pos => Create<Line>("Line", pos)},
             {"Ray", pos => Create<RayShape>("Ray", pos)},
             {"Polygon", pos => Create<Polygon>("Polygon", pos)},
-            {"Plane", pos => CreateWithCollider<PlaneShape>("Plane", pos)}
+            {"Plane", pos => Create<PlaneShape>("Plane", pos)}
         };
 
         public static Shape CreateShape(string type, Vector3 position)
@@ -34,25 +34,15 @@ namespace Manipulator
 
 
         public static T Create<T>(string type, Vector3 position) where T : Shape
-        { 
+        {
             var go = new GameObject(type);
             var shape = go.AddComponent<T>();
-            shape.InitializeNew(type, position);
-            if (type == "Plane") return shape;
-            
-            var drag = go.AddComponent<DraggableShape>();
-            if (drag == null)
-            {
-                //Debug.LogError($"[Create] Failed to add DraggableShape to {type}");
-            }
-            else
-            {
-                drag.SetShape(shape);
-            }
+            Debug.Log($"[ShapeFactory] Created shape: {shape}, type: {type}, id: {go.GetInstanceID()}");
 
- 
+            shape.InitializeNew(type, position);
             return shape;
         }
+
 
         
         private static T CreateWithCollider<T>(string type, Vector3 position) where T : Shape
@@ -64,42 +54,34 @@ namespace Manipulator
                 var box = shape.gameObject.AddComponent<BoxCollider>();
                 box.isTrigger = false;
 
-                plane.OnMeshUpdated += mesh =>
+                // Ngay lập tức gán collider chính xác
+                Vector3 size = Vector3.zero;
+                Vector3 center = Vector3.zero;
+                float extent = 100f;
+                float thickness = 0.1f;
+
+                // Xác định hướng pháp tuyến của plane (giả sử shape.transform.forward là pháp tuyến)
+                Vector3 normal = shape.transform.forward;
+
+                if (Mathf.Abs(normal.x) > 0.9f)
                 {
-                    var bounds = mesh.bounds;
-                    var scale = shape.transform.localScale;
-
-                    Vector3 size = Vector3.Scale(bounds.size, scale);
-                    Vector3 center = bounds.center;
-
-                    // Xác định hướng pháp tuyến để làm collider thật mỏng ở trục đó
-                    Vector3 normal = shape.transform.forward;
-                    float thin = 0.01f;
-
-                    Vector3 colliderSize = size;
-
-                    if (Mathf.Abs(normal.x) > 0.9f)
-                        colliderSize = new Vector3(thin, size.y*2, size.z);  // Nằm trong OYZ
-                    else if (Mathf.Abs(normal.y) > 0.9f)
-                        colliderSize = new Vector3(size.x, thin, size.z);  // Nằm trong OXZ
-                    else
-                        colliderSize = new Vector3(size.x, size.y*2, thin);  // Nằm trong OXY
-
-                    box.size = colliderSize;
-                    box.center = center;
-                };
-            }/*
-            else
-            {
-                var meshCollider = shape.gameObject.AddComponent<MeshCollider>();
-                meshCollider.convex = true;
-                meshCollider.isTrigger = false;
-
-                if (shape is MeshBasedShape meshShape)
-                {
-                    meshShape.OnMeshUpdated += mesh => meshCollider.sharedMesh = mesh;
+                    // Nằm trên mặt OYZ
+                    size = new Vector3(thickness, extent * 2, extent * 2);
                 }
-            }*/
+                else if (Mathf.Abs(normal.y) > 0.9f)
+                {
+                    // Nằm trên mặt OXZ
+                    size = new Vector3(extent * 2, thickness, extent * 2);
+                }
+                else
+                {
+                    // Nằm trên mặt OXY
+                    size = new Vector3(extent * 2, extent * 2, thickness);
+                }
+
+                box.size = size;
+                box.center = center;
+            }
 
             return shape;
         }

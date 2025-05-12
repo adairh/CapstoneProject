@@ -42,29 +42,73 @@ namespace Manipulator
         }
 
         public static Mesh CreatePlane(List<Point> points)
-        
         {
-            if (points == null || points.Count < 3)
-            {
-                Debug.LogError("[MeshGenerator] A plane requires at least 3 points.");
-                return new Mesh();
-            }
+            if (points.Count < 3) return null;
 
-            Vector3[] vertices = new Vector3[3];
-            for (int i = 0; i < 3; i++)
-            {
-                vertices[i] = points[i].transform.position;
-            }
+            Vector3 p0 = points[0].transform.position;
+            Vector3 p1 = points[1].transform.position;
+            Vector3 p2 = points[2].transform.position;
 
-            int[] triangles = { 0, 1, 2 };
-            Vector3 normal = Vector3.Cross(vertices[1] - vertices[0], vertices[2] - vertices[0]).normalized;
-            Vector3[] normals = { normal, normal, normal };
+            // Tính hướng trục
+            Vector3 dir1 = (p1 - p0).normalized;
+            Vector3 dir2 = (p2 - p0).normalized;
+
+            float extent1 = (p1 - p0).magnitude;
+            float extent2 = (p2 - p0).magnitude;
+
+            // 4 đỉnh mặt phẳng hình chữ nhật từ -1 đến +1 mỗi chiều
+            Vector3[] vertices = new Vector3[4]
+            {
+                -dir1 * extent1 - dir2 * extent2,
+                dir1 * extent1 - dir2 * extent2,
+                dir1 * extent1 + dir2 * extent2,
+                -dir1 * extent1 + dir2 * extent2,
+            };
+
+            int[] triangles = new int[]
+            {
+                0, 1, 2,  // Mặt trước
+                0, 2, 3,  // Mặt trước
+                2, 1, 0,  // Mặt sau
+                3, 2, 0   // Mặt sau
+            };
 
             Mesh mesh = new Mesh();
+            mesh.name = "DoubleSidedPlane";
             mesh.vertices = vertices;
             mesh.triangles = triangles;
-            mesh.normals = normals;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+        
+        public static Mesh CreatePlaneFacing(Vector3 axis1, Vector3 axis2, float extent1, float extent2)
+        {
+            axis1.Normalize();
+            axis2.Normalize();
 
+            Vector3[] vertices = new Vector3[4]
+            {
+                -axis1 * extent1 - axis2 * extent2,
+                axis1 * extent1 - axis2 * extent2,
+                axis1 * extent1 + axis2 * extent2,
+                -axis1 * extent1 + axis2 * extent2,
+            };
+
+            int[] triangles = new int[]
+            {
+                0, 1, 2,
+                0, 2, 3,
+                2, 1, 0,
+                3, 2, 0
+            };
+
+            Mesh mesh = new Mesh();
+            mesh.name = "PlaneFacing";
+            mesh.vertices = vertices;
+            mesh.triangles = triangles;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
             return mesh;
         }
         

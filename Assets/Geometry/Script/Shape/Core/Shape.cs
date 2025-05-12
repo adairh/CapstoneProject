@@ -77,6 +77,7 @@ namespace Manipulator
             gameObject.AddComponent<HoverableShape>().SetShape(this);
             gameObject.AddComponent<SelectableShape>().SetShape(this);
             gameObject.AddComponent<ShapeClickHandler>().SetShape(this);
+            gameObject.AddComponent<DraggableShape>().SetShape(this);
             
             ApplyDataToTransform(Data);
             ShapeStorage.Register(this);

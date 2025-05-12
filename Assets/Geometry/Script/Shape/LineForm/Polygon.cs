@@ -61,10 +61,10 @@ namespace Manipulator
                 triangles = triangles
             };
             mesh.RecalculateNormals();
-            mesh.RecalculateBounds();
+            mesh.RecalculateBounds(); 
 
             meshFilter.sharedMesh = mesh;
-            meshCollider.sharedMesh = mesh;
+            meshCollider.sharedMesh = mesh; 
         }
 
         private int[] Triangulate(Vector3[] vertices)
@@ -226,7 +226,7 @@ namespace Manipulator
                         Settings = new()
                     };
                     previewSegment = ShapeFactory.CreateShape(segData.Id, segData.Position) as Segment;
-                    previewSegment.MarkAsPreview();
+                    //previewSegment.MarkAsPreview();
                 }
                 previewSegment.SetEndPoint(previewPoint);
 
