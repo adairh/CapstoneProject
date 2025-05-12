@@ -40,7 +40,8 @@ namespace Manipulator
             return new List<ISetting>
             {
                 new PositionSetting(transform.position, this),
-                new ColorSetting(MaterialType.Default, this)
+                new ColorSetting(MaterialType.Default, this),
+                new VisibilitySetting(true,this)
             };
         }
 
