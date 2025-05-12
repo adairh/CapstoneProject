@@ -1161,7 +1161,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 3
   m_TargetDisplay: 0
 --- !u!224 &219934953
 RectTransform:
@@ -1418,7 +1418,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_TargetDisplay: 0
 --- !u!224 &282696836
 RectTransform:
@@ -1460,8 +1460,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   quickJoinButton: {fileID: 1994534612}
   createLobbyButton: {fileID: 1144546612}
+  statusText: {fileID: 0}
   createPopupUI: {fileID: 0}
   joinPopupUI: {fileID: 0}
+  statusPopupPrefab: {fileID: 0}
+  loadingPanel: {fileID: 0}
 --- !u!1 &319154263
 GameObject:
   m_ObjectHideFlags: 0
@@ -1943,6 +1946,7 @@ MonoBehaviour:
   canvasPlaygame: {fileID: 1853315379}
   canvasOnboarding: {fileID: 219934949}
   canvas: {fileID: 0}
+  overPlayCanvas: {fileID: 0}
   popupJoinRoom: {fileID: 0}
   popupCreateRoom: {fileID: 0}
   darkOverlay: {fileID: 0}
@@ -5891,7 +5895,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!224 &1853315383
 RectTransform:

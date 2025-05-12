@@ -53,7 +53,7 @@ public class HomeScreenController : MonoBehaviour
         ConfigureUIBasedOnScene();
         canvasHome.SetActive(true);
         canvasPlaygame.SetActive(false);
-        canvasOnboarding.SetActive(false); // Hide onboarding screen if it's active
+        canvasOnboarding.SetActive(true); // Hide onboarding screen if it's active
         canvas.SetActive(false); // an canvas chinh khi bat dau
 
         // dam bao cac popup + overlay duoc an ngay khi lo bat trong editor
