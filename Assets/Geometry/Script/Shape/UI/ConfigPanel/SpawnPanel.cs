@@ -5,9 +5,16 @@ namespace Manipulator
 {
     public class SpawnPanel
     {
-        private GameObject spawnedPanel;
+        // Make currentPanel public static but readonly from outside
+        public static GameObject CurrentPanel { get; private set; }
         private RectTransform canvasRect;
         private Canvas canvas;
+
+        // Add a public method to clear the panel
+        public static void ClearCurrentPanel()
+        {
+            CurrentPanel = null;
+        }
 
         public SpawnPanel()
         {
@@ -27,22 +34,18 @@ namespace Manipulator
         public void SpawnPanelAtTop(Shape shape)
         {
             Debug.Log($"[SpawnPanel] SpawnPanelAtTop called for shape: {shape.name}");
-            if (canvasRect == null)
+            if (canvasRect == null || UIManager.Instance == null)
             {
-                Debug.LogError("[SpawnPanel] canvasRect is null → cannot spawn panel");
-                return;
-            }
-            if (UIManager.Instance == null)
-            {
-                Debug.LogError("[SpawnPanel] UIManager.Instance is null → cannot spawn panel");
+                Debug.LogError("[SpawnPanel] Required components are null");
                 return;
             }
 
-            // Destroy existing panel before spawning a new one
-            if (spawnedPanel != null)
+            // Destroy any existing panel first
+            if (CurrentPanel != null)
             {
                 Debug.Log("[SpawnPanel] Destroying previous panel");
-                Object.Destroy(spawnedPanel);
+                Object.Destroy(CurrentPanel);
+                CurrentPanel = null;
             }
 
             // Get settings for the shape
@@ -62,18 +65,19 @@ namespace Manipulator
             }
             Debug.Log($"[SpawnPanel] Got panel prefab: {panelPrefab.name}");
 
-            // Instantiate UI panel at the top of the canvas
-            spawnedPanel = Object.Instantiate(panelPrefab, canvas.transform);
-            Debug.Log($"[SpawnPanel] Instantiated panel: {spawnedPanel.name}");
-            RectTransform panelRect = spawnedPanel.GetComponent<RectTransform>();
+            // Instantiate new panel
+            CurrentPanel = Object.Instantiate(panelPrefab, canvas.transform);
+            Debug.Log($"[SpawnPanel] Instantiated panel: {CurrentPanel.name}");
+            RectTransform panelRect = CurrentPanel.GetComponent<RectTransform>();
             Debug.Log($"[SpawnPanel] panelRect after GetComponent: {panelRect}");
 
+            // Set panel position and anchors
             panelRect.anchorMin = new Vector2(0.5f, 1f);
             panelRect.anchorMax = new Vector2(0.5f, 1f);
             panelRect.pivot     = new Vector2(0.5f, 1f);
             panelRect.anchoredPosition = new Vector2(0, -20);
 
-            // Attach settings UI dynamically
+            // Build and attach settings UI
             GameObject settingsPanel = UIBuilder.BuildSettingsPanel(shape);
             if (settingsPanel == null)
             {
@@ -82,7 +86,7 @@ namespace Manipulator
             else
             {
                 Debug.Log($"[SpawnPanel] Built settingsPanel: {settingsPanel.name}");
-                settingsPanel.transform.SetParent(spawnedPanel.transform, false);
+                settingsPanel.transform.SetParent(CurrentPanel.transform, false);
 
                 var rt = settingsPanel.GetComponent<RectTransform>();
                 if (rt != null)
@@ -103,22 +107,24 @@ namespace Manipulator
             Debug.Log($"[SpawnPanel] Panel size after Adjust: {panelRect.sizeDelta}");
 
             // Add close-on-click-outside behavior
-            spawnedPanel.AddComponent<PanelCloser>();
+            CurrentPanel.AddComponent<PanelCloser>();
             Debug.Log("[SpawnPanel] Added PanelCloser component");
         }
 
         private void AdjustPanelSize(RectTransform panelRect, List<ISetting> settings)
         {
             var pixelRect = canvas.pixelRect;
-            float panelWidth  = pixelRect.width  * 0.7f;
-            float panelHeight = pixelRect.height * 0.1f;
+            float panelWidth = Mathf.Min(pixelRect.width * 0.7f, 400f); // Max width of 400 pixels
+            float panelHeight = Mathf.Min(pixelRect.height * 0.8f, 600f); // Max height of 600 pixels
 
-            Debug.Log($"[SpawnPanel] Canvas pixelRect={pixelRect}, initial size={panelWidth}x{panelHeight}");
-            // nếu muốn cộng thêm từng setting:
-            // foreach (ISetting i in settings)
-            //     panelHeight += i.Height();
-
+            // Set the panel size
             panelRect.sizeDelta = new Vector2(panelWidth, panelHeight);
+            
+            // Ensure the panel is properly anchored at the top
+            panelRect.anchorMin = new Vector2(0.5f, 1f);
+            panelRect.anchorMax = new Vector2(0.5f, 1f);
+            panelRect.pivot = new Vector2(0.5f, 1f);
+            panelRect.anchoredPosition = new Vector2(0, -20);
         }
     }
 }
