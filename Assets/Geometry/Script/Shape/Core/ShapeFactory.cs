@@ -11,7 +11,8 @@ namespace Manipulator
             {"Point", pos => Create<Point>("Point", pos)},
             {"Segment", pos => Create<Segment>("Segment", pos)},
             {"Line", pos => Create<Line>("Line", pos)},
-            {"Ray", pos => CreateWithCollider<RayShape>("Ray", pos)},
+            {"Ray", pos => Create<RayShape>("Ray", pos)},
+            {"Polygon", pos => Create<Polygon>("Polygon", pos)},
             {"Plane", pos => CreateWithCollider<PlaneShape>("Plane", pos)}
         };
 

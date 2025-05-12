@@ -30,6 +30,20 @@ namespace Manipulator
             // override if needed
         }
 
+        /// <summary>
+        /// Trả về danh sách setting của shape.
+        /// Mỗi shape con sẽ override nếu có custom.
+        /// </summary>
+        public virtual List<ISetting> GetSettings()
+        {
+            return new List<ISetting>
+            {
+                new PositionSetting(this)
+            };
+        }
+
+
+        
         public virtual void Initialize(ShapeData data)
         {
             ShapeId = data.Id;
@@ -63,7 +77,17 @@ namespace Manipulator
         {
             ShapeStorage.Unregister(this);
         }
+        
+        public virtual void SetRaycastIgnore(bool ignore)
+        {
+            int layer = ignore ? 2 : 0;
+            gameObject.layer = layer;
 
+            foreach (Transform child in transform)
+                if (child != null)
+                    child.gameObject.layer = layer;
+        }
+        
         public virtual void Dispose()
         {
             // 1. Gỡ khỏi storage

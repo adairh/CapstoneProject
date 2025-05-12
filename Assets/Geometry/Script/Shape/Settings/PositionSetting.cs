@@ -1,101 +1,56 @@
-﻿// using TMPro;
-// using UnityEngine;
-//
-// namespace Manipulator
-// {
-//     public class PositionSetting : Setting<Vector3>
-//     {
-//         public PositionSetting(Vector3 position, Shape shape) : base(position, ISetting.SettingType.NUMERIC,
-//             typeof(Shape))
-//         {
-//             targetShape = shape;
-//             prefab = UIManager.Instance.GetUIComponent("PositionSettingPrefab");
-//         }
-//
-//         public override GameObject GetUI()
-//         {
-//             uiInstance = Object.Instantiate(prefab);
-//             if (UIManager.Instance == null)
-//             {
-//                 //Debug.LogError("UIManager instance not found in the scene!");
-//                 return null;
-//             }
-//
-//             TMP_InputField[] inputFields = uiInstance.GetComponentsInChildren<TMP_InputField>();
-//
-//             if (inputFields.Length >= 3) // Ensure we have three input fields (X, Y, Z)
-//             {
-//                 Vector3 tempValue = Value; // Store Value in a local variable
-//
-//                 // Set input fields to current values
-//                 inputFields[0].text = tempValue.x + "";
-//                 inputFields[1].text = tempValue.y + "";
-//                 inputFields[2].text = tempValue.z + "";
-//
-//                 // Add listeners for each field
-//                 inputFields[0].onEndEdit.AddListener(value =>
-//                 {
-//                     if (float.TryParse(value, out float result))
-//                     {
-//                         tempValue.x = result; // Modify tempValue
-//                         Value = tempValue; // Assign back to Value
-//                         Apply();
-//                     }
-//
-//                     inputFields[0].text = tempValue.x + " ";
-//                 });
-//
-//                 inputFields[1].onEndEdit.AddListener(value =>
-//                 {
-//                     if (float.TryParse(value, out float result))
-//                     {
-//                         tempValue.y = result;
-//                         Value = tempValue;
-//                         Apply();
-//                     }
-//
-//                     inputFields[1].text = tempValue.y + "";
-//                 });
-//
-//                 inputFields[2].onEndEdit.AddListener(value =>
-//                 {
-//                     if (float.TryParse(value, out float result))
-//                     {
-//                         tempValue.z = result;
-//                         Value = tempValue;
-//                         Apply();
-//                     }
-//
-//                     inputFields[2].text = tempValue.z + "";
-//                 });
-//             }
-//
-//
-//             return uiInstance;
-//         }
-//
-//         public override void Apply()
-//         {
-//             //targetShape. = Value;
-//             targetShape.ModifySetting(this, Value);
-//             targetShape.MoveToPosition(Value);
-//
-//         }
-//
-//         public override void Update()
-//         {
-//             Value = targetShape.Position;
-//         }
-//
-//         public override float Height()
-//         {
-//             if (prefab.TryGetComponent<RectTransform>(out var rectTransform))
-//             {
-//                 return rectTransform.rect.height; // Get height of UI panel
-//             }
-//
-//             return 0f; // Default if no RectTransform is found
-//         }
-//
-//     }
-// }
+﻿using TMPro;
+using UnityEngine;
+
+namespace Manipulator
+{ 
+    public class PositionSetting : Setting<Vector3>
+    {
+        private TMP_InputField xInput, yInput, zInput;
+
+        public PositionSetting(Shape shape) : base(shape.transform.position, shape,
+            UIManager.Instance.GetUIComponent("PositionSettingPrefab")) { }
+
+        public override GameObject CreateUI(Transform parent)
+        {
+            UIInstance = GameObject.Instantiate(Prefab, parent);
+
+            var inputs = UIInstance.GetComponentsInChildren<TMP_InputField>();
+            xInput = inputs[0];
+            yInput = inputs[1];
+            zInput = inputs[2];
+
+            LoadFromShape();
+
+            xInput.onEndEdit.AddListener(_ => ApplyFromUI());
+            yInput.onEndEdit.AddListener(_ => ApplyFromUI());
+            zInput.onEndEdit.AddListener(_ => ApplyFromUI());
+
+            return UIInstance;
+        }
+
+        public override void LoadFromShape()
+        {
+            Value = TargetShape.transform.position;
+            xInput.text = Value.x.ToString("F2");
+            yInput.text = Value.y.ToString("F2");
+            zInput.text = Value.z.ToString("F2");
+        }
+
+        public override void ApplyToShape()
+        {
+            TargetShape.MoveTo(Value);
+        }
+
+        private void ApplyFromUI()
+        {
+            if (float.TryParse(xInput.text, out float x) &&
+                float.TryParse(yInput.text, out float y) &&
+                float.TryParse(zInput.text, out float z))
+            {
+                Value = new Vector3(x, y, z);
+                ApplyToShape();
+            }
+        }
+    }
+
+}

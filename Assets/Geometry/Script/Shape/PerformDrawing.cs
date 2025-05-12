@@ -43,7 +43,7 @@ namespace Manipulator
                     Line.Drawer.UpdateLineInput();
                     break;
                 case IShapeButton.ShapeType.RayShape:
-                    RayShape.Drawer.UpdateRayShapeInput();
+                    Polygon.Drawer.UpdatePolygonInput();
                     break;
             }
         }

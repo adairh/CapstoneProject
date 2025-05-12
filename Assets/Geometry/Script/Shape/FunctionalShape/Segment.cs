@@ -191,7 +191,7 @@ namespace Manipulator
             }
         }
 
-        public void SetRaycastIgnore(bool ignore)
+        public override void SetRaycastIgnore(bool ignore)
         {
             int layer = ignore ? 2 : 0;
             gameObject.layer = layer;
