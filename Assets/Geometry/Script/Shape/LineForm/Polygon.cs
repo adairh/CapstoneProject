@@ -123,7 +123,7 @@ namespace Manipulator
                 if (p != null && p.IsOnlyConnectedTo(this))
                     yield return p;
         }
- 
+        
         public static class Drawer
         {
             private static List<Point> points = new();
@@ -152,7 +152,7 @@ namespace Manipulator
                     return;
                 }
 
-                // Spawn fixed point
+                // Tạo point thật
                 string newPointId = Guid.NewGuid().ToString();
                 var pointData = new ShapeData
                 {
@@ -166,40 +166,53 @@ namespace Manipulator
                 };
 
                 pendingPointId = newPointId;
+                var pointBatch = new CreateShapeBatchAction(new List<ShapeData> { pointData });
 
-                batch = new CreateShapeBatchAction(new List<ShapeData> { pointData });
-                batch.OnShapeSpawned = shape =>
+                pointBatch.OnShapeSpawned = shape =>
                 {
                     if (shape is Point pt && pt.ShapeId == pendingPointId)
                     {
+                        // Spawn segment thật từ điểm trước tới điểm mới
+                        if (points.Count > 0)
+                        {
+                            string segId = Guid.NewGuid().ToString();
+                            var segData = new ShapeData
+                            {
+                                Id = segId,
+                                Type = "Segment",
+                                Position = Vector3.zero,
+                                Rotation = Quaternion.identity,
+                                Scale = Vector3.one,
+                                ConnectedPoints = new() { points.Last().ShapeId, pt.ShapeId },
+                                Settings = new()
+                            };
+
+                            var segBatch = new CreateShapeBatchAction(new List<ShapeData> { segData });
+                            UndoRedoNetworkBridge.Instance.DoAndBroadcast(segBatch);
+                        }
+
                         points.Add(pt);
 
-                        // Chỉ tạo preview sau khi có ít nhất 2 điểm
-                        if (points.Count > 1)
+                        // Cập nhật hoặc tạo preview segment/point mới
+                        if (previewPoint == null)
                         {
-                            if (previewPoint == null)
-                            {
-                                previewPoint = ShapeFactory.CreateShape("Point", pos) as Point;
-                                previewPoint.SetRaycastIgnore(true);
-                            }
-
-                            if (previewSegment == null)
-                            {
-                                previewSegment = ShapeFactory.CreateShape("Segment", pos) as Segment;
-                                previewSegment.MarkAsPreview();
-                                previewSegment.SetStartPoint(pt);      // ✅ Dùng pt trực tiếp
-                                previewSegment.SetEndPoint(previewPoint);
-                            }
-                            else
-                            {
-                                // Reset start point cho đoạn mới
-                                previewSegment.SetStartPoint(pt);
-                            }
+                            previewPoint = ShapeFactory.CreateShape("Point", pos) as Point;
+                            previewPoint.SetRaycastIgnore(true);
                         }
+
+                        if (previewSegment == null)
+                        {
+                            previewSegment = ShapeFactory.CreateShape("Segment", pos) as Segment;
+                            previewSegment.MarkAsPreview();
+                            previewSegment.SetRaycastIgnore(true);
+                        }
+
+                        previewSegment.SetStartPoint(pt);
+                        previewSegment.SetEndPoint(previewPoint);
                     }
                 };
 
-                UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(pointBatch);
             }
 
             private static void UpdatePreview()
@@ -215,6 +228,23 @@ namespace Manipulator
             {
                 if (points.Count < 3) return;
 
+                // Tạo đoạn cuối cùng nối từ điểm cuối → điểm đầu
+                string lastSegId = Guid.NewGuid().ToString();
+                var finalSegData = new ShapeData
+                {
+                    Id = lastSegId,
+                    Type = "Segment",
+                    Position = Vector3.zero,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new() { points.Last().ShapeId, points[0].ShapeId },
+                    Settings = new()
+                };
+
+                var segBatch = new CreateShapeBatchAction(new List<ShapeData> { finalSegData });
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(segBatch);
+
+                // Tạo polygon
                 pendingPolygonId = Guid.NewGuid().ToString();
                 var polyData = new ShapeData
                 {
@@ -227,12 +257,11 @@ namespace Manipulator
                     Settings = new()
                 };
 
-                var action = new CreateShapeBatchAction(new List<ShapeData> { polyData });
-                UndoRedoNetworkBridge.Instance.DoAndBroadcast(action);
+                var polyAction = new CreateShapeBatchAction(new List<ShapeData> { polyData });
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(polyAction);
 
                 // Cleanup
                 points.Clear();
-
                 previewPoint?.DestroyShape();
                 previewSegment?.DestroyShape();
                 previewPoint = null;
@@ -251,5 +280,7 @@ namespace Manipulator
                 return null;
             }
         }
+
+
     }
 }
