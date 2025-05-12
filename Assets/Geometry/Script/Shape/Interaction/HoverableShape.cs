@@ -4,14 +4,12 @@ namespace Manipulator
 {
     public class HoverableShape : ShapeBehaviourBase
     {
-        private Renderer rend;
-        private Material defaultMat;
+        private Renderer rend; 
         private Material hoverMat;
 
-        private void Awake()
+        private void Start()
         {
-            rend = GetComponentInChildren<Renderer>();
-            defaultMat = MaterialLibrary.Get(MaterialType.Default);
+            rend = GetComponentInChildren<Renderer>(); 
             hoverMat = MaterialLibrary.Get(MaterialType.Hover);
         }
         
@@ -42,7 +40,7 @@ namespace Manipulator
                         //MaterialLibrary.Get(MaterialType.Select);
                         return;
                     }
-                rend.material = defaultMat;
+                rend.material = shape.DefaultMat;
             }
         }
     }

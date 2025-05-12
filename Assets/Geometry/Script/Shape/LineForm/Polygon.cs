@@ -27,7 +27,7 @@ namespace Manipulator
             meshRenderer = visual.AddComponent<MeshRenderer>();
             meshCollider = visual.AddComponent<MeshCollider>();
 
-            meshRenderer.material = MaterialLibrary.Get(MaterialType.Default);
+            meshRenderer.material = DefaultMat;
             meshCollider.convex = true;
         }
 

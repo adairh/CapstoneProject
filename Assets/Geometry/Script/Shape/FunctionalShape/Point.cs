@@ -30,7 +30,7 @@ namespace Manipulator
             var mf = gameObject.AddComponent<MeshFilter>();
             var mr = gameObject.AddComponent<MeshRenderer>();
             mf.mesh = MeshGenerator.CreateSphere(Radius);
-            mr.material = MaterialLibrary.Get(MaterialType.Default);
+            mr.material = DefaultMat;
 
             // Collider
             collider = GetComponent<SphereCollider>();

@@ -5,40 +5,68 @@ namespace Manipulator
 // Base Interface for All Settings
     public interface ISetting
     {
-        GameObject CreateUI(Transform parent); // Gắn trực tiếp vào layout
-        void LoadFromShape();                 // Load giá trị từ shape
-        void ApplyToShape();                  // Apply khi chỉnh xong
-    }
+        enum SettingType
+        {
+            NUMERIC,
+            NONNUMERIC
+        }
 
+        object GetValue(); // Returns value as an object
+        GameObject GetUI();
+        SettingType Type { get; }
+
+        void Apply();
+        void Update();
+        void SetValue(object value);
+        float Height();
+    }
 
 // Generic Abstract Class for Settings
     public abstract class Setting<T> : ISetting
     {
         public T Value { get; protected set; }
-        public Shape TargetShape { get; set; }
-        public GameObject UIInstance { get; protected set; }
-        public GameObject Prefab { get; protected set; }
 
-        protected Setting(T initialValue, Shape shape, GameObject prefab)
+        public Shape targetShape { get; set; }
+        public GameObject uiInstance { get; protected set; }
+        public GameObject prefab { get; protected set; }
+
+
+        public System.Type TargetShape { get; protected set; }
+        public ISetting.SettingType Type { get; } // Ensure it's correctly initialized
+
+        protected Setting(T data, ISetting.SettingType settingType, System.Type targetShape)
         {
-            Value = initialValue;
-            TargetShape = shape;
-            Prefab = prefab;
+            Value = data;
+            Type = settingType;
+            TargetShape = targetShape;
         }
 
-        public abstract GameObject CreateUI(Transform parent);
-        public abstract void LoadFromShape();
-        public abstract void ApplyToShape();
+        public abstract GameObject GetUI();
+        public abstract void Apply();
+        public abstract float Height();
+        public abstract void Update();
 
+        public object GetValue() => Value;
+
+        // Allow setting values from object (used for UI input)
         public void SetValue(object value)
         {
-            if (value is T cast) Value = cast;
+            if (value is T castValue)
+            {
+                SetValue(castValue);
+            }
+            else
+            {
+                Debug.LogError(
+                    $"Invalid value type for setting {GetType().Name}. Expected {typeof(T)}, got {value.GetType()}.");
+            }
         }
 
+        // Virtual method allows customization in child classes
         public virtual void SetValue(T value)
         {
+            //Debug.LogWarning(" set value = " + value + " - " + Value);
             Value = value;
         }
     }
-
 }

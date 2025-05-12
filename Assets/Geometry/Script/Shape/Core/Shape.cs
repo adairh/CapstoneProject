@@ -27,7 +27,8 @@ namespace Manipulator
 
         protected virtual void Awake()
         {
-            // override if needed
+            DefaultMat = new Material(MaterialLibrary.Get(MaterialType.Default)); 
+            
         }
 
         /// <summary>
@@ -38,7 +39,8 @@ namespace Manipulator
         {
             return new List<ISetting>
             {
-                new PositionSetting(this)
+                new PositionSetting(transform.position, this),
+                new ColorSetting(MaterialType.Default, this)
             };
         }
 
@@ -53,6 +55,8 @@ namespace Manipulator
             ShapeStorage.Register(this);
         }
 
+        public Material DefaultMat { get; set; }
+        
         public virtual void InitializeNew(string type, Vector3 position)
         {
             ShapeId = Guid.NewGuid().ToString();
@@ -68,6 +72,10 @@ namespace Manipulator
                 Settings = new Dictionary<string, string>()
             };
  
+
+            gameObject.AddComponent<HoverableShape>().SetShape(this);
+            gameObject.AddComponent<SelectableShape>().SetShape(this);
+            gameObject.AddComponent<ShapeClickHandler>().SetShape(this);
             
             ApplyDataToTransform(Data);
             ShapeStorage.Register(this);

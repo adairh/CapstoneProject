@@ -50,8 +50,6 @@ namespace Manipulator
                 drag.SetShape(shape);
             }
 
-            go.AddComponent<HoverableShape>().SetShape(shape);
-            go.AddComponent<SelectableShape>().SetShape(shape);
  
             return shape;
         }

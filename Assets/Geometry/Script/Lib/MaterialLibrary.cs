@@ -16,6 +16,17 @@ namespace Manipulator
         Hover,
         Plane
         // TODO: thêm nếu cần
+        ,
+        
+        Red,
+        Green,
+        Blue,
+        Yellow,
+        White,
+        Black,
+        Cyan,
+        Magenta,
+        Gray
     }
 
     /// <summary>
@@ -32,9 +43,19 @@ namespace Manipulator
             { MaterialType.Default,   Color.red },
             { MaterialType.Highlight, new Color(1f, 0.8f, 0f) },  // vàng nhạt
             { MaterialType.Drag,      new Color(0.2f, 0.6f, 1f) }, // xanh dương
-            { MaterialType.Select,    new Color(0f, 1f, 0f) },     // xanh lá
-            { MaterialType.Hover,    Color.cyan },     // xanh lá
+            { MaterialType.Select,    new Color(0f, 0.5f, 0.3f) },     // xanh lá
+            { MaterialType.Hover,    new Color(0.8f, 0.5f, 0.3f)},     // xanh lá
             { MaterialType.Plane,     new Color(1f, 1f, 1f, 0.5f)  },     // xanh lá
+            
+            { MaterialType.Red,    Color.red },
+            { MaterialType.Green,  Color.green },  // vàng nhạt
+            { MaterialType.Blue,   Color.blue }, // xanh dương
+            { MaterialType.Yellow, Color.yellow },     // xanh lá
+            { MaterialType.White,  Color.white },     // xanh lá
+            { MaterialType.Black,  Color.black },     // xanh lá
+            { MaterialType.Cyan,   Color.cyan },     // xanh lá 
+            { MaterialType.Magenta,Color.magenta  },     // xanh lá
+            { MaterialType.Gray,   Color.gray  },     // xanh lá
         };
 
         /// <summary>

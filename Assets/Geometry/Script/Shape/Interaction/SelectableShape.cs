@@ -5,15 +5,13 @@ namespace Manipulator
 {
     public class SelectableShape : ShapeBehaviourBase
     {
-        private Renderer rend;
-        private Material defaultMat;
+        private Renderer rend; 
         private Material selectedMat;
         private bool isSelected = false;
 
-        private void Awake()
+        private void Start()
         {
             rend = GetComponentInChildren<Renderer>();
-            defaultMat = MaterialLibrary.Get(MaterialType.Default);
             selectedMat = MaterialLibrary.Get(MaterialType.Select);
             //SetSelected(false);
         }
@@ -41,7 +39,7 @@ namespace Manipulator
             isSelected = selected;
             if (rend != null)
             {
-                rend.material = isSelected ? selectedMat : defaultMat;
+                rend.material = isSelected ? selectedMat : shape.DefaultMat;
                 OnSelectedChanged?.Invoke(this);
             }
         }

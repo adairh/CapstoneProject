@@ -14,7 +14,7 @@ namespace Manipulator
 
             meshFilter = gameObject.AddComponent<MeshFilter>();
             meshRenderer = gameObject.AddComponent<MeshRenderer>();
-            meshRenderer.material = MaterialLibrary.Get(MaterialType.Default);
+            meshRenderer.material = DefaultMat;
         }
 
         public void SetPoints(List<Point> points)

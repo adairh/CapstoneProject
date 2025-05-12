@@ -13,7 +13,7 @@ namespace Manipulator
         {
             ISetting[] defaultSetting =
             {
-                new ColorSetting(Color.red),
+                //new ColorSetting(Color.red, shape),
                 new NameSetting(this.ToString())
             };
 
