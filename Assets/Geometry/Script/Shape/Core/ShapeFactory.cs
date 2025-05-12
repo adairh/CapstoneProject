@@ -18,12 +18,12 @@ namespace Manipulator
 
         public static Shape CreateShape(string type, Vector3 position)
         {
-            //Debug.LogError($"[CreateShape] {position}");
+            Debug.LogError($"[CreateShape {type}] {position}");
 
             if (creators.TryGetValue(type, out var ctor))
             {
                 var instance = ctor(position);
-                //Debug.LogError($"[CreateShape] {instance != null}");
+                Debug.LogError($"[CreateShape {type}] {instance != null}");
 
                 if (instance != null) return instance;
             }
@@ -37,7 +37,7 @@ namespace Manipulator
         {
             var go = new GameObject(type);
             var shape = go.AddComponent<T>();
-            Debug.Log($"[ShapeFactory] Created shape: {shape}, type: {type}, id: {go.GetInstanceID()}");
+            Debug.Log($"[CreateShape {type}] Created shape: {shape}, type: {type}, id: {go.GetInstanceID()}");
 
             shape.InitializeNew(type, position);
             return shape;

@@ -123,14 +123,13 @@ namespace Manipulator
                 if (p != null && p.IsOnlyConnectedTo(this))
                     yield return p;
         }
-
+ 
         public static class Drawer
         {
             private static List<Point> points = new();
             private static Segment previewSegment;
             private static Point previewPoint;
             private static string pendingPointId;
-            private static string pendingSegmentId;
             private static string pendingPolygonId;
             private static CreateShapeBatchAction batch;
             private const float SnapDistance = 0.2f;
@@ -153,9 +152,8 @@ namespace Manipulator
                     return;
                 }
 
+                // Spawn fixed point
                 string newPointId = Guid.NewGuid().ToString();
-                string newSegId = Guid.NewGuid().ToString();
-
                 var pointData = new ShapeData
                 {
                     Id = newPointId,
@@ -167,35 +165,38 @@ namespace Manipulator
                     Settings = new()
                 };
 
-                var segData = new ShapeData
-                {
-                    Id = newSegId,
-                    Type = "Segment",
-                    Position = pos,
-                    Rotation = Quaternion.identity,
-                    Scale = Vector3.one,
-                    ConnectedPoints = new()
-                };
-
-                if (points.Count > 0)
-                {
-                    segData.ConnectedPoints.Add(points.Last().ShapeId);
-                    segData.ConnectedPoints.Add(newPointId);
-                }
-
-                List<ShapeData> datas = new() { pointData };
-                if (points.Count > 0) datas.Add(segData);
-
                 pendingPointId = newPointId;
-                pendingSegmentId = newSegId;
 
-                batch = new CreateShapeBatchAction(datas);
+                batch = new CreateShapeBatchAction(new List<ShapeData> { pointData });
                 batch.OnShapeSpawned = shape =>
                 {
                     if (shape is Point pt && pt.ShapeId == pendingPointId)
+                    {
                         points.Add(pt);
-                    else if (shape is Segment seg && seg.ShapeId == pendingSegmentId)
-                        seg.MarkAsPreview();
+
+                        // Chỉ tạo preview sau khi có ít nhất 2 điểm
+                        if (points.Count > 1)
+                        {
+                            if (previewPoint == null)
+                            {
+                                previewPoint = ShapeFactory.CreateShape("Point", pos) as Point;
+                                previewPoint.SetRaycastIgnore(true);
+                            }
+
+                            if (previewSegment == null)
+                            {
+                                previewSegment = ShapeFactory.CreateShape("Segment", pos) as Segment;
+                                previewSegment.MarkAsPreview();
+                                previewSegment.SetStartPoint(pt);      // ✅ Dùng pt trực tiếp
+                                previewSegment.SetEndPoint(previewPoint);
+                            }
+                            else
+                            {
+                                // Reset start point cho đoạn mới
+                                previewSegment.SetStartPoint(pt);
+                            }
+                        }
+                    }
                 };
 
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
@@ -203,38 +204,17 @@ namespace Manipulator
 
             private static void UpdatePreview()
             {
-                if (points.Count == 0 || !PerformDrawing.RaycastMouse(out Vector3 pos)) return;
+                if (previewPoint == null || previewSegment == null || points.Count == 0) return;
+                if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
 
-                if (previewPoint == null)
-                {
-                    previewPoint = ShapeFactory.CreateShape("Point", pos) as Point;
-                    previewPoint.SetRaycastIgnore(true);
-                    //previewPoint.MarkAsPreview();
-                }
                 previewPoint.MoveTo(pos, queue: false);
-
-                if (previewSegment == null)
-                {
-                    var segData = new ShapeData
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Type = "Segment",
-                        Position = pos,
-                        Rotation = Quaternion.identity,
-                        Scale = Vector3.one,
-                        ConnectedPoints = new() { points.Last().ShapeId, previewPoint.ShapeId },
-                        Settings = new()
-                    };
-                    previewSegment = ShapeFactory.CreateShape(segData.Id, segData.Position) as Segment;
-                    //previewSegment.MarkAsPreview();
-                }
                 previewSegment.SetEndPoint(previewPoint);
-
             }
 
-            
             private static void CompletePolygon()
             {
+                if (points.Count < 3) return;
+
                 pendingPolygonId = Guid.NewGuid().ToString();
                 var polyData = new ShapeData
                 {
@@ -250,16 +230,15 @@ namespace Manipulator
                 var action = new CreateShapeBatchAction(new List<ShapeData> { polyData });
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(action);
 
+                // Cleanup
                 points.Clear();
 
                 previewPoint?.DestroyShape();
                 previewSegment?.DestroyShape();
                 previewPoint = null;
                 previewSegment = null;
-                
-                
-                PerformDrawing.ResetMode();
 
+                PerformDrawing.ResetMode();
             }
 
             private static Point FindNearbyPoint(Vector3 pos)
