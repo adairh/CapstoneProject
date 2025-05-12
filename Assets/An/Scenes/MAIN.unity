@@ -1464,6 +1464,7 @@ MonoBehaviour:
   createPopupUI: {fileID: 0}
   joinPopupUI: {fileID: 0}
   statusPopupPrefab: {fileID: 0}
+  loadingPanel: {fileID: 0}
 --- !u!1 &319154263
 GameObject:
   m_ObjectHideFlags: 0
@@ -1945,6 +1946,7 @@ MonoBehaviour:
   canvasPlaygame: {fileID: 1853315379}
   canvasOnboarding: {fileID: 219934949}
   canvas: {fileID: 0}
+  overPlayCanvas: {fileID: 0}
   popupJoinRoom: {fileID: 0}
   popupCreateRoom: {fileID: 0}
   darkOverlay: {fileID: 0}
@@ -4806,10 +4808,10 @@ RectTransform:
   - {fileID: 1239775073}
   m_Father: {fileID: 319154264}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 789.6, y: -115}
+  m_SizeDelta: {x: 130, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1420178282
 MonoBehaviour:
@@ -4939,10 +4941,10 @@ RectTransform:
   - {fileID: 1321352354}
   m_Father: {fileID: 319154264}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 1086.9, y: -115}
+  m_SizeDelta: {x: 130, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1503102814
 MonoBehaviour:
@@ -5372,10 +5374,10 @@ RectTransform:
   - {fileID: 212518381}
   m_Father: {fileID: 319154264}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 195, y: -115}
+  m_SizeDelta: {x: 130, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1769114212
 MonoBehaviour:
@@ -5831,7 +5833,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1853315380
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5952,10 +5954,10 @@ RectTransform:
   - {fileID: 199113322}
   m_Father: {fileID: 319154264}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 492.3, y: -115}
+  m_SizeDelta: {x: 130, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1855381803
 MonoBehaviour:
