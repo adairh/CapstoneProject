@@ -64,6 +64,21 @@ namespace Manipulator
             hitPos = Vector3.zero;
             return false;
         }
+        public static bool RaycastMouse(out Vector3 hitPos, out Shape shape)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition); 
+
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                hitPos = hit.point;
+                shape = hit.collider.GetComponentInParent<Shape>();
+                return true;
+            }
+
+            hitPos = Vector3.zero;
+            shape = null;
+            return false;
+        }
 
 
         public static void ResetMode()
