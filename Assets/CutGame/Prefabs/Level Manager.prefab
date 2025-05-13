@@ -62,35 +62,35 @@ MonoBehaviour:
   levels:
   - levelPrefab: {fileID: 5023224552959780717, guid: 31ae9328eb3f41d419a1fd5df9ede47b,
       type: 3}
-    timeLimit: 200
+    timeLimit: 100
     hardmode: 0
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 2f9b36f88760c534a8b438819d288c6c, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: 2262ed9ec6dab214b8ee7da7e16bea2a,
       type: 3}
-    timeLimit: 200
+    timeLimit: 100
     hardmode: 0
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 2f9b36f88760c534a8b438819d288c6c, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: 72aaa7a0e596a534c9c0ef24e2b0aef1,
       type: 3}
-    timeLimit: 200
+    timeLimit: 100
     hardmode: 0
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 2f9b36f88760c534a8b438819d288c6c, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: 416bf8ff6926b2947a277f4c07f40fd3,
       type: 3}
-    timeLimit: 200
+    timeLimit: 100
     hardmode: 0
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 2f9b36f88760c534a8b438819d288c6c, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: fa6b4ddff5660954bb7cd7c2f808626e,
       type: 3}
-    timeLimit: 250
+    timeLimit: 100
     hardmode: 0
     unlocked: 1
     rating: 0
@@ -104,28 +104,28 @@ MonoBehaviour:
     QuestionDatas: {fileID: 11400000, guid: 1e930d6d48fdf034f9d3c86033f61c34, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: cd41eeeb1c66d3e42be93abaf1aa491c,
       type: 3}
-    timeLimit: 300
+    timeLimit: 250
     hardmode: 1
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 1e930d6d48fdf034f9d3c86033f61c34, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: d06a4e25960bc734688cdd24e7a9db31,
       type: 3}
-    timeLimit: 300
+    timeLimit: 250
     hardmode: 1
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 1e930d6d48fdf034f9d3c86033f61c34, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: 70ba22e695ea1d542840931c36b2ff6b,
       type: 3}
-    timeLimit: 330
+    timeLimit: 250
     hardmode: 1
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 1e930d6d48fdf034f9d3c86033f61c34, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: 2e92419aca24aac48bf4318b00bf4371,
       type: 3}
-    timeLimit: 350
+    timeLimit: 250
     hardmode: 1
     unlocked: 1
     rating: 0
