@@ -9,7 +9,7 @@ namespace Manipulator
 
         private void Start()
         {
-            // Small delay before activation to avoid detecting the click that spawned the panel
+            // Small delay before activation
             Invoke(nameof(EnableCloseDetection), 0.1f);
         }
 
@@ -18,17 +18,29 @@ namespace Manipulator
             isInitialized = true;
         }
 
+        private void OnDestroy()
+        {
+            // Use the public method to clear the panel reference
+            if (gameObject == SpawnPanel.CurrentPanel)
+            {
+                SpawnPanel.ClearCurrentPanel();
+            }
+        }
+
         private void Update()
         {
-            // Wait until initialization to prevent immediate destruction on spawn
             if (!isInitialized) return;
 
-            // Check if user clicked anywhere outside the UI
             if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2))
             {
                 if (!IsPointerOverUIElement())
                 {
-                    Destroy(gameObject); // Destroy the panel if clicked outside
+                    // Use the public method to clear the panel reference
+                    if (gameObject == SpawnPanel.CurrentPanel)
+                    {
+                        SpawnPanel.ClearCurrentPanel();
+                    }
+                    Destroy(gameObject);
                 }
             }
         }
