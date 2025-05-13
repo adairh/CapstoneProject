@@ -1,0 +1,18 @@
+{
+        "input": {
+            "text": "申し訳ありませんが、そういう言葉を使われると困ります。どのようなことを学びたいですか？(I'm sorry, but I would appreciate it if you could use more polite language. What would you like to learn?)"
+        },
+        "voice": {
+            "languageCode": "ja-JP",
+            "name": "ja-JP-Neural2-B"
+        },
+        "audioConfig": {
+            "audioEncoding": "LINEAR16",
+            "pitch": 0,
+            "effectsProfileId": [
+                  "small-bluetooth-speaker-class-device"
+                ],
+            "sampleRateHertz": 22050,
+            "speakingRate": 1
+        }
+    }
