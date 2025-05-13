@@ -5,6 +5,5 @@ Circle A=πr² C=2πr
 Parallelogram A=b×h P=2(a+b)
 Trapezoid A=½(a+b)×h P=a+b+c+d
 Ellipse A=πab
-RegularPolygon A=(1/4)ns²cot(π/n) P=ns
 Kite A=(d1×d2)/2 P=2(a+b)
-SectorofCircle A=(θ/360)πr² P=rθ+2r
+SectorofCir A=(θ/360)πr² P=rθ+2r
