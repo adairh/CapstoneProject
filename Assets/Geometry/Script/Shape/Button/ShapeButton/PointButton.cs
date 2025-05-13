@@ -2,14 +2,14 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    public class CircleButton : BaseButton, IShapeButton
+    public class PointButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.Circle;
+        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.Point;
 
         protected override void OnButtonClick()
         {
             base.OnButtonClick();
-            Debug.Log("Circle Button Clicked!");
+            Debug.Log("Circle Point Clicked!");
             ShapeButtonManager.SetActiveShape(GetShapeType());
         }
     }

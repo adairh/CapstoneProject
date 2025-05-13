@@ -53,6 +53,8 @@ namespace Manipulator
             // Settings (position)
             //AppendSettings(new PositionSetting(transform.position, this));
             ShapeStorage.Register(this);
+            AutoConstraintManager.TryAutoAttachConstraint(this);
+
         }
 
         #endregion
@@ -241,8 +243,10 @@ namespace Manipulator
                         ConnectedPoints = new(),
                         Settings = new()
                     };
-                    NetworkShapeSpawner.Instance.CreateShapeNetworked(data, out Shape p);
-
+                    
+                    var v = new CreateShapeAction(data);
+                    UndoRedoNetworkBridge.Instance.DoAndBroadcast(v);
+                    
                     PerformDrawing.ResetMode();
                 }
             }
