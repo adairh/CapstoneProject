@@ -14,7 +14,8 @@ namespace Manipulator
             Segment,
             StraightLine,
             Line,
-            RayShape
+            RayShape,
+            Polygon
         }
     }
 }

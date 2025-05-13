@@ -24,7 +24,7 @@ namespace Manipulator
 // Generic Abstract Class for Settings
     public abstract class Setting<T> : ISetting
     {
-        public T Value { get; protected set; }
+        public T Value { get; set; }
 
         public Shape targetShape { get; set; }
         public GameObject uiInstance { get; protected set; }

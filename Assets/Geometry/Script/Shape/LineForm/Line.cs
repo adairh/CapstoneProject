@@ -34,7 +34,7 @@ namespace Manipulator
             meshCollider.sharedMesh = mesh;
             meshCollider.convex = true;
 
-            meshRenderer.material = MaterialLibrary.Get(MaterialType.Default);
+            meshRenderer.material = DefaultMat;
 
 
             if (!TryGetComponent(out positionSync))

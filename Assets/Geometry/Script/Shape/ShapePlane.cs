@@ -14,9 +14,40 @@ namespace Manipulator
 
             meshFilter = gameObject.AddComponent<MeshFilter>();
             meshRenderer = gameObject.AddComponent<MeshRenderer>();
-            meshRenderer.material = MaterialLibrary.Get(MaterialType.Default);
+            meshRenderer.material = DefaultMat;
         }
 
+        public override void UpdateHitbox()
+        {
+            if (pivotPoints.Count < 3) return;
+
+            Vector3 p0 = pivotPoints[0].transform.position;
+            Vector3 p1 = pivotPoints[1].transform.position;
+            Vector3 p2 = pivotPoints[2].transform.position;
+
+            Vector3 center = (p0 + p1 + p2) / 3f;
+            Vector3 dir1 = (p1 - p0);
+            Vector3 dir2 = (p2 - p0);
+
+            float extent1 = dir1.magnitude;
+            float extent2 = dir2.magnitude;
+
+            Vector3 normal = Vector3.Cross(dir1, dir2).normalized;
+            Vector3 upHint = Vector3.Cross(dir1, normal); // giúp cố định "trục lên" của collider
+
+            transform.position = center;
+            transform.rotation = Quaternion.LookRotation(normal, upHint); // ✅ chuẩn hóa hướng xoay
+
+            var box = gameObject.GetComponent<BoxCollider>();
+            if (!box) box = gameObject.AddComponent<BoxCollider>();
+
+            box.center = Vector3.zero;
+            box.size = new Vector3(extent1 * 2, extent2 * 2, 0.1f); // 0.1f là độ dày pháp tuyến
+        }
+
+
+
+        
         public void SetPoints(List<Point> points)
         {
             pivotPoints.Clear();
@@ -34,11 +65,7 @@ namespace Manipulator
             var mesh = MeshGenerator.CreatePlane(pivotPoints);
             GetComponent<MeshFilter>().mesh = mesh;
             OnMeshUpdated?.Invoke(mesh);
-        }
-
-        public override void UpdateHitbox()
-        {
-            // Optional: Add bounds or collider for the plane if needed
+            UpdateHitbox();
         }
 
         public override ShapeData Serialize()

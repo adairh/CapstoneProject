@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -27,9 +28,26 @@ namespace Manipulator
 
         protected virtual void Awake()
         {
-            // override if needed
+            DefaultMat = new Material(MaterialLibrary.Get(MaterialType.Default)); 
+            
         }
 
+        /// <summary>
+        /// Trả về danh sách setting của shape.
+        /// Mỗi shape con sẽ override nếu có custom.
+        /// </summary>
+        public virtual List<ISetting> GetSettings()
+        {
+            return new List<ISetting>
+            {
+                new PositionSetting(transform.position, this),
+                new ColorSetting(MaterialType.Default, this),
+                new VisibilitySetting(true,this)
+            };
+        }
+
+
+        
         public virtual void Initialize(ShapeData data)
         {
             ShapeId = data.Id;
@@ -39,6 +57,8 @@ namespace Manipulator
             ShapeStorage.Register(this);
         }
 
+        public Material DefaultMat { get; set; }
+        
         public virtual void InitializeNew(string type, Vector3 position)
         {
             ShapeId = Guid.NewGuid().ToString();
@@ -54,7 +74,28 @@ namespace Manipulator
                 Settings = new Dictionary<string, string>()
             };
  
-            
+
+            gameObject.AddComponent<HoverableShape>().SetShape(this);
+            gameObject.AddComponent<SelectableShape>().SetShape(this);
+            gameObject.AddComponent<ShapeClickHandler>().SetShape(this);
+            gameObject.AddComponent<DraggableShape>().SetShape(this);
+
+            if (this is Point)
+            {
+                var label = UIManager.Instance.GetUIComponent("LabelDisplayPrefab");
+                if (label != null)
+                {
+                    var go = Instantiate(label, transform);
+                    go.transform.localPosition = new Vector3(0, 0.5f, 0);
+                    var disp = go.GetComponentInChildren<LabelDisplay>();
+                    var s = LabelGenerator.Next();
+                    disp.SetLabel(s);
+                    if (disp != null && s != null)
+                        disp.Initialize(s);
+                    
+                }
+            }
+
             ApplyDataToTransform(Data);
             ShapeStorage.Register(this);
         }
@@ -63,7 +104,17 @@ namespace Manipulator
         {
             ShapeStorage.Unregister(this);
         }
+        
+        public virtual void SetRaycastIgnore(bool ignore)
+        {
+            int layer = ignore ? 2 : 0;
+            gameObject.layer = layer;
 
+            foreach (Transform child in transform)
+                if (child != null)
+                    child.gameObject.layer = layer;
+        }
+        
         public virtual void Dispose()
         {
             // 1. Gỡ khỏi storage

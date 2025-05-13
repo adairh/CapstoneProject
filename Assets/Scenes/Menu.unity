@@ -2211,6 +2211,21 @@ PrefabInstance:
       propertyPath: m_fontColorGradient.bottomRight.r
       value: 0.4666667
       objectReference: {fileID: 0}
+    - target: {fileID: 7231977792699623518, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 7188542563688512529}
+    - target: {fileID: 7231977792699623518, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: QuitGame
+      objectReference: {fileID: 0}
+    - target: {fileID: 7231977792699623518, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: An_An.MainMenuUI, Assembly-CSharp
+      objectReference: {fileID: 0}
     - target: {fileID: 7439322589897087695, guid: 79faca156d0d70643b36f0910ffd6762,
         type: 3}
       propertyPath: m_fontColorGradient.bottomLeft.b
@@ -2321,6 +2336,18 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 79faca156d0d70643b36f0910ffd6762, type: 3}
+--- !u!114 &7188542563688512529 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8064365914464009402, guid: 79faca156d0d70643b36f0910ffd6762,
+    type: 3}
+  m_PrefabInstance: {fileID: 7188542563688512528}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3287a788f6a11e4ab25d3d2ff9ef3be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

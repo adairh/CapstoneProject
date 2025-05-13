@@ -53,26 +53,63 @@ namespace Manipulator
 
         void CreatePlane(Vector3 axis1, Vector3 axis2, string name)
         {
-            Vector3 p1 = Vector3.zero;
-            Vector3 p2 = axis1 * gridSize;
-            Vector3 p3 = axis2 * gridSize;
+            float extent = gridSize;
 
-            var point1 = (Point)ShapeFactory.CreateShape("Point", p1);
-            var point2 = (Point)ShapeFactory.CreateShape("Point", p2);
-            var point3 = (Point)ShapeFactory.CreateShape("Point", p3);
+            GameObject planeGO = new GameObject(name);
+            planeGO.transform.SetParent(transform);
 
-            var plane = (PlaneShape)ShapeFactory.CreateShape("Plane", Vector3.zero);
-            plane.name = name;
-            plane.AddPivot(point1);
-            plane.AddPivot(point2);
-            plane.AddPivot(point3);
-            plane.CompleteDraw();
+            // Add mesh components
+            var filter = planeGO.AddComponent<MeshFilter>();
+            var renderer = planeGO.AddComponent<MeshRenderer>();
+            var collider = planeGO.AddComponent<BoxCollider>();
 
-            var renderer = plane.GetComponent<MeshRenderer>();
-            if (renderer)
+            // Create mesh
+            Mesh mesh = MeshGenerator.CreatePlaneFacing(axis1, axis2, extent, extent);
+            filter.mesh = mesh;
+
+            // Set double-sided material
+            Material mat = new Material(planeMaterial);
+            mat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off); // hiển thị 2 mặt
+
+// Làm trong suốt
+            mat.SetFloat("_Mode", 3);
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.DisableKeyword("_ALPHATEST_ON");
+            mat.EnableKeyword("_ALPHABLEND_ON");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            mat.renderQueue = 3000;
+
+            Color color = mat.color;
+            color.a = 0.3f;
+            mat.color = color;
+
+            renderer.material = mat;
+
+
+            // Collider: align with direction
+            Vector3 normal = Vector3.Cross(axis1, axis2).normalized;
+            Vector3 size = Mathf.Abs(Vector3.Dot(normal, Vector3.right)) > 0.9f
+                ? new Vector3(0.1f, extent * 2, extent * 2)
+                : Mathf.Abs(Vector3.Dot(normal, Vector3.up)) > 0.9f
+                    ? new Vector3(extent * 2, 0.1f, extent * 2)
+                    : new Vector3(extent * 2, extent * 2, 0.1f);
+            collider.size = size;
+            collider.center = Vector3.zero;
+            
+            
+        }
+
+        
+        void RemoveAllMonoBehaviours(GameObject go)
+        {
+            var components = go.GetComponents<MonoBehaviour>();
+            foreach (var comp in components)
             {
-                renderer.material = new Material(planeMaterial);
+                Destroy(comp);
             }
         }
+
     }
 }

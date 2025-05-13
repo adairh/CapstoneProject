@@ -34,7 +34,7 @@ namespace Manipulator
             meshCollider.sharedMesh = mesh;
             meshCollider.convex = true;
 
-            meshRenderer.material = MaterialLibrary.Get(MaterialType.Default);
+            meshRenderer.material = DefaultMat;
 
 
             if (!TryGetComponent(out positionSync))
@@ -191,7 +191,7 @@ namespace Manipulator
             }
         }
 
-        public void SetRaycastIgnore(bool ignore)
+        public override void SetRaycastIgnore(bool ignore)
         {
             int layer = ignore ? 2 : 0;
             gameObject.layer = layer;
