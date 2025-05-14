@@ -9,13 +9,26 @@ namespace Manipulator
             None,
             Point,
             Circle,
-            Rectangle,
             Triangle,
             Segment,
             StraightLine,
             Line,
             RayShape,
-            Polygon
+            Polygon,
+            
+            EquilateralPyramid,
+            EquilateralTriangle,
+            GenericPyramid,
+            IsoscelesTriangle,
+            Rectangle,
+            RegularTetrahedron,
+            Rhombus,
+            RightTriangle,
+            Square, 
+            SquarePrism,
+            SquarePyramid,
+            Tetrahedron
+            
         }
     }
 }

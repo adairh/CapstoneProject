@@ -5,49 +5,77 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    public class RightTriangleDrawer : BaseButton
-    {
-        private CreateShapeBatchAction batch;
+    public class RightTriangleDrawer : IPrebuiltDrawer
+    { 
+        
+        private Point a, b, c;
+        private Segment ab, bc, ca;
 
-        protected override void OnButtonClick()
+        public void Begin(Vector3 startPos)
         {
-            StartCoroutine(Draw());
+            string idA = Guid.NewGuid().ToString();
+            string idB = Guid.NewGuid().ToString();
+            string idC = Guid.NewGuid().ToString();
+
+            a = ShapeFactory.CreateShape(idA, startPos) as Point;
+            b = ShapeFactory.CreateShape(idB, startPos) as Point;
+            c = ShapeFactory.CreateShape(idC, startPos) as Point;
+
+            a.SetRaycastIgnore(true);
+            b.SetRaycastIgnore(true);
+            c.SetRaycastIgnore(true);
+
+            ab = ShapeFactory.CreateShape("Segment", startPos) as Segment;
+            bc = ShapeFactory.CreateShape("Segment", startPos) as Segment;
+            ca = ShapeFactory.CreateShape("Segment", startPos) as Segment;
+
+            ab.MarkAsPreview();
+            bc.MarkAsPreview();
+            ca.MarkAsPreview();
+
+            ab.SetStartPoint(a);
+            ab.SetEndPoint(b);
+            bc.SetStartPoint(b);
+            bc.SetEndPoint(c);
+            ca.SetStartPoint(c);
+            ca.SetEndPoint(a);
         }
 
-        private System.Collections.IEnumerator Draw()
+        public void Working(Vector3 currentPos)
         {
-            UIHint.Show("Chọn điểm A");
-            yield return ShapePicker.WaitForPoint();
-            var a = ShapePicker.LastPicked as Point;
-            if (a == null) yield break;
-            string idA = a.ShapeId;
+            b.MoveTo(currentPos, queue: false);
 
-            UIHint.Show("Chọn điểm B (đáy)");
-            yield return ShapePicker.WaitForPoint();
-            var b = ShapePicker.LastPicked as Point;
-            if (b == null) yield break;
-            string idB = b.ShapeId;
+            Vector3 abVec = b.transform.position - a.transform.position;
+            Vector3 right = Vector3.Cross(abVec.normalized, Vector3.forward); // XY
+            Vector3 cPos = a.transform.position + right * abVec.magnitude;
 
-            Vector3 ab = b.transform.position - a.transform.position;
-            Vector3 perp = Vector3.Cross(ab.normalized, Vector3.forward).normalized;
-            Vector3 cPos = a.transform.position + perp * Vector3.Distance(a.transform.position, b.transform.position) * 0.6f;
+            c.MoveTo(cPos, queue: false);
+        }
 
-            string idC = Guid.NewGuid().ToString();
-            string idAB = Guid.NewGuid().ToString();
-            string idBC = Guid.NewGuid().ToString();
-            string idCA = Guid.NewGuid().ToString();
-
-            var dataList = new List<ShapeData>
+        public void End(Vector3 finalPos)
+        {
+            var batch = new CreateShapeBatchAction(new List<ShapeData>
             {
-                new ShapeData { Id = idC, Type = "Point", Position = cPos },
-                new ShapeData { Id = idAB, Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = idBC, Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = idCA, Type = "Segment", ConnectedPoints = new() { idC, idA } }
-            };
+                a.Data, b.Data, c.Data,
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { a.ShapeId, b.ShapeId } },
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { b.ShapeId, c.ShapeId } },
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { c.ShapeId, a.ShapeId } }
+            });
 
-            batch = new CreateShapeBatchAction(dataList);
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
-            UIHint.Hide();
+
+            a.DestroyShape(); b.DestroyShape(); c.DestroyShape();
+            ab.DestroyShape(); bc.DestroyShape(); ca.DestroyShape();
+        }
+
+        public void Cancel()
+        {
+            a?.DestroyShape();
+            b?.DestroyShape();
+            c?.DestroyShape();
+            ab?.DestroyShape();
+            bc?.DestroyShape();
+            ca?.DestroyShape();
         }
     }
 }

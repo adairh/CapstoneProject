@@ -1,61 +1,79 @@
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class TetrahedronDrawer : BaseButton
-    {
-        private CreateShapeBatchAction batch;
+    public class TetrahedronDrawer : IPrebuiltDrawer
+    { 
+        
+        private Point a, b, c, apex;
+        private List<Segment> segments = new();
 
-        protected override void OnButtonClick()
+        public void Begin(Vector3 startPos)
         {
-            StartCoroutine(Draw());
+            a = ShapeFactory.CreateShape(Guid.NewGuid().ToString(), startPos) as Point;
+            b = ShapeFactory.CreateShape(Guid.NewGuid().ToString(), startPos) as Point;
+            c = ShapeFactory.CreateShape(Guid.NewGuid().ToString(), startPos) as Point;
+            apex = ShapeFactory.CreateShape(Guid.NewGuid().ToString(), startPos) as Point;
+
+            foreach (var p in new[] { a, b, c, apex }) p.SetRaycastIgnore(true);
+
+            for (int i = 0; i < 6; i++)
+            {
+                var seg = ShapeFactory.CreateShape("Segment", startPos) as Segment;
+                seg.MarkAsPreview();
+                seg.SetRaycastIgnore(true);
+                segments.Add(seg);
+            }
         }
 
-        private IEnumerator Draw()
+        public void Working(Vector3 currentPos)
         {
-            UIHint.Show("Chọn điểm A");
-            yield return ShapePicker.WaitForPoint();
-            var a = ShapePicker.LastPicked as Point;
-            if (a == null) yield break;
-            string idA = a.ShapeId;
+            Vector3 ab = currentPos - a.transform.position;
+            float side = ab.magnitude;
 
-            UIHint.Show("Chọn điểm B");
-            yield return ShapePicker.WaitForPoint();
-            var b = ShapePicker.LastPicked as Point;
-            if (b == null) yield break;
-            string idB = b.ShapeId;
+            Vector3 bPos = a.transform.position + ab;
+            Vector3 cPos = a.transform.position + Quaternion.Euler(0, 0, 60) * ab;
+            Vector3 apexPos = (a.transform.position + bPos + cPos) / 3f + Vector3.forward * (side * 0.8f);
 
-            UIHint.Show("Chọn điểm C");
-            yield return ShapePicker.WaitForPoint();
-            var c = ShapePicker.LastPicked as Point;
-            if (c == null) yield break;
-            string idC = c.ShapeId;
+            b.MoveTo(bPos, queue: false);
+            c.MoveTo(cPos, queue: false);
+            apex.MoveTo(apexPos, queue: false);
 
-            // Mặt đáy: tam giác ABC
-            Vector3 center = (a.transform.position + b.transform.position + c.transform.position) / 3f;
-            Vector3 normal = Vector3.Cross(b.transform.position - a.transform.position, c.transform.position - a.transform.position).normalized;
-            Vector3 dPos = center + normal * Vector3.Distance(a.transform.position, b.transform.position);
+            segments[0].SetStartPoint(a); segments[0].SetEndPoint(b);
+            segments[1].SetStartPoint(b); segments[1].SetEndPoint(c);
+            segments[2].SetStartPoint(c); segments[2].SetEndPoint(a);
 
-            string idD = Guid.NewGuid().ToString();
+            segments[3].SetStartPoint(apex); segments[3].SetEndPoint(a);
+            segments[4].SetStartPoint(apex); segments[4].SetEndPoint(b);
+            segments[5].SetStartPoint(apex); segments[5].SetEndPoint(c);
+        }
 
-            List<ShapeData> datas = new()
+        public void End(Vector3 finalPos)
+        {
+            var batch = new CreateShapeBatchAction(new List<ShapeData>
             {
-                new ShapeData { Id = idD, Type = "Point", Position = dPos },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idC, idA } },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idA, idD } },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idB, idD } },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idC, idD } }
-            };
+                a.Data, b.Data, c.Data, apex.Data,
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { a.ShapeId, b.ShapeId } },
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { b.ShapeId, c.ShapeId } },
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { c.ShapeId, a.ShapeId } },
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { apex.ShapeId, a.ShapeId } },
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { apex.ShapeId, b.ShapeId } },
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { apex.ShapeId, c.ShapeId } },
+            });
 
-            batch = new CreateShapeBatchAction(datas);
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
-            UIHint.Hide();
+
+            a.DestroyShape(); b.DestroyShape(); c.DestroyShape(); apex.DestroyShape();
+            foreach (var seg in segments) seg.DestroyShape();
+        }
+
+        public void Cancel()
+        {
+            a?.DestroyShape(); b?.DestroyShape(); c?.DestroyShape(); apex?.DestroyShape();
+            foreach (var seg in segments) seg.DestroyShape();
         }
     }
 }

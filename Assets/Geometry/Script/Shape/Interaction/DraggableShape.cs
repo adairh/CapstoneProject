@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 namespace Manipulator
-{ 
+{
     public class DraggableShape : ShapeBehaviourBase
     {
         private bool isDragging = false;
@@ -10,84 +10,54 @@ namespace Manipulator
 
         private void OnMouseDown()
         {
-            if (shape == null)
-            {
-                //Debug.LogWarning("[DraggableShape] OnMouseDown: shape is null");
+            if (shape == null || ManipulationManager.Instance.IsDrawing)
                 return;
-            }
-
-            if (ManipulationManager.Instance.IsDrawing)
-            {
-                //Debug.Log("[DraggableShape] OnMouseDown: currently drawing, cannot drag");
-                return;
-            }
 
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider.gameObject == gameObject)
             {
-                if (hit.collider.gameObject != gameObject)
-                {
-                    //Debug.Log("[DraggableShape] OnMouseDown: hit wrong object");
-                    return;
-                }
-
                 isDragging = true;
                 dragStartPosition = shape.transform.position;
 
                 Vector3 mouseWorld = hit.point;
                 offset = shape.transform.position - mouseWorld;
-
-                //Debug.Log($"[DraggableShape] Start dragging shape ID={shape.ShapeId} at {dragStartPosition}");
-            }
-            else
-            {
-                //Debug.LogWarning("[DraggableShape] OnMouseDown: raycast hit nothing");
             }
         }
 
         private void OnMouseDrag()
         {
-            if (!isDragging || shape == null)
-            {
-                //Debug.Log("[DraggableShape] OnMouseDrag: skipping, dragging=false or shape=null");
+            if (!isDragging || shape == null || ManipulationManager.Instance.IsDrawing)
                 return;
-            }
-
-            if (ManipulationManager.Instance.IsDrawing)
-            {
-                //Debug.Log("[DraggableShape] OnMouseDrag: currently drawing, skipping drag");
-                return;
-            }
 
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                Vector3 targetPos = hit.point + offset;
-                shape.MoveTo(targetPos, queue: false);
-                //Debug.Log($"[DraggableShape] Dragging shape ID={shape.ShapeId} to {targetPos}");
-            }
-            else
-            {
-                //Debug.LogWarning("[DraggableShape] OnMouseDrag: raycast hit nothing");
+                Vector3 rawTarget = hit.point + offset;
+                Vector3 current = shape.transform.position;
+
+                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                {
+                    // Move only on XZ
+                    rawTarget.y = current.y;
+                }
+                else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                {
+                    // Move only on Y
+                    rawTarget.x = current.x;
+                    rawTarget.z = current.z;
+                }
+                // else: free movement
+
+                shape.MoveTo(rawTarget, queue: false);
             }
         }
 
         private void OnMouseUp()
         {
-            if (!isDragging || shape == null)
-            {
-                //Debug.Log("[DraggableShape] OnMouseUp: not dragging or shape is null");
+            if (!isDragging || shape == null || ManipulationManager.Instance.IsDrawing)
                 return;
-            }
 
             isDragging = false;
-
-            if (ManipulationManager.Instance.IsDrawing)
-            {
-                //Debug.Log("[DraggableShape] OnMouseUp: currently drawing, canceling drag end");
-                return;
-            }
-
             Vector3 dragEndPosition = shape.transform.position;
 
             if (dragEndPosition != dragStartPosition)
@@ -95,11 +65,6 @@ namespace Manipulator
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(
                     new MoveShapeAction(shape.ShapeId, dragStartPosition, dragEndPosition)
                 );
-                //Debug.Log($"[DraggableShape] Finished dragging shape ID={shape.ShapeId} from {dragStartPosition} to {dragEndPosition}");
-            }
-            else
-            {
-                //Debug.Log("[DraggableShape] Dragged but position unchanged");
             }
         }
     }

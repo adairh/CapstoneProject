@@ -5,58 +5,80 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    public class SquareDrawer : BaseButton
+    public class SquareDrawer : IPrebuiltDrawer
     {
-        private CreateShapeBatchAction batch;
+        
+         
+        
+        
+        private Point a, b, c, d;
+        private List<Segment> segments = new();
 
-        protected override void OnButtonClick()
+        public void Begin(Vector3 startPos)
         {
-            StartCoroutine(Draw());
-        }
-
-        private System.Collections.IEnumerator Draw()
-        {
-            UIHint.Show("Chọn điểm A (góc trái dưới)");
-            yield return ShapePicker.WaitForPoint();
-            var a = ShapePicker.LastPicked as Point;
-            if (a == null) yield break;
-            string idA = a.ShapeId;
-
-            UIHint.Show("Chọn điểm B (góc phải dưới)");
-            yield return ShapePicker.WaitForPoint();
-            var b = ShapePicker.LastPicked as Point;
-            if (b == null) yield break;
-            string idB = b.ShapeId;
-
-            Vector3 ab = b.transform.position - a.transform.position;
-            float side = ab.magnitude;
-
-            Vector3 dir = ab.normalized;
-            Vector3 normal = Vector3.Cross(dir, Vector3.forward).normalized;
-            Vector3 cPos = b.transform.position + normal * side;
-            Vector3 dPos = a.transform.position + normal * side;
-
+            string idA = Guid.NewGuid().ToString();
+            string idB = Guid.NewGuid().ToString();
             string idC = Guid.NewGuid().ToString();
             string idD = Guid.NewGuid().ToString();
 
-            string idAB = Guid.NewGuid().ToString();
-            string idBC = Guid.NewGuid().ToString();
-            string idCD = Guid.NewGuid().ToString();
-            string idDA = Guid.NewGuid().ToString();
+            a = ShapeFactory.CreateShape(idA, startPos) as Point;
+            b = ShapeFactory.CreateShape(idB, startPos) as Point;
+            c = ShapeFactory.CreateShape(idC, startPos) as Point;
+            d = ShapeFactory.CreateShape(idD, startPos) as Point;
 
-            var dataList = new List<ShapeData>
+            foreach (var pt in new[] { a, b, c, d }) pt.SetRaycastIgnore(true);
+
+            for (int i = 0; i < 4; i++)
             {
-                new ShapeData { Id = idC, Type = "Point", Position = cPos },
-                new ShapeData { Id = idD, Type = "Point", Position = dPos },
-                new ShapeData { Id = idAB, Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = idBC, Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = idCD, Type = "Segment", ConnectedPoints = new() { idC, idD } },
-                new ShapeData { Id = idDA, Type = "Segment", ConnectedPoints = new() { idD, idA } }
-            };
+                var seg = ShapeFactory.CreateShape("Segment", startPos) as Segment;
+                seg.MarkAsPreview();
+                seg.SetRaycastIgnore(true);
+                segments.Add(seg);
+            }
+        }
 
-            batch = new CreateShapeBatchAction(dataList);
+        public void Working(Vector3 currentPos)
+        {
+            Vector3 ab = currentPos - a.transform.position;
+            Vector3 dir = ab.normalized;
+            float length = ab.magnitude;
+
+            Vector3 right = Vector3.Cross(dir, Vector3.forward); // Mặt phẳng XY
+            Vector3 bPos = a.transform.position + dir * length;
+            Vector3 cPos = bPos + right * length;
+            Vector3 dPos = a.transform.position + right * length;
+
+            b.MoveTo(bPos, queue: false);
+            c.MoveTo(cPos, queue: false);
+            d.MoveTo(dPos, queue: false);
+
+            segments[0].SetStartPoint(a); segments[0].SetEndPoint(b);
+            segments[1].SetStartPoint(b); segments[1].SetEndPoint(c);
+            segments[2].SetStartPoint(c); segments[2].SetEndPoint(d);
+            segments[3].SetStartPoint(d); segments[3].SetEndPoint(a);
+        }
+
+        public void End(Vector3 finalPos)
+        {
+            var batch = new CreateShapeBatchAction(new List<ShapeData>
+            {
+                a.Data, b.Data, c.Data, d.Data,
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { a.ShapeId, b.ShapeId } },
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { b.ShapeId, c.ShapeId } },
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { c.ShapeId, d.ShapeId } },
+                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { d.ShapeId, a.ShapeId } }
+            });
+
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
-            UIHint.Hide();
+
+            a.DestroyShape(); b.DestroyShape(); c.DestroyShape(); d.DestroyShape();
+            foreach (var seg in segments) seg.DestroyShape();
+        }
+
+        public void Cancel()
+        {
+            a?.DestroyShape(); b?.DestroyShape(); c?.DestroyShape(); d?.DestroyShape();
+            foreach (var seg in segments) seg.DestroyShape();
         }
     }
 }

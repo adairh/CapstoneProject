@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.InputSystem;
 
 namespace Manipulator
 {
@@ -297,14 +298,29 @@ namespace Manipulator
                 if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
 
                 Point snap = FindNearbyPoint(pos, exclude: startPoint);
-                endPoint.MoveTo((snap != null) ? snap.transform.position : pos, queue: false);
+                Vector3 targetPos = pos;
 
-                // if (snap != null && snap != endPoint)
-                // {
-                //     endPoint.DestroyShape();
-                //     preview.SetEndPoint(snap);
-                // }
+                Vector3 currentPos = endPoint.transform.position;
+
+                // Giữ E: khoá X
+                if (Input.GetKey(KeyCode.E))
+                {
+                    targetPos.x = startPoint.transform.position.x;
+                }
+                // Giữ R: khoá Y
+                if (Input.GetKey(KeyCode.R))
+                {
+                    targetPos.y = startPoint.transform.position.y;
+                }
+                // Giữ T: khoá Z
+                if (Input.GetKey(KeyCode.T))
+                {
+                    targetPos.z = startPoint.transform.position.z;
+                }
+
+                endPoint.MoveTo((snap != null) ? snap.transform.position : targetPos, queue: false);
             }
+
 
             private static void End()
             {

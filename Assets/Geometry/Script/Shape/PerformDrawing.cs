@@ -48,7 +48,34 @@ namespace Manipulator
                 case IShapeButton.ShapeType.Polygon:
                     Polygon.Drawer.UpdatePolygonInput();
                     break;
+
+                // Prebuilt shapes
+                case IShapeButton.ShapeType.EquilateralTriangle:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new EquilateralTriangleDrawer());
+                    break;
+                case IShapeButton.ShapeType.IsoscelesTriangle:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new IsoscelesTriangleDrawer());
+                    break; 
+                case IShapeButton.ShapeType.Square:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new SquareDrawer());
+                    break;
+                case IShapeButton.ShapeType.Rectangle:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new RectangleDrawer());
+                    break;
+                case IShapeButton.ShapeType.Rhombus:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new RhombusDrawer());
+                    break;
+                case IShapeButton.ShapeType.Tetrahedron:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new TetrahedronDrawer());
+                    break;
+                case IShapeButton.ShapeType.RegularTetrahedron:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new RegularTetrahedronDrawer());
+                    break; 
+                case IShapeButton.ShapeType.EquilateralPyramid:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new EquilateralPyramidDrawer());
+                    break; 
             }
+
         }
 
         public static bool RaycastMouse(out Vector3 hitPos)

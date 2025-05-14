@@ -7,7 +7,7 @@ namespace Manipulator
     {
         protected override void OnButtonClick()
         {
-            PrebuiltSpawnPanel.Show("Tam giác vuông", new string[] { "Độ dài đáy AB", "Chiều cao AC" }, OnConfirm);
+            PrebuiltSpawnPanel.Show("Tam giác vuông", new[] { "Chiều dài đáy AB", "Chiều cao AC" }, OnConfirm);
         }
 
         private void OnConfirm(float[] values)
@@ -16,28 +16,27 @@ namespace Manipulator
             float baseLength = values[0];
             float height = values[1];
 
-            Vector3 a = Vector3.zero;
-            Vector3 b = new Vector3(baseLength, 0, 0);
-            Vector3 c = new Vector3(0, height, 0);
+            if (!PerformDrawing.RaycastMouse(out Vector3 origin)) return;
+
+            Vector3 a = origin;
+            Vector3 b = origin + new Vector3(baseLength, 0, 0);
+            Vector3 c = origin + new Vector3(0, height, 0);
 
             string idA = System.Guid.NewGuid().ToString();
             string idB = System.Guid.NewGuid().ToString();
             string idC = System.Guid.NewGuid().ToString();
-            string idAB = System.Guid.NewGuid().ToString();
-            string idBC = System.Guid.NewGuid().ToString();
-            string idCA = System.Guid.NewGuid().ToString();
 
-            var dataList = new System.Collections.Generic.List<ShapeData>
+            var batch = new CreateShapeBatchAction(new System.Collections.Generic.List<ShapeData>
             {
                 new ShapeData { Id = idA, Type = "Point", Position = a },
                 new ShapeData { Id = idB, Type = "Point", Position = b },
                 new ShapeData { Id = idC, Type = "Point", Position = c },
-                new ShapeData { Id = idAB, Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = idBC, Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = idCA, Type = "Segment", ConnectedPoints = new() { idC, idA } }
-            };
 
-            var batch = new CreateShapeBatchAction(dataList);
+                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idA, idB } },
+                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idB, idC } },
+                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idC, idA } }
+            });
+
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
         }
     }

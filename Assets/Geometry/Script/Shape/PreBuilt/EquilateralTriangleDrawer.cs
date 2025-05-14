@@ -5,54 +5,106 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    public class EquilateralTriangleDrawer : BaseButton
+    public class EquilateralTriangleDrawer : IPrebuiltDrawer
+{
+    private string idA, idB, idC, idAB, idBC, idCA;
+
+    private Point a, b, c;
+    private Segment ab, bc, ca;
+
+    private float baseLength;
+
+    public void Begin(Vector3 startPos)
     {
-        private CreateShapeBatchAction batch;
+        idA = Guid.NewGuid().ToString();
+        idB = Guid.NewGuid().ToString();
+        idC = Guid.NewGuid().ToString();
 
-        protected override void OnButtonClick()
+        idAB = Guid.NewGuid().ToString();
+        idBC = Guid.NewGuid().ToString();
+        idCA = Guid.NewGuid().ToString();
+
+        var datas = new List<ShapeData>
         {
-            StartCoroutine(Draw());
-        }
+            new ShapeData { Id = idA, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
+            new ShapeData { Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
+            new ShapeData { Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
 
-        private System.Collections.IEnumerator Draw()
+            new ShapeData { Id = idAB, Type = "Segment", ConnectedPoints = new() { idA, idB }},
+            new ShapeData { Id = idBC, Type = "Segment", ConnectedPoints = new() { idB, idC }},
+            new ShapeData { Id = idCA, Type = "Segment", ConnectedPoints = new() { idC, idA }},
+        };
+
+        var batch = new CreateShapeBatchAction(datas);
+
+        batch.OnShapeSpawned = shape =>
         {
-            UIHint.Show("Chọn điểm A");
-            yield return ShapePicker.WaitForPoint();
-            var a = ShapePicker.LastPicked as Point;
-            if (a == null) yield break;
-            string idA = a.ShapeId;
-
-            UIHint.Show("Chọn điểm B");
-            yield return ShapePicker.WaitForPoint();
-            var b = ShapePicker.LastPicked as Point;
-            if (b == null) yield break;
-            string idB = b.ShapeId;
-
-            Vector3 aPos = a.transform.position;
-            Vector3 bPos = b.transform.position;
-            Vector3 ab = bPos - aPos;
-            float len = ab.magnitude;
-            Vector3 dir = ab.normalized;
-            Vector3 normal = Vector3.Cross(dir, Vector3.forward).normalized;
-            float height = Mathf.Sqrt(3f) / 2f * len;
-            Vector3 cPos = (aPos + bPos) / 2 + normal * height;
-
-            string idC = Guid.NewGuid().ToString();
-            string idAB = Guid.NewGuid().ToString();
-            string idBC = Guid.NewGuid().ToString();
-            string idCA = Guid.NewGuid().ToString();
-
-            var dataList = new List<ShapeData>
+            if (shape is Point pt)
             {
-                new ShapeData { Id = idC, Type = "Point", Position = cPos },
-                new ShapeData { Id = idAB, Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = idBC, Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = idCA, Type = "Segment", ConnectedPoints = new() { idC, idA } }
-            };
+                if (pt.ShapeId == idA) a = pt;
+                if (pt.ShapeId == idB) b = pt;
+                if (pt.ShapeId == idC) c = pt;
+            }
 
-            batch = new CreateShapeBatchAction(dataList);
-            UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
-            UIHint.Hide();
+            if (shape is Segment s)
+            {
+                if (s.ShapeId == idAB) ab = s;
+                if (s.ShapeId == idBC) bc = s;
+                if (s.ShapeId == idCA) ca = s;
+            }
+
+            TryConnectSegments();
+        };
+
+        UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
+    }
+
+    private void TryConnectSegments()
+    {
+        if (a != null && b != null && c != null && ab != null && bc != null && ca != null)
+        {
+            a.SetRaycastIgnore(true); b.SetRaycastIgnore(true); c.SetRaycastIgnore(true);
+            ab.SetRaycastIgnore(true); bc.SetRaycastIgnore(true); ca.SetRaycastIgnore(true);
+            ab.MarkAsPreview(); bc.MarkAsPreview(); ca.MarkAsPreview();
+
+            ab.SetStartPoint(a); ab.SetEndPoint(b);
+            bc.SetStartPoint(b); bc.SetEndPoint(c);
+            ca.SetStartPoint(c); ca.SetEndPoint(a);
         }
     }
+
+    public void Working(Vector3 currentPos)
+    {
+        if (a == null || b == null || c == null) return;
+
+        b.MoveTo(currentPos, queue: false);
+
+        Vector3 dir = (b.transform.position - a.transform.position).normalized;
+        baseLength = Vector3.Distance(a.transform.position, b.transform.position);
+
+        Vector3 right = Vector3.Cross(dir, Vector3.forward); // Mặt phẳng XY
+        float height = Mathf.Sqrt(3f) / 2f * baseLength;
+        Vector3 midpoint = (a.transform.position + b.transform.position) / 2f;
+        Vector3 cPos = midpoint + right * height;
+
+        c.MoveTo(cPos, queue: false);
+    }
+
+    public void End(Vector3 finalPos)
+    {
+        a.SetRaycastIgnore(false);
+        b.SetRaycastIgnore(false);
+        c.SetRaycastIgnore(false);
+        ab.SetRaycastIgnore(false);
+        bc.SetRaycastIgnore(false);
+        ca.SetRaycastIgnore(false); 
+    }
+
+    public void Cancel()
+    {
+        a?.DestroyShape(); b?.DestroyShape(); c?.DestroyShape();
+        ab?.DestroyShape(); bc?.DestroyShape(); ca?.DestroyShape();
+    }
+}
+
 }
