@@ -61,7 +61,7 @@ public class BackToHomeButton : MonoBehaviour
 
     public void OnCreateRoomButton()
     {
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("Copy_SampleScene");
     }
 
     public void SubmitCreateRoom()
