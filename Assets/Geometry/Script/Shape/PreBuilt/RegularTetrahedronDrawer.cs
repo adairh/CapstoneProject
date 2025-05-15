@@ -1,4 +1,4 @@
-
+// Refactored RegularTetrahedronDrawer
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,39 +7,95 @@ namespace Manipulator
 {
     public class RegularTetrahedronDrawer : IPrebuiltDrawer
     {
-        
-         
-        
+        private string idA, idB, idC, idD;
+        private string idAB, idBC, idCA, idAD, idBD, idCD;
         private Point a, b, c, d;
-        private List<Segment> segments = new();
+        private Segment ab, bc, ca, ad, bd, cd;
 
         public void Begin(Vector3 startPos)
         {
-            a = ShapeFactory.CreateShape(Guid.NewGuid().ToString(), startPos) as Point;
-            b = ShapeFactory.CreateShape(Guid.NewGuid().ToString(), startPos) as Point;
-            c = ShapeFactory.CreateShape(Guid.NewGuid().ToString(), startPos) as Point;
-            d = ShapeFactory.CreateShape(Guid.NewGuid().ToString(), startPos) as Point;
+            idA = Guid.NewGuid().ToString();
+            idB = Guid.NewGuid().ToString();
+            idC = Guid.NewGuid().ToString();
+            idD = Guid.NewGuid().ToString();
+            idAB = Guid.NewGuid().ToString();
+            idBC = Guid.NewGuid().ToString();
+            idCA = Guid.NewGuid().ToString();
+            idAD = Guid.NewGuid().ToString();
+            idBD = Guid.NewGuid().ToString();
+            idCD = Guid.NewGuid().ToString();
 
-            foreach (var pt in new[] { a, b, c, d }) pt.SetRaycastIgnore(true);
-
-            for (int i = 0; i < 6; i++)
+            var datas = new List<ShapeData>
             {
-                var seg = ShapeFactory.CreateShape("Segment", startPos) as Segment;
-                seg.MarkAsPreview();
-                seg.SetRaycastIgnore(true);
-                segments.Add(seg);
+                new ShapeData { Id = idA, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new ShapeData { Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new ShapeData { Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new ShapeData { Id = idD, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
+
+                new ShapeData { Id = idAB, Type = "Segment", ConnectedPoints = new() { idA, idB } },
+                new ShapeData { Id = idBC, Type = "Segment", ConnectedPoints = new() { idB, idC } },
+                new ShapeData { Id = idCA, Type = "Segment", ConnectedPoints = new() { idC, idA } },
+                new ShapeData { Id = idAD, Type = "Segment", ConnectedPoints = new() { idA, idD } },
+                new ShapeData { Id = idBD, Type = "Segment", ConnectedPoints = new() { idB, idD } },
+                new ShapeData { Id = idCD, Type = "Segment", ConnectedPoints = new() { idC, idD } },
+            };
+
+            var batch = new CreateShapeBatchAction(datas);
+            batch.OnShapeSpawned = shape =>
+            {
+                if (shape is Point pt)
+                {
+                    if (pt.ShapeId == idA) a = pt;
+                    if (pt.ShapeId == idB) b = pt;
+                    if (pt.ShapeId == idC) c = pt;
+                    if (pt.ShapeId == idD) d = pt;
+                }
+                else if (shape is Segment s)
+                {
+                    if (s.ShapeId == idAB) ab = s;
+                    if (s.ShapeId == idBC) bc = s;
+                    if (s.ShapeId == idCA) ca = s;
+                    if (s.ShapeId == idAD) ad = s;
+                    if (s.ShapeId == idBD) bd = s;
+                    if (s.ShapeId == idCD) cd = s;
+                }
+                TryConnect();
+            };
+
+            UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
+        }
+
+        private void TryConnect()
+        {
+            if (a != null && b != null && c != null && d != null &&
+                ab != null && bc != null && ca != null &&
+                ad != null && bd != null && cd != null)
+            {
+                foreach (var pt in new[] { a, b, c, d }) pt.SetRaycastIgnore(true);
+                foreach (var seg in new[] { ab, bc, ca, ad, bd, cd })
+                {
+                    seg.MarkAsPreview();
+                    seg.SetRaycastIgnore(true);
+                }
+
+                ab.SetStartPoint(a); ab.SetEndPoint(b);
+                bc.SetStartPoint(b); bc.SetEndPoint(c);
+                ca.SetStartPoint(c); ca.SetEndPoint(a);
+                ad.SetStartPoint(a); ad.SetEndPoint(d);
+                bd.SetStartPoint(b); bd.SetEndPoint(d);
+                cd.SetStartPoint(c); cd.SetEndPoint(d);
             }
         }
 
         public void Working(Vector3 currentPos)
         {
+            if (a == null || b == null || c == null || d == null) return;
+
             Vector3 ab = currentPos - a.transform.position;
             float side = ab.magnitude;
-
             Vector3 bPos = a.transform.position + ab;
             Vector3 cPos = a.transform.position + Quaternion.Euler(0, 0, 60) * ab;
 
-            // Calculate apex using tetrahedron geometry
             Vector3 centroid = (a.transform.position + bPos + cPos) / 3f;
             float height = Mathf.Sqrt(2f / 3f) * side;
             Vector3 dPos = centroid + Vector3.forward * height;
@@ -47,38 +103,18 @@ namespace Manipulator
             b.MoveTo(bPos, queue: false);
             c.MoveTo(cPos, queue: false);
             d.MoveTo(dPos, queue: false);
-
-            segments[0].SetStartPoint(a); segments[0].SetEndPoint(b);
-            segments[1].SetStartPoint(b); segments[1].SetEndPoint(c);
-            segments[2].SetStartPoint(c); segments[2].SetEndPoint(a);
-
-            segments[3].SetStartPoint(a); segments[3].SetEndPoint(d);
-            segments[4].SetStartPoint(b); segments[4].SetEndPoint(d);
-            segments[5].SetStartPoint(c); segments[5].SetEndPoint(d);
         }
 
         public void End(Vector3 finalPos)
         {
-            var batch = new CreateShapeBatchAction(new List<ShapeData>
-            {
-                a.Data, b.Data, c.Data, d.Data,
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { a.ShapeId, b.ShapeId } },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { b.ShapeId, c.ShapeId } },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { c.ShapeId, a.ShapeId } },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { a.ShapeId, d.ShapeId } },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { b.ShapeId, d.ShapeId } },
-                new ShapeData { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { c.ShapeId, d.ShapeId } },
-            });
-
-            UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
-            foreach (var pt in new[] { a, b, c, d }) pt.DestroyShape();
-            foreach (var seg in segments) seg.DestroyShape();
+            foreach (var pt in new[] { a, b, c, d }) pt.SetRaycastIgnore(false);
+            foreach (var seg in new[] { ab, bc, ca, ad, bd, cd }) seg.SetRaycastIgnore(false);
         }
 
         public void Cancel()
         {
             foreach (var pt in new[] { a, b, c, d }) pt?.DestroyShape();
-            foreach (var seg in segments) seg.DestroyShape();
+            foreach (var seg in new[] { ab, bc, ca, ad, bd, cd }) seg?.DestroyShape();
         }
     }
 }

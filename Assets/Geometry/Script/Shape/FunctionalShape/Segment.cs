@@ -306,16 +306,19 @@ namespace Manipulator
                 if (Input.GetKey(KeyCode.E))
                 {
                     targetPos.x = startPoint.transform.position.x;
+                    targetPos.y = startPoint.transform.position.y;
                 }
                 // Giữ R: khoá Y
                 if (Input.GetKey(KeyCode.R))
                 {
                     targetPos.y = startPoint.transform.position.y;
+                    targetPos.z = startPoint.transform.position.z;
                 }
                 // Giữ T: khoá Z
                 if (Input.GetKey(KeyCode.T))
                 {
                     targetPos.z = startPoint.transform.position.z;
+                    targetPos.x = startPoint.transform.position.x;
                 }
 
                 endPoint.MoveTo((snap != null) ? snap.transform.position : targetPos, queue: false);

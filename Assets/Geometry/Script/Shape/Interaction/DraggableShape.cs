@@ -7,7 +7,7 @@ namespace Manipulator
         private bool isDragging = false;
         private Vector3 offset;
         private Vector3 dragStartPosition;
-
+        private Vector3 lastMousePosition;
         private void OnMouseDown()
         {
             if (shape == null || ManipulationManager.Instance.IsDrawing)
@@ -19,8 +19,9 @@ namespace Manipulator
                 isDragging = true;
                 dragStartPosition = shape.transform.position;
 
-                Vector3 mouseWorld = hit.point;
-                offset = shape.transform.position - mouseWorld;
+                offset = shape.transform.position - hit.point;
+
+                lastMousePosition = Input.mousePosition;
             }
         }
 
@@ -29,29 +30,31 @@ namespace Manipulator
             if (!isDragging || shape == null || ManipulationManager.Instance.IsDrawing)
                 return;
 
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            Vector3 mouseDelta = Input.mousePosition - lastMousePosition;
+            lastMousePosition = Input.mousePosition;
+
+            // Chuyển delta từ screen space sang world space
+            Vector3 worldDelta = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.WorldToScreenPoint(shape.transform.position).z)) -
+                                 Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x - mouseDelta.x, Input.mousePosition.y - mouseDelta.y, Camera.main.WorldToScreenPoint(shape.transform.position).z));
+
+            Vector3 currentPos = shape.transform.position;
+            Vector3 target = currentPos + worldDelta;
+
+            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             {
-                Vector3 rawTarget = hit.point + offset;
-                Vector3 current = shape.transform.position;
-
-                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
-                {
-                    // Move only on XZ
-                    rawTarget.y = current.y;
-                }
-                else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-                {
-                    // Move only on Y
-                    rawTarget.x = current.x;
-                    rawTarget.z = current.z;
-                }
-                // else: free movement
-
-                shape.MoveTo(rawTarget, queue: false);
+                // Only XZ
+                target.y = currentPos.y;
             }
-        }
+            else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+            {
+                // Only Y
+                target.x = currentPos.x;
+                target.z = currentPos.z;
+            }
 
+            shape.MoveTo(target, queue: false);
+        }
+        
         private void OnMouseUp()
         {
             if (!isDragging || shape == null || ManipulationManager.Instance.IsDrawing)

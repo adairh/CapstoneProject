@@ -53,6 +53,9 @@ namespace Manipulator
                 case IShapeButton.ShapeType.EquilateralTriangle:
                     PrebuiltDrawingHandler.Instance.StartDrawing(new EquilateralTriangleDrawer());
                     break;
+                case IShapeButton.ShapeType.EquilateralPyramid:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new EquilateralPyramidDrawer());
+                    break;
                 case IShapeButton.ShapeType.IsoscelesTriangle:
                     PrebuiltDrawingHandler.Instance.StartDrawing(new IsoscelesTriangleDrawer());
                     break; 
@@ -70,10 +73,20 @@ namespace Manipulator
                     break;
                 case IShapeButton.ShapeType.RegularTetrahedron:
                     PrebuiltDrawingHandler.Instance.StartDrawing(new RegularTetrahedronDrawer());
-                    break; 
-                case IShapeButton.ShapeType.EquilateralPyramid:
-                    PrebuiltDrawingHandler.Instance.StartDrawing(new EquilateralPyramidDrawer());
-                    break; 
+                    break;
+                case IShapeButton.ShapeType.GenericPyramid:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new GenericPyramidDrawer());
+                    break;   
+                case IShapeButton.ShapeType.RightTriangle:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new RightTriangleDrawer());
+                    break;  
+                case IShapeButton.ShapeType.SquarePrism:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new SquarePrismDrawer());
+                    break;
+                case IShapeButton.ShapeType.SquarePyramid:
+                    PrebuiltDrawingHandler.Instance.StartDrawing(new SquarePyramidDrawer());
+                    break;  
+                   
             }
 
         }
