@@ -1,15 +1,16 @@
-// Refactored IsoscelesTriangleDrawer
+// Refactored RightTriangleDrawer with Mesh Display
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class IsoscelesTriangleDrawer : IPrebuiltDrawer
+    public class RightTriangleDrawer : IPrebuiltDrawer
     {
         private string idA, idB, idC, idAB, idBC, idCA;
         private Point a, b, c;
         private Segment ab, bc, ca;
+        private ShapeMeshDisplay meshDisplay;
 
         public void Begin(Vector3 startPos)
         {
@@ -65,22 +66,26 @@ namespace Manipulator
                 ab.SetStartPoint(a); ab.SetEndPoint(b);
                 bc.SetStartPoint(b); bc.SetEndPoint(c);
                 ca.SetStartPoint(c); ca.SetEndPoint(a);
+
+                if (meshDisplay == null)
+                {
+                    meshDisplay = a.gameObject.AddComponent<ShapeMeshDisplay>();
+                    meshDisplay.Initialize(new List<Point> { a, b, c });
+                }
             }
         }
 
         public void Working(Vector3 currentPos)
         {
             if (a == null || b == null || c == null) return;
-            b.MoveTo(currentPos, queue: false);
-
-            Vector3 mid = (a.transform.position + b.transform.position) / 2f;
-            Vector3 dir = (b.transform.position - a.transform.position).normalized;
-            Vector3 normal = Vector3.Cross(dir, Vector3.forward);
-            float baseLength = Vector3.Distance(a.transform.position, b.transform.position);
-            float height = baseLength * 0.75f;
-            Vector3 cPos = mid + normal * height;
+            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
+            b.MoveTo(snappedPos, queue: false);
+            Vector3 ab = b.transform.position - a.transform.position;
+            Vector3 right = Vector3.Cross(Vector3.up, ab.normalized);
+            Vector3 cPos = a.transform.position + right * ab.magnitude;
             c.MoveTo(cPos, queue: false);
         }
+
 
         public void End(Vector3 finalPos)
         {

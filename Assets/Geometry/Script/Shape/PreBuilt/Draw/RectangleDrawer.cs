@@ -1,16 +1,17 @@
-// Refactored RhombusDrawer
+// Refactored RectangleDrawer with Mesh Display
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class RhombusDrawer : IPrebuiltDrawer
+    public class RectangleDrawer : IPrebuiltDrawer
     {
         private string idA, idB, idC, idD;
         private string idAB, idBC, idCD, idDA;
         private Point a, b, c, d;
         private Segment ab, bc, cd, da;
+        private ShapeMeshDisplay meshDisplay;
 
         public void Begin(Vector3 startPos)
         {
@@ -74,27 +75,33 @@ namespace Manipulator
                 bc.SetStartPoint(b); bc.SetEndPoint(c);
                 cd.SetStartPoint(c); cd.SetEndPoint(d);
                 da.SetStartPoint(d); da.SetEndPoint(a);
+
+                if (meshDisplay == null)
+                {
+                    meshDisplay = a.gameObject.AddComponent<ShapeMeshDisplay>();
+                    meshDisplay.Initialize(new List<Point> { a, b, c, d });
+                }
             }
         }
 
         public void Working(Vector3 currentPos)
         {
             if (a == null || b == null || c == null || d == null) return;
-
-            Vector3 ab = currentPos - a.transform.position;
+            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
+            Vector3 ab = snappedPos - a.transform.position;
             Vector3 dir = ab.normalized;
-            float length = ab.magnitude;
-            Vector3 right = Vector3.Cross(dir, Vector3.forward);
-            float diagonal = length;
-
-            Vector3 bPos = a.transform.position + dir * length;
-            Vector3 cPos = bPos + right * diagonal;
-            Vector3 dPos = a.transform.position + right * diagonal;
-
+            float width = ab.magnitude;
+            Vector3 right = Vector3.Cross(Vector3.up, dir);
+            float height = width * 0.6f;
+            Vector3 bPos = a.transform.position + dir * width;
+            Vector3 cPos = bPos + right * height;
+            Vector3 dPos = a.transform.position + right * height;
             b.MoveTo(bPos, queue: false);
             c.MoveTo(cPos, queue: false);
             d.MoveTo(dPos, queue: false);
         }
+
+
 
         public void End(Vector3 finalPos)
         {

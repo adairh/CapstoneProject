@@ -1,16 +1,17 @@
-// Refactored RegularTetrahedronDrawer
+// Refactored TetrahedronDrawer with Mesh Display for base triangle
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class RegularTetrahedronDrawer : IPrebuiltDrawer
+    public class TetrahedronDrawer : IPrebuiltDrawer
     {
         private string idA, idB, idC, idD;
         private string idAB, idBC, idCA, idAD, idBD, idCD;
         private Point a, b, c, d;
         private Segment ab, bc, ca, ad, bd, cd;
+        private ShapeMeshDisplay meshDisplay;
 
         public void Begin(Vector3 startPos)
         {
@@ -84,25 +85,27 @@ namespace Manipulator
                 ad.SetStartPoint(a); ad.SetEndPoint(d);
                 bd.SetStartPoint(b); bd.SetEndPoint(d);
                 cd.SetStartPoint(c); cd.SetEndPoint(d);
+
+                if (meshDisplay == null)
+                {
+                    meshDisplay = a.gameObject.AddComponent<ShapeMeshDisplay>();
+                    meshDisplay.Initialize(new List<Point> { a, b, c });
+                }
             }
         }
 
         public void Working(Vector3 currentPos)
         {
             if (a == null || b == null || c == null || d == null) return;
-
-            Vector3 ab = currentPos - a.transform.position;
+            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
+            Vector3 ab = snappedPos - a.transform.position;
             float side = ab.magnitude;
             Vector3 bPos = a.transform.position + ab;
-            Vector3 cPos = a.transform.position + Quaternion.Euler(0, 0, 60) * ab;
-
-            Vector3 centroid = (a.transform.position + bPos + cPos) / 3f;
-            float height = Mathf.Sqrt(2f / 3f) * side;
-            Vector3 dPos = centroid + Vector3.forward * height;
-
+            Vector3 cPos = a.transform.position + Quaternion.AngleAxis(60, Vector3.up) * ab;
+            Vector3 apexPos = (a.transform.position + bPos + cPos) / 3f + Vector3.up * (side * 0.9f);
             b.MoveTo(bPos, queue: false);
             c.MoveTo(cPos, queue: false);
-            d.MoveTo(dPos, queue: false);
+            d.MoveTo(apexPos, queue: false);
         }
 
         public void End(Vector3 finalPos)

@@ -1,4 +1,4 @@
-// Refactored EquilateralPyramidDrawer
+// Refactored EquilateralPyramidDrawer with Mesh Display
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,6 +11,7 @@ namespace Manipulator
         private List<string> segIds;
         private Point a, b, c, apex;
         private List<Segment> segments = new();
+        private ShapeMeshDisplay baseMesh;
 
         public void Begin(Vector3 startPos)
         {
@@ -58,7 +59,8 @@ namespace Manipulator
 
         private void TryConnect()
         {
-            if (a == null || b == null || c == null || apex == null || segments.Count < 6) return;
+            if (a == null || b == null || c == null || apex == null) return;
+            if (segments.Count < 6) return;
 
             foreach (var pt in new[] { a, b, c, apex }) pt.SetRaycastIgnore(true);
             foreach (var seg in segments)
@@ -73,22 +75,28 @@ namespace Manipulator
             segments[3].SetStartPoint(apex); segments[3].SetEndPoint(a);
             segments[4].SetStartPoint(apex); segments[4].SetEndPoint(b);
             segments[5].SetStartPoint(apex); segments[5].SetEndPoint(c);
+
+            if (baseMesh == null)
+            {
+                baseMesh = a.gameObject.AddComponent<ShapeMeshDisplay>();
+                baseMesh.Initialize(new List<Point> { a, b, c });
+            }
         }
 
         public void Working(Vector3 currentPos)
         {
             if (a == null || b == null || c == null || apex == null) return;
-
-            Vector3 ab = currentPos - a.transform.position;
+            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
+            Vector3 ab = snappedPos - a.transform.position;
             float side = ab.magnitude;
             Vector3 bPos = a.transform.position + ab;
-            Vector3 cPos = a.transform.position + Quaternion.Euler(0, 0, 60) * ab;
-            Vector3 apexPos = (a.transform.position + bPos + cPos) / 3f + Vector3.forward * side;
-
+            Vector3 cPos = a.transform.position + Quaternion.AngleAxis(60, Vector3.up) * ab;
+            Vector3 apexPos = (a.transform.position + bPos + cPos) / 3f + Vector3.up * side;
             b.MoveTo(bPos, queue: false);
             c.MoveTo(cPos, queue: false);
             apex.MoveTo(apexPos, queue: false);
         }
+
 
         public void End(Vector3 finalPos)
         {

@@ -1,4 +1,4 @@
-// Refactored SquarePrismDrawer
+// Refactored SquarePrismDrawer with Mesh Display for base square
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,6 +11,7 @@ namespace Manipulator
         private List<string> segmentIds;
         private Dictionary<string, Point> points = new();
         private Dictionary<string, Segment> segments = new();
+        private ShapeMeshDisplay meshDisplay;
 
         public void Begin(Vector3 startPos)
         {
@@ -85,6 +86,16 @@ namespace Manipulator
                 ConnectPoints(idB, idF, segmentIds[9]);
                 ConnectPoints(idC, idG, segmentIds[10]);
                 ConnectPoints(idD, idH, segmentIds[11]);
+
+                if (meshDisplay == null &&
+                    points.TryGetValue(idA, out var a) &&
+                    points.TryGetValue(idB, out var b) &&
+                    points.TryGetValue(idC, out var c) &&
+                    points.TryGetValue(idD, out var d))
+                {
+                    meshDisplay = a.gameObject.AddComponent<ShapeMeshDisplay>();
+                    meshDisplay.Initialize(new List<Point> { a, b, c, d });
+                }
             }
         }
 
@@ -102,22 +113,20 @@ namespace Manipulator
         public void Working(Vector3 currentPos)
         {
             if (!points.ContainsKey(idA) || !points.ContainsKey(idB)) return;
-
-            var a = points[idA];
-            var b = points[idB];
-            b.MoveTo(currentPos, queue: false);
-
+            Point a = points[idA];
+            Point b = points[idB];
+            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
+            b.MoveTo(snappedPos, queue: false);
             Vector3 ab = b.transform.position - a.transform.position;
-            Vector3 right = Vector3.Cross(ab.normalized, Vector3.forward);
+            Vector3 right = Vector3.Cross(Vector3.up, ab.normalized);
             float length = ab.magnitude;
             float height = length * 0.8f;
-
             points[idC].MoveTo(b.transform.position + right * length, queue: false);
             points[idD].MoveTo(a.transform.position + right * length, queue: false);
-            points[idE].MoveTo(a.transform.position + Vector3.forward * height, queue: false);
-            points[idF].MoveTo(b.transform.position + Vector3.forward * height, queue: false);
-            points[idG].MoveTo(points[idC].transform.position + Vector3.forward * height, queue: false);
-            points[idH].MoveTo(points[idD].transform.position + Vector3.forward * height, queue: false);
+            points[idE].MoveTo(a.transform.position + Vector3.up * height, queue: false);
+            points[idF].MoveTo(b.transform.position + Vector3.up * height, queue: false);
+            points[idG].MoveTo(points[idC].transform.position + Vector3.up * height, queue: false);
+            points[idH].MoveTo(points[idD].transform.position + Vector3.up * height, queue: false);
         }
 
         public void End(Vector3 finalPos)

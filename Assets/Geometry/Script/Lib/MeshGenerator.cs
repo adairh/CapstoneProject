@@ -1,10 +1,38 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Manipulator
 {
     public static class MeshGenerator
     {
+        public static Mesh GenerateMesh(List<Vector3> points)
+        {
+            if (points.Count < 3) return null;
+
+            var mesh = new Mesh();
+
+            var basePos = points[0];
+            var vertices = points.Select(p => p - basePos).ToArray();
+            var tris = new List<int>();
+
+            for (int i = 1; i < points.Count - 1; i++)
+            {
+                tris.Add(0); tris.Add(i); tris.Add(i + 1);
+            }
+
+            mesh.vertices = vertices;
+            mesh.triangles = tris.ToArray();
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
+            // Move mesh back to world position
+            for (int i = 0; i < vertices.Length; i++) vertices[i] += basePos;
+            mesh.vertices = vertices;
+
+            return mesh;
+        }
+        
         public static Mesh CreateSphere(float radius, int segments = 16, int rings = 16)
         {
             GameObject temp = GameObject.CreatePrimitive(PrimitiveType.Sphere);

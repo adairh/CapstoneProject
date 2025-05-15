@@ -1,15 +1,17 @@
-// Refactored RightTriangleDrawer
+// Refactored EquilateralTriangleDrawer with Mesh Display
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class RightTriangleDrawer : IPrebuiltDrawer
+    public class EquilateralTriangleDrawer : IPrebuiltDrawer
     {
         private string idA, idB, idC, idAB, idBC, idCA;
         private Point a, b, c;
         private Segment ab, bc, ca;
+        private ShapeMeshDisplay meshDisplay;
+        private float baseLength;
 
         public void Begin(Vector3 startPos)
         {
@@ -39,51 +41,64 @@ namespace Manipulator
                     if (pt.ShapeId == idB) b = pt;
                     if (pt.ShapeId == idC) c = pt;
                 }
-                else if (shape is Segment s)
+
+                if (shape is Segment s)
                 {
                     if (s.ShapeId == idAB) ab = s;
                     if (s.ShapeId == idBC) bc = s;
                     if (s.ShapeId == idCA) ca = s;
                 }
-                TryConnect();
+
+                TryConnectSegments();
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
         }
 
-        private void TryConnect()
+        private void TryConnectSegments()
         {
             if (a != null && b != null && c != null && ab != null && bc != null && ca != null)
             {
-                foreach (var pt in new[] { a, b, c }) pt.SetRaycastIgnore(true);
-                foreach (var seg in new[] { ab, bc, ca })
-                {
-                    seg.MarkAsPreview();
-                    seg.SetRaycastIgnore(true);
-                }
+                a.SetRaycastIgnore(true); b.SetRaycastIgnore(true); c.SetRaycastIgnore(true);
+                ab.SetRaycastIgnore(true); bc.SetRaycastIgnore(true); ca.SetRaycastIgnore(true);
+                ab.MarkAsPreview(); bc.MarkAsPreview(); ca.MarkAsPreview();
 
                 ab.SetStartPoint(a); ab.SetEndPoint(b);
                 bc.SetStartPoint(b); bc.SetEndPoint(c);
                 ca.SetStartPoint(c); ca.SetEndPoint(a);
+
+                if (meshDisplay == null)
+                {
+                    meshDisplay = a.gameObject.AddComponent<ShapeMeshDisplay>();
+                    meshDisplay.Initialize(new List<Point> { a, b, c });
+                }
             }
         }
 
         public void Working(Vector3 currentPos)
         {
             if (a == null || b == null || c == null) return;
-
-            b.MoveTo(currentPos, queue: false);
-
-            Vector3 ab = b.transform.position - a.transform.position;
-            Vector3 right = Vector3.Cross(ab.normalized, Vector3.forward);
-            Vector3 cPos = a.transform.position + right * ab.magnitude;
+            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
+            b.MoveTo(snappedPos, queue: false);
+            Vector3 dir = (b.transform.position - a.transform.position).normalized;
+            float baseLength = Vector3.Distance(a.transform.position, b.transform.position);
+            Vector3 right = Vector3.Cross(Vector3.up, dir); // Plane is XZ
+            float height = Mathf.Sqrt(3f) / 2f * baseLength;
+            Vector3 midpoint = (a.transform.position + b.transform.position) / 2f;
+            Vector3 cPos = midpoint + right * height;
             c.MoveTo(cPos, queue: false);
         }
 
+
+
         public void End(Vector3 finalPos)
         {
-            foreach (var pt in new[] { a, b, c }) pt.SetRaycastIgnore(false);
-            foreach (var seg in new[] { ab, bc, ca }) seg.SetRaycastIgnore(false);
+            a.SetRaycastIgnore(false);
+            b.SetRaycastIgnore(false);
+            c.SetRaycastIgnore(false);
+            ab.SetRaycastIgnore(false);
+            bc.SetRaycastIgnore(false);
+            ca.SetRaycastIgnore(false);
         }
 
         public void Cancel()

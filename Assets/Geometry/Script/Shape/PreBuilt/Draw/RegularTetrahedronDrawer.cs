@@ -1,16 +1,16 @@
-// Refactored SquareDrawer
+// Refactored RegularTetrahedronDrawer
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class SquareDrawer : IPrebuiltDrawer
+    public class RegularTetrahedronDrawer : IPrebuiltDrawer
     {
         private string idA, idB, idC, idD;
-        private string idAB, idBC, idCD, idDA;
+        private string idAB, idBC, idCA, idAD, idBD, idCD;
         private Point a, b, c, d;
-        private Segment ab, bc, cd, da;
+        private Segment ab, bc, ca, ad, bd, cd;
 
         public void Begin(Vector3 startPos)
         {
@@ -20,8 +20,10 @@ namespace Manipulator
             idD = Guid.NewGuid().ToString();
             idAB = Guid.NewGuid().ToString();
             idBC = Guid.NewGuid().ToString();
+            idCA = Guid.NewGuid().ToString();
+            idAD = Guid.NewGuid().ToString();
+            idBD = Guid.NewGuid().ToString();
             idCD = Guid.NewGuid().ToString();
-            idDA = Guid.NewGuid().ToString();
 
             var datas = new List<ShapeData>
             {
@@ -29,10 +31,13 @@ namespace Manipulator
                 new ShapeData { Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new ShapeData { Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new ShapeData { Id = idD, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
+
                 new ShapeData { Id = idAB, Type = "Segment", ConnectedPoints = new() { idA, idB } },
                 new ShapeData { Id = idBC, Type = "Segment", ConnectedPoints = new() { idB, idC } },
+                new ShapeData { Id = idCA, Type = "Segment", ConnectedPoints = new() { idC, idA } },
+                new ShapeData { Id = idAD, Type = "Segment", ConnectedPoints = new() { idA, idD } },
+                new ShapeData { Id = idBD, Type = "Segment", ConnectedPoints = new() { idB, idD } },
                 new ShapeData { Id = idCD, Type = "Segment", ConnectedPoints = new() { idC, idD } },
-                new ShapeData { Id = idDA, Type = "Segment", ConnectedPoints = new() { idD, idA } },
             };
 
             var batch = new CreateShapeBatchAction(datas);
@@ -49,8 +54,10 @@ namespace Manipulator
                 {
                     if (s.ShapeId == idAB) ab = s;
                     if (s.ShapeId == idBC) bc = s;
+                    if (s.ShapeId == idCA) ca = s;
+                    if (s.ShapeId == idAD) ad = s;
+                    if (s.ShapeId == idBD) bd = s;
                     if (s.ShapeId == idCD) cd = s;
-                    if (s.ShapeId == idDA) da = s;
                 }
                 TryConnect();
             };
@@ -61,10 +68,11 @@ namespace Manipulator
         private void TryConnect()
         {
             if (a != null && b != null && c != null && d != null &&
-                ab != null && bc != null && cd != null && da != null)
+                ab != null && bc != null && ca != null &&
+                ad != null && bd != null && cd != null)
             {
                 foreach (var pt in new[] { a, b, c, d }) pt.SetRaycastIgnore(true);
-                foreach (var seg in new[] { ab, bc, cd, da })
+                foreach (var seg in new[] { ab, bc, ca, ad, bd, cd })
                 {
                     seg.MarkAsPreview();
                     seg.SetRaycastIgnore(true);
@@ -72,39 +80,43 @@ namespace Manipulator
 
                 ab.SetStartPoint(a); ab.SetEndPoint(b);
                 bc.SetStartPoint(b); bc.SetEndPoint(c);
+                ca.SetStartPoint(c); ca.SetEndPoint(a);
+                ad.SetStartPoint(a); ad.SetEndPoint(d);
+                bd.SetStartPoint(b); bd.SetEndPoint(d);
                 cd.SetStartPoint(c); cd.SetEndPoint(d);
-                da.SetStartPoint(d); da.SetEndPoint(a);
             }
         }
 
         public void Working(Vector3 currentPos)
         {
             if (a == null || b == null || c == null || d == null) return;
+            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
+            Vector3 ab = snappedPos - a.transform.position;
+            float side = ab.magnitude;
 
-            Vector3 ab = currentPos - a.transform.position;
-            Vector3 dir = ab.normalized;
-            float length = ab.magnitude;
-            Vector3 right = Vector3.Cross(dir, Vector3.forward);
+            Vector3 bPos = a.transform.position + ab;
+            Vector3 cPos = a.transform.position + Quaternion.AngleAxis(60, Vector3.up) * ab;
 
-            Vector3 bPos = a.transform.position + dir * length;
-            Vector3 cPos = bPos + right * length;
-            Vector3 dPos = a.transform.position + right * length;
+            Vector3 centroid = (a.transform.position + bPos + cPos) / 3f;
+            float height = Mathf.Sqrt(2f / 3f) * side;
+            Vector3 dPos = centroid + Vector3.up * height;
 
             b.MoveTo(bPos, queue: false);
             c.MoveTo(cPos, queue: false);
             d.MoveTo(dPos, queue: false);
         }
 
+
         public void End(Vector3 finalPos)
         {
             foreach (var pt in new[] { a, b, c, d }) pt.SetRaycastIgnore(false);
-            foreach (var seg in new[] { ab, bc, cd, da }) seg.SetRaycastIgnore(false);
+            foreach (var seg in new[] { ab, bc, ca, ad, bd, cd }) seg.SetRaycastIgnore(false);
         }
 
         public void Cancel()
         {
             foreach (var pt in new[] { a, b, c, d }) pt?.DestroyShape();
-            foreach (var seg in new[] { ab, bc, cd, da }) seg?.DestroyShape();
+            foreach (var seg in new[] { ab, bc, ca, ad, bd, cd }) seg?.DestroyShape();
         }
     }
 }
