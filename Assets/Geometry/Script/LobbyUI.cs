@@ -6,6 +6,8 @@ using Khoa;
 using Manipulator;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Geometry;
 
 public class LobbyUI : MonoBehaviour
 {
@@ -32,6 +34,7 @@ public class LobbyUI : MonoBehaviour
     private void Awake()
     {
         Debug.Log("LobbyUI Awake");
+        
         if (Instance == null)
         {
             Instance = this;
@@ -113,6 +116,9 @@ public class LobbyUI : MonoBehaviour
                 }
             });
         });
+        
+
+        
     }
 
     private void Start()
@@ -136,8 +142,27 @@ public class LobbyUI : MonoBehaviour
         {
             Debug.LogError("joinPopupUI is null in Start!");
         }
+        
+        
+        Debug.LogWarning("Lobby UI:" + SceneFlag.IsRandom);
+        if (SceneFlag.IsRandom)
+        {
+            CallDelayedLobbyCreation();
+            SceneFlag.IsRandom = false;
+            return;
+        }
+
+    }
+ 
+    private async void CallDelayedLobbyCreation()
+    {
+        ShowLoading();             
+        await Task.Delay(1000);                         
+        await GameLobby.Instance.CreateRandomLobby(); 
+        HideLoading();             
     }
 
+    
     public void Hide()
     {
         Debug.Log("Hiding LobbyUI");

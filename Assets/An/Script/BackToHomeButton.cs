@@ -1,3 +1,4 @@
+using Geometry;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
@@ -61,7 +62,17 @@ public class BackToHomeButton : MonoBehaviour
 
     public void OnCreateRoomButton()
     {
-        SceneManager.LoadScene("Copy_SampleScene");
+        SceneManager.LoadScene("SampleScene");
+    }
+
+    public void OnCreateRandomRoomButton()
+    {        
+        Debug.LogWarning("OnCreateRandomRoomButton 1:" + SceneFlag.IsRandom);
+
+        SceneFlag.IsRandom = true;        
+        Debug.LogWarning("OnCreateRandomRoomButton 2:" + SceneFlag.IsRandom);
+        SceneManager.LoadScene("SampleScene");
+        Debug.LogWarning("OnCreateRandomRoomButton 3:" + SceneFlag.IsRandom); 
     }
 
     public void SubmitCreateRoom()

@@ -12,6 +12,7 @@ using Unity.Netcode.Transports.UTP;
 using System.Threading.Tasks;
 using System.Linq;
 using An_An;
+using Geometry;
 using Manipulator;
 using Khoa;
 /// <summary>
@@ -346,7 +347,7 @@ public class GameLobby : MonoBehaviour
         }
     }
 
-    public async void CreateLobby(string lobbyName, string password, bool isPrivate)
+    public async Task CreateLobby(string lobbyName, string password, bool isPrivate)
     {
         try
         {
@@ -480,7 +481,7 @@ public class GameLobby : MonoBehaviour
         }
     }
 
-    public async void CreateRandomLobby()
+    public async Task CreateRandomLobby()
     {
         const int maxRetries = 3;
         string roomId = "";

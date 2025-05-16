@@ -2313,6 +2313,79 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 548184432}
   m_CullTransparentMesh: 1
+--- !u!1001 &606198999
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 7246776013332700813, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 168.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7246776013332700813, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 23.960007
+      objectReference: {fileID: 0}
+    - target: {fileID: 7246776013332700813, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7246776013332700813, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7246776013332700813, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7246776013332700813, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7246776013332700813, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7246776013332700813, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7246776013332700813, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7246776013332700813, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8025333918036511319, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_Name
+      value: GameLobby
+      objectReference: {fileID: 0}
+    - target: {fileID: 8025333918036511319, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 8bd68b0f4b3255f47bbaf8bfead24dfa, type: 3}
 --- !u!1 &670454069
 GameObject:
   m_ObjectHideFlags: 0
@@ -5259,7 +5332,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1974765765}
         m_TargetAssemblyTypeName: BackToHomeButton, Assembly-CSharp
-        m_MethodName: OnCreateRoomButton
+        m_MethodName: OnCreateRandomRoomButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -7015,3 +7088,4 @@ SceneRoots:
   - {fileID: 1380809299}
   - {fileID: 450864688}
   - {fileID: 1853315383}
+  - {fileID: 606198999}
