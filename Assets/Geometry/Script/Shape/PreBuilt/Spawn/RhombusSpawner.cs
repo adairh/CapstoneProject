@@ -1,47 +1,38 @@
-
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class RhombusSpawner : BaseButton
+    public class RhombusSpawner : IShapeSpawner
     {
-        protected override void OnButtonClick()
+        public List<FieldDefinition> GetFieldDefinitions()
         {
-            PrebuiltSpawnPanel.Show("Hình thoi", new[] { "Đường chéo ngang", "Đường chéo đứng" }, OnConfirm);
+            return new List<FieldDefinition>
+            {
+                new FieldDefinition { Name = "Diagonal1", Type = FieldType.Length, IsRequired = true },
+                new FieldDefinition { Name = "Diagonal2", Type = FieldType.Length, IsRequired = true },
+                new FieldDefinition {
+                    Name = "Area", Type = FieldType.Area, IsRequired = false,
+                    ComputeFromOthers = inputs =>
+                        inputs.ContainsKey("Diagonal1") && inputs.ContainsKey("Diagonal2")
+                            ? 0.5f * inputs["Diagonal1"] * inputs["Diagonal2"] : throw new Exception()
+                }
+            };
         }
 
-        private void OnConfirm(float[] values)
+        public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
-            if (values.Length < 2) return;
-            float d1 = values[0]; // ngang (trên trục X)
-            float d2 = values[1]; // đứng (trên trục Y)
-
-            if (!PerformDrawing.RaycastMouse(out Vector3 origin)) return;
-
-            Vector3 a = origin + new Vector3(-d1 / 2f, 0, 0);
-            Vector3 b = origin + new Vector3(0, d2 / 2f, 0);
-            Vector3 c = origin + new Vector3(d1 / 2f, 0, 0);
-            Vector3 d = origin + new Vector3(0, -d2 / 2f, 0);
-
-            string idA = System.Guid.NewGuid().ToString();
-            string idB = System.Guid.NewGuid().ToString();
-            string idC = System.Guid.NewGuid().ToString();
-            string idD = System.Guid.NewGuid().ToString();
-
-            var batch = new CreateShapeBatchAction(new System.Collections.Generic.List<ShapeData>
+            return new ShapeData
             {
-                new ShapeData { Id = idA, Type = "Point", Position = a },
-                new ShapeData { Id = idB, Type = "Point", Position = b },
-                new ShapeData { Id = idC, Type = "Point", Position = c },
-                new ShapeData { Id = idD, Type = "Point", Position = d },
-
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idC, idD } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idD, idA } }
-            });
-
-            UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
+                Type = "Rhombus",
+                Position = Vector3.zero,
+                Settings = new Dictionary<string, string>
+                {
+                    { "d1", inputs["Diagonal1"].ToString() },
+                    { "d2", inputs["Diagonal2"].ToString() }
+                }
+            };
         }
     }
 }

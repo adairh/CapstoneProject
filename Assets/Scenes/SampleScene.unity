@@ -2512,6 +2512,7 @@ GameObject:
   - component: {fileID: 1045046960}
   - component: {fileID: 1045046962}
   - component: {fileID: 1045046961}
+  - component: {fileID: 1045046963}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -2607,6 +2608,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f74d005065a042d79cc1072693451fe0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1045046963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1045046952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f854b2ca707f22f40affd89b892225ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputPanel: {fileID: 4578105600583764405, guid: 924e0aae60f9e7e49a29d69c9c149c88,
+    type: 3}
 --- !u!1 &1056793388
 GameObject:
   m_ObjectHideFlags: 0
@@ -3794,7 +3809,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 45
   m_TargetDisplay: 0
 --- !u!224 &1225205073
 RectTransform:
@@ -5343,7 +5358,7 @@ PrefabInstance:
     - target: {fileID: 183887278471395081, guid: ba9bcba0e0991194fbe0d482c5981778,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.00097462704
+      value: 0.0010061515
       objectReference: {fileID: 0}
     - target: {fileID: 389290303487695843, guid: ba9bcba0e0991194fbe0d482c5981778,
         type: 3}

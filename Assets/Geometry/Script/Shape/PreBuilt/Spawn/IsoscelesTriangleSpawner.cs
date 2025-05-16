@@ -1,44 +1,46 @@
-
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class IsoscelesTriangleSpawner : BaseButton
+    public class IsoscelesTriangleSpawner : IShapeSpawner
     {
-        protected override void OnButtonClick()
+        public List<FieldDefinition> GetFieldDefinitions()
         {
-            PrebuiltSpawnPanel.Show("Tam giác cân", new[] { "Độ dài đáy", "Chiều cao" }, OnConfirm);
+            return new List<FieldDefinition>
+            {
+                new FieldDefinition { Name = "Base", Type = FieldType.Length, IsRequired = true },
+                new FieldDefinition { Name = "Side", Type = FieldType.Length, IsRequired = true },
+                new FieldDefinition {
+                    Name = "Height", Type = FieldType.Height, IsRequired = false,
+                    ComputeFromOthers = inputs =>
+                        inputs.ContainsKey("Side") && inputs.ContainsKey("Base")
+                            ? Mathf.Sqrt(inputs["Side"] * inputs["Side"] - (inputs["Base"] * inputs["Base"]) / 4f)
+                            : throw new Exception()
+                },
+                new FieldDefinition {
+                    Name = "Area", Type = FieldType.Area, IsRequired = false,
+                    ComputeFromOthers = inputs =>
+                        inputs.ContainsKey("Base") && inputs.ContainsKey("Side")
+                            ? 0.5f * inputs["Base"] * Mathf.Sqrt(inputs["Side"] * inputs["Side"] - (inputs["Base"] * inputs["Base"]) / 4f)
+                            : throw new Exception()
+                }
+            };
         }
 
-        private void OnConfirm(float[] values)
+        public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
-            if (values.Length < 2) return;
-            float baseLength = values[0];
-            float height = values[1];
-
-            if (!PerformDrawing.RaycastMouse(out Vector3 origin)) return;
-
-            Vector3 a = origin;
-            Vector3 b = origin + new Vector3(baseLength, 0, 0);
-            Vector3 midpoint = (a + b) / 2f;
-            Vector3 c = midpoint + Vector3.up * height;
-
-            string idA = System.Guid.NewGuid().ToString();
-            string idB = System.Guid.NewGuid().ToString();
-            string idC = System.Guid.NewGuid().ToString();
-
-            var batch = new CreateShapeBatchAction(new System.Collections.Generic.List<ShapeData>
+            return new ShapeData
             {
-                new ShapeData { Id = idA, Type = "Point", Position = a },
-                new ShapeData { Id = idB, Type = "Point", Position = b },
-                new ShapeData { Id = idC, Type = "Point", Position = c },
-
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idC, idA } }
-            });
-
-            UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
+                Type = "IsoscelesTriangle",
+                Position = Vector3.zero,
+                Settings = new Dictionary<string, string>
+                {
+                    { "base", inputs["Base"].ToString() },
+                    { "side", inputs["Side"].ToString() }
+                }
+            };
         }
     }
 }

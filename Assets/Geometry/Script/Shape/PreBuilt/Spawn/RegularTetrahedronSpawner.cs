@@ -1,51 +1,42 @@
-
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class RegularTetrahedronSpawner : BaseButton
+    public class RegularTetrahedronSpawner : IShapeSpawner
     {
-        protected override void OnButtonClick()
+        public List<FieldDefinition> GetFieldDefinitions()
         {
-            PrebuiltSpawnPanel.Show("Tứ diện đều", new[] { "Cạnh" }, OnConfirm);
+            return new List<FieldDefinition>
+            {
+                new FieldDefinition { Name = "Edge", Type = FieldType.Length, IsRequired = true },
+                new FieldDefinition {
+                    Name = "Volume", Type = FieldType.Area, IsRequired = false,
+                    ComputeFromOthers = inputs =>
+                        inputs.ContainsKey("Edge")
+                            ? Mathf.Pow(inputs["Edge"], 3) / (6 * Mathf.Sqrt(2)) : throw new Exception()
+                },
+                new FieldDefinition {
+                    Name = "Height", Type = FieldType.Height, IsRequired = false,
+                    ComputeFromOthers = inputs =>
+                        inputs.ContainsKey("Edge")
+                            ? Mathf.Sqrt(2f / 3f) * inputs["Edge"] : throw new Exception()
+                }
+            };
         }
 
-        private void OnConfirm(float[] values)
+        public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
-            if (values.Length < 1) return;
-            float side = values[0];
-            if (!PerformDrawing.RaycastMouse(out Vector3 origin)) return;
-
-            Vector3 a = origin;
-            Vector3 b = a + new Vector3(side, 0, 0);
-            Vector3 c = a + Quaternion.Euler(0, 0, 60) * new Vector3(side, 0, 0);
-
-            Vector3 centroid = (a + b + c) / 3f;
-            float height = Mathf.Sqrt(2f / 3f) * side;
-            Vector3 d = centroid + Vector3.forward * height;
-
-            string idA = System.Guid.NewGuid().ToString();
-            string idB = System.Guid.NewGuid().ToString();
-            string idC = System.Guid.NewGuid().ToString();
-            string idD = System.Guid.NewGuid().ToString();
-
-            var batch = new CreateShapeBatchAction(new System.Collections.Generic.List<ShapeData>
+            return new ShapeData
             {
-                new ShapeData { Id = idA, Type = "Point", Position = a },
-                new ShapeData { Id = idB, Type = "Point", Position = b },
-                new ShapeData { Id = idC, Type = "Point", Position = c },
-                new ShapeData { Id = idD, Type = "Point", Position = d },
-
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idC, idA } },
-
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idA, idD } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idB, idD } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idC, idD } },
-            });
-
-            UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
+                Type = "RegularTetrahedron",
+                Position = Vector3.zero,
+                Settings = new Dictionary<string, string>
+                {
+                    { "edge", inputs["Edge"].ToString() }
+                }
+            };
         }
     }
 }

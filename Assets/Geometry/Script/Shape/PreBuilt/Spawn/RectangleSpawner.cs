@@ -1,47 +1,44 @@
-
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class RectangleSpawner : BaseButton
+    public class RectangleSpawner : IShapeSpawner
     {
-        protected override void OnButtonClick()
+        public List<FieldDefinition> GetFieldDefinitions()
         {
-            PrebuiltSpawnPanel.Show("Hình chữ nhật", new[] { "Chiều rộng", "Chiều cao" }, OnConfirm);
+            return new List<FieldDefinition>
+            {
+                new FieldDefinition { Name = "Length", Type = FieldType.Length, IsRequired = true },
+                new FieldDefinition { Name = "Width", Type = FieldType.Width, IsRequired = true },
+                new FieldDefinition {
+                    Name = "Area", Type = FieldType.Area, IsRequired = false,
+                    ComputeFromOthers = inputs =>
+                        inputs.ContainsKey("Length") && inputs.ContainsKey("Width")
+                            ? inputs["Length"] * inputs["Width"] : throw new Exception()
+                },
+                new FieldDefinition {
+                    Name = "Perimeter", Type = FieldType.Perimeter, IsRequired = false,
+                    ComputeFromOthers = inputs =>
+                        inputs.ContainsKey("Length") && inputs.ContainsKey("Width")
+                            ? 2 * (inputs["Length"] + inputs["Width"]) : throw new Exception()
+                }
+            };
         }
 
-        private void OnConfirm(float[] values)
+        public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
-            if (values.Length < 2) return;
-            float width = values[0];
-            float height = values[1];
-
-            if (!PerformDrawing.RaycastMouse(out Vector3 origin)) return;
-
-            Vector3 a = origin;
-            Vector3 b = origin + new Vector3(width, 0, 0);
-            Vector3 c = b + new Vector3(0, height, 0);
-            Vector3 d = a + new Vector3(0, height, 0);
-
-            string idA = System.Guid.NewGuid().ToString();
-            string idB = System.Guid.NewGuid().ToString();
-            string idC = System.Guid.NewGuid().ToString();
-            string idD = System.Guid.NewGuid().ToString();
-
-            var batch = new CreateShapeBatchAction(new System.Collections.Generic.List<ShapeData>
+            return new ShapeData
             {
-                new ShapeData { Id = idA, Type = "Point", Position = a },
-                new ShapeData { Id = idB, Type = "Point", Position = b },
-                new ShapeData { Id = idC, Type = "Point", Position = c },
-                new ShapeData { Id = idD, Type = "Point", Position = d },
-
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idC, idD } },
-                new ShapeData { Id = System.Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new() { idD, idA } }
-            });
-
-            UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
+                Type = "Rectangle",
+                Position = Vector3.zero,
+                Settings = new Dictionary<string, string>
+                {
+                    { "length", inputs["Length"].ToString() },
+                    { "width", inputs["Width"].ToString() }
+                }
+            };
         }
     }
 }
