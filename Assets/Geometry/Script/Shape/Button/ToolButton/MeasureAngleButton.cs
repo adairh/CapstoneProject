@@ -1,4 +1,4 @@
-
+using System.Collections;
 using UnityEngine;
 
 namespace Manipulator
@@ -11,7 +11,7 @@ namespace Manipulator
             StartCoroutine(SelectThreePointsAndMeasure());
         }
 
-        private System.Collections.IEnumerator SelectThreePointsAndMeasure()
+        private IEnumerator SelectThreePointsAndMeasure()
         {
             yield return ShapePicker.WaitForPoint("Select Point A");
             var a = ShapePicker.LastPicked as Point;
@@ -33,4 +33,3 @@ namespace Manipulator
         }
     }
 }
-    

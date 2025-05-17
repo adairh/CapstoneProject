@@ -1,24 +1,18 @@
 ﻿// Refactored PerformDrawing.cs to support drawing mode via enum selector
 
-using UnityEngine;
-using System;
-using System.Collections.Generic;
 using Unity.Netcode;
+using UnityEngine;
 
 namespace Manipulator
 {
     public class PerformDrawing : MonoBehaviour
     {
-        public static PerformDrawing Instance { get; private set; }
- 
- 
-
-        private enum DragState { None, Dragging }
+        private Point currentStartPoint;
         private DragState currentState = DragState.None;
 
         private string pendingStartPointId;
-        private Point currentStartPoint;
         private Segment previewSegment;
+        public static PerformDrawing Instance { get; private set; }
 
         private void Awake()
         {
@@ -58,7 +52,7 @@ namespace Manipulator
                     break;
                 case IShapeButton.ShapeType.IsoscelesTriangle:
                     PrebuiltDrawingHandler.Instance.StartDrawing(new IsoscelesTriangleDrawer());
-                    break; 
+                    break;
                 case IShapeButton.ShapeType.Square:
                     PrebuiltDrawingHandler.Instance.StartDrawing(new SquareDrawer());
                     break;
@@ -76,26 +70,24 @@ namespace Manipulator
                     break;
                 case IShapeButton.ShapeType.GenericPyramid:
                     PrebuiltDrawingHandler.Instance.StartDrawing(new GenericPyramidDrawer());
-                    break;   
+                    break;
                 case IShapeButton.ShapeType.RightTriangle:
                     PrebuiltDrawingHandler.Instance.StartDrawing(new RightTriangleDrawer());
-                    break;  
+                    break;
                 case IShapeButton.ShapeType.SquarePrism:
                     PrebuiltDrawingHandler.Instance.StartDrawing(new SquarePrismDrawer());
                     break;
                 case IShapeButton.ShapeType.SquarePyramid:
                     PrebuiltDrawingHandler.Instance.StartDrawing(new SquarePyramidDrawer());
-                    break;  
-                   
+                    break;
             }
-
         }
 
         public static bool RaycastMouse(out Vector3 hitPos)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition); 
+            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            if (Physics.Raycast(ray, out var hit))
             {
                 hitPos = hit.point;
                 return true;
@@ -104,11 +96,12 @@ namespace Manipulator
             hitPos = Vector3.zero;
             return false;
         }
+
         public static bool RaycastMouse(out Vector3 hitPos, out Shape shape)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition); 
+            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            if (Physics.Raycast(ray, out var hit))
             {
                 hitPos = hit.point;
                 shape = hit.collider.GetComponentInParent<Shape>();
@@ -124,6 +117,13 @@ namespace Manipulator
         public static void ResetMode()
         {
             ShapeButtonManager.SetActiveShape(IShapeButton.ShapeType.None);
+        }
+
+
+        private enum DragState
+        {
+            None,
+            Dragging
         }
     }
 }

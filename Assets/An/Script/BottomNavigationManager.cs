@@ -51,11 +51,11 @@ namespace An_An
     // Gom 4 tab: Home, File, Draw, Setting
     public class BottomNavigationBar : MonoBehaviour
     {
-        [SerializeField] GameObject[] panels; // gom 4 panel: home, file, draw, setting
+        [SerializeField] private GameObject[] panels; // gom 4 panel: home, file, draw, setting
 
-        private int currentIndex = 0;
+        private int currentIndex;
 
-        void Start()
+        private void Start()
         {
             ShowPanel(0); // hien thi panel home dau tien
         }
@@ -65,25 +65,22 @@ namespace An_An
             ShowPanel(index);
         }
 
-        void ShowPanel(int index)
+        private void ShowPanel(int index)
         {
-            for (int i = 0; i < panels.Length; i++)
-            {
-                panels[i].SetActive(i == index);
-            }
+            for (var i = 0; i < panels.Length; i++) panels[i].SetActive(i == index);
             currentIndex = index;
         }
 
         // Swipe 
         public void SwipeToNext()
         {
-            int nextIndex = (currentIndex + 1) % panels.Length;
+            var nextIndex = (currentIndex + 1) % panels.Length;
             ShowPanel(nextIndex);
         }
 
         public void SwipeToPrevious()
         {
-            int prevIndex = (currentIndex - 1 + panels.Length) % panels.Length;
+            var prevIndex = (currentIndex - 1 + panels.Length) % panels.Length;
             ShowPanel(prevIndex);
         }
     }

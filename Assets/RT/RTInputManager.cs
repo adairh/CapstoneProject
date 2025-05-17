@@ -1,7 +1,6 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 /*
 A simple input manager for multiple gamepads
@@ -27,7 +26,7 @@ public class RTButtonState
         COUNT
     }
 
-    public bool _bDown = false;
+    public bool _bDown;
     public eFriendlyName _friendlyName = eFriendlyName.BUTTON_UNKNOWN;
     public int _rawButtonIndex;
 }
@@ -49,34 +48,41 @@ public class RTInputDevice
 {
     public const int C_BUTTON_COUNT = 16;
     public const int C_AXIS_COUNT = 2; //just for movement
+    private readonly KeyCode[] _altKeys = new KeyCode[(int)RTButtonState.eFriendlyName.COUNT];
+
+    private readonly float[] _axis = new float[C_AXIS_COUNT];
+
+    private readonly bool _bGamepadAnalog = false; //if true, is proportional
+
+    private bool _bUsingAltKeys;
+    private readonly RTButtonState[] _buttons = new RTButtonState[C_BUTTON_COUNT];
+    private KeyCode _buttonZeroGamepadKeycode = KeyCode.None; //Joystick1Button0  or whatever is needed
 
     public int _uniqueID; //what we call ourselves to outside people
     public int _unityGamepadID = -1; //what unity calls it
-    KeyCode _buttonZeroGamepadKeycode = KeyCode.None;  //Joystick1Button0  or whatever is needed
-    public int GetUniqueID() { return _uniqueID; }
-    public int GetUnityGamepadID() { return _unityGamepadID; }
 
-    float[] _axis = new float[C_AXIS_COUNT];
-    RTButtonState[] _buttons = new RTButtonState[C_BUTTON_COUNT];
-    KeyCode[] _altKeys = new KeyCode[(int)RTButtonState.eFriendlyName.COUNT];
+    public int GetUniqueID()
+    {
+        return _uniqueID;
+    }
 
-    bool _bUsingAltKeys = false;
+    public int GetUnityGamepadID()
+    {
+        return _unityGamepadID;
+    }
 
-    public float GetAxis(eRTAxis axis) { return _axis[(int)axis]; }
+    public float GetAxis(eRTAxis axis)
+    {
+        return _axis[(int)axis];
+    }
 
     public event Action<RTButtonState, eRTButtonEvent> OnButtonEvent;
 
-    bool _bGamepadAnalog = false; //if true, is proportional
-
-    int GetButtonRawIndexFromFriendlyName(RTButtonState.eFriendlyName friendlyName)
+    private int GetButtonRawIndexFromFriendlyName(RTButtonState.eFriendlyName friendlyName)
     {
-        for (int i = 0; i < C_BUTTON_COUNT; i++)
-        {
+        for (var i = 0; i < C_BUTTON_COUNT; i++)
             if (_buttons[i]._friendlyName == friendlyName)
-            {
                 return i;
-            }
-        }
 
         return -1;
     }
@@ -91,12 +97,8 @@ public class RTInputDevice
         if (_buttons[GetButtonRawIndexFromFriendlyName(friendlyName)]._bDown) return true;
 
         if (_bUsingAltKeys)
-        {
             if (Input.GetKey(_altKeys[(int)friendlyName]))
-            {
                 return true;
-            }
-        }
         return false;
     }
 
@@ -107,14 +109,30 @@ public class RTInputDevice
 
         switch (_unityGamepadID)
         {
-            case 0: _buttonZeroGamepadKeycode = KeyCode.Joystick1Button0; break;
-            case 1: _buttonZeroGamepadKeycode = KeyCode.Joystick2Button0; break;
-            case 2: _buttonZeroGamepadKeycode = KeyCode.Joystick3Button0; break;
-            case 3: _buttonZeroGamepadKeycode = KeyCode.Joystick4Button0; break;
-            case 4: _buttonZeroGamepadKeycode = KeyCode.Joystick5Button0; break;
-            case 5: _buttonZeroGamepadKeycode = KeyCode.Joystick6Button0; break;
-            case 6: _buttonZeroGamepadKeycode = KeyCode.Joystick7Button0; break;
-            case 7: _buttonZeroGamepadKeycode = KeyCode.Joystick8Button0; break;
+            case 0:
+                _buttonZeroGamepadKeycode = KeyCode.Joystick1Button0;
+                break;
+            case 1:
+                _buttonZeroGamepadKeycode = KeyCode.Joystick2Button0;
+                break;
+            case 2:
+                _buttonZeroGamepadKeycode = KeyCode.Joystick3Button0;
+                break;
+            case 3:
+                _buttonZeroGamepadKeycode = KeyCode.Joystick4Button0;
+                break;
+            case 4:
+                _buttonZeroGamepadKeycode = KeyCode.Joystick5Button0;
+                break;
+            case 5:
+                _buttonZeroGamepadKeycode = KeyCode.Joystick6Button0;
+                break;
+            case 6:
+                _buttonZeroGamepadKeycode = KeyCode.Joystick7Button0;
+                break;
+            case 7:
+                _buttonZeroGamepadKeycode = KeyCode.Joystick8Button0;
+                break;
 
             default:
                 Debug.LogError("We don't handle this joystick yet");
@@ -125,8 +143,8 @@ public class RTInputDevice
     public void Init(int uniqueID)
     {
         _uniqueID = uniqueID;
-    
-        for (int i = 0; i < C_BUTTON_COUNT; i++)
+
+        for (var i = 0; i < C_BUTTON_COUNT; i++)
         {
             _buttons[i] = new RTButtonState();
             _buttons[i]._rawButtonIndex = i;
@@ -137,7 +155,6 @@ public class RTInputDevice
 
         _buttons[0]._friendlyName = RTButtonState.eFriendlyName.BUTTON_A;
         _buttons[1]._friendlyName = RTButtonState.eFriendlyName.BUTTON_B;
-
     }
 
     public void SetAltKeys(KeyCode left, KeyCode right, KeyCode up, KeyCode down, KeyCode button1, KeyCode button2)
@@ -155,7 +172,6 @@ public class RTInputDevice
 
     public void Update()
     {
-
         //process keys first if need be
         _axis[(int)eRTAxis.HORIZONTAL] = 0;
         _axis[(int)eRTAxis.VERTICAL] = 0;
@@ -167,7 +183,7 @@ public class RTInputDevice
 
             if (!_bGamepadAnalog)
             {
-                Vector2 vTemp = new Vector2(_axis[(int)eRTAxis.HORIZONTAL], _axis[(int)eRTAxis.VERTICAL]);
+                var vTemp = new Vector2(_axis[(int)eRTAxis.HORIZONTAL], _axis[(int)eRTAxis.VERTICAL]);
 
                 if (vTemp.magnitude > 0.2f)
                 {
@@ -176,150 +192,94 @@ public class RTInputDevice
                     _axis[(int)eRTAxis.VERTICAL] = vTemp.y;
                 }
             }
-           
         }
 
         if (_bUsingAltKeys)
         {
-            if (Input.GetKey(_altKeys[(int)RTButtonState.eFriendlyName.BUTTON_LEFT])) _axis[(int)eRTAxis.HORIZONTAL] = -1.0f;
-            if (Input.GetKey(_altKeys[(int)RTButtonState.eFriendlyName.BUTTON_RIGHT])) _axis[(int)eRTAxis.HORIZONTAL] = 1.0f;
-            if (Input.GetKey(_altKeys[(int)RTButtonState.eFriendlyName.BUTTON_UP])) _axis[(int)eRTAxis.VERTICAL] = -1.0f;
-            if (Input.GetKey(_altKeys[(int)RTButtonState.eFriendlyName.BUTTON_DOWN])) _axis[(int)eRTAxis.VERTICAL] = 1.0f;
+            if (Input.GetKey(_altKeys[(int)RTButtonState.eFriendlyName.BUTTON_LEFT]))
+                _axis[(int)eRTAxis.HORIZONTAL] = -1.0f;
+            if (Input.GetKey(_altKeys[(int)RTButtonState.eFriendlyName.BUTTON_RIGHT]))
+                _axis[(int)eRTAxis.HORIZONTAL] = 1.0f;
+            if (Input.GetKey(_altKeys[(int)RTButtonState.eFriendlyName.BUTTON_UP]))
+                _axis[(int)eRTAxis.VERTICAL] = -1.0f;
+            if (Input.GetKey(_altKeys[(int)RTButtonState.eFriendlyName.BUTTON_DOWN]))
+                _axis[(int)eRTAxis.VERTICAL] = 1.0f;
         }
 
 
         //why don't I do all these in the same loop?  Because I think the order could matter in some cases!
         if (_buttonZeroGamepadKeycode != KeyCode.None)
         {
-            for (int i = 0; i < C_BUTTON_COUNT; i++)
-            {
+            for (var i = 0; i < C_BUTTON_COUNT; i++)
                 _buttons[i]._bDown = Input.GetKey((KeyCode)((int)_buttonZeroGamepadKeycode + i));
-            }
 
-            for (int i = 0; i < C_BUTTON_COUNT; i++)
-            {
+            for (var i = 0; i < C_BUTTON_COUNT; i++)
                 if (Input.GetKeyDown((KeyCode)((int)_buttonZeroGamepadKeycode + i)))
-                {
                     if (OnButtonEvent != null)
                         OnButtonEvent(_buttons[i], eRTButtonEvent.DOWN);
-                }
-            }
 
-            for (int i = 0; i < C_BUTTON_COUNT; i++)
-            {
+            for (var i = 0; i < C_BUTTON_COUNT; i++)
                 if (Input.GetKeyUp((KeyCode)((int)_buttonZeroGamepadKeycode + i)))
-                {
                     if (OnButtonEvent != null)
                         OnButtonEvent(_buttons[i], eRTButtonEvent.UP);
-                }
-            }
         }
 
         if (_bUsingAltKeys)
         {
             //hacky for now
             if (Input.GetKeyDown(_altKeys[(int)RTButtonState.eFriendlyName.BUTTON_A]))
-            {
-                    if (OnButtonEvent != null)
-                    {
-                        OnButtonEvent(_buttons[0], eRTButtonEvent.DOWN);
-                    }
-             }
+                if (OnButtonEvent != null)
+                    OnButtonEvent(_buttons[0], eRTButtonEvent.DOWN);
 
             if (Input.GetKeyUp(_altKeys[(int)RTButtonState.eFriendlyName.BUTTON_A]))
-            {
-                    if (OnButtonEvent != null)
-                    {
-                        OnButtonEvent(_buttons[0], eRTButtonEvent.UP);
-                    }
-            }
+                if (OnButtonEvent != null)
+                    OnButtonEvent(_buttons[0], eRTButtonEvent.UP);
         }
     }
 }
 
 public class RTInputManager : MonoBehaviour
 {
-
-    public event Action<RTInputDevice> OnGamepadConnected;
-    //public event Action<int> OnGamepadDisconnected;
-
-    LinkedList<RTInputDevice> _devices;
-    int _nextID = 0;
     public const int C_MAX_PLAYERS = 4;
 
-    static RTInputManager _this;
+    private static RTInputManager _this;
+    //public event Action<int> OnGamepadDisconnected;
 
-    static public RTInputManager Get() { return _this; }
+    private LinkedList<RTInputDevice> _devices;
+    private int _nextID;
 
-    void Awake ()
+    private void Awake()
     {
         _this = this;
         _devices = new LinkedList<RTInputDevice>();
 
-        for (int i=0; i < C_MAX_PLAYERS; i++)
+        for (var i = 0; i < C_MAX_PLAYERS; i++)
         {
-            RTInputDevice d = new RTInputDevice();
+            var d = new RTInputDevice();
             d.Init(_nextID++);
 
-       
-                //some extra default keymapping so we can use keyboard keys in addition to the gamepad
-                if (i == 0)
-                {
-                    d.SetAltKeys(KeyCode.LeftArrow, KeyCode.RightArrow, KeyCode.UpArrow, KeyCode.DownArrow,
-                        KeyCode.RightControl, KeyCode.Slash);
-                }
-                if (i == 1)
-                {
-                    d.SetAltKeys(KeyCode.A, KeyCode.D, KeyCode.W, KeyCode.S,
-                        KeyCode.Space, KeyCode.N);
-                }
+
+            //some extra default keymapping so we can use keyboard keys in addition to the gamepad
+            if (i == 0)
+                d.SetAltKeys(KeyCode.LeftArrow, KeyCode.RightArrow, KeyCode.UpArrow, KeyCode.DownArrow,
+                    KeyCode.RightControl, KeyCode.Slash);
+            if (i == 1)
+                d.SetAltKeys(KeyCode.A, KeyCode.D, KeyCode.W, KeyCode.S,
+                    KeyCode.Space, KeyCode.N);
 
 
             _devices.AddLast(d);
         }
     }
-	
-    public RTInputDevice GetDeviceByUnityID(int unityJoystickID)
-    {
-        var item = _devices.First;
-
-        while(item != null)
-        {
-            if (item.Value.GetUnityGamepadID() == unityJoystickID)
-            {
-                return item.Value;
-            }
-            item = item.Next;
-        }
-
-        return null;
-    }
-
-    public RTInputDevice GetDeviceByUniqueID(int uniqueID)
-    {
-        var item = _devices.First;
-
-        while (item != null)
-        {
-            if (item.Value.GetUniqueID() == uniqueID)
-            {
-                return item.Value;
-            }
-            item = item.Next;
-        }
-
-        return null;
-    }
 
     // Update is called once per frame
-    void Update ()
+    private void Update()
     {
-
         //Debug.Log("Found " + UnityEngine.Experimental.Input.Gamepad.all.Count  + " gamepads");
 
-        for (int i=0; i < Input.GetJoystickNames().Length; i++)
+        for (var i = 0; i < Input.GetJoystickNames().Length; i++)
         {
-            RTInputDevice d = GetDeviceByUnityID(i);
+            var d = GetDeviceByUnityID(i);
             if (d == null)
             {
                 //wow, it's new, assign this joystick to an existing player
@@ -333,10 +293,43 @@ public class RTInputManager : MonoBehaviour
 
 
         var device = _devices.First;
-        while(device != null)
+        while (device != null)
         {
             device.Value.Update();
             device = device.Next;
         }
+    }
+
+    public event Action<RTInputDevice> OnGamepadConnected;
+
+    public static RTInputManager Get()
+    {
+        return _this;
+    }
+
+    public RTInputDevice GetDeviceByUnityID(int unityJoystickID)
+    {
+        var item = _devices.First;
+
+        while (item != null)
+        {
+            if (item.Value.GetUnityGamepadID() == unityJoystickID) return item.Value;
+            item = item.Next;
+        }
+
+        return null;
+    }
+
+    public RTInputDevice GetDeviceByUniqueID(int uniqueID)
+    {
+        var item = _devices.First;
+
+        while (item != null)
+        {
+            if (item.Value.GetUniqueID() == uniqueID) return item.Value;
+            item = item.Next;
+        }
+
+        return null;
     }
 }

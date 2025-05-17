@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 namespace Manipulator
@@ -15,13 +14,13 @@ namespace Manipulator
             else if (absDir.x >= absDir.y)
                 return new Plane(Vector3.right, 0f);    // Snap to YZ (x = 0)
             else*/
-                return new Plane(Vector3.up, 0f);       // Snap to XZ (y = 0)
+            return new Plane(Vector3.up, 0f); // Snap to XZ (y = 0)
         }
 
         public static Vector3 SnapToPlane(Vector3 pos)
         {
-            Plane plane = DetermineSnapPlane();
-            float dist = plane.GetDistanceToPoint(pos);
+            var plane = DetermineSnapPlane();
+            var dist = plane.GetDistanceToPoint(pos);
             return pos - plane.normal * dist;
         }
     }

@@ -1,139 +1,149 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to transition the specified Transform.Translate to the target value.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanTransformTranslate")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Transform/Transform.Translate" + LeanTransition.MethodsMenuSuffix + "(LeanTransformTranslate)")]
-	public class LeanTransformTranslate : LeanMethodWithStateAndTarget
-	{
-		public override System.Type GetTargetType()
-		{
-			return typeof(Transform);
-		}
+    /// <summary>This component allows you to transition the specified Transform.Translate to the target value.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanTransformTranslate")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Transform/Transform.Translate" +
+                      LeanTransition.MethodsMenuSuffix + "(LeanTransformTranslate)")]
+    public class LeanTransformTranslate : LeanMethodWithStateAndTarget
+    {
+        public State Data;
 
-		public override void Register()
-		{
-			if (Data.RelativeTo != null)
-			{
-				PreviousState = Register(GetAliasedTarget(Data.Target), Data.Translation, Data.RelativeTo, Data.Duration, Data.Ease);
-			}
-			else
-			{
-				PreviousState = Register(GetAliasedTarget(Data.Target), Data.Translation, Data.Space, Data.Duration, Data.Ease);
-			}
-		}
+        public override Type GetTargetType()
+        {
+            return typeof(Transform);
+        }
 
-		public static LeanState Register(Transform target, Vector3 translation, Transform relativeTo, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+        public override void Register()
+        {
+            if (Data.RelativeTo != null)
+                PreviousState = Register(GetAliasedTarget(Data.Target), Data.Translation, Data.RelativeTo,
+                    Data.Duration, Data.Ease);
+            else
+                PreviousState = Register(GetAliasedTarget(Data.Target), Data.Translation, Data.Space, Data.Duration,
+                    Data.Ease);
+        }
 
-			state.Translation = translation;
-			state.Space       = Space.Self;
-			state.RelativeTo  = relativeTo;
-			state.Ease        = ease;
+        public static LeanState Register(Transform target, Vector3 translation, Transform relativeTo, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Translation = translation;
+            state.Space = Space.Self;
+            state.RelativeTo = relativeTo;
+            state.Ease = ease;
 
-		public static LeanState Register(Transform target, Vector3 translation, Space space, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+            return LeanTransition.Register(state, duration);
+        }
 
-			state.Translation = translation;
-			state.Space       = space;
-			state.RelativeTo  = null;
-			state.Ease        = ease;
+        public static LeanState Register(Transform target, Vector3 translation, Space space, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Translation = translation;
+            state.Space = space;
+            state.RelativeTo = null;
+            state.Ease = ease;
 
-		[System.Serializable]
-		public class State : LeanStateWithTarget<Transform>
-		{
-			[Tooltip("The amount we will translate.")]
-			public Vector3 Translation;
+            return LeanTransition.Register(state, duration);
+        }
 
-			[Tooltip("The space we will transition in.")]
-			public Space Space = Space.Self;
+        [Serializable]
+        public class State : LeanStateWithTarget<Transform>
+        {
+            public static Stack<State> Pool = new();
 
-			[Tooltip("The space we will transition in.")]
-			public Transform RelativeTo;
+            [Tooltip("The amount we will translate.")]
+            public Vector3 Translation;
 
-			[Tooltip("The ease method that will be used for the transition.")]
-			public LeanEase Ease = LeanEase.Smooth;
+            [Tooltip("The space we will transition in.")]
+            public Space Space = Space.Self;
 
-			[System.NonSerialized] private Vector3 oldTranslation;
+            [Tooltip("The space we will transition in.")]
+            public Transform RelativeTo;
 
-			public override ConflictType Conflict
-			{
-				get
-				{
-					return ConflictType.None;
-				}
-			}
+            [Tooltip("The ease method that will be used for the transition.")]
+            public LeanEase Ease = LeanEase.Smooth;
 
-			public override void BeginWithTarget()
-			{
-				oldTranslation = Vector3.zero;
-			}
+            [NonSerialized] private Vector3 oldTranslation;
 
-			public override void UpdateWithTarget(float progress)
-			{
-				var newTranslation = Translation * Smooth(Ease, progress);
+            public override ConflictType Conflict => ConflictType.None;
 
-				if (RelativeTo != null)
-				{
-					Target.Translate(newTranslation - oldTranslation, RelativeTo);
-				}
-				else
-				{
-					Target.Translate(newTranslation - oldTranslation, Space);
-				}
+            public override void BeginWithTarget()
+            {
+                oldTranslation = Vector3.zero;
+            }
 
-				oldTranslation = newTranslation;
-			}
+            public override void UpdateWithTarget(float progress)
+            {
+                var newTranslation = Translation * Smooth(Ease, progress);
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+                if (RelativeTo != null)
+                    Target.Translate(newTranslation - oldTranslation, RelativeTo);
+                else
+                    Target.Translate(newTranslation - oldTranslation, Space);
 
-		public State Data;
-	}
+                oldTranslation = newTranslation;
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static Transform TranslateTransition(this Transform target, float x, float y, float z, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformTranslate.Register(target, new Vector3(x, y, z), Space.Self, duration, ease); return target;
-		}
+    public static partial class LeanExtensions
+    {
+        public static Transform TranslateTransition(this Transform target, float x, float y, float z, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformTranslate.Register(target, new Vector3(x, y, z), Space.Self, duration, ease);
+            return target;
+        }
 
-		public static Transform TranslateTransition(this Transform target, Vector3 translation, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformTranslate.Register(target, translation, Space.Self, duration, ease); return target;
-		}
+        public static Transform TranslateTransition(this Transform target, Vector3 translation, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformTranslate.Register(target, translation, Space.Self, duration, ease);
+            return target;
+        }
 
-		public static Transform TranslateTransition(this Transform target, float x, float y, float z, Space space, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformTranslate.Register(target, new Vector3(x, y, z), space, duration, ease); return target;
-		}
+        public static Transform TranslateTransition(this Transform target, float x, float y, float z, Space space,
+            float duration, LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformTranslate.Register(target, new Vector3(x, y, z), space, duration, ease);
+            return target;
+        }
 
-		public static Transform TranslateTransition(this Transform target, Vector3 translation, Space space, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformTranslate.Register(target, translation, space, duration, ease); return target;
-		}
+        public static Transform TranslateTransition(this Transform target, Vector3 translation, Space space,
+            float duration, LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformTranslate.Register(target, translation, space, duration, ease);
+            return target;
+        }
 
-		public static Transform TranslateTransition(this Transform target, float x, float y, float z, Transform relativeTo, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformTranslate.Register(target, new Vector3(x, y, z), relativeTo, duration, ease); return target;
-		}
+        public static Transform TranslateTransition(this Transform target, float x, float y, float z,
+            Transform relativeTo, float duration, LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformTranslate.Register(target, new Vector3(x, y, z), relativeTo, duration, ease);
+            return target;
+        }
 
-		public static Transform TranslateTransition(this Transform target, Vector3 translation, Transform relativeTo, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformTranslate.Register(target, translation, relativeTo, duration, ease); return target;
-		}
-	}
+        public static Transform TranslateTransition(this Transform target, Vector3 translation, Transform relativeTo,
+            float duration, LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformTranslate.Register(target, translation, relativeTo, duration, ease);
+            return target;
+        }
+    }
 }

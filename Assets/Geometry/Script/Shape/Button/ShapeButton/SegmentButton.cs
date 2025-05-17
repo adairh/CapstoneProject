@@ -4,7 +4,10 @@ namespace Manipulator
 {
     public class SegmentButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.Segment;
+        public IShapeButton.ShapeType GetShapeType()
+        {
+            return IShapeButton.ShapeType.Segment;
+        }
 
         protected override void OnButtonClick()
         {

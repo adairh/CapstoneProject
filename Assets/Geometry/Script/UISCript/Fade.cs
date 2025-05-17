@@ -8,6 +8,7 @@ namespace Geometry.Script.UISCript
     {
         [Tooltip("Time in seconds to wait before starting fade out")]
         public float delay = 0.5f;
+
         [Tooltip("Duration of the fade out effect in seconds")]
         public float fadeDuration = 1f;
 
@@ -17,10 +18,7 @@ namespace Geometry.Script.UISCript
         {
             // Get or add a CanvasGroup for fading
             canvasGroup = GetComponent<CanvasGroup>();
-            if (canvasGroup == null)
-            {
-                canvasGroup = gameObject.AddComponent<CanvasGroup>();
-            }
+            if (canvasGroup == null) canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
 
         private void Start()
@@ -34,7 +32,7 @@ namespace Geometry.Script.UISCript
             // Wait for the specified delay after app start
             yield return new WaitForSeconds(delay);
 
-            float elapsed = 0f;
+            var elapsed = 0f;
             while (elapsed < fadeDuration)
             {
                 elapsed += Time.deltaTime;

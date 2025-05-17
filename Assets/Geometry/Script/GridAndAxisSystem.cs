@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Manipulator
 {
@@ -11,8 +12,8 @@ namespace Manipulator
         public Material axisHighlightMaterial;
         public Material markerMaterial;
 
-        [Header("Colors")]
-        public Color xColor = Color.red;
+        [Header("Colors")] public Color xColor = Color.red;
+
         public Color yColor = Color.green;
         public Color zColor = Color.blue;
 
@@ -27,7 +28,7 @@ namespace Manipulator
             CreatePlane(Vector3.right, Vector3.up, "Plane_OXZ");
         }
 
-        void CreateAxisWithMarkers(Vector3 direction, Color color, string name)
+        private void CreateAxisWithMarkers(Vector3 direction, Color color, string name)
         {
             var axis = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             axis.name = name;
@@ -39,7 +40,7 @@ namespace Manipulator
             var renderer = axis.GetComponent<Renderer>();
             renderer.material = new Material(axisMaterial) { color = color };
 
-            for (int i = -gridSize; i <= gridSize; i++)
+            for (var i = -gridSize; i <= gridSize; i++)
             {
                 var marker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 marker.name = name + "_Marker_" + i;
@@ -51,11 +52,11 @@ namespace Manipulator
             }
         }
 
-        void CreatePlane(Vector3 axis1, Vector3 axis2, string name)
+        private void CreatePlane(Vector3 axis1, Vector3 axis2, string name)
         {
             float extent = gridSize;
 
-            GameObject planeGO = new GameObject(name);
+            var planeGO = new GameObject(name);
             planeGO.transform.SetParent(transform);
 
             // Add mesh components
@@ -64,24 +65,24 @@ namespace Manipulator
             var collider = planeGO.AddComponent<BoxCollider>();
 
             // Create mesh
-            Mesh mesh = MeshGenerator.CreatePlaneFacing(axis1, axis2, extent, extent);
+            var mesh = MeshGenerator.CreatePlaneFacing(axis1, axis2, extent, extent);
             filter.mesh = mesh;
 
             // Set double-sided material
-            Material mat = new Material(planeMaterial);
-            mat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off); // hiển thị 2 mặt
+            var mat = new Material(planeMaterial);
+            mat.SetInt("_Cull", (int)CullMode.Off); // hiển thị 2 mặt
 
 // Làm trong suốt
             mat.SetFloat("_Mode", 3);
-            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
             mat.SetInt("_ZWrite", 0);
             mat.DisableKeyword("_ALPHATEST_ON");
             mat.EnableKeyword("_ALPHABLEND_ON");
             mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
             mat.renderQueue = 3000;
 
-            Color color = mat.color;
+            var color = mat.color;
             color.a = 0.3f;
             mat.color = color;
 
@@ -89,27 +90,21 @@ namespace Manipulator
 
 
             // Collider: align with direction
-            Vector3 normal = Vector3.Cross(axis1, axis2).normalized;
-            Vector3 size = Mathf.Abs(Vector3.Dot(normal, Vector3.right)) > 0.9f
+            var normal = Vector3.Cross(axis1, axis2).normalized;
+            var size = Mathf.Abs(Vector3.Dot(normal, Vector3.right)) > 0.9f
                 ? new Vector3(0.1f, extent * 2, extent * 2)
                 : Mathf.Abs(Vector3.Dot(normal, Vector3.up)) > 0.9f
                     ? new Vector3(extent * 2, 0.1f, extent * 2)
                     : new Vector3(extent * 2, extent * 2, 0.1f);
             collider.size = size;
             collider.center = Vector3.zero;
-            
-            
         }
 
-        
-        void RemoveAllMonoBehaviours(GameObject go)
+
+        private void RemoveAllMonoBehaviours(GameObject go)
         {
             var components = go.GetComponents<MonoBehaviour>();
-            foreach (var comp in components)
-            {
-                Destroy(comp);
-            }
+            foreach (var comp in components) Destroy(comp);
         }
-
     }
 }

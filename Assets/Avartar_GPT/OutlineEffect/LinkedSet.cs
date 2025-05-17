@@ -1,132 +1,109 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace cakeslice
 {
-	public class LinkedSet<T> : IEnumerable<T>
-	{
+    public class LinkedSet<T> : IEnumerable<T>
+    {
+        public enum AddType
+        {
+	        /// <summary>
+	        ///     No changes were made
+	        /// </summary>
+	        NO_CHANGE,
 
-		private LinkedList<T> list;
+	        /// <summary>
+	        ///     The value was added
+	        /// </summary>
+	        ADDED,
 
-		private Dictionary<T, LinkedListNode<T>> dictionary;
+	        /// <summary>
+	        ///     The value was moved to the end.
+	        /// </summary>
+	        MOVED
+        }
 
-		public LinkedSet()
-		{
-			list = new LinkedList<T>();
-			dictionary = new Dictionary<T, LinkedListNode<T>>();
-		}
+        private readonly Dictionary<T, LinkedListNode<T>> dictionary;
 
-		public LinkedSet(IEqualityComparer<T> comparer)
-		{
-			list = new LinkedList<T>();
-			dictionary = new Dictionary<T, LinkedListNode<T>>(comparer);
-		}
+        private readonly LinkedList<T> list;
 
-		public bool Contains(T t)
-		{
-			return dictionary.ContainsKey(t);
-		}
+        public LinkedSet()
+        {
+            list = new LinkedList<T>();
+            dictionary = new Dictionary<T, LinkedListNode<T>>();
+        }
 
-		public bool Add(T t)
-		{
+        public LinkedSet(IEqualityComparer<T> comparer)
+        {
+            list = new LinkedList<T>();
+            dictionary = new Dictionary<T, LinkedListNode<T>>(comparer);
+        }
 
-			if (dictionary.ContainsKey(t))
-			{
-				return false;
-			}
+        public IEnumerator<T> GetEnumerator()
+        {
+            return list.GetEnumerator();
+        }
 
-			LinkedListNode<T> node = list.AddLast(t);
-			dictionary.Add(t, node);
-			return true;
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return list.GetEnumerator();
+        }
 
-		}
+        public bool Contains(T t)
+        {
+            return dictionary.ContainsKey(t);
+        }
 
-		public void Clear()
-		{
-			list.Clear();
-			dictionary.Clear();
-		}
+        public bool Add(T t)
+        {
+            if (dictionary.ContainsKey(t)) return false;
 
-		public AddType AddOrMoveToEnd(T t)
-		{
+            var node = list.AddLast(t);
+            dictionary.Add(t, node);
+            return true;
+        }
 
-			LinkedListNode<T> node;
+        public void Clear()
+        {
+            list.Clear();
+            dictionary.Clear();
+        }
 
-			if (dictionary.Comparer.Equals(t, list.Last.Value))
-			{
-				return AddType.NO_CHANGE;
-			}
-			else if (dictionary.TryGetValue(t, out node))
-			{
-				list.Remove(node);
-				node = list.AddLast(t);
-				dictionary[t] = node;
-				return AddType.MOVED;
-			}
-			else
-			{
-				node = list.AddLast(t);
-				dictionary[t] = node;
-				return AddType.ADDED;
-			}
+        public AddType AddOrMoveToEnd(T t)
+        {
+            LinkedListNode<T> node;
 
-		}
+            if (dictionary.Comparer.Equals(t, list.Last.Value)) return AddType.NO_CHANGE;
 
-		public bool Remove(T t)
-		{
+            if (dictionary.TryGetValue(t, out node))
+            {
+                list.Remove(node);
+                node = list.AddLast(t);
+                dictionary[t] = node;
+                return AddType.MOVED;
+            }
 
-			LinkedListNode<T> node;
+            node = list.AddLast(t);
+            dictionary[t] = node;
+            return AddType.ADDED;
+        }
 
-			if (dictionary.TryGetValue(t, out node) && dictionary.Remove(t))
-			{
-				list.Remove(node);
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+        public bool Remove(T t)
+        {
+            LinkedListNode<T> node;
 
-		}
+            if (dictionary.TryGetValue(t, out node) && dictionary.Remove(t))
+            {
+                list.Remove(node);
+                return true;
+            }
 
-		public void ExceptWith(IEnumerable<T> enumerable)
-		{
-			foreach (T t in enumerable)
-			{
-				Remove(t);
-			}
-		}
+            return false;
+        }
 
-		public IEnumerator<T> GetEnumerator ()
-		{
-			return list.GetEnumerator();
-		}
-
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
-		{
-			return list.GetEnumerator();
-		}
-
-		public enum AddType
-		{
-
-			/// <summary>
-			/// No changes were made
-			/// </summary>
-			NO_CHANGE,
-
-			/// <summary>
-			/// The value was added
-			/// </summary>
-			ADDED,
-
-			/// <summary>
-			/// The value was moved to the end.
-			/// </summary>
-			MOVED
-
-		}
-
-	}
+        public void ExceptWith(IEnumerable<T> enumerable)
+        {
+            foreach (var t in enumerable) Remove(t);
+        }
+    }
 }
-

@@ -1,85 +1,91 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to transition the specified <b>Material</b>'s <b>vector</b> to the target value.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanMaterialVector")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Material/Material vector" + LeanTransition.MethodsMenuSuffix + "(LeanMaterialVector)")]
-	public class LeanMaterialVector : LeanMethodWithStateAndTarget
-	{
-		public override System.Type GetTargetType()
-		{
-			return typeof(Material);
-		}
+    /// <summary>This component allows you to transition the specified <b>Material</b>'s <b>vector</b> to the target value.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanMaterialVector")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Material/Material vector" + LeanTransition.MethodsMenuSuffix +
+                      "(LeanMaterialVector)")]
+    public class LeanMaterialVector : LeanMethodWithStateAndTarget
+    {
+        public State Data;
 
-		public override void Register()
-		{
-			PreviousState = Register(GetAliasedTarget(Data.Target), Data.Property, Data.Value, Data.Duration, Data.Ease);
-		}
+        public override Type GetTargetType()
+        {
+            return typeof(Material);
+        }
 
-		public static LeanState Register(Material target, string property, Vector4 value, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+        public override void Register()
+        {
+            PreviousState = Register(GetAliasedTarget(Data.Target), Data.Property, Data.Value, Data.Duration,
+                Data.Ease);
+        }
 
-			state.Property = property;
-			state.Value    = value;
-			state.Ease     = ease;
+        public static LeanState Register(Material target, string property, Vector4 value, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Property = property;
+            state.Value = value;
+            state.Ease = ease;
 
-		[System.Serializable]
-		public class State : LeanStateWithTarget<Material>
-		{
-			[Tooltip("The name of the vector property in the shader.")]
-			public string Property;
+            return LeanTransition.Register(state, duration);
+        }
 
-			[Tooltip("The value we will transition to.")]
-			public Vector4 Value;
+        [Serializable]
+        public class State : LeanStateWithTarget<Material>
+        {
+            public static Stack<State> Pool = new();
 
-			[Tooltip("The ease method that will be used for the transition.")]
-			public LeanEase Ease  = LeanEase.Smooth;
+            [Tooltip("The name of the vector property in the shader.")]
+            public string Property;
 
-			[System.NonSerialized] private Vector4 oldValue;
+            [Tooltip("The value we will transition to.")]
+            public Vector4 Value;
 
-			public override int CanFill
-			{
-				get
-				{
-					return Target != null && Target.GetVector(Property) != Value ? 1 : 0;
-				}
-			}
+            [Tooltip("The ease method that will be used for the transition.")]
+            public LeanEase Ease = LeanEase.Smooth;
 
-			public override void FillWithTarget()
-			{
-				Value = Target.GetVector(Property);
-			}
+            [NonSerialized] private Vector4 oldValue;
 
-			public override void BeginWithTarget()
-			{
-				oldValue = Target.GetVector(Property);
-			}
+            public override int CanFill => Target != null && Target.GetVector(Property) != Value ? 1 : 0;
 
-			public override void UpdateWithTarget(float progress)
-			{
-				Target.SetVector(Property, Vector4.LerpUnclamped(oldValue, Value, Smooth(Ease, progress)));
-			}
+            public override void FillWithTarget()
+            {
+                Value = Target.GetVector(Property);
+            }
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+            public override void BeginWithTarget()
+            {
+                oldValue = Target.GetVector(Property);
+            }
 
-		public State Data;
-	}
+            public override void UpdateWithTarget(float progress)
+            {
+                Target.SetVector(Property, Vector4.LerpUnclamped(oldValue, Value, Smooth(Ease, progress)));
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static Material vectorTransition(this Material target, string property, Vector4 value, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanMaterialVector.Register(target, property, value, duration, ease); return target;
-		}
-	}
+    public static partial class LeanExtensions
+    {
+        public static Material vectorTransition(this Material target, string property, Vector4 value, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            LeanMaterialVector.Register(target, property, value, duration, ease);
+            return target;
+        }
+    }
 }

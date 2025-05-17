@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Networking;
 
 public class UnityWebRequestAwaiter : INotifyCompletion
 {
-    private UnityWebRequestAsyncOperation asyncOp;
+    private readonly UnityWebRequestAsyncOperation asyncOp;
     private Action continuation;
 
     public UnityWebRequestAwaiter(UnityWebRequestAsyncOperation asyncOp)
@@ -16,13 +14,15 @@ public class UnityWebRequestAwaiter : INotifyCompletion
         asyncOp.completed += OnRequestCompleted;
     }
 
-    public bool IsCompleted { get { return asyncOp.isDone; } }
-
-    public void GetResult() { }
+    public bool IsCompleted => asyncOp.isDone;
 
     public void OnCompleted(Action continuation)
     {
         this.continuation = continuation;
+    }
+
+    public void GetResult()
+    {
     }
 
     private void OnRequestCompleted(AsyncOperation obj)

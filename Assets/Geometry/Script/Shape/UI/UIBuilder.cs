@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 
 namespace Manipulator
 {
@@ -12,8 +11,8 @@ namespace Manipulator
                 return null;
 
             // Create the main panel (scroll view container)
-            GameObject panel = new GameObject("SettingsPanel", typeof(RectTransform), typeof(Image));
-            RectTransform panelRect = panel.GetComponent<RectTransform>();
+            var panel = new GameObject("SettingsPanel", typeof(RectTransform), typeof(Image));
+            var panelRect = panel.GetComponent<RectTransform>();
             panel.AddComponent<CanvasRenderer>();
             panel.GetComponent<Image>().color = new Color(0.2f, 0.2f, 0.2f, 0.95f);
             panelRect.sizeDelta = new Vector2(300, 400); // Fixed size
@@ -23,7 +22,7 @@ namespace Manipulator
             //panelRect.anchoredPosition = Vector2.zero; // Center position
 
             // ScrollRect
-            ScrollRect scrollRect = panel.AddComponent<ScrollRect>();
+            var scrollRect = panel.AddComponent<ScrollRect>();
             scrollRect.vertical = true;
             scrollRect.horizontal = false;
             scrollRect.scrollSensitivity = 20f;
@@ -32,23 +31,23 @@ namespace Manipulator
             scrollRect.elasticity = 0.1f;
 
             // Create the viewport
-            GameObject viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(Mask));
-            RectTransform viewportRect = viewport.GetComponent<RectTransform>();
+            var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(Mask));
+            var viewportRect = viewport.GetComponent<RectTransform>();
             viewportRect.SetParent(panel.transform, false);
             viewportRect.anchorMin = new Vector2(0, 0);
             viewportRect.anchorMax = new Vector2(1, 1);
             viewportRect.pivot = new Vector2(0.5f, 0.5f);
             viewportRect.offsetMin = Vector2.zero;
             viewportRect.offsetMax = Vector2.zero;
-            Image viewportImage = viewport.GetComponent<Image>();
+            var viewportImage = viewport.GetComponent<Image>();
             viewportImage.color = new Color(1, 1, 1, 0.1f);
             viewport.GetComponent<Mask>().showMaskGraphic = false;
 
             scrollRect.viewport = viewportRect;
 
             // Create content object
-            GameObject content = new GameObject("Content", typeof(RectTransform));
-            RectTransform contentRect = content.GetComponent<RectTransform>();
+            var content = new GameObject("Content", typeof(RectTransform));
+            var contentRect = content.GetComponent<RectTransform>();
             contentRect.SetParent(viewport.transform, false);
             contentRect.anchorMin = new Vector2(0, 1);
             contentRect.anchorMax = new Vector2(1, 1);
@@ -60,7 +59,7 @@ namespace Manipulator
             scrollRect.verticalNormalizedPosition = 1f;
 
             // Add layout components
-            VerticalLayoutGroup layout = content.AddComponent<VerticalLayoutGroup>();
+            var layout = content.AddComponent<VerticalLayoutGroup>();
             layout.childControlHeight = true;
             layout.childControlWidth = true;
             layout.childForceExpandWidth = true;
@@ -69,20 +68,20 @@ namespace Manipulator
             layout.padding = new RectOffset(5, 5, 60, 5);
             layout.childAlignment = TextAnchor.UpperCenter;
 
-            ContentSizeFitter sizeFitter = content.AddComponent<ContentSizeFitter>();
+            var sizeFitter = content.AddComponent<ContentSizeFitter>();
             sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             sizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // Add settings UI elements
-            foreach (ISetting setting in targetShape.GetSettings())
+            foreach (var setting in targetShape.GetSettings())
             {
                 setting.Update();
-                GameObject settingUI = setting.GetUI();
+                var settingUI = setting.GetUI();
                 if (settingUI != null)
                 {
                     settingUI.transform.SetParent(content.transform, false);
 
-                    LayoutElement le = settingUI.GetComponent<LayoutElement>();
+                    var le = settingUI.GetComponent<LayoutElement>();
                     if (le == null)
                     {
                         le = settingUI.AddComponent<LayoutElement>();

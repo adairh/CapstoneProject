@@ -1,15 +1,14 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
 public class PlayerFunctions : MonoBehaviour
 {
-    private GameObject playerCamera;
     private GameObject mainUI;
-    void Start()
+    private GameObject playerCamera;
+
+    private void Start()
     {
-        playerCamera = GameObject.FindGameObjectWithTag("MainCamera");    
+        playerCamera = GameObject.FindGameObjectWithTag("MainCamera");
         mainUI = GameObject.FindGameObjectWithTag("MainUI");
     }
 
@@ -35,7 +34,6 @@ public class PlayerFunctions : MonoBehaviour
         gameObject.GetComponent<PlayerMovement>().enabled = true;
         gameObject.GetComponentInChildren<MouseLook>().enabled = true;
 
-        Cursor.lockState = CursorLockMode.Locked;        
+        Cursor.lockState = CursorLockMode.Locked;
     }
-
 }

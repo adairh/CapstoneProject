@@ -4,7 +4,10 @@ namespace Manipulator
 {
     public class RayShapeButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.RayShape;
+        public IShapeButton.ShapeType GetShapeType()
+        {
+            return IShapeButton.ShapeType.RayShape;
+        }
 
         protected override void OnButtonClick()
         {

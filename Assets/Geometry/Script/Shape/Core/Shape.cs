@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Animations;
 
 namespace Manipulator
 {
@@ -12,29 +10,34 @@ namespace Manipulator
         [SerializeField] public string ShapeId;
 
         [SerializeField] private string shapeType;
+
+        protected readonly List<Point> pivotPoints = new();
+
+        protected readonly List<ISetting> settings = new();
         public string ShapeType => shapeType;
 
         public ShapeData Data { get; protected set; }
-
-        protected readonly List<Point> pivotPoints = new();
         public IReadOnlyList<Point> PivotPoints => pivotPoints;
-
-        protected readonly List<ISetting> settings = new();
         public IReadOnlyList<ISetting> Settings => settings;
 
         public event Action<Shape> OnChanged;
+
+
+        public virtual IEnumerable<Shape> GetDependentShapesForDelete()
+        {
+            yield return this; // default: chỉ chính nó
+        }
 
         #region INIT
 
         protected virtual void Awake()
         {
-            DefaultMat = new Material(MaterialLibrary.Get(MaterialType.Default)); 
-            
+            DefaultMat = new Material(MaterialLibrary.Get(MaterialType.Default));
         }
 
         /// <summary>
-        /// Trả về danh sách setting của shape.
-        /// Mỗi shape con sẽ override nếu có custom.
+        ///     Trả về danh sách setting của shape.
+        ///     Mỗi shape con sẽ override nếu có custom.
         /// </summary>
         public virtual List<ISetting> GetSettings()
         {
@@ -42,12 +45,11 @@ namespace Manipulator
             {
                 new PositionSetting(transform.position, this),
                 new ColorSetting(MaterialType.Default, this),
-                new VisibilitySetting(true,this)
+                new VisibilitySetting(true, this)
             };
         }
 
 
-        
         public virtual void Initialize(ShapeData data)
         {
             ShapeId = data.Id;
@@ -58,7 +60,7 @@ namespace Manipulator
         }
 
         public Material DefaultMat { get; set; }
-        
+
         public virtual void InitializeNew(string type, Vector3 position)
         {
             ShapeId = Guid.NewGuid().ToString();
@@ -73,7 +75,7 @@ namespace Manipulator
                 ConnectedPoints = new List<string>(),
                 Settings = new Dictionary<string, string>()
             };
- 
+
 
             gameObject.AddComponent<HoverableShape>().SetShape(this);
             gameObject.AddComponent<SelectableShape>().SetShape(this);
@@ -92,7 +94,6 @@ namespace Manipulator
                     disp.SetLabel(s);
                     if (disp != null && s != null)
                         disp.Initialize(s);
-                    
                 }
             }
 
@@ -104,17 +105,17 @@ namespace Manipulator
         {
             ShapeStorage.Unregister(this);
         }
-        
+
         public virtual void SetRaycastIgnore(bool ignore)
         {
-            int layer = ignore ? 2 : 0;
+            var layer = ignore ? 2 : 0;
             gameObject.layer = layer;
 
             foreach (Transform child in transform)
                 if (child != null)
                     child.gameObject.layer = layer;
         }
-        
+
         public virtual void Dispose()
         {
             // 1. Gỡ khỏi storage
@@ -134,18 +135,16 @@ namespace Manipulator
 
             // 4. Hủy GameObject
             if (gameObject != null)
-                GameObject.Destroy(gameObject);
+                Destroy(gameObject);
         }
-        
-        
-        
+
         #endregion
 
         #region TRANSFORM SYNC
 
         protected virtual void ApplyDataToTransform(ShapeData data)
         {
-            ShapeId = data.Id; 
+            ShapeId = data.Id;
             transform.position = data.Position;
             transform.rotation = data.Rotation;
             transform.localScale = data.Scale;
@@ -167,18 +166,17 @@ namespace Manipulator
             if (!pivotPoints.Contains(p))
             {
                 pivotPoints.Add(p);
-                p.OnChanged += pt => OnPivotChanged((Point)pt);
+                p.OnChanged += pt => OnPivotChanged(pt);
             }
         }
 
         public void RemovePivot(Point p)
         {
             if (pivotPoints.Remove(p))
-                p.OnChanged -= pt => OnPivotChanged((Point)pt);
+                p.OnChanged -= pt => OnPivotChanged(pt);
         }
 
 
-        
         protected virtual void OnPivotChanged(Point pt)
         {
             NotifyChanged();
@@ -195,8 +193,7 @@ namespace Manipulator
 
         public void UpdateSetting(ISetting setting)
         {
-            for (int i = 0; i < settings.Count; i++)
-            {
+            for (var i = 0; i < settings.Count; i++)
                 if (settings[i].GetType() == setting.GetType())
                 {
                     settings[i] = setting;
@@ -204,14 +201,15 @@ namespace Manipulator
                     NotifyChanged();
                     return;
                 }
-            }
 
             settings.Add(setting);
             ApplySetting(setting);
             NotifyChanged();
         }
 
-        protected virtual void ApplySetting(ISetting setting) { }
+        protected virtual void ApplySetting(ISetting setting)
+        {
+        }
 
         public void AppendSettings(params ISetting[] newSettings)
         {
@@ -239,8 +237,13 @@ namespace Manipulator
 
         #region MISC
 
-        public virtual void UpdateHitbox() { }
-        public virtual void CompleteDraw() { }
+        public virtual void UpdateHitbox()
+        {
+        }
+
+        public virtual void CompleteDraw()
+        {
+        }
 
         public virtual void NotifyChanged(bool silent = false)
         {
@@ -254,19 +257,17 @@ namespace Manipulator
             Destroy(gameObject);
         }
 
-        public bool isInternalMove = false;
+        public bool isInternalMove;
 
         public virtual void MoveTo(Vector3 newPosition, bool silent = false, bool queue = true)
-        { 
+        {
             Debug.LogError($"[Shape Move To] {newPosition}");
             if (transform.position == newPosition) return;
 
             if (!silent && !isInternalMove && !UndoRedoManager.SuppressRecording)
-            {
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(
                     new MoveShapeAction(ShapeId, transform.position, newPosition), queue
                 );
-            }
 
             isInternalMove = true;
             transform.position = newPosition;
@@ -276,17 +277,6 @@ namespace Manipulator
                 NotifyChanged();
         }
 
-
         #endregion
-        
-        
-        public virtual IEnumerable<Shape> GetDependentShapesForDelete()
-        {
-            yield return this; // default: chỉ chính nó
-        }
-
-        
-        
-
     }
 }

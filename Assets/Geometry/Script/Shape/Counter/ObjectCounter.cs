@@ -1,9 +1,9 @@
 ﻿public static class ObjectCounter
 {
-    private static int count = 0; // Global counter
+    private static int count; // Global counter
 
     /// <summary>
-    /// Get the next object number in sequence.
+    ///     Get the next object number in sequence.
     /// </summary>
     public static int Next()
     {
@@ -11,7 +11,7 @@
     }
 
     /// <summary>
-    /// Get the current object number without incrementing.
+    ///     Get the current object number without incrementing.
     /// </summary>
     public static int Current()
     {
@@ -19,7 +19,7 @@
     }
 
     /// <summary>
-    /// Reset the counter to zero.
+    ///     Reset the counter to zero.
     /// </summary>
     public static void Reset()
     {

@@ -1,11 +1,7 @@
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System;
-using UnityEngine.SceneManagement;
-
-using An_An;
-using Manipulator;
 
 public class JoinPopupUI : MonoBehaviour
 {
@@ -16,6 +12,7 @@ public class JoinPopupUI : MonoBehaviour
     [SerializeField] private GameObject darkOverlay; // Optional: for dimming background when popup is active
 
     private Action<string, string> onConfirm;
+
     private void Awake()
     {
         if (lobbyNameInputField == null) Debug.LogError("LobbyNameInputField is not assigned in LobbyPopupUI!");
@@ -25,14 +22,15 @@ public class JoinPopupUI : MonoBehaviour
 
         confirmButton.onClick.AddListener(() =>
         {
-            string lobbyName = lobbyNameInputField.text?.Trim();
-            string password = passwordInputField.text?.Trim();
+            var lobbyName = lobbyNameInputField.text?.Trim();
+            var password = passwordInputField.text?.Trim();
             Debug.Log($"Popup Input: Name={lobbyName}, Password={password}");
             if (string.IsNullOrEmpty(lobbyName) || string.IsNullOrEmpty(password))
             {
                 Debug.LogWarning("Lobby name and password cannot be empty!");
                 return;
             }
+
             onConfirm?.Invoke(lobbyName, password);
             Debug.Log("Confirm Clicked: Checking GameLobby.Instance...");
             if (GameLobby.Instance == null)
@@ -45,6 +43,7 @@ public class JoinPopupUI : MonoBehaviour
                 //GameLobby.Instance.CreateLobby(lobbyName, password, false);
                 GameLobby.Instance.JoinLobbyByNameAndPassword(lobbyName, password);
             }
+
             Hide();
         });
 

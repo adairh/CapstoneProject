@@ -1,19 +1,18 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class MaterialMover : MonoBehaviour
 {
-
     public float scrollSpeed = 0.5F;
     public Renderer rend;
-    void Start()
+
+    private void Start()
     {
         rend = GetComponent<Renderer>();
     }
-    void Update()
+
+    private void Update()
     {
-        float offset = Time.time * scrollSpeed;
+        var offset = Time.time * scrollSpeed;
         rend.material.SetTextureOffset("_MainTex", new Vector2(0, offset));
     }
 }

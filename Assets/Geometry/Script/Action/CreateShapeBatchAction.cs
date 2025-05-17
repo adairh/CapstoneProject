@@ -12,8 +12,8 @@ namespace Manipulator
 
     public class CreateShapeBatchAction : IUndoableAction
     {
-        public readonly List<ShapeData> shapeDataList;
         public readonly List<Shape> createdShapes = new();
+        public readonly List<ShapeData> shapeDataList;
 
         public Action<Shape> OnShapeSpawned; // 👈 ADD THIS LINE
 
@@ -27,14 +27,11 @@ namespace Manipulator
             if (UndoRedoNetworkBridge.Instance.IsHost)
             {
                 foreach (var data in shapeDataList)
-                {
                     UndoRedoNetworkBridge.Instance.SpawnFromData(data, shape =>
                     {
                         if (shape == null)
-                        {
                             //Debug.LogError($"[CreateShapeBatchAction] Failed to create shape of type {data.Type}");
                             return;
-                        }
 
                         shape.ShapeId = data.Id;
                         shape.Deserialize(data);
@@ -43,10 +40,9 @@ namespace Manipulator
                         createdShapes.Add(shape);
                         OnShapeSpawned?.Invoke(shape);
                     });
-                }
 
                 // Gửi xuống client
-                string batchJson = JsonUtility.ToJson(new ShapeDataListWrapper { list = shapeDataList });
+                var batchJson = JsonUtility.ToJson(new ShapeDataListWrapper { list = shapeDataList });
                 UndoRedoNetworkBridge.Instance.BroadcastCreateShapeBatchClientRpc(batchJson);
             }
         }
@@ -58,18 +54,13 @@ namespace Manipulator
             {
                 if (shape is Point pt)
                 {
-                    int referenceCount = 0;
+                    var referenceCount = 0;
                     foreach (var s in ShapeStorage.GetAllShapes())
-                    {
-
                         if (s is Segment seg && (seg.StartPoint == pt || seg.EndPoint == pt))
-                        {
                             referenceCount++;
-                        }
-                    }
                     Debug.LogError($"[UNDO] Ref {pt.ShapeId} - {referenceCount}");
                 }
-                
+
                 UndoRedoNetworkBridge.Instance.BroadcastDeleteShapeClientRpc(shape.ShapeId);
                 shape.DestroyShape();
             }

@@ -3,24 +3,19 @@ using UnityEngine.UI;
 
 public class GridButtonUI : MonoBehaviour
 {
-    private LevelLoader levelLoader;
-
     public Button button;
     public Text label;
 
-    [Space]
-    public Image locked;
+    [Space] public Image locked;
 
-    [Space]
-    public Image[] stars;
+    [Space] public Image[] stars;
 
-    [Space]
-    public Color starColor;
+    [Space] public Color starColor;
 
-    [Space]
-    public Image hard;
+    [Space] public Image hard;
 
     private int index;
+    private LevelLoader levelLoader;
 
     public void EnterLevel()
     {
@@ -38,10 +33,7 @@ public class GridButtonUI : MonoBehaviour
             this.index = index;
             label.text = (index + 1).ToString();
 
-            for (int i = 0; i < level.rating; i++)
-            {
-                stars[i].color = starColor;
-            }
+            for (var i = 0; i < level.rating; i++) stars[i].color = starColor;
         }
         else
         {
@@ -53,9 +45,6 @@ public class GridButtonUI : MonoBehaviour
             stars[0].transform.parent.gameObject.SetActive(false);
         }
 
-        if (level.hardmode)
-        {
-            hard.gameObject.SetActive(true);
-        }
+        if (level.hardmode) hard.gameObject.SetActive(true);
     }
 }

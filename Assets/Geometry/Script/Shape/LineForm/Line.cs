@@ -1,24 +1,21 @@
 ﻿// Refactored Line.cs — ADD DEBUG LOGGING FOR DRAWING FLOW with SNAP POINTS and UNDO-SAFE SPAWN + RECONNECT SYNC FIX + SAFE DESTROY HANDLING
 
-using UnityEngine;
-using Unity.Netcode;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using UnityEngine;
 
 namespace Manipulator
 {
     public class Line : Shape
     {
-        private NetworkPositionSync positionSync;
-        public Point StartPoint { get; private set; }
-        public Point EndPoint { get; private set; }
-
         [SerializeField] private string IDS, IDE;
+        private bool isPreview;
+        private NetworkPositionSync positionSync;
 
         private GameObject visual;
-        private bool isPreview = false;
+        public Point StartPoint { get; private set; }
+        public Point EndPoint { get; private set; }
 
         protected override void Awake()
         {
@@ -40,23 +37,32 @@ namespace Manipulator
             if (!TryGetComponent(out positionSync))
                 positionSync = gameObject.AddComponent<NetworkPositionSync>();
         }
-        
+
         private void Update()
         {
             if (!isPreview || StartPoint == null || visual == null) return;
 
-            Vector3 a = StartPoint.transform.position;
-            Vector3 b = EndPoint != null ? EndPoint.transform.position : a;
-            Vector3 mid = (a + b) / 2;
-            Vector3 dir = b - a;
-            float length = dir.magnitude;
+            var a = StartPoint.transform.position;
+            var b = EndPoint != null ? EndPoint.transform.position : a;
+            var mid = (a + b) / 2;
+            var dir = b - a;
+            var length = dir.magnitude;
 
             visual.transform.position = mid;
             visual.transform.rotation = Quaternion.LookRotation(dir);
             visual.transform.Rotate(90, 0, 0);
             visual.transform.localScale = new Vector3(0.05f, length / 2f, 0.05f);
         }
-        
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            if (ShapeStorage.Contains(ShapeId))
+                ShapeStorage.Unregister(this);
+            if (StartPoint != null) StartPoint.OnPositionChanged -= OnPivotMoved;
+            if (EndPoint != null) EndPoint.OnPositionChanged -= OnPivotMoved;
+        }
+
         public override void UpdateHitbox()
         {
             if (TryGetComponent(out MeshCollider col))
@@ -68,7 +74,7 @@ namespace Manipulator
 
         public override void MoveTo(Vector3 newPosition, bool silent = false, bool queue = true)
         {
-            Vector3 delta = newPosition - transform.position;
+            var delta = newPosition - transform.position;
 
             if (StartPoint == null || EndPoint == null) return;
 
@@ -79,9 +85,7 @@ namespace Manipulator
             };
 
             if (!silent && !isInternalMove)
-            {
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(new MultiMoveShapeAction(moves), queue);
-            }
 
             // Di chuyển các point luôn
             StartPoint.isInternalMove = true;
@@ -103,10 +107,13 @@ namespace Manipulator
         {
             yield return this;
             if (StartPoint != null && StartPoint.IsOnlyConnectedTo(this)) yield return StartPoint;
-            if (EndPoint != null && EndPoint.IsOnlyConnectedTo(this)) yield return EndPoint; 
+            if (EndPoint != null && EndPoint.IsOnlyConnectedTo(this)) yield return EndPoint;
         }
 
-        public void MarkAsPreview() => isPreview = true;
+        public void MarkAsPreview()
+        {
+            isPreview = true;
+        }
 
         public void SetStartPoint(Point a)
         {
@@ -123,7 +130,7 @@ namespace Manipulator
             b.OnPositionChanged += OnPivotMoved; // 👈 thêm dòng này
             UpdateVisual();
         }
-        
+
         private void OnPivotMoved(Point moved)
         {
             UpdateVisual(); // 👈 tự cập nhật lại visual khi point di chuyển
@@ -136,17 +143,17 @@ namespace Manipulator
             IDS = StartPoint.ShapeId;
             IDE = EndPoint.ShapeId;
 
-            Vector3 a = StartPoint.transform.position;
-            Vector3 b = EndPoint.transform.position;
+            var a = StartPoint.transform.position;
+            var b = EndPoint.transform.position;
 
-            Vector3 dir = (b - a).normalized;
+            var dir = (b - a).normalized;
 
             // Kéo dài 100 đơn vị mỗi phía (vô cực mô phỏng)
-            Vector3 farA = a - dir * 50f;
-            Vector3 farB = b + dir * 50f;
+            var farA = a - dir * 50f;
+            var farB = b + dir * 50f;
 
-            Vector3 mid = (farA + farB) / 2;
-            float length = Vector3.Distance(farA, farB);
+            var mid = (farA + farB) / 2;
+            var length = Vector3.Distance(farA, farB);
 
             transform.position = mid;
             transform.rotation = Quaternion.LookRotation(farB - farA);
@@ -198,7 +205,7 @@ namespace Manipulator
 
         public void SetRaycastIgnore(bool ignore)
         {
-            int layer = ignore ? 2 : 0;
+            var layer = ignore ? 2 : 0;
             gameObject.layer = layer;
 
             foreach (Transform child in transform)
@@ -212,17 +219,9 @@ namespace Manipulator
                 EndPoint.gameObject.layer = layer;
         }
 
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-            if (ShapeStorage.Contains(this.ShapeId))
-                ShapeStorage.Unregister(this);
-            if (StartPoint != null) StartPoint.OnPositionChanged -= OnPivotMoved;
-            if (EndPoint != null) EndPoint.OnPositionChanged -= OnPivotMoved;
-        }
-
         public static class Drawer
         {
+            private const float SnapDistance = 0.3f;
             private static Point startPoint;
             private static Point endPoint;
             private static Line preview;
@@ -231,11 +230,7 @@ namespace Manipulator
             private static string pendingSegId;
 
             private static CreateShapeBatchAction batch;
-
-            private enum State { None, Dragging }
             private static State current = State.None;
-
-            private const float SnapDistance = 0.3f;
 
             public static void UpdateLineInput()
             {
@@ -246,15 +241,15 @@ namespace Manipulator
 
             private static void Start()
             {
-                if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
+                if (!PerformDrawing.RaycastMouse(out var pos)) return;
                 var mm = ManipulationManager.Instance;
                 if (mm.IsDrawing) return;
                 mm.IsDrawing = true;
 
                 List<ShapeData> datas = new();
 
-                Point snap = FindNearbyPoint(pos);
-                bool usingSnap = snap != null;
+                var snap = FindNearbyPoint(pos);
+                var usingSnap = snap != null;
 
                 if (usingSnap)
                 {
@@ -264,15 +259,30 @@ namespace Manipulator
                 else
                 {
                     pendingStartId = Guid.NewGuid().ToString();
-                    var p1Data = new ShapeData { Id = pendingStartId, Type = "Point", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new(), Settings = new() };
+                    var p1Data = new ShapeData
+                    {
+                        Id = pendingStartId, Type = "Point", Position = pos, Rotation = Quaternion.identity,
+                        Scale = Vector3.one, ConnectedPoints = new List<string>(),
+                        Settings = new Dictionary<string, string>()
+                    };
                     datas.Add(p1Data);
                 }
 
                 pendingEndId = Guid.NewGuid().ToString();
                 pendingSegId = Guid.NewGuid().ToString();
 
-                var p2Data = new ShapeData { Id = pendingEndId, Type = "Point", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new(), Settings = new() };
-                var segData = new ShapeData { Id = pendingSegId, Type = "Line", Position = pos, Rotation = Quaternion.identity, Scale = Vector3.one, ConnectedPoints = new() { pendingStartId, pendingEndId }, Settings = new() };
+                var p2Data = new ShapeData
+                {
+                    Id = pendingEndId, Type = "Point", Position = pos, Rotation = Quaternion.identity,
+                    Scale = Vector3.one, ConnectedPoints = new List<string>(),
+                    Settings = new Dictionary<string, string>()
+                };
+                var segData = new ShapeData
+                {
+                    Id = pendingSegId, Type = "Line", Position = pos, Rotation = Quaternion.identity,
+                    Scale = Vector3.one, ConnectedPoints = new List<string> { pendingStartId, pendingEndId },
+                    Settings = new Dictionary<string, string>()
+                };
 
                 datas.Add(p2Data);
                 datas.Add(segData);
@@ -299,10 +309,10 @@ namespace Manipulator
             private static void Update()
             {
                 if (current != State.Dragging || startPoint == null || endPoint == null) return;
-                if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
+                if (!PerformDrawing.RaycastMouse(out var pos)) return;
 
-                Point snap = FindNearbyPoint(pos, exclude: startPoint);
-                endPoint.MoveTo((snap != null) ? snap.transform.position : pos, queue: false);
+                var snap = FindNearbyPoint(pos, startPoint);
+                endPoint.MoveTo(snap != null ? snap.transform.position : pos, queue: false);
 
                 // if (snap != null && snap != endPoint)
                 // {
@@ -317,35 +327,34 @@ namespace Manipulator
                 ManipulationManager.Instance.IsDrawing = false;
                 current = State.None;
                 PerformDrawing.ResetMode();
-                
+
                 var pos = endPoint.transform.position;
-                Point snap = FindNearbyPoint(pos, exclude: startPoint);
-                endPoint.MoveTo((snap != null) ? snap.transform.position : pos, queue: false);
+                var snap = FindNearbyPoint(pos, startPoint);
+                endPoint.MoveTo(snap != null ? snap.transform.position : pos, queue: false);
 
                 batch = UndoRedoManager.Instance.LastStack() as CreateShapeBatchAction;
-                
+
                 if (snap != null && snap != endPoint)
                 {
                     endPoint.DestroyShape();
                     preview.SetEndPoint(snap);
-                    
+
                     //Debug.LogError($"[Line - new] {snap.ShapeId}");
-                    
+
                     if (batch != null)
                     {
                         var p2Data = batch.shapeDataList.Find(d => d.Id == pendingEndId);
                         //Debug.LogError($"[Line] p2Data {p2Data != null}");
 
                         if (p2Data != null)
-                        {
                             /*Debug.LogError($"[Line - old] {p2Data.Id}");
-
-
-                            foreach (var i in batch.shapeDataList)
-                            {
-                                Debug.LogError($"[Line - before] {i.Id}");
-
-                            }*/
+    
+    
+                                foreach (var i in batch.shapeDataList)
+                                {
+                                    Debug.LogError($"[Line - before] {i.Id}");
+    
+                                }*/
                             if (p2Data.Id != snap.ShapeId)
                             {
                                 batch.shapeDataList.Remove(p2Data);
@@ -353,7 +362,7 @@ namespace Manipulator
 
                                 batch.createdShapes.Remove(endPoint);
                                 batch.createdShapes.Remove(snap);
-                                
+
                                 var seg = batch.shapeDataList.Find(d => d.Id == pendingSegId);
 
                                 /*foreach (var i in seg.ConnectedPoints)
@@ -361,7 +370,7 @@ namespace Manipulator
                                     Debug.LogError($"[LineCon - before] {i}");
 
                                 }*/
-                                
+
                                 List<string> conn = new() { pendingStartId, snap.ShapeId };
                                 seg.ConnectedPoints = conn;
 
@@ -371,16 +380,14 @@ namespace Manipulator
 
                                 }*/
                             }
-                            
-                            /*foreach (var i in batch.shapeDataList)
+                        /*foreach (var i in batch.shapeDataList)
                             {
                                 Debug.LogError($"[Line - after] {i.Id}");
 
                             }*/
-                        }
                     }
                 }
-                
+
                 //Debug.LogError($"[Line] Batch {batch != null}");
 
                 if (endPoint != null && batch != null)
@@ -413,9 +420,13 @@ namespace Manipulator
                 //Debug.LogError($"[OnStartPointReady] Current pendingStartId = {pendingStartId}, pendingEndId = {pendingEndId}");
 
                 if (p.ShapeId == pendingStartId)
+                {
                     startPoint = p;
+                }
                 else if (p.ShapeId == pendingEndId)
+                {
                     endPoint = p;
+                }
                 else
                     //Debug.LogError("[OnStartPointReady] Point ID does not match any pending ID");
 
@@ -432,10 +443,8 @@ namespace Manipulator
                 //Debug.LogError($"[OnLineReady] Pending ID = {pendingSegId}");
 
                 if (s.ShapeId != pendingSegId)
-                {
                     //Debug.LogError("[OnLineReady] Line ID does not match");
                     return;
-                }
 
                 preview = s;
 
@@ -453,12 +462,17 @@ namespace Manipulator
                     if (shape == null || shape.gameObject == null) continue;
 
                     if (shape is Point pt && pt != exclude)
-                    {
                         if (Vector3.Distance(pos, pt.transform.position) < SnapDistance)
                             return pt;
-                    }
                 }
+
                 return null;
+            }
+
+            private enum State
+            {
+                None,
+                Dragging
             }
         }
     }

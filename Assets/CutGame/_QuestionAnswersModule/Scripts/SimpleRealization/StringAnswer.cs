@@ -4,14 +4,17 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
 {
     public class StringAnswer : IAnswer<string>
     {
-        private string _data;
+        private readonly string _data;
 
         public StringAnswer(string data)
         {
             _data = data;
         }
 
-        public string GetAnswerData() => _data;
+        public string GetAnswerData()
+        {
+            return _data;
+        }
 
         public bool IsEqualsTo(IAnswer<string> anotherAnswer)
         {

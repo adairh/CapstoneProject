@@ -1,18 +1,24 @@
 ﻿using UnityEngine;
-using System.Collections;
 
-public enum MoveDirection { Up, Left, Down, Right }
+public enum MoveDirection
+{
+    Up,
+    Left,
+    Down,
+    Right
+}
 
-public class InputManager : MonoBehaviour {
-
+public class InputManager : MonoBehaviour
+{
     private MatchGameManager gm;
 
-	void Start () {
-        gm = GameObject.FindObjectOfType<MatchGameManager>();
-	}
-	
-	void Update () {
+    private void Start()
+    {
+        gm = FindObjectOfType<MatchGameManager>();
+    }
 
+    private void Update()
+    {
         if (gm.State == GameState.GameOver)
             return;
 
@@ -24,6 +30,5 @@ public class InputManager : MonoBehaviour {
             gm.Move(MoveDirection.Left);
         else if (Input.GetKeyDown(KeyCode.DownArrow))
             gm.Move(MoveDirection.Down);
-
     }
 }

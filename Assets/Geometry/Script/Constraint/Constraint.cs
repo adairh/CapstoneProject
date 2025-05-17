@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Manipulator
 {
     /// <summary>
-    /// Base class cho tất cả constraint. Mỗi constraint nên kế thừa từ đây.
+    ///     Base class cho tất cả constraint. Mỗi constraint nên kế thừa từ đây.
     /// </summary>
     public abstract class Constraint : MonoBehaviour
     {
@@ -29,29 +29,30 @@ namespace Manipulator
         }
 
         /// <summary>
-        /// Xác định constraint có liên quan tới shape này không.
+        ///     Xác định constraint có liên quan tới shape này không.
         /// </summary>
         public abstract bool HasShape(Shape shape);
 
         /// <summary>
-        /// Gọi khi có shape di chuyển hoặc thay đổi.
+        ///     Gọi khi có shape di chuyển hoặc thay đổi.
         /// </summary>
         public abstract void ApplyConstraint(Shape changedShape, Vector3 delta);
 
         /// <summary>
-        /// Serialize constraint về dạng dữ liệu lưu trữ được.
+        ///     Serialize constraint về dạng dữ liệu lưu trữ được.
         /// </summary>
         public abstract ConstraintData Serialize();
 
         /// <summary>
-        /// Xóa toàn bộ sự kiện và liên kết.
+        ///     Xóa toàn bộ sự kiện và liên kết.
         /// </summary>
-        public virtual void Cleanup() { }
+        public virtual void Cleanup()
+        {
+        }
 
         /// <summary>
-        /// Danh sách các Shape liên quan.
+        ///     Danh sách các Shape liên quan.
         /// </summary>
         public abstract IEnumerable<Shape> GetRelatedShapes();
     }
- 
-} 
+}

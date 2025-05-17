@@ -1,13 +1,13 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Manipulator
 {
     public class ShapeManager : MonoBehaviour
     {
-        private List<Shape> shapes = new List<Shape>();
+        private readonly List<Shape> shapes = new();
 
-        void Start()
+        private void Start()
         {
             // Example Usage
             // AddShape(new Rectangle(new Vector3(2, 2, 2), 2f, 3f));
@@ -30,7 +30,7 @@ namespace Manipulator
             shapes.Add(shape);
         }*/
 
-        void DrawAllShapes()
+        private void DrawAllShapes()
         {
             foreach (var shape in shapes)
             {
@@ -38,9 +38,9 @@ namespace Manipulator
             }
         }
 
-        Vector3 SnapToGrid(Vector3 position)
+        private Vector3 SnapToGrid(Vector3 position)
         {
-            float gridSize = 1f;
+            var gridSize = 1f;
             return new Vector3(
                 Mathf.Round(position.x / gridSize) * gridSize,
                 Mathf.Round(position.y / gridSize) * gridSize,

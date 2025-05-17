@@ -1,4 +1,5 @@
 // Refactored GenericPyramidDrawer
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,10 +8,10 @@ namespace Manipulator
 {
     public class GenericPyramidDrawer : IPrebuiltDrawer
     {
-        private string idA, idB, idC, idD;
-        private string idAB, idBC, idCA, idAD, idBD, idCD;
         private Point a, b, c, apex;
         private Segment ab, bc, ca, ad, bd, cd;
+        private string idA, idB, idC, idD;
+        private string idAB, idBC, idCA, idAD, idBD, idCD;
 
         public void Begin(Vector3 startPos)
         {
@@ -27,17 +28,29 @@ namespace Manipulator
 
             var datas = new List<ShapeData>
             {
-                new ShapeData { Id = idA, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idD, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new()
+                {
+                    Id = idA, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idD, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
 
-                new ShapeData { Id = idAB, Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = idBC, Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = idCA, Type = "Segment", ConnectedPoints = new() { idC, idA } },
-                new ShapeData { Id = idAD, Type = "Segment", ConnectedPoints = new() { idD, idA } },
-                new ShapeData { Id = idBD, Type = "Segment", ConnectedPoints = new() { idD, idB } },
-                new ShapeData { Id = idCD, Type = "Segment", ConnectedPoints = new() { idD, idC } },
+                new() { Id = idAB, Type = "Segment", ConnectedPoints = new List<string> { idA, idB } },
+                new() { Id = idBC, Type = "Segment", ConnectedPoints = new List<string> { idB, idC } },
+                new() { Id = idCA, Type = "Segment", ConnectedPoints = new List<string> { idC, idA } },
+                new() { Id = idAD, Type = "Segment", ConnectedPoints = new List<string> { idD, idA } },
+                new() { Id = idBD, Type = "Segment", ConnectedPoints = new List<string> { idD, idB } },
+                new() { Id = idCD, Type = "Segment", ConnectedPoints = new List<string> { idD, idC } }
             };
 
             var batch = new CreateShapeBatchAction(datas);
@@ -59,46 +72,26 @@ namespace Manipulator
                     if (s.ShapeId == idBD) bd = s;
                     if (s.ShapeId == idCD) cd = s;
                 }
+
                 TryConnect();
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
         }
 
-        private void TryConnect()
-        {
-            if (a != null && b != null && c != null && apex != null &&
-                ab != null && bc != null && ca != null &&
-                ad != null && bd != null && cd != null)
-            {
-                foreach (var pt in new[] { a, b, c, apex }) pt.SetRaycastIgnore(true);
-                foreach (var seg in new[] { ab, bc, ca, ad, bd, cd })
-                {
-                    seg.MarkAsPreview();
-                    seg.SetRaycastIgnore(true);
-                }
-
-                ab.SetStartPoint(a); ab.SetEndPoint(b);
-                bc.SetStartPoint(b); bc.SetEndPoint(c);
-                ca.SetStartPoint(c); ca.SetEndPoint(a);
-                ad.SetStartPoint(apex); ad.SetEndPoint(a);
-                bd.SetStartPoint(apex); bd.SetEndPoint(b);
-                cd.SetStartPoint(apex); cd.SetEndPoint(c);
-            }
-        }
-
         public void Working(Vector3 currentPos)
         {
             if (a == null || b == null || c == null || apex == null) return;
 
-            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
-            Vector3 ab = snappedPos - a.transform.position;
-            float side = ab.magnitude;
-            Vector3 dir = ab.normalized;
+            var snappedPos = currentPos;
+            snappedPos.y = 0f;
+            var ab = snappedPos - a.transform.position;
+            var side = ab.magnitude;
+            var dir = ab.normalized;
 
-            Vector3 bPos = a.transform.position + dir * side;
-            Vector3 cPos = a.transform.position + Quaternion.AngleAxis(-45f, Vector3.up) * dir * side * 0.8f;
-            Vector3 apexPos = (a.transform.position + bPos + cPos) / 3f + Vector3.up * (side * 0.8f);
+            var bPos = a.transform.position + dir * side;
+            var cPos = a.transform.position + Quaternion.AngleAxis(-45f, Vector3.up) * dir * side * 0.8f;
+            var apexPos = (a.transform.position + bPos + cPos) / 3f + Vector3.up * (side * 0.8f);
 
             b.MoveTo(bPos, queue: false);
             c.MoveTo(cPos, queue: false);
@@ -116,6 +109,34 @@ namespace Manipulator
         {
             foreach (var pt in new[] { a, b, c, apex }) pt?.DestroyShape();
             foreach (var seg in new[] { ab, bc, ca, ad, bd, cd }) seg?.DestroyShape();
+        }
+
+        private void TryConnect()
+        {
+            if (a != null && b != null && c != null && apex != null &&
+                ab != null && bc != null && ca != null &&
+                ad != null && bd != null && cd != null)
+            {
+                foreach (var pt in new[] { a, b, c, apex }) pt.SetRaycastIgnore(true);
+                foreach (var seg in new[] { ab, bc, ca, ad, bd, cd })
+                {
+                    seg.MarkAsPreview();
+                    seg.SetRaycastIgnore(true);
+                }
+
+                ab.SetStartPoint(a);
+                ab.SetEndPoint(b);
+                bc.SetStartPoint(b);
+                bc.SetEndPoint(c);
+                ca.SetStartPoint(c);
+                ca.SetEndPoint(a);
+                ad.SetStartPoint(apex);
+                ad.SetEndPoint(a);
+                bd.SetStartPoint(apex);
+                bd.SetEndPoint(b);
+                cd.SetStartPoint(apex);
+                cd.SetEndPoint(c);
+            }
         }
     }
 }

@@ -3,14 +3,13 @@
 [ExecuteInEditMode]
 public class LevelBounds : MonoBehaviour
 {
-    private LineRenderer boundsRenderer;
-
-    public static readonly float upperBound =  4.5f,
-                                 lowerBound = -5.5f,
-                                 leftBound = -3.0f,
-                                 rightBound = 3.0f;
+    public static readonly float upperBound = 4.5f,
+        lowerBound = -5.5f,
+        leftBound = -3.0f,
+        rightBound = 3.0f;
 
     private Vector3[] boundsPositions;
+    private LineRenderer boundsRenderer;
 
     private void Start()
     {

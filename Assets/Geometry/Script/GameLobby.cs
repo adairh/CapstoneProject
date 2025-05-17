@@ -1,37 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Linq;
+using System.Threading.Tasks;
+using Khoa;
+using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
-using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
-using System.Threading.Tasks;
-using System.Linq;
-using An_An;
-using Geometry;
-using Manipulator;
-using Khoa;
-/// <summary>
-/// By Khoa
-/// </summary>
+using UnityEngine;
 
+/// <summary>
+///     By Khoa
+/// </summary>
 public class GameLobby : MonoBehaviour
 {
-    public static GameLobby Instance { get; private set; }
     public const int max_user_amount = 40;
-    private Unity.Services.Lobbies.Models.Lobby joinedLobby;
-    private string profileId;
-    private Dictionary<ulong, string> clientIdToPlayerIdMap = new Dictionary<ulong, string>();
+    private const float LOBBY_REFRESH_INTERVAL = 5f; // Refresh lobby data every 5 seconds
 
     [SerializeField] private GameObject notificationPrefab;
+    private readonly Dictionary<ulong, string> clientIdToPlayerIdMap = new();
 
     private bool hasReportedError = false; // Flag to prevent duplicate error reports
-    private float lastLobbyRefreshTime = 0f;
-    private const float LOBBY_REFRESH_INTERVAL = 5f; // Refresh lobby data every 5 seconds
+    private Lobby joinedLobby;
+    private float lastLobbyRefreshTime;
+    private string profileId;
+    public static GameLobby Instance { get; private set; }
+
+    public bool IsHost => NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
 
     private void Awake()
     {
@@ -50,6 +49,7 @@ public class GameLobby : MonoBehaviour
             {
                 Debug.LogWarning("NetworkManager.Singleton is null in Awake!");
             }
+
             InitializeUnityAuthentication();
         }
         else
@@ -68,14 +68,6 @@ public class GameLobby : MonoBehaviour
         }
     }
 
-    public bool IsHost
-    {
-        get
-        {
-            return NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
-        }
-    }
-
     private async void OnClientConnected(ulong clientId)
     {
         Debug.Log($"OnClientConnected called with Client ID: {clientId}, IsHost: {IsHost}");
@@ -88,7 +80,7 @@ public class GameLobby : MonoBehaviour
             }
 
             // Check if we already have a mapping for this ClientId
-            if (clientIdToPlayerIdMap.TryGetValue(clientId, out string playerId) && !string.IsNullOrEmpty(playerId))
+            if (clientIdToPlayerIdMap.TryGetValue(clientId, out var playerId) && !string.IsNullOrEmpty(playerId))
             {
                 Debug.Log($"Using cached PlayerId: {playerId} for Client ID: {clientId}");
             }
@@ -101,6 +93,7 @@ public class GameLobby : MonoBehaviour
                     Debug.LogWarning($"Could not find PlayerId for Client ID: {clientId}");
                     playerId = $"Unknown_{clientId}";
                 }
+
                 clientIdToPlayerIdMap[clientId] = playerId;
             }
 
@@ -117,12 +110,12 @@ public class GameLobby : MonoBehaviour
             return;
         }
 
-        GameObject notification = Instantiate(notificationPrefab, Vector3.zero, Quaternion.identity);
-        Canvas canvas = FindObjectOfType<Canvas>();
+        var notification = Instantiate(notificationPrefab, Vector3.zero, Quaternion.identity);
+        var canvas = FindObjectOfType<Canvas>();
         if (canvas != null)
         {
             notification.transform.SetParent(canvas.transform, false);
-            RectTransform rect = notification.GetComponent<RectTransform>();
+            var rect = notification.GetComponent<RectTransform>();
             rect.anchoredPosition = new Vector2(0, 100);
             rect.localScale = Vector3.one;
             Debug.Log("User joined notification parented to Canvas at position (0, 100)");
@@ -134,7 +127,7 @@ public class GameLobby : MonoBehaviour
             return;
         }
 
-        NotificationPopup popup = notification.GetComponent<NotificationPopup>();
+        var popup = notification.GetComponent<NotificationPopup>();
         if (popup != null)
         {
             popup.SetMessage(message);
@@ -156,35 +149,29 @@ public class GameLobby : MonoBehaviour
 
         // Check if a recent refresh is needed
         if (Time.time - lastLobbyRefreshTime > LOBBY_REFRESH_INTERVAL)
-        {
             try
             {
                 joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
                 lastLobbyRefreshTime = Time.time;
                 Debug.Log($"Refreshed lobby, player count: {joinedLobby.Players.Count}");
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogError($"Failed to refresh lobby: {e.Message}");
                 return null;
             }
-        }
 
         // Simplified retry logic since this is now a fallback
         foreach (var player in joinedLobby.Players)
-        {
             if (player.Data != null && player.Data.TryGetValue("ClientId", out var clientIdData))
-            {
-                if (ulong.TryParse(clientIdData.Value, out ulong storedClientId) && storedClientId == clientId)
+                if (ulong.TryParse(clientIdData.Value, out var storedClientId) && storedClientId == clientId)
                 {
                     Debug.Log($"Found PlayerId: {player.Id} for Client ID: {clientId} in fallback");
                     return player.Id;
                 }
-            }
-        }
 
         Debug.LogWarning($"No PlayerId found for Client ID: {clientId} in fallback, attempting fallback...");
-        string hostPlayerId = AuthenticationService.Instance.PlayerId;
+        var hostPlayerId = AuthenticationService.Instance.PlayerId;
         var nonHostPlayer = joinedLobby.Players.FirstOrDefault(p => p.Id != hostPlayerId);
         if (nonHostPlayer != null)
         {
@@ -212,19 +199,16 @@ public class GameLobby : MonoBehaviour
             {
                 Debug.Log("New players detected, updating ClientId to PlayerId mappings...");
                 foreach (var player in joinedLobby.Players)
-                {
                     if (player.Data != null && player.Data.TryGetValue("ClientId", out var clientIdData))
-                    {
-                        if (ulong.TryParse(clientIdData.Value, out ulong clientId) && !clientIdToPlayerIdMap.ContainsKey(clientId))
+                        if (ulong.TryParse(clientIdData.Value, out var clientId) &&
+                            !clientIdToPlayerIdMap.ContainsKey(clientId))
                         {
                             clientIdToPlayerIdMap[clientId] = player.Id;
                             Debug.Log($"Mapped ClientId: {clientId} to PlayerId: {player.Id}");
                         }
-                    }
-                }
             }
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogWarning($"Failed to refresh lobby data: {e.Message}");
         }
@@ -233,22 +217,24 @@ public class GameLobby : MonoBehaviour
     private async void SendHeartbeat()
     {
         if (joinedLobby != null && IsHost)
-        {
-            for (int attempt = 1; attempt <= 3; attempt++)
-            {
+            for (var attempt = 1; attempt <= 3; attempt++)
                 try
                 {
-                    if (!AuthenticationService.Instance.IsSignedIn || !AuthenticationService.Instance.SessionTokenExists)
+                    if (!AuthenticationService.Instance.IsSignedIn ||
+                        !AuthenticationService.Instance.SessionTokenExists)
                     {
-                        Debug.Log($"Authentication invalid before heartbeat for Profile: {profileId}. Re-authenticating...");
+                        Debug.Log(
+                            $"Authentication invalid before heartbeat for Profile: {profileId}. Re-authenticating...");
                         await SignInAnonymouslyWithRetry();
                     }
+
                     await LobbyService.Instance.SendHeartbeatPingAsync(joinedLobby.Id);
-                    Debug.Log($"Heartbeat sent for lobby: {joinedLobby.Name}, ID: {joinedLobby.Id}, IsPrivate: {joinedLobby.IsPrivate}, Profile: {profileId}");
+                    Debug.Log(
+                        $"Heartbeat sent for lobby: {joinedLobby.Name}, ID: {joinedLobby.Id}, IsPrivate: {joinedLobby.IsPrivate}, Profile: {profileId}");
                     await VerifyLobbyStatus();
                     break;
                 }
-                catch (System.Exception e)
+                catch (Exception e)
                 {
                     Debug.LogWarning($"Heartbeat attempt {attempt} failed for lobby {joinedLobby.Name}: {e.Message}");
                     if (attempt == 3)
@@ -256,18 +242,17 @@ public class GameLobby : MonoBehaviour
                         Debug.LogError($"Failed to send heartbeat after 3 attempts: {e.Message}");
                         await RecreateLobbyIfNeeded();
                     }
+
                     await Task.Delay(2000);
                 }
-            }
-        }
     }
 
     private async void InitializeUnityAuthentication()
     {
         if (UnityServices.State != ServicesInitializationState.Initialized)
         {
-            profileId = $"default_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
-            InitializationOptions initOptions = new InitializationOptions();
+            profileId = $"default_{Guid.NewGuid().ToString().Substring(0, 8)}";
+            var initOptions = new InitializationOptions();
             initOptions.SetProfile(profileId);
             try
             {
@@ -276,7 +261,7 @@ public class GameLobby : MonoBehaviour
                 await SignInAnonymouslyWithRetry();
                 Debug.Log($"Signed in anonymously with profile: {profileId}");
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogError($"Failed to initialize Unity Services with profile {profileId}: {e.Message}");
             }
@@ -287,18 +272,20 @@ public class GameLobby : MonoBehaviour
     {
         if (AuthenticationService.Instance.IsSignedIn && AuthenticationService.Instance.SessionTokenExists)
         {
-            Debug.Log($"Player already signed in with PlayerId: {AuthenticationService.Instance.PlayerId}, Profile: {profileId}");
+            Debug.Log(
+                $"Player already signed in with PlayerId: {AuthenticationService.Instance.PlayerId}, Profile: {profileId}");
             return;
         }
-        for (int attempt = 1; attempt <= maxRetries; attempt++)
-        {
+
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
             try
             {
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                Debug.Log($"Authentication successful on attempt {attempt}. PlayerId: {AuthenticationService.Instance.PlayerId}, Profile: {profileId}");
+                Debug.Log(
+                    $"Authentication successful on attempt {attempt}. PlayerId: {AuthenticationService.Instance.PlayerId}, Profile: {profileId}");
                 return;
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogWarning($"Authentication attempt {attempt} failed: {e.Message}");
                 if (attempt == maxRetries)
@@ -306,27 +293,29 @@ public class GameLobby : MonoBehaviour
                     Debug.LogError($"Failed to authenticate after {maxRetries} attempts: {e.Message}");
                     throw;
                 }
+
                 await Task.Delay(2000);
             }
-        }
     }
 
     private async void MonitorRelayAllocation()
     {
         await Task.Delay(30 * 60 * 1000);
         if (joinedLobby != null && IsHost)
-        {
             try
             {
                 Debug.Log($"Refreshing Relay allocation for lobby: {joinedLobby.Name}");
-                Allocation newAllocation = await RelayService.Instance.CreateAllocationAsync(max_user_amount);
-                string newJoinCode = await RelayService.Instance.GetJoinCodeAsync(newAllocation.AllocationId);
+                var newAllocation = await RelayService.Instance.CreateAllocationAsync(max_user_amount);
+                var newJoinCode = await RelayService.Instance.GetJoinCodeAsync(newAllocation.AllocationId);
                 var updateOptions = new UpdateLobbyOptions
                 {
                     Data = new Dictionary<string, DataObject>
                     {
                         { "JoinCode", new DataObject(DataObject.VisibilityOptions.Public, newJoinCode) },
-                        { "Password", new DataObject(DataObject.VisibilityOptions.Public, joinedLobby.Data["Password"].Value) }
+                        {
+                            "Password",
+                            new DataObject(DataObject.VisibilityOptions.Public, joinedLobby.Data["Password"].Value)
+                        }
                     }
                 };
                 joinedLobby = await LobbyService.Instance.UpdateLobbyAsync(joinedLobby.Id, updateOptions);
@@ -340,11 +329,10 @@ public class GameLobby : MonoBehaviour
                     newAllocation.ConnectionData
                 );
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogError($"Failed to refresh Relay allocation: {e.Message}");
             }
-        }
     }
 
     public async Task CreateLobby(string lobbyName, string password, bool isPrivate)
@@ -354,8 +342,8 @@ public class GameLobby : MonoBehaviour
             if (UnityServices.State == ServicesInitializationState.Uninitialized)
             {
                 Debug.Log("Initializing Unity Services...");
-                profileId = $"default_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
-                InitializationOptions initOptions = new InitializationOptions();
+                profileId = $"default_{Guid.NewGuid().ToString().Substring(0, 8)}";
+                var initOptions = new InitializationOptions();
                 initOptions.SetProfile(profileId);
                 await UnityServices.InitializeAsync(initOptions);
                 await SignInAnonymouslyWithRetry();
@@ -372,14 +360,14 @@ public class GameLobby : MonoBehaviour
             lobbyName = lobbyName.Trim().ToLower();
             password = password.Trim();
 
-            QueryResponse existingLobbies = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
+            var existingLobbies = await Lobbies.Instance.QueryLobbiesAsync(new QueryLobbiesOptions
             {
                 Filters = new List<QueryFilter>
                 {
-                    new QueryFilter(
-                        field: QueryFilter.FieldOptions.Name,
-                        value: lobbyName,
-                        op: QueryFilter.OpOptions.EQ
+                    new(
+                        QueryFilter.FieldOptions.Name,
+                        lobbyName,
+                        QueryFilter.OpOptions.EQ
                     )
                 }
             });
@@ -388,20 +376,18 @@ public class GameLobby : MonoBehaviour
             {
                 Debug.LogError($"Lobby with name {lobbyName} already exists! Aborting creation.");
                 if (LobbyUI.Instance != null)
-                {
                     LobbyUI.Instance.UpdateStatus($"Error: Lobby '{lobbyName}' already exists!");
-                }
-                throw new System.Exception($"Lobby '{lobbyName}' already exists!");
+                throw new Exception($"Lobby '{lobbyName}' already exists!");
             }
 
             Debug.Log($"Creating lobby: Name={lobbyName}, Password={password}, IsPrivate={isPrivate}");
 
             Debug.Log("Creating Relay allocation...");
-            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(max_user_amount);
-            string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+            var allocation = await RelayService.Instance.CreateAllocationAsync(max_user_amount);
+            var joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
             Debug.Log($"Relay allocation created: JoinCode={joinCode}");
 
-            CreateLobbyOptions options = new CreateLobbyOptions
+            var options = new CreateLobbyOptions
             {
                 IsPrivate = isPrivate,
                 Data = new Dictionary<string, DataObject>
@@ -432,7 +418,7 @@ public class GameLobby : MonoBehaviour
             );
 
             Debug.Log("Starting host...");
-            bool hostStarted = NetworkManager.Singleton.StartHost();
+            var hostStarted = NetworkManager.Singleton.StartHost();
             Debug.Log($"Host started: {hostStarted}, IsHost: {NetworkManager.Singleton.IsHost}");
 
             InvokeRepeating(nameof(SendHeartbeat), 10f, 10f);
@@ -446,13 +432,10 @@ public class GameLobby : MonoBehaviour
 
             MonitorRelayAllocation();
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogError($"Failed to create lobby: {e.Message}");
-            if (LobbyUI.Instance != null)
-            {
-                LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
-            }
+            if (LobbyUI.Instance != null) LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
             throw; // Re-throw the exception to be caught by the caller
         }
     }
@@ -467,16 +450,17 @@ public class GameLobby : MonoBehaviour
                 {
                     Data = new Dictionary<string, DataObject>
                     {
-                        { "Heartbeat", new DataObject(DataObject.VisibilityOptions.Public, System.DateTime.UtcNow.ToString()) }
+                        { "Heartbeat", new DataObject(DataObject.VisibilityOptions.Public, DateTime.UtcNow.ToString()) }
                     }
                 };
                 await LobbyService.Instance.UpdateLobbyAsync(joinedLobby.Id, updateOptions);
                 Debug.Log("Sent lobby keep-alive update.");
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogWarning($"Failed to send keep-alive update: {e.Message}");
             }
+
             await Task.Delay(15000);
         }
     }
@@ -484,11 +468,10 @@ public class GameLobby : MonoBehaviour
     public async Task CreateRandomLobby()
     {
         const int maxRetries = 3;
-        string roomId = "";
-        string password = "";
+        var roomId = "";
+        var password = "";
 
-        for (int attempt = 1; attempt <= maxRetries; attempt++)
-        {
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
             try
             {
                 // Generate random 4-character room ID and password using GUID for better uniqueness
@@ -499,43 +482,37 @@ public class GameLobby : MonoBehaviour
                 CreateLobby(roomId, password, true);
 
                 if (LobbyUI.Instance != null)
-                {
                     LobbyUI.Instance.UpdateStatus($"Created Private Lobby: {roomId}, Password: {password}");
-                }
                 return; // Successfully created the lobby, exit the method
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 if (e.Message.Contains("already exists"))
                 {
                     Debug.LogWarning($"Room ID {roomId} already exists, retrying (attempt {attempt}/{maxRetries})...");
                     if (attempt == maxRetries)
                     {
-                        Debug.LogError($"Failed to create random lobby after {maxRetries} attempts: Room ID collision.");
+                        Debug.LogError(
+                            $"Failed to create random lobby after {maxRetries} attempts: Room ID collision.");
                         if (LobbyUI.Instance != null)
-                        {
-                            LobbyUI.Instance.UpdateStatus($"Error: Failed to create lobby after {maxRetries} attempts (Room ID collision).");
-                        }
+                            LobbyUI.Instance.UpdateStatus(
+                                $"Error: Failed to create lobby after {maxRetries} attempts (Room ID collision).");
                         return;
                     }
                 }
                 else
                 {
                     Debug.LogError($"Failed to create random lobby: {e.Message}");
-                    if (LobbyUI.Instance != null)
-                    {
-                        LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
-                    }
+                    if (LobbyUI.Instance != null) LobbyUI.Instance.UpdateStatus($"Error: {e.Message}");
                     return;
                 }
             }
-        }
     }
 
     private string GenerateRandomString(int length)
     {
         // Use GUID for better uniqueness, then truncate to the desired length
-        string guid = System.Guid.NewGuid().ToString().Replace("-", "").ToUpper();
+        var guid = Guid.NewGuid().ToString().Replace("-", "").ToUpper();
         return guid.Substring(0, length);
     }
 
@@ -565,14 +542,12 @@ public class GameLobby : MonoBehaviour
 
             // Validate password before joining
             if (lobby.Data.TryGetValue("Password", out var passwordData))
-            {
                 if (passwordData.Value != password)
                 {
                     Debug.LogError("Incorrect password.");
                     LobbyUI.Instance?.UpdateStatus("Error: Incorrect password!");
                     return;
                 }
-            }
 
             // Only join if password is correct
             joinedLobby = await Lobbies.Instance.JoinLobbyByIdAsync(lobby.Id);
@@ -601,7 +576,7 @@ public class GameLobby : MonoBehaviour
         if (UnityServices.State == ServicesInitializationState.Initialized) return;
 
         profileId = $"default_{Guid.NewGuid().ToString().Substring(0, 8)}";
-        InitializationOptions initOptions = new InitializationOptions().SetProfile(profileId);
+        var initOptions = new InitializationOptions().SetProfile(profileId);
         await UnityServices.InitializeAsync(initOptions);
         await SignInAnonymouslyWithRetry();
 
@@ -611,7 +586,7 @@ public class GameLobby : MonoBehaviour
     private async Task<Lobby> FindLobbyByNameAsync(string name)
     {
         const int maxRetries = 3;
-        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
         {
             try
             {
@@ -619,7 +594,7 @@ public class GameLobby : MonoBehaviour
                 {
                     Filters = new List<QueryFilter>
                     {
-                        new QueryFilter(QueryFilter.FieldOptions.Name, name, QueryFilter.OpOptions.EQ)
+                        new(QueryFilter.FieldOptions.Name, name, QueryFilter.OpOptions.EQ)
                     }
                 };
 
@@ -648,8 +623,7 @@ public class GameLobby : MonoBehaviour
         const int maxRetries = 3;
         JoinAllocation allocation = null;
 
-        for (int attempt = 1; attempt <= maxRetries; attempt++)
-        {
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
             try
             {
                 allocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
@@ -661,13 +635,12 @@ public class GameLobby : MonoBehaviour
                 Debug.LogWarning($"Relay join attempt {attempt} failed: {e.Message}");
                 if (attempt == maxRetries)
                 {
-                    LobbyUI.Instance?.UpdateStatus($"Error: Relay join failed.");
+                    LobbyUI.Instance?.UpdateStatus("Error: Relay join failed.");
                     return;
                 }
 
                 await Task.Delay(1500);
             }
-        }
 
         if (allocation == null)
         {
@@ -698,7 +671,7 @@ public class GameLobby : MonoBehaviour
 
             // Update the player's ClientId in the lobby data
             await Task.Delay(1000); // Brief delay to ensure client is fully connected
-            string clientId = NetworkManager.Singleton.LocalClientId.ToString();
+            var clientId = NetworkManager.Singleton.LocalClientId.ToString();
             var updatePlayerOptions = new UpdatePlayerOptions
             {
                 Data = new Dictionary<string, PlayerDataObject>
@@ -706,8 +679,7 @@ public class GameLobby : MonoBehaviour
                     { "ClientId", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, clientId) }
                 }
             };
-            for (int attempt = 1; attempt <= 3; attempt++)
-            {
+            for (var attempt = 1; attempt <= 3; attempt++)
                 try
                 {
                     joinedLobby = await LobbyService.Instance.UpdatePlayerAsync(
@@ -715,7 +687,8 @@ public class GameLobby : MonoBehaviour
                         AuthenticationService.Instance.PlayerId,
                         updatePlayerOptions
                     );
-                    Debug.Log($"Updated player data with ClientId: {clientId} for PlayerId: {AuthenticationService.Instance.PlayerId}");
+                    Debug.Log(
+                        $"Updated player data with ClientId: {clientId} for PlayerId: {AuthenticationService.Instance.PlayerId}");
                     break;
                 }
                 catch (Exception e)
@@ -726,9 +699,9 @@ public class GameLobby : MonoBehaviour
                         Debug.LogError($"Failed to update player data after 3 attempts: {e.Message}");
                         break;
                     }
+
                     await Task.Delay(1000);
                 }
-            }
 
             LobbyUI.Instance?.UpdateStatus("Client Connected");
             LobbyUI.Instance?.Hide();
@@ -746,13 +719,15 @@ public class GameLobby : MonoBehaviour
         {
             if (!AuthenticationService.Instance.IsSignedIn || !AuthenticationService.Instance.SessionTokenExists)
             {
-                Debug.Log($"Authentication invalid before verifying lobby status. Re-authenticating...");
+                Debug.Log("Authentication invalid before verifying lobby status. Re-authenticating...");
                 await SignInAnonymouslyWithRetry();
             }
+
             var lobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
-            Debug.Log($"Lobby status verified: {lobby.Name} is active with {lobby.Players.Count} players, IsPrivate: {lobby.IsPrivate}, Profile: {profileId}");
+            Debug.Log(
+                $"Lobby status verified: {lobby.Name} is active with {lobby.Players.Count} players, IsPrivate: {lobby.IsPrivate}, Profile: {profileId}");
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogError($"Failed to verify lobby status: {e.Message}");
             await RecreateLobbyIfNeeded();
@@ -765,12 +740,12 @@ public class GameLobby : MonoBehaviour
         {
             await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogError($"Lobby {joinedLobby.Name} no longer exists: {e.Message}");
-            string lobbyName = joinedLobby.Name;
-            string password = joinedLobby.Data["Password"].Value;
-            bool isPrivate = joinedLobby.IsPrivate;
+            var lobbyName = joinedLobby.Name;
+            var password = joinedLobby.Data["Password"].Value;
+            var isPrivate = joinedLobby.IsPrivate;
             joinedLobby = null;
             CreateLobby(lobbyName, password, isPrivate);
         }
@@ -785,7 +760,7 @@ public class GameLobby : MonoBehaviour
         }
 
         // Check if the current player is the host
-        string currentPlayerId = AuthenticationService.Instance.PlayerId;
+        var currentPlayerId = AuthenticationService.Instance.PlayerId;
         if (joinedLobby.HostId != currentPlayerId)
         {
             Debug.LogWarning("Only the host can toggle lobby privacy.");
@@ -795,7 +770,7 @@ public class GameLobby : MonoBehaviour
 
         try
         {
-            bool newPrivacyStatus = !joinedLobby.IsPrivate;
+            var newPrivacyStatus = !joinedLobby.IsPrivate;
             var updatedLobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions
             {
                 IsPrivate = newPrivacyStatus
@@ -812,7 +787,7 @@ public class GameLobby : MonoBehaviour
         }
     }
 
-    public Unity.Services.Lobbies.Models.Lobby GetJoinedLobby()
+    public Lobby GetJoinedLobby()
     {
         return joinedLobby;
     }

@@ -7,6 +7,12 @@ namespace Manipulator
     {
         [SerializeField] private TextMeshProUGUI text;
 
+        private void LateUpdate()
+        {
+            if (Camera.main != null)
+                transform.forward = Camera.main.transform.forward;
+        }
+
         public void Initialize(string label)
         {
             if (text != null)
@@ -19,12 +25,9 @@ namespace Manipulator
                 text.text = newText;
         }
 
-        public string GetLabel() => text.text;
-
-        private void LateUpdate()
+        public string GetLabel()
         {
-            if (Camera.main != null)
-                transform.forward = Camera.main.transform.forward;
+            return text.text;
         }
     }
 }

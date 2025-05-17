@@ -4,8 +4,8 @@ using UnityEngine;
 namespace Manipulator
 {
     /// <summary>
-    /// Liệt kê các loại Material mà bạn sẽ dùng xuyên suốt:
-    /// Default, Highlight, Drag, Select, v.v…
+    ///     Liệt kê các loại Material mà bạn sẽ dùng xuyên suốt:
+    ///     Default, Highlight, Drag, Select, v.v…
     /// </summary>
     public enum MaterialType
     {
@@ -14,10 +14,11 @@ namespace Manipulator
         Drag,
         Select,
         Hover,
+
         Plane
         // TODO: thêm nếu cần
         ,
-        
+
         Red,
         Green,
         Blue,
@@ -30,7 +31,7 @@ namespace Manipulator
     }
 
     /// <summary>
-    /// Cung cấp sẵn các Material URP/Lit với BaseColor cấu hình sẵn.
+    ///     Cung cấp sẵn các Material URP/Lit với BaseColor cấu hình sẵn.
     /// </summary>
     public static class MaterialLibrary
     {
@@ -40,26 +41,26 @@ namespace Manipulator
         // Màu mặc định cho từng MaterialType (có thể tùy chỉnh)
         private static readonly Dictionary<MaterialType, Color> _colors = new()
         {
-            { MaterialType.Default,   Color.red },
-            { MaterialType.Highlight, new Color(1f, 0.8f, 0f) },  // vàng nhạt
-            { MaterialType.Drag,      new Color(0.2f, 0.6f, 1f) }, // xanh dương
-            { MaterialType.Select,    new Color(0f, 0.5f, 0.3f) },     // xanh lá
-            { MaterialType.Hover,    new Color(0.8f, 0.5f, 0.3f)},     // xanh lá
-            { MaterialType.Plane,     new Color(1f, 1f, 1f, 0.5f)  },     // xanh lá
-            
-            { MaterialType.Red,    Color.red },
-            { MaterialType.Green,  Color.green },  // vàng nhạt
-            { MaterialType.Blue,   Color.blue }, // xanh dương
-            { MaterialType.Yellow, Color.yellow },     // xanh lá
-            { MaterialType.White,  Color.white },     // xanh lá
-            { MaterialType.Black,  Color.black },     // xanh lá
-            { MaterialType.Cyan,   Color.cyan },     // xanh lá 
-            { MaterialType.Magenta,Color.magenta  },     // xanh lá
-            { MaterialType.Gray,   Color.gray  },     // xanh lá
+            { MaterialType.Default, Color.red },
+            { MaterialType.Highlight, new Color(1f, 0.8f, 0f) }, // vàng nhạt
+            { MaterialType.Drag, new Color(0.2f, 0.6f, 1f) }, // xanh dương
+            { MaterialType.Select, new Color(0f, 0.5f, 0.3f) }, // xanh lá
+            { MaterialType.Hover, new Color(0.8f, 0.5f, 0.3f) }, // xanh lá
+            { MaterialType.Plane, new Color(1f, 1f, 1f, 0.5f) }, // xanh lá
+
+            { MaterialType.Red, Color.red },
+            { MaterialType.Green, Color.green }, // vàng nhạt
+            { MaterialType.Blue, Color.blue }, // xanh dương
+            { MaterialType.Yellow, Color.yellow }, // xanh lá
+            { MaterialType.White, Color.white }, // xanh lá
+            { MaterialType.Black, Color.black }, // xanh lá
+            { MaterialType.Cyan, Color.cyan }, // xanh lá 
+            { MaterialType.Magenta, Color.magenta }, // xanh lá
+            { MaterialType.Gray, Color.gray } // xanh lá
         };
 
         /// <summary>
-        /// Lấy Material tương ứng; sẽ tự tạo lần đầu và cache lại.
+        ///     Lấy Material tương ứng; sẽ tự tạo lần đầu và cache lại.
         /// </summary>
         public static Material Get(MaterialType type)
         {
@@ -69,11 +70,12 @@ namespace Manipulator
                 mat.name = $"Mat_{type}";
                 _materials[type] = mat;
             }
+
             return mat;
         }
 
         /// <summary>
-        /// Tạo Material URP/Lit và gán Base Color.
+        ///     Tạo Material URP/Lit và gán Base Color.
         /// </summary>
         private static Material CreateLitMaterial(Color baseColor)
         {

@@ -1,32 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using _QuestionAnswersModule.Scripts.SimpleRealization;
 using UnityEngine;
 
 public class LevelData : MonoBehaviour
 {
-    [System.Serializable]
-    public class Level
-    {
-        public GameObject levelPrefab;
-        public int timeLimit;
-        public bool hardmode = false;
+    private static char[] savedData;
 
-        public bool unlocked;
-        public int rating;
-        
-        public QuestionSet QuestionDatas;
-    }
+    public static Dictionary<QuestionSet, List<int>> appearedQuestion = new();
 
 #if UNITY_EDITOR
-    [SerializeField]
-    private bool unlockAll = false;
+    [SerializeField] private bool unlockAll;
 #endif
 
     public List<Level> levels;
-
-    private static char[] savedData = null;
-    public static Dictionary<QuestionSet, List<int>> appearedQuestion
-        = new Dictionary<QuestionSet, List<int>>();
 
     // Loads saved data (player progression)
     private void Awake()
@@ -37,18 +24,14 @@ public class LevelData : MonoBehaviour
                 savedData = PlayerPrefs.GetString("savedData").ToCharArray(0, 12);
             else
                 SetDefault();
-        }    
+        }
 
         LoadSavedData();
 
 #if UNITY_EDITOR
         if (unlockAll)
-        {
             foreach (var level in levels)
-            {
                 level.unlocked = true;
-            }
-        }
 #endif
     }
 
@@ -59,17 +42,13 @@ public class LevelData : MonoBehaviour
 
         savedData[0] = '0';
 
-        for (int i = 1; i < levels.Count; i++)
-        {
-            savedData[i] = '9';
-        }
+        for (var i = 1; i < levels.Count; i++) savedData[i] = '9';
     }
 
     // Setting progression based on saved data
     private void LoadSavedData()
     {
-        for (int i = 0; i < levels.Count; i++)
-        {
+        for (var i = 0; i < levels.Count; i++)
             if (savedData[i] == '9')
             {
                 levels[i].unlocked = false;
@@ -79,7 +58,6 @@ public class LevelData : MonoBehaviour
                 levels[i].unlocked = true;
                 levels[i].rating = savedData[i] - '0';
             }
-        }
     }
 
     public void SetRating(int index, int rating)
@@ -105,5 +83,18 @@ public class LevelData : MonoBehaviour
         SetDefault();
         Save();
         LoadSavedData();
+    }
+
+    [Serializable]
+    public class Level
+    {
+        public GameObject levelPrefab;
+        public int timeLimit;
+        public bool hardmode;
+
+        public bool unlocked;
+        public int rating;
+
+        public QuestionSet QuestionDatas;
     }
 }

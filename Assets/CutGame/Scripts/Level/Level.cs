@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using _QuestionAnswersModule.Scripts.SimpleRealization;
 using UnityEngine;
 
 public class Level : MonoBehaviour
@@ -8,23 +7,16 @@ public class Level : MonoBehaviour
     public List<BloodCell> bloodCells;
     public List<Virus> viruses;
 
-    public event Action OnAllyDestroy;
-    public event Action OnEnemyDestroy;
- 
     // Initializes references in actors (destructibles)
     private void Start()
     {
-        foreach (var bloodCell in bloodCells)
-        {
-            bloodCell.level = this;
-        }
+        foreach (var bloodCell in bloodCells) bloodCell.level = this;
 
-        foreach (var virus in viruses)
-        {
-            virus.level = this;
-        }
- 
+        foreach (var virus in viruses) virus.level = this;
     }
+
+    public event Action OnAllyDestroy;
+    public event Action OnEnemyDestroy;
 
     public void DestroyAlly()
     {
@@ -35,8 +27,7 @@ public class Level : MonoBehaviour
     {
         viruses.Remove(virus);
         Destroy(virus.gameObject);
-        
+
         OnEnemyDestroy();
     }
 }
-

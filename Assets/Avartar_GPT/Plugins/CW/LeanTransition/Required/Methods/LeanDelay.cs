@@ -1,60 +1,69 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to delay for a specified duration.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanDelay")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Delay" + LeanTransition.MethodsMenuSuffix + "(LeanDelay)")]
-	public class LeanDelay : LeanMethodWithState
-	{
-		public override void Register()
-		{
-			PreviousState = Register(Data.Duration);
-		}
+    /// <summary>This component allows you to delay for a specified duration.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanDelay")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Delay" + LeanTransition.MethodsMenuSuffix + "(LeanDelay)")]
+    public class LeanDelay : LeanMethodWithState
+    {
+        public State Data;
 
-		public static LeanState Register(float duration)
-		{
-			var state = LeanTransition.Spawn(State.Pool);
+        public override void Register()
+        {
+            PreviousState = Register(Data.Duration);
+        }
 
-			return LeanTransition.Register(state, duration);
-		}
+        public static LeanState Register(float duration)
+        {
+            var state = LeanTransition.Spawn(State.Pool);
 
-		[System.Serializable]
-		public class State : LeanState
-		{
-			public override void Begin()
-			{
-				// No state to begin from
-			}
+            return LeanTransition.Register(state, duration);
+        }
 
-			public override void Update(float progress)
-			{
-				// No state to update
-			}
+        [Serializable]
+        public class State : LeanState
+        {
+            public static Stack<State> Pool = new();
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+            public override void Begin()
+            {
+                // No state to begin from
+            }
 
-		public State Data;
-	}
+            public override void Update(float progress)
+            {
+                // No state to update
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		/// <summary>This will pause the animation for the specified amount of seconds.</summary>
-		public static T DelayTransition<T>(this T target, float duration)
-			where T : Component
-		{
-			Method.LeanDelay.Register(duration); return target;
-		}
+    public static partial class LeanExtensions
+    {
+        /// <summary>This will pause the animation for the specified amount of seconds.</summary>
+        public static T DelayTransition<T>(this T target, float duration)
+            where T : Component
+        {
+            LeanDelay.Register(duration);
+            return target;
+        }
 
-		/// <summary>This will pause the animation for the specified amount of seconds.</summary>
-		public static GameObject DelayTransition(this GameObject target, float duration)
-		{
-			Method.LeanDelay.Register(duration); return target;
-		}
-	}
+        /// <summary>This will pause the animation for the specified amount of seconds.</summary>
+        public static GameObject DelayTransition(this GameObject target, float duration)
+        {
+            LeanDelay.Register(duration);
+            return target;
+        }
+    }
 }

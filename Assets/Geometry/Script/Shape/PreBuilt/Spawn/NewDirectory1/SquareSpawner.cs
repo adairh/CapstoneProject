@@ -38,6 +38,12 @@ namespace Manipulator
         public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
             float side = inputs["Side"];
+            IPrebuiltDrawer drawer = new SquareDrawer();
+            Vector3 vec = new Vector3();
+            drawer.Begin(vec);
+            drawer.Working(vec + side);
+			drawer.End();
+            
             return new ShapeData
             {
                 Id = Guid.NewGuid().ToString(),
@@ -48,6 +54,8 @@ namespace Manipulator
                     { "side", side.ToString() }
                 }
             };
+
+            
         }
     }
 }

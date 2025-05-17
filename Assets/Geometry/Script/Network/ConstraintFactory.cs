@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using Object = UnityEngine.Object;
+﻿using UnityEngine;
 
 namespace Manipulator
-{ 
-
-    public static class ConstraintFactory {
+{
+    public static class ConstraintFactory
+    {
         public static void CreateConstraintNetworked(ConstraintData data)
         {
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateConstraintAction(data));
         }
-        
+
         // Tạo constraint từ dữ liệu đã có
         public static Constraint CreateFromData(ConstraintData data)
         {
@@ -25,10 +22,5 @@ namespace Manipulator
             constraint.Cleanup();
             Object.Destroy(constraint);
         }
- 
-
-        
     }
-
-
 }

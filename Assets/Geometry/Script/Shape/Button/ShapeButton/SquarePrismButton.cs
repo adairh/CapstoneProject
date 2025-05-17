@@ -4,7 +4,10 @@ namespace Manipulator
 {
     public class SquarePrismButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.SquarePrism;
+        public IShapeButton.ShapeType GetShapeType()
+        {
+            return IShapeButton.ShapeType.SquarePrism;
+        }
 
         protected override void OnButtonClick()
         {

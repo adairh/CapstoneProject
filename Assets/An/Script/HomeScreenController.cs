@@ -1,34 +1,33 @@
-﻿
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro;
-using System.Collections;
+
 // Khoa đã ở đây
 public class HomeScreenController : MonoBehaviour
 {
     public static HomeScreenController Instance;
 
-    [Header("Main Canvases")]
-    public GameObject canvasHome;
+    [Header("Main Canvases")] public GameObject canvasHome;
+
     public GameObject canvasPlaygame;
     public GameObject canvasOnboarding; // Onboarding screen with ShowHome button
     public GameObject canvas; // Main Canvas transform for UI instantiation
     public GameObject overPlayCanvas;
 
-    [Header("Popups")]
-    public GameObject popupJoinRoom;
+    [Header("Popups")] public GameObject popupJoinRoom;
+
     public GameObject popupCreateRoom;
     public GameObject darkOverlay;
 
-    [Header("Join Room Inputs")]
-    public TMP_InputField joinRoomIDInput;
+    [Header("Join Room Inputs")] public TMP_InputField joinRoomIDInput;
+
     public TMP_InputField joinPasswordInput;
 
-    [Header("Create Room Inputs")]
-    public TMP_InputField createRoomIDInput;
+    [Header("Create Room Inputs")] public TMP_InputField createRoomIDInput;
+
     public TMP_InputField createPasswordInput;
 
-    private bool isCreateRoomButtonClicked = false;
+    private bool isCreateRoomButtonClicked;
 
     private void Awake()
     {
@@ -45,7 +44,7 @@ public class HomeScreenController : MonoBehaviour
     }
 
     // ===================== KHONG BO =====================
-    void Start()
+    private void Start()
     {
         // Không đụng 
         //mac dinh hien canvasHome, an canvasPlaygame
@@ -61,7 +60,6 @@ public class HomeScreenController : MonoBehaviour
         if (popupCreateRoom != null) popupCreateRoom.SetActive(false);
         if (darkOverlay != null) darkOverlay.SetActive(false);
         // Configure UI based on the current scene
-
     }
     // ===================== kHONG BO =====================
     //void Start()
@@ -92,11 +90,10 @@ public class HomeScreenController : MonoBehaviour
     private void ConfigureUIBasedOnScene()
     {
         // Get the active scene
-        Scene currentScene = SceneManager.GetActiveScene();
+        var currentScene = SceneManager.GetActiveScene();
 
         // Check the scene name or build index
         if (currentScene.name == "SampleScene")
-        {
             if (isCreateRoomButtonClicked)
             {
                 popupCreateRoom.SetActive(true);
@@ -106,13 +103,9 @@ public class HomeScreenController : MonoBehaviour
 
                 isCreateRoomButtonClicked = false;
             }
-
-        }
-        
     }
     // ===================== PLAY GAME =====================
 
-    
 
     public void OnPlayGamesButton()
     {
@@ -143,8 +136,8 @@ public class HomeScreenController : MonoBehaviour
         // Không đụng - KHoa
         SceneManager.LoadScene("SampleScene");
         //canvasHome.SetActive(false);
-        
-        
+
+
         //popupJoinRoom.SetActive(false);
         // popupCreateRoom.SetActive(true);
 
@@ -170,15 +163,14 @@ public class HomeScreenController : MonoBehaviour
         SceneManager.LoadScene("SampleScene");
         /*popupCreateRoom.SetActive(true);
         popupJoinRoom.SetActive(false);*/
-        
-      /*  canvasHome.SetActive(true);
-        darkOverlay.SetActive(true);
-        */
+
+        /*  canvasHome.SetActive(true);
+          darkOverlay.SetActive(true);
+          */
         /*canvasPlaygame.SetActive(false);
         canvasOnboarding.SetActive(false); */
-
     }
-   
+
 
     public void SubmitCreateRoom()
     {

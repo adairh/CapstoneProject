@@ -1,26 +1,22 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(CanvasGroup))]
-
 public class HideGUI : MonoBehaviour
 {
-
     public enum eStartupAlpha
     {
         DontChange,
         SetAlphaToOne,
-            SetAlphaToZero
+        SetAlphaToZero
     }
 
     public eStartupAlpha _SetAlphaAtStart = eStartupAlpha.SetAlphaToZero;
-    public bool SetInactive = true;
- 	// Use this for initialization
-	void Start ()
-    {
 
+    public bool SetInactive = true;
+
+    // Use this for initialization
+    private void Start()
+    {
         switch (_SetAlphaAtStart)
         {
             case eStartupAlpha.DontChange:
@@ -34,16 +30,11 @@ public class HideGUI : MonoBehaviour
             case eStartupAlpha.SetAlphaToZero:
                 GetComponent<CanvasGroup>().alpha = 0.0f;
                 break;
-
         }
 
         //assume by now other scripts have had a chance to init their statics, etc, so we can go disable ourselves now
-        if (SetInactive)
-        {
-            gameObject.SetActive(false);
-        }
+        if (SetInactive) gameObject.SetActive(false);
 
         Destroy(this);
     }
-
 }

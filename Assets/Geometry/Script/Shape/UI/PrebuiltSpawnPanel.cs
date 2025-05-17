@@ -1,9 +1,8 @@
-
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using System;
 using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace Manipulator
 {
@@ -18,7 +17,7 @@ namespace Manipulator
         [SerializeField] private Button confirmButton;
         [SerializeField] private Button cancelButton;
 
-        private List<TMP_InputField> inputs = new();
+        private readonly List<TMP_InputField> inputs = new();
         private Action<float[]> onConfirm;
 
         private void Awake()
@@ -53,15 +52,15 @@ namespace Manipulator
         {
             var values = new List<float>();
             foreach (var input in inputs)
-            {
-                if (float.TryParse(input.text, out float val))
+                if (float.TryParse(input.text, out var val))
+                {
                     values.Add(val);
+                }
                 else
                 {
                     Debug.LogWarning("Giá trị nhập không hợp lệ!");
                     return;
                 }
-            }
 
             root.SetActive(false);
             onConfirm?.Invoke(values.ToArray());

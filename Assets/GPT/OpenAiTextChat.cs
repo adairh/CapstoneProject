@@ -1,41 +1,47 @@
+using System;
+using System.Collections.Generic;
 using OpenAI_API;
 using OpenAI_API.Chat;
 using OpenAI_API.Models;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class OpenAiTextChat : MonoBehaviour
 {
-    private GameObject chatUI;
+    public static string latestResponseMessage = "";
     public GameObject conversationCamera;
     public AudioClip startSound;
     public AudioClip stopSound;
     public AudioClip sendSound;
     public AudioClip receiveSound;
+
+    public string botName = "Bot";
+
+    [TextArea(5, 20)] //minlines, maxlines
+    public string initialRole = "You are a kind villager in the town of Vibeland";
+
+    public string startString = "Approaching the villager..";
+
+    private OpenAIAPI api;
     private AudioSource audioSource;
+    private GameObject chatUI;
     private TMP_InputField inputField;
+    private List<ChatMessage> messages;
     private Button okButton;
     private TMP_Text outputField;
     private GameObject player;
 
-    public string botName = "Bot";
-    
-    [TextArea(5, 20)]   //minlines, maxlines
-    public string initialRole = "You are a kind villager in the town of Vibeland";
-    public string startString = "Approaching the villager..";
-    public static string latestResponseMessage = "";
+    private void Update()
+    {
+        if (Input.GetKeyUp(KeyCode.Escape)) StopConversation();
+        if (Input.GetKeyUp(KeyCode.Return)) okButton.onClick.Invoke();
+    }
 
-    private OpenAIAPI api;
-    private List<ChatMessage> messages;
-
-    void OnEnable()
+    private void OnEnable()
     {
         //Sound setup
-        audioSource = this.GetComponent<AudioSource>();
+        audioSource = GetComponent<AudioSource>();
         audioSource.clip = startSound;
         audioSource.Play();
 
@@ -55,13 +61,11 @@ public class OpenAiTextChat : MonoBehaviour
 
         api = new OpenAIAPI(); //Gets api key from default location. In your username's folder on Windows.
         okButton.onClick.AddListener(() => GetResponse());
-        
+
 
         messages = new List<ChatMessage>
         {
-
-            new ChatMessage(ChatMessageRole.System, initialRole)
-
+            new(ChatMessageRole.System, initialRole)
         };
 
         inputField.text = "";
@@ -71,12 +75,7 @@ public class OpenAiTextChat : MonoBehaviour
         outputField.text = startString;
     }
 
-    void Update()
-    {
-        if (Input.GetKeyUp(KeyCode.Escape)) StopConversation();
-        if (Input.GetKeyUp(KeyCode.Return)) okButton.onClick.Invoke();
-    }
-    void StopConversation()
+    private void StopConversation()
     {
         audioSource.clip = stopSound;
         audioSource.Play();
@@ -87,13 +86,12 @@ public class OpenAiTextChat : MonoBehaviour
         player.GetComponent<PlayerFunctions>().EnablePlayer();
 
         gameObject.GetComponent<BotIdle>().enabled = true;
-        this.enabled = false;
-
+        enabled = false;
     }
- 
-    async void GetResponse()
+
+    private async void GetResponse()
     {
-        if (this.enabled == false) return;
+        if (enabled == false) return;
         if (inputField.text.Length < 1) return;
 
         audioSource.clip = sendSound;
@@ -101,12 +99,13 @@ public class OpenAiTextChat : MonoBehaviour
 
         okButton.enabled = false;
 
-        ChatMessage userMessage = new ChatMessage();
-        userMessage.Role = ChatMessageRole.User;    //Sets role to user
-         
-        userMessage.Content = inputField.text;      //Sets content to what is in the text field
+        var userMessage = new ChatMessage();
+        userMessage.Role = ChatMessageRole.User; //Sets role to user
 
-        if (userMessage.Content.Length > 100) userMessage.Content = userMessage.Content.Substring(0, 100);  //Shortens for safety
+        userMessage.Content = inputField.text; //Sets content to what is in the text field
+
+        if (userMessage.Content.Length > 100)
+            userMessage.Content = userMessage.Content.Substring(0, 100); //Shortens for safety
 
         Debug.Log(string.Format("{0}: {1}", userMessage.rawRole, userMessage.Content)); //Logs user input
         outputField.text = string.Format("You: {0}", userMessage.Content);
@@ -116,7 +115,7 @@ public class OpenAiTextChat : MonoBehaviour
 
         try
         {
-            var chatResult = await api.Chat.CreateChatCompletionAsync(new ChatRequest()
+            var chatResult = await api.Chat.CreateChatCompletionAsync(new ChatRequest
             {
                 Model = Model.ChatGPTTurbo,
                 Temperature = 0.1,
@@ -124,13 +123,16 @@ public class OpenAiTextChat : MonoBehaviour
                 Messages = messages
             });
 
-            ChatMessage responseMessage = new ChatMessage();
-            responseMessage.Role = chatResult.Choices[0].Message.Role;       //Get role first choice from list of responses
-            responseMessage.Content = chatResult.Choices[0].Message.Content; //Get content first choice from list of responses
+            var responseMessage = new ChatMessage();
+            responseMessage.Role = chatResult.Choices[0].Message.Role; //Get role first choice from list of responses
+            responseMessage.Content =
+                chatResult.Choices[0].Message.Content; //Get content first choice from list of responses
             latestResponseMessage = responseMessage.Content;
 
-            Debug.Log(string.Format("{0}: {1}", responseMessage.rawRole, responseMessage.Content)); //Logs response output
-            outputField.text = string.Format("You: {0}\n\n{1}: {2}", userMessage.Content, botName, responseMessage.Content);
+            Debug.Log(string.Format("{0}: {1}", responseMessage.rawRole,
+                responseMessage.Content)); //Logs response output
+            outputField.text = string.Format("You: {0}\n\n{1}: {2}", userMessage.Content, botName,
+                responseMessage.Content);
 
             messages.Add(responseMessage);
         }
@@ -141,11 +143,9 @@ public class OpenAiTextChat : MonoBehaviour
         //Try and catch used to display errors in game
 
 
-
         audioSource.clip = receiveSound;
         audioSource.Play();
 
         okButton.enabled = true;
-
     }
 }

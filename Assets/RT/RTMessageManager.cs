@@ -1,8 +1,6 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
-using System.Linq;
 
 /*
     RTMessageManager by Seth A. Robinson 10/16/2018
@@ -58,6 +56,11 @@ using System.Linq;
 
 public class RTMessage
 {
+    public Delegate _delegate;
+    public object[] _parms;
+    public float deliveryTime;
+
+    public object value;
 
     public void Send()
     {
@@ -69,46 +72,31 @@ public class RTMessage
             try
             {
                 if ((MonoBehaviour)_delegate.Target == null)
-                {
                     //script we were calling back in gone
                     //Hmm, maybe we should have an option to turn this warning on...
                     //Debug.Log("RTMessageManager Warning: RTMessage can't call " + _delegate.Method.Name + " - " + _delegate.Method + ", it no longer exists");
                     return;
-                }
             }
             catch
             {
             }
 
             if (_parms == null)
-            {
                 //optimization for calls with no parms, in theory at least.  I didn't notice a diff
                 ((Action)_delegate).Invoke();
-            } else
-            {
+            else
                 _delegate.DynamicInvoke(_parms);
-            }
-            
-            
         }
-      
     }
-
-    public Delegate _delegate;
-
-    public object value;
-    public float deliveryTime;
-    public object[] _parms;
-    
 }
 
 public class RTMessageManager : MonoBehaviour
 {
-    static RTMessageManager _this = null;
-    LinkedList<RTMessage> _events;
+    private static RTMessageManager _this;
 
-    float _curTime = 0;
-    float _timeMod = 1.0f; //0 is pause, 2 would be 2x speed
+    private float _curTime;
+    private LinkedList<RTMessage> _events;
+    private float _timeMod = 1.0f; //0 is pause, 2 would be 2x speed
 
 
     public void Awake()
@@ -125,9 +113,35 @@ public class RTMessageManager : MonoBehaviour
         //Debug.Log("RTMessageManager initted initted, gameobject we're in renamed to RTMessageManager initted");
     }
 
-    void AddMessage(Delegate method, float delayInSeconds, object[] parms)
+    // Update is called once per frame
+    private void Update()
     {
-        RTMessage r = new RTMessage();
+        _curTime += Time.deltaTime * _timeMod;
+
+        var node = _events.First;
+        while (node != null)
+        {
+            var next = node.Next;
+
+            if (node.Value.deliveryTime < _curTime)
+            {
+                var tempNode = node;
+                _events.Remove(node);
+                tempNode.Value.Send();
+            }
+            else
+            {
+                //list is sorted, so we can safely assume there are no other events right now
+                break;
+            }
+
+            node = next;
+        }
+    }
+
+    private void AddMessage(Delegate method, float delayInSeconds, object[] parms)
+    {
+        var r = new RTMessage();
         r._delegate = method;
         r.deliveryTime = _curTime + delayInSeconds;
         r._parms = parms;
@@ -139,21 +153,15 @@ public class RTMessageManager : MonoBehaviour
         while (node != null)
         {
             if (node.Value.deliveryTime > r.deliveryTime)
-            {
                 //ok, insert before this guy
                 break;
-            }
             node = node.Next;
         }
 
         if (node != null)
-        {
             _events.AddBefore(node, r);
-        } else
-        {
+        else
             _events.AddLast(r);
-        }
-
     }
 
     public void Schedule(float delayInSeconds, Action method)
@@ -166,7 +174,7 @@ public class RTMessageManager : MonoBehaviour
         AddMessage(method, delayInSeconds, new object[] { o1 });
     }
 
-    public void Schedule<T,T2>(float delayInSeconds, Action<T,T2> method, T o1, T2 o2)
+    public void Schedule<T, T2>(float delayInSeconds, Action<T, T2> method, T o1, T2 o2)
     {
         AddMessage(method, delayInSeconds, new object[] { o1, o2 });
     }
@@ -181,27 +189,26 @@ public class RTMessageManager : MonoBehaviour
         AddMessage(method, delayInSeconds, new object[] { o1, o2, o3, o4 });
     }
 
-    public void Schedule<T, T2, T3, T4, T5>(float delayInSeconds, Action<T, T2, T3, T4, T5> method, T o1, T2 o2, T3 o3, T4 o4, T5 o5)
+    public void Schedule<T, T2, T3, T4, T5>(float delayInSeconds, Action<T, T2, T3, T4, T5> method, T o1, T2 o2, T3 o3,
+        T4 o4, T5 o5)
     {
         AddMessage(method, delayInSeconds, new object[] { o1, o2, o3, o4, o5 });
     }
 
-    public void Schedule<T, T2, T3, T4, T5, T6>(float delayInSeconds, Action<T, T2, T3, T4, T5, T6> method, T o1, T2 o2, T3 o3, T4 o4, T5 o5, T6 o6)
+    public void Schedule<T, T2, T3, T4, T5, T6>(float delayInSeconds, Action<T, T2, T3, T4, T5, T6> method, T o1, T2 o2,
+        T3 o3, T4 o4, T5 o5, T6 o6)
     {
         AddMessage(method, delayInSeconds, new object[] { o1, o2, o3, o4, o5, o6 });
     }
 
-    void RemoveScheduledCalls(Delegate del)
+    private void RemoveScheduledCalls(Delegate del)
     {
         var node = _events.First;
         while (node != null)
         {
             var next = node.Next;
 
-            if (node.Value._delegate == del)
-            {
-                _events.Remove(node);
-            }
+            if (node.Value._delegate == del) _events.Remove(node);
             node = next;
         }
     }
@@ -217,45 +224,17 @@ public class RTMessageManager : MonoBehaviour
     {
         RemoveScheduledCalls((Delegate)(object)del);
     }
-    
+
     public static RTMessageManager Get()
     {
         if (!_this)
-        {
             //Actually, let's just create it
             _this = new GameObject("RTMessageManager").AddComponent<RTMessageManager>();
-        }
         return _this;
     }
 
     public void SetTimeMod(float mod)
     {
         _timeMod = mod;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-        _curTime += Time.deltaTime * _timeMod;
-
-        var node = _events.First;
-        while (node != null)
-        {
-            var next = node.Next;
-
-            if (node.Value.deliveryTime < _curTime)
-            {
-                var tempNode = node;
-                _events.Remove(node);
-                tempNode.Value.Send();
-                
-            } else
-            {
-                //list is sorted, so we can safely assume there are no other events right now
-                break;
-            }
-            node = next;
-        }
     }
 }

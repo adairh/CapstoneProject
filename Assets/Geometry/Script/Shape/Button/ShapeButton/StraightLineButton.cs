@@ -4,7 +4,10 @@ namespace Manipulator
 {
     public class StraightLineButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.StraightLine;
+        public IShapeButton.ShapeType GetShapeType()
+        {
+            return IShapeButton.ShapeType.StraightLine;
+        }
 
         protected override void OnButtonClick()
         {

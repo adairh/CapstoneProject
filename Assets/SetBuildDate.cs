@@ -1,17 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using TMPro;
 using UnityEngine;
-using TMPro;
 
 public class SetBuildDate : MonoBehaviour
 {
-
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    private void Start()
     {
-        TextMeshProUGUI tm = GetComponent<TextMeshProUGUI>();
-        tm.text = "Compiled "+RTBuildInfo.Timestamp;
-	}
-	
-	
+        var tm = GetComponent<TextMeshProUGUI>();
+        tm.text = "Compiled " + RTBuildInfo.Timestamp;
+    }
 }

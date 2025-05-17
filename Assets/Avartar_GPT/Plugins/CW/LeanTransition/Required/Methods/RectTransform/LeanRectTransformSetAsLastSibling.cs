@@ -1,44 +1,48 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component calls the <b>RectTransform.SetAsLastSibling</b> method when this transition completes.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanRectTransformSetAsLastSibling")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "RectTransform/RectTransform.SetAsLastSibling" + LeanTransition.MethodsMenuSuffix + "(LeanRectTransformSetAsLastSibling)")]
-	public class LeanRectTransformSetAsLastSibling : LeanMethodWithStateAndTarget
-	{
-		public override System.Type GetTargetType()
-		{
-			return typeof(RectTransform);
-		}
+    /// <summary>This component calls the <b>RectTransform.SetAsLastSibling</b> method when this transition completes.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanRectTransformSetAsLastSibling")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "RectTransform/RectTransform.SetAsLastSibling" +
+                      LeanTransition.MethodsMenuSuffix + "(LeanRectTransformSetAsLastSibling)")]
+    public class LeanRectTransformSetAsLastSibling : LeanMethodWithStateAndTarget
+    {
+        public State Data;
 
-		public override void Register()
-		{
-			PreviousState = Register(GetAliasedTarget(Data.Target), Data.Duration);
-		}
+        public override Type GetTargetType()
+        {
+            return typeof(RectTransform);
+        }
 
-		public static LeanState Register(RectTransform target, float duration)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+        public override void Register()
+        {
+            PreviousState = Register(GetAliasedTarget(Data.Target), Data.Duration);
+        }
 
-			return LeanTransition.Register(state, duration);
-		}
+        public static LeanState Register(RectTransform target, float duration)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-		[System.Serializable]
-		public class State : LeanStateWithTarget<RectTransform>
-		{
-			public override void UpdateWithTarget(float progress)
-			{
-				if (progress == 1.0f)
-				{
-					Target.SetAsLastSibling();
-				}
-			}
+            return LeanTransition.Register(state, duration);
+        }
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+        [Serializable]
+        public class State : LeanStateWithTarget<RectTransform>
+        {
+            public static Stack<State> Pool = new();
 
-		public State Data;
-	}
+            public override void UpdateWithTarget(float progress)
+            {
+                if (progress == 1.0f) Target.SetAsLastSibling();
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }

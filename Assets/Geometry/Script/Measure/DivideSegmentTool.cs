@@ -1,4 +1,5 @@
-
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
@@ -7,19 +8,19 @@ namespace Manipulator
     {
         public static void CreateDividedPoint(Point a, Point b, float ratio)
         {
-            Vector3 pa = a.transform.position;
-            Vector3 pb = b.transform.position;
-            Vector3 pos = (pa + ratio * pb) / (1 + ratio);
+            var pa = a.transform.position;
+            var pb = b.transform.position;
+            var pos = (pa + ratio * pb) / (1 + ratio);
 
             var data = new ShapeData
             {
-                Id = System.Guid.NewGuid().ToString(),
+                Id = Guid.NewGuid().ToString(),
                 Type = "Point",
                 Position = pos,
                 Rotation = Quaternion.identity,
                 Scale = Vector3.one,
-                ConnectedPoints = new(),
-                Settings = new()
+                ConnectedPoints = new List<string>(),
+                Settings = new Dictionary<string, string>()
             };
 
             var v = new CreateShapeAction(data);

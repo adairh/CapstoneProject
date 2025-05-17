@@ -1,28 +1,24 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Manipulator
 {
     public class UIManager : MonoBehaviour
     {
-        public static UIManager Instance { get; private set; }
-
-        [Header("Canvas")]
-        [SerializeField] private Transform canvas;
+        [Header("Canvas")] [SerializeField] private Transform canvas;
 
         public Canvas CanvasSetting;
 
-        [Header("UI Prefabs")]
-        [Tooltip("Drag in any UI prefab you want to register at startup")]
-        [SerializeField] private List<GameObject> uiPrefabsList;
-        
-        
+        [Header("UI Prefabs")] [Tooltip("Drag in any UI prefab you want to register at startup")] [SerializeField]
+        private List<GameObject> uiPrefabsList;
+
 
         // Internal lookup of name → prefab
-        private Dictionary<string, GameObject> uiPrefabs = new Dictionary<string, GameObject>();
+        private readonly Dictionary<string, GameObject> uiPrefabs = new();
+        public static UIManager Instance { get; private set; }
 
         /// <summary>
-        /// Read-only access to registered prefabs.
+        ///     Read-only access to registered prefabs.
         /// </summary>
         public IReadOnlyDictionary<string, GameObject> UIPrefabs => uiPrefabs;
 
@@ -45,7 +41,7 @@ namespace Manipulator
         }
 
         /// <summary>
-        /// Registers a prefab under a given key (use its name or your own).
+        ///     Registers a prefab under a given key (use its name or your own).
         /// </summary>
         public void RegisterUIComponent(string key, GameObject prefab)
         {
@@ -54,6 +50,7 @@ namespace Manipulator
                 Debug.LogWarning($"UIManager: Attempted to register null prefab under key '{key}'");
                 return;
             }
+
             if (!uiPrefabs.ContainsKey(key))
                 uiPrefabs[key] = prefab;
             else
@@ -61,7 +58,7 @@ namespace Manipulator
         }
 
         /// <summary>
-        /// Returns the raw prefab registered under that key (or null).
+        ///     Returns the raw prefab registered under that key (or null).
         /// </summary>
         public GameObject GetUIComponent(string key)
         {
@@ -70,8 +67,8 @@ namespace Manipulator
         }
 
         /// <summary>
-        /// Instantiates the prefab under that key as a child of the main canvas.
-        /// Returns the instance or null if missing.
+        ///     Instantiates the prefab under that key as a child of the main canvas.
+        ///     Returns the instance or null if missing.
         /// </summary>
         public GameObject InstantiateUIComponent(string key)
         {
@@ -81,18 +78,23 @@ namespace Manipulator
                 Debug.LogWarning($"UIManager: No prefab registered under '{key}'");
                 return null;
             }
+
             if (canvas == null)
             {
                 Debug.LogWarning("UIManager: Canvas Transform is null, cannot instantiate UI");
                 return null;
             }
+
             return Instantiate(prefab, canvas);
         }
 
         /// <summary>
-        /// For other systems to grab the canvas Transform reference.
+        ///     For other systems to grab the canvas Transform reference.
         /// </summary>
-        public Transform GetCanvasTransform() => canvas;
+        public Transform GetCanvasTransform()
+        {
+            return canvas;
+        }
 
         private void LoadUIComponentsFromList()
         {

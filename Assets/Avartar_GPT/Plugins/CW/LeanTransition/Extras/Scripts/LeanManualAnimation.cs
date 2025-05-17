@@ -1,105 +1,112 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
 using CW.Common;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Lean.Transition
 {
-	/// <summary>This component allows you to manually begin transitions from UI button events and other sources.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanManualAnimation")]
-	[AddComponentMenu(LeanTransition.ComponentMenuPrefix + "Lean Manual Animation")]
-	public class LeanManualAnimation : MonoBehaviour
-	{
-		/// <summary>This allows you to specify the transitions this component will begin.
-		/// You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
-		/// For example, the <b>Graphic.color Transition (LeanGraphicColor)</b> component can be used to change the color back to normal.</summary>
-		public LeanPlayer Transitions { get { if (transitions == null) transitions = new LeanPlayer(); return transitions; } } [SerializeField] [UnityEngine.Serialization.FormerlySerializedAs("Transitions")] private LeanPlayer transitions;
+    /// <summary>This component allows you to manually begin transitions from UI button events and other sources.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanManualAnimation")]
+    [AddComponentMenu(LeanTransition.ComponentMenuPrefix + "Lean Manual Animation")]
+    public class LeanManualAnimation : MonoBehaviour
+    {
+        [SerializeField] [FormerlySerializedAs("Transitions")]
+        private LeanPlayer transitions;
 
-		[System.NonSerialized]
-		private HashSet<LeanState> states = new HashSet<LeanState>();
+        [NonSerialized] private bool registered;
 
-		[System.NonSerialized]
-		private bool registered;
+        [NonSerialized] private readonly HashSet<LeanState> states = new();
 
-		/// <summary>This method will execute all transitions on the <b>Transform</b> specified in the <b>Transitions</b> setting.</summary>
-		[ContextMenu("Begin Transitions")]
-		public void BeginTransitions()
-		{
-			if (transitions != null)
-			{
-				if (registered == false)
-				{
-					registered = true;
+        /// <summary>
+        ///     This allows you to specify the transitions this component will begin.
+        ///     You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
+        ///     For example, the <b>Graphic.color Transition (LeanGraphicColor)</b> component can be used to change the color back
+        ///     to normal.
+        /// </summary>
+        public LeanPlayer Transitions
+        {
+            get
+            {
+                if (transitions == null) transitions = new LeanPlayer();
+                return transitions;
+            }
+        }
 
-					LeanTransition.OnFinished += HandleFinished;
-				}
+        protected virtual void OnDestroy()
+        {
+            if (registered)
+                // Comment this out in case you call BeginTransitions after destruction?
+                //registered = false;
 
-				LeanTransition.OnRegistered += HandleRegistered;
+                LeanTransition.OnFinished -= HandleFinished;
+        }
 
-				transitions.Begin();
+        /// <summary>This method will execute all transitions on the <b>Transform</b> specified in the <b>Transitions</b> setting.</summary>
+        [ContextMenu("Begin Transitions")]
+        public void BeginTransitions()
+        {
+            if (transitions != null)
+            {
+                if (registered == false)
+                {
+                    registered = true;
 
-				LeanTransition.OnRegistered -= HandleRegistered;
-			}
-		}
+                    LeanTransition.OnFinished += HandleFinished;
+                }
 
-		/// <summary>This method will stop all transitions that were begun from this component.</summary>
-		[ContextMenu("Stop Transitions")]
-		public void StopTransitions()
-		{
-			foreach (var state in states)
-			{
-				state.Stop();
-			}
-		}
+                LeanTransition.OnRegistered += HandleRegistered;
 
-		/// <summary>This method will skip all transitions that were begun from this component.</summary>
-		[ContextMenu("Skip Transitions")]
-		public void SkipTransitions()
-		{
-			foreach (var state in states)
-			{
-				state.Skip();
-			}
-		}
+                transitions.Begin();
 
-		protected virtual void OnDestroy()
-		{
-			if (registered == true)
-			{
-				// Comment this out in case you call BeginTransitions after destruction?
-				//registered = false;
+                LeanTransition.OnRegistered -= HandleRegistered;
+            }
+        }
 
-				LeanTransition.OnFinished -= HandleFinished;
-			}
-		}
+        /// <summary>This method will stop all transitions that were begun from this component.</summary>
+        [ContextMenu("Stop Transitions")]
+        public void StopTransitions()
+        {
+            foreach (var state in states) state.Stop();
+        }
 
-		private void HandleRegistered(LeanState state)
-		{
-			states.Add(state);
-		}
+        /// <summary>This method will skip all transitions that were begun from this component.</summary>
+        [ContextMenu("Skip Transitions")]
+        public void SkipTransitions()
+        {
+            foreach (var state in states) state.Skip();
+        }
 
-		private void HandleFinished(LeanState state)
-		{
-			states.Remove(state);
-		}
-	}
+        private void HandleRegistered(LeanState state)
+        {
+            states.Add(state);
+        }
+
+        private void HandleFinished(LeanState state)
+        {
+            states.Remove(state);
+        }
+    }
 }
 
 #if UNITY_EDITOR
 namespace Lean.Transition.Editor
 {
-	using UnityEditor;
-	using TARGET = LeanManualAnimation;
+    using TARGET = LeanManualAnimation;
 
-	[CanEditMultipleObjects]
-	[CustomEditor(typeof(TARGET))]
-	public class LeanManualAnimation_Editor : CwEditor
-	{
-		protected override void OnInspector()
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+    [CanEditMultipleObjects]
+    [CustomEditor(typeof(TARGET))]
+    public class LeanManualAnimation_Editor : CwEditor
+    {
+        protected override void OnInspector()
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			Draw("transitions", "This stores the Transforms containing all the transitions that will be performed.");
-		}
-	}
+            Draw("transitions", "This stores the Transforms containing all the transitions that will be performed.");
+        }
+    }
 }
 #endif

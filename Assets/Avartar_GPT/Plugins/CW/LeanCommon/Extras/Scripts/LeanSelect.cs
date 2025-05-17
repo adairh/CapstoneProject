@@ -1,362 +1,389 @@
-using UnityEngine;
-using UnityEngine.Events;
+using System;
 using System.Collections.Generic;
 using CW.Common;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Events;
 
 namespace Lean.Common
 {
-	/// <summary>This is the base class for all object selectors.</summary>
-	[HelpURL(LeanCommon.HelpUrlPrefix + "LeanSelect")]
-	[AddComponentMenu(LeanCommon.ComponentPathPrefix + "Select")]
-	public class LeanSelect : MonoBehaviour
-	{
-		[System.Serializable] public class LeanSelectableEvent : UnityEvent<LeanSelectable> {}
+    /// <summary>This is the base class for all object selectors.</summary>
+    [HelpURL(LeanCommon.HelpUrlPrefix + "LeanSelect")]
+    [AddComponentMenu(LeanCommon.ComponentPathPrefix + "Select")]
+    public class LeanSelect : MonoBehaviour
+    {
+        public enum LimitType
+        {
+            Unlimited,
+            StopAtMax,
+            DeselectFirst
+        }
 
-		public enum ReselectType
-		{
-			KeepSelected,
-			Deselect,
-			DeselectAndSelect,
-			SelectAgain
-		}
+        public enum ReselectType
+        {
+            KeepSelected,
+            Deselect,
+            DeselectAndSelect,
+            SelectAgain
+        }
 
-		public enum LimitType
-		{
-			Unlimited,
-			StopAtMax,
-			DeselectFirst
-		}
+        public static LinkedList<LeanSelect> Instances = new();
+        [SerializeField] private bool deselectWithNothing;
+        [SerializeField] private LimitType limit;
+        [SerializeField] private int maxSelectables = 5;
+        [SerializeField] private ReselectType reselect = ReselectType.SelectAgain;
+        [SerializeField] protected List<LeanSelectable> selectables;
+        [SerializeField] private LeanSelectableEvent onSelected;
+        [SerializeField] private LeanSelectableEvent onDeselected;
+        [SerializeField] private UnityEvent onNothing;
+        [NonSerialized] private LinkedListNode<LeanSelect> instancesNode;
 
-		public static LinkedList<LeanSelect> Instances = new LinkedList<LeanSelect>(); [System.NonSerialized] private LinkedListNode<LeanSelect> instancesNode;
+        /// <summary>
+        ///     If you attempt to select a point that has no objects underneath, should all currently selected objects be
+        ///     deselected?
+        /// </summary>
+        public bool DeselectWithNothing
+        {
+            set => deselectWithNothing = value;
+            get => deselectWithNothing;
+        }
 
-		/// <summary>If you attempt to select a point that has no objects underneath, should all currently selected objects be deselected?</summary>
-		public bool DeselectWithNothing { set { deselectWithNothing = value; } get { return deselectWithNothing; } } [SerializeField] private bool deselectWithNothing;
+        /// <summary>
+        ///     If you have selected the maximum number of objects, what should happen?
+        ///     Unlimited = Always allow selection.
+        ///     StopAtMax = Allow selection up to the <b>MaxSelectables</b> count, then do nothing.
+        ///     DeselectFirst = Always allow selection, but deselect the first object when the <b>MaxSelectables</b> count is
+        ///     reached.
+        /// </summary>
+        public LimitType Limit
+        {
+            set => limit = value;
+            get => limit;
+        }
 
-		/// <summary>If you have selected the maximum number of objects, what should happen?
-		/// Unlimited = Always allow selection.
-		/// StopAtMax = Allow selection up to the <b>MaxSelectables</b> count, then do nothing.
-		/// DeselectFirst = Always allow selection, but deselect the first object when the <b>MaxSelectables</b> count is reached.</summary>
-		public LimitType Limit { set { limit = value; } get { return limit; } } [SerializeField] private LimitType limit;
+        /// <summary>
+        ///     The maximum number of selectables that can be selected at the same time.
+        ///     0 = Unlimited.
+        /// </summary>
+        public int MaxSelectables
+        {
+            set => maxSelectables = value;
+            get => maxSelectables;
+        }
 
-		/// <summary>The maximum number of selectables that can be selected at the same time.
-		/// 0 = Unlimited.</summary>
-		public int MaxSelectables { set { maxSelectables = value; } get { return maxSelectables; } } [SerializeField] private int maxSelectables = 5;
+        /// <summary>If you select an already selected selectable, what should happen?</summary>
+        public ReselectType Reselect
+        {
+            set => reselect = value;
+            get => reselect;
+        }
 
-		/// <summary>If you select an already selected selectable, what should happen?</summary>
-		public ReselectType Reselect { set { reselect = value; } get { return reselect; } } [SerializeField] private ReselectType reselect = ReselectType.SelectAgain;
+        /// <summary>This stores all objects selected by this component.</summary>
+        public List<LeanSelectable> Selectables
+        {
+            get
+            {
+                if (selectables == null) selectables = new List<LeanSelectable>();
+                return selectables;
+            }
+        }
 
-		/// <summary>This stores all objects selected by this component.</summary>
-		public List<LeanSelectable> Selectables { get { if (selectables == null) selectables = new List<LeanSelectable>(); return selectables; } } [SerializeField] protected List<LeanSelectable> selectables;
+        /// <summary>This is invoked when an object is selected.</summary>
+        public LeanSelectableEvent OnSelected
+        {
+            get
+            {
+                if (onSelected == null) onSelected = new LeanSelectableEvent();
+                return onSelected;
+            }
+        }
 
-		/// <summary>This is invoked when an object is selected.</summary>
-		public LeanSelectableEvent OnSelected { get { if (onSelected == null) onSelected = new LeanSelectableEvent(); return onSelected; } } [SerializeField] private LeanSelectableEvent onSelected;
+        /// <summary>This is invoked when an object is deselected.</summary>
+        public LeanSelectableEvent OnDeselected
+        {
+            get
+            {
+                if (onDeselected == null) onDeselected = new LeanSelectableEvent();
+                return onDeselected;
+            }
+        }
 
-		/// <summary>This is invoked when an object is deselected.</summary>
-		public LeanSelectableEvent OnDeselected { get { if (onDeselected == null) onDeselected = new LeanSelectableEvent(); return onDeselected; } } [SerializeField] private LeanSelectableEvent onDeselected;
+        /// <summary>This is invoked when you try to select, but nothing is found.</summary>
+        public UnityEvent OnNothing
+        {
+            get
+            {
+                if (onNothing == null) onNothing = new UnityEvent();
+                return onNothing;
+            }
+        }
 
-		/// <summary>This is invoked when you try to select, but nothing is found.</summary>
-		public UnityEvent OnNothing { get { if (onNothing == null) onNothing = new UnityEvent(); return onNothing; } } [SerializeField] private UnityEvent onNothing;
+        protected virtual void OnEnable()
+        {
+            instancesNode = Instances.AddLast(this);
+        }
 
-		public static event System.Action<LeanSelect, LeanSelectable> OnAnySelected;
+        protected virtual void OnDisable()
+        {
+            Instances.Remove(instancesNode);
+            instancesNode = null;
+        }
 
-		public static event System.Action<LeanSelect, LeanSelectable> OnAnyDeselected;
+        protected virtual void OnDestroy()
+        {
+            DeselectAll();
+        }
 
-		public bool IsSelected(LeanSelectable selectable)
-		{
-			return selectables != null && selectables.Contains(selectable);
-		}
+        public static event Action<LeanSelect, LeanSelectable> OnAnySelected;
 
-		/// <summary>This will select the specified object and add it to this component's <b>Selectables</b> list, if it isn't already there.</summary>
-		public void Select(LeanSelectable selectable)
-		{
-			TrySelect(selectable);
-		}
+        public static event Action<LeanSelect, LeanSelectable> OnAnyDeselected;
 
-		/// <summary>This remove the specified object from this component's <b>Selectables</b> list if present, and deselect it.</summary>
-		public void Deselect(LeanSelectable selectable)
-		{
-			if (selectable != null && selectables != null)
-			{
-				TryDeselect(selectable);
-			}
-		}
+        public bool IsSelected(LeanSelectable selectable)
+        {
+            return selectables != null && selectables.Contains(selectable);
+        }
 
-		protected bool TrySelect(LeanSelectable selectable)
-		{
-			if (CwHelper.Enabled(selectable) == true)
-			{
-				if (TryReselect(selectable) == true) 
-				{
-					if (Selectables.Contains(selectable) == false) // NOTE: Property
-					{
-						switch (limit)
-						{
-							case LimitType.Unlimited:
-							{
-							}
-							break;
+        /// <summary>
+        ///     This will select the specified object and add it to this component's <b>Selectables</b> list, if it isn't
+        ///     already there.
+        /// </summary>
+        public void Select(LeanSelectable selectable)
+        {
+            TrySelect(selectable);
+        }
 
-							case LimitType.StopAtMax:
-							{
-								if (selectables.Count >= maxSelectables)
-								{
-									return false;
-								}
-							}
-							break;
+        /// <summary>This remove the specified object from this component's <b>Selectables</b> list if present, and deselect it.</summary>
+        public void Deselect(LeanSelectable selectable)
+        {
+            if (selectable != null && selectables != null) TryDeselect(selectable);
+        }
 
-							case LimitType.DeselectFirst:
-							{
-								if (selectables.Count > 0 && selectables.Count >= maxSelectables)
-								{
-									TryDeselect(selectables[0]);
-								}
-							}
-							break;
-						}
-					}
+        protected bool TrySelect(LeanSelectable selectable)
+        {
+            if (CwHelper.Enabled(selectable))
+            {
+                if (TryReselect(selectable))
+                {
+                    if (Selectables.Contains(selectable) == false) // NOTE: Property
+                        switch (limit)
+                        {
+                            case LimitType.Unlimited:
+                            {
+                            }
+                                break;
 
-					selectables.Add(selectable);
+                            case LimitType.StopAtMax:
+                            {
+                                if (selectables.Count >= maxSelectables) return false;
+                            }
+                                break;
 
-					if (onSelected != null) onSelected.Invoke(selectable);
+                            case LimitType.DeselectFirst:
+                            {
+                                if (selectables.Count > 0 && selectables.Count >= maxSelectables)
+                                    TryDeselect(selectables[0]);
+                            }
+                                break;
+                        }
 
-					if (OnAnySelected != null) OnAnySelected.Invoke(this, selectable);
+                    selectables.Add(selectable);
 
-					selectable.InvokeOnSelected(this);
+                    if (onSelected != null) onSelected.Invoke(selectable);
 
-					return true;
-				}
-			}
-			// Nothing was selected?
-			else
-			{
-				if (onNothing != null) onNothing.Invoke();
+                    if (OnAnySelected != null) OnAnySelected.Invoke(this, selectable);
 
-				if (deselectWithNothing == true)
-				{
-					DeselectAll();
-				}
-			}
+                    selectable.InvokeOnSelected(this);
 
-			return false;
-		}
+                    return true;
+                }
+            }
+            // Nothing was selected?
+            else
+            {
+                if (onNothing != null) onNothing.Invoke();
 
-		private bool TryReselect(LeanSelectable selectable)
-		{
-			switch (reselect)
-			{
-				case ReselectType.KeepSelected:
-				{
-					if (Selectables.Contains(selectable) == false) // NOTE: Property
-					{
-						return true;
-					}
-				}
-				break;
+                if (deselectWithNothing) DeselectAll();
+            }
 
-				case ReselectType.Deselect:
-				{
-					if (Selectables.Contains(selectable) == false) // NOTE: Property
-					{
-						return true;
-					}
-					else
-					{
-						Deselect(selectable);
-					}
-				}
-				break;
+            return false;
+        }
 
-				case ReselectType.DeselectAndSelect:
-				{
-					if (Selectables.Contains(selectable) == true) // NOTE: Property
-					{
-						Deselect(selectable);
-					}
-				}
-				return true;
+        private bool TryReselect(LeanSelectable selectable)
+        {
+            switch (reselect)
+            {
+                case ReselectType.KeepSelected:
+                {
+                    if (Selectables.Contains(selectable) == false) // NOTE: Property
+                        return true;
+                }
+                    break;
 
-				case ReselectType.SelectAgain:
-				{
-				}
-				return true;
-			}
+                case ReselectType.Deselect:
+                {
+                    if (Selectables.Contains(selectable) == false) // NOTE: Property
+                        return true;
+                    Deselect(selectable);
+                }
+                    break;
 
-			return false;
-		}
+                case ReselectType.DeselectAndSelect:
+                {
+                    if (Selectables.Contains(selectable)) // NOTE: Property
+                        Deselect(selectable);
+                }
+                    return true;
 
-		protected bool TryDeselect(LeanSelectable selectable)
-		{
-			if (selectables != null)
-			{
-				var index = selectables.IndexOf(selectable);
+                case ReselectType.SelectAgain:
+                {
+                }
+                    return true;
+            }
 
-				if (index >= 0)
-				{
-					return TryDeselect(index);
-				}
-			}
+            return false;
+        }
 
-			return false;
-		}
+        protected bool TryDeselect(LeanSelectable selectable)
+        {
+            if (selectables != null)
+            {
+                var index = selectables.IndexOf(selectable);
 
-		protected bool TryDeselect(int index)
-		{
-			var success = false;
+                if (index >= 0) return TryDeselect(index);
+            }
 
-			if (selectables != null && index >= 0 && index < selectables.Count)
-			{
-				var selectable = selectables[index];
+            return false;
+        }
 
-				selectables.RemoveAt(index);
+        protected bool TryDeselect(int index)
+        {
+            var success = false;
 
-				if (selectable != null)
-				{
-					selectable.InvokeOnDeslected(this);
+            if (selectables != null && index >= 0 && index < selectables.Count)
+            {
+                var selectable = selectables[index];
 
-					if (onDeselected != null)
-					{
-						onDeselected.Invoke(selectable);
-					}
+                selectables.RemoveAt(index);
 
-					if (OnAnyDeselected != null)
-					{
-						OnAnyDeselected.Invoke(this, selectable);
-					}
-				}
+                if (selectable != null)
+                {
+                    selectable.InvokeOnDeslected(this);
 
-				success = true;
-			}
+                    if (onDeselected != null) onDeselected.Invoke(selectable);
 
-			return success;
-		}
+                    if (OnAnyDeselected != null) OnAnyDeselected.Invoke(this, selectable);
+                }
 
-		/// <summary>This will deselect all objects that were selected by this component.</summary>
-		[ContextMenu("Deselect All")]
-		public void DeselectAll()
-		{
-			if (selectables != null)
-			{
-				while (selectables.Count > 0)
-				{
-					var index      = selectables.Count - 1;
-					var selectable = selectables[index];
+                success = true;
+            }
 
-					selectables.RemoveAt(index);
+            return success;
+        }
 
-					selectable.InvokeOnDeslected(this);
-				}
-			}
-		}
+        /// <summary>This will deselect all objects that were selected by this component.</summary>
+        [ContextMenu("Deselect All")]
+        public void DeselectAll()
+        {
+            if (selectables != null)
+                while (selectables.Count > 0)
+                {
+                    var index = selectables.Count - 1;
+                    var selectable = selectables[index];
 
-		/// <summary>This will deselect objects in chronological order until the selected object count reaches the specified amount.</summary>
-		public void Cull(int maxCount)
-		{
-			if (selectables != null)
-			{
-				while (selectables.Count > 0 && selectables.Count > maxCount)
-				{
-					var selectable = selectables[0];
+                    selectables.RemoveAt(index);
 
-					selectables.RemoveAt(0);
+                    selectable.InvokeOnDeslected(this);
+                }
+        }
 
-					if (selectable != null)
-					{
-						if (selectable != null)
-						{
-							Deselect(selectable);
-						}
-					}
-				}
-			}
-		}
+        /// <summary>
+        ///     This will deselect objects in chronological order until the selected object count reaches the specified
+        ///     amount.
+        /// </summary>
+        public void Cull(int maxCount)
+        {
+            if (selectables != null)
+                while (selectables.Count > 0 && selectables.Count > maxCount)
+                {
+                    var selectable = selectables[0];
 
-		protected virtual void OnEnable()
-		{
-			instancesNode = Instances.AddLast(this);
-		}
+                    selectables.RemoveAt(0);
 
-		protected virtual void OnDisable()
-		{
-			Instances.Remove(instancesNode); instancesNode = null;
-		}
+                    if (selectable != null)
+                        if (selectable != null)
+                            Deselect(selectable);
+                }
+        }
 
-		protected virtual void OnDestroy()
-		{
-			DeselectAll();
-		}
-	}
+        [Serializable]
+        public class LeanSelectableEvent : UnityEvent<LeanSelectable>
+        {
+        }
+    }
 }
 
 #if UNITY_EDITOR
 namespace Lean.Common.Editor
 {
-	using UnityEditor;
-	using TARGET = LeanSelect;
+    using TARGET = LeanSelect;
 
-	[CanEditMultipleObjects]
-	[CustomEditor(typeof(TARGET))]
-	public class LeanSelect_Editor : CwEditor
-	{
-		[System.NonSerialized] TARGET tgt; [System.NonSerialized] TARGET[] tgts;
+    [CanEditMultipleObjects]
+    [CustomEditor(typeof(TARGET))]
+    public class LeanSelect_Editor : CwEditor
+    {
+        [NonSerialized] private TARGET tgt;
+        [NonSerialized] private TARGET[] tgts;
 
-		protected override void OnInspector()
-		{
-			GetTargets(out tgt, out tgts);
+        protected override void OnInspector()
+        {
+            GetTargets(out tgt, out tgts);
 
-			Draw("deselectWithNothing", "If you attempt to select a point that has no objects underneath, should all currently selected objects be deselected?");
-			Draw("limit", "If you have selected the maximum number of objects, what should happen?\n\nUnlimited = Always allow selection.\n\nStopAtMax = Allow selection up to the <b>MaxSelectables</b> count, then do nothing.\n\nDeselectFirst = Always allow selection, but deselect the first object when the <b>MaxSelectables</b> count is reached.");
-			if (Any(tgts, t => t.Limit != LeanSelect.LimitType.Unlimited))
-			{
-				BeginIndent();
-					Draw("maxSelectables", "The maximum number of selectables that can be selected at the same time.\n\n0 = Unlimited.");
-				EndIndent();
-			}
-			Draw("reselect", "If you select an already selected selectable, what should happen?");
+            Draw("deselectWithNothing",
+                "If you attempt to select a point that has no objects underneath, should all currently selected objects be deselected?");
+            Draw("limit",
+                "If you have selected the maximum number of objects, what should happen?\n\nUnlimited = Always allow selection.\n\nStopAtMax = Allow selection up to the <b>MaxSelectables</b> count, then do nothing.\n\nDeselectFirst = Always allow selection, but deselect the first object when the <b>MaxSelectables</b> count is reached.");
+            if (Any(tgts, t => t.Limit != LeanSelect.LimitType.Unlimited))
+            {
+                BeginIndent();
+                Draw("maxSelectables",
+                    "The maximum number of selectables that can be selected at the same time.\n\n0 = Unlimited.");
+                EndIndent();
+            }
 
-			Separator();
+            Draw("reselect", "If you select an already selected selectable, what should happen?");
 
-			var select   = (LeanSelectable)UnityEditor.EditorGUILayout.ObjectField(new GUIContent("Select", "Drop a selectable object here to select it."), null, typeof(LeanSelectable), true);
-			var deselect = (LeanSelectable)UnityEditor.EditorGUILayout.ObjectField(new GUIContent("Deselect", "Drop a selectable object here to deselect it."), null, typeof(LeanSelectable), true);
+            Separator();
 
-			BeginDisabled();
-				Draw("selectables", "This stores all objects selected by this component.");
-			EndDisabled();
+            var select = (LeanSelectable)EditorGUILayout.ObjectField(
+                new GUIContent("Select", "Drop a selectable object here to select it."), null, typeof(LeanSelectable),
+                true);
+            var deselect = (LeanSelectable)EditorGUILayout.ObjectField(
+                new GUIContent("Deselect", "Drop a selectable object here to deselect it."), null,
+                typeof(LeanSelectable), true);
 
-			Separator();
+            BeginDisabled();
+            Draw("selectables", "This stores all objects selected by this component.");
+            EndDisabled();
 
-			var showUnusedEvents = DrawFoldout("Show Unused Events", "Show all events?");
+            Separator();
 
-			DrawEvents(showUnusedEvents);
+            var showUnusedEvents = DrawFoldout("Show Unused Events", "Show all events?");
 
-			if (select != null)
-			{
-				Each(tgts, t => t.Select(select), true);
-			}
+            DrawEvents(showUnusedEvents);
 
-			if (deselect != null)
-			{
-				Each(tgts, t => t.Deselect(deselect), true);
-			}
-		}
+            if (select != null) Each(tgts, t => t.Select(select), true);
 
-		protected virtual void DrawEvents(bool showUnusedEvents)
-		{
-			if (Any(tgts, t => t.OnSelected.GetPersistentEventCount() > 0) == true || showUnusedEvents == true)
-			{
-				Draw("onSelected");
-			}
+            if (deselect != null) Each(tgts, t => t.Deselect(deselect), true);
+        }
 
-			if (Any(tgts, t => t.OnDeselected.GetPersistentEventCount() > 0) == true || showUnusedEvents == true)
-			{
-				Draw("onDeselected");
-			}
+        protected virtual void DrawEvents(bool showUnusedEvents)
+        {
+            if (Any(tgts, t => t.OnSelected.GetPersistentEventCount() > 0) || showUnusedEvents) Draw("onSelected");
 
-			if (Any(tgts, t => t.OnNothing.GetPersistentEventCount() > 0) == true || showUnusedEvents == true)
-			{
-				Draw("onNothing");
-			}
-		}
-	}
+            if (Any(tgts, t => t.OnDeselected.GetPersistentEventCount() > 0) || showUnusedEvents) Draw("onDeselected");
+
+            if (Any(tgts, t => t.OnNothing.GetPersistentEventCount() > 0) || showUnusedEvents) Draw("onNothing");
+        }
+    }
 }
 #endif

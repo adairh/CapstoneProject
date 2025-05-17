@@ -1,81 +1,86 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to transition the specified Transform.rotation to the target value.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanTransformRotation")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Transform/Transform.rotation" + LeanTransition.MethodsMenuSuffix + "(LeanTransformRotation)")]
-	public class LeanTransformRotation : LeanMethodWithStateAndTarget
-	{
-		public override System.Type GetTargetType()
-		{
-			return typeof(Transform);
-		}
+    /// <summary>This component allows you to transition the specified Transform.rotation to the target value.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanTransformRotation")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Transform/Transform.rotation" +
+                      LeanTransition.MethodsMenuSuffix + "(LeanTransformRotation)")]
+    public class LeanTransformRotation : LeanMethodWithStateAndTarget
+    {
+        public State Data;
 
-		public override void Register()
-		{
-			PreviousState = Register(GetAliasedTarget(Data.Target), Data.Rotation, Data.Duration, Data.Ease);
-		}
+        public override Type GetTargetType()
+        {
+            return typeof(Transform);
+        }
 
-		public static LeanState Register(Transform target, Quaternion rotation, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+        public override void Register()
+        {
+            PreviousState = Register(GetAliasedTarget(Data.Target), Data.Rotation, Data.Duration, Data.Ease);
+        }
 
-			state.Rotation = rotation;
-			state.Ease     = ease;
+        public static LeanState Register(Transform target, Quaternion rotation, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Rotation = rotation;
+            state.Ease = ease;
 
-		[System.Serializable]
-		public class State : LeanStateWithTarget<Transform>
-		{
-			[Tooltip("The rotation we will transition to.")]
-			public Quaternion Rotation = Quaternion.identity;
+            return LeanTransition.Register(state, duration);
+        }
 
-			[Tooltip("The ease method that will be used for the transition.")]
-			public LeanEase Ease = LeanEase.Smooth;
+        [Serializable]
+        public class State : LeanStateWithTarget<Transform>
+        {
+            public static Stack<State> Pool = new();
 
-			[System.NonSerialized] private Quaternion oldRotation;
+            [Tooltip("The rotation we will transition to.")]
+            public Quaternion Rotation = Quaternion.identity;
 
-			public override int CanFill
-			{
-				get
-				{
-					return Target != null && Target.rotation != Rotation ? 1 : 0;
-				}
-			}
+            [Tooltip("The ease method that will be used for the transition.")]
+            public LeanEase Ease = LeanEase.Smooth;
 
-			public override void FillWithTarget()
-			{
-				Rotation = Target.rotation;
-			}
+            [NonSerialized] private Quaternion oldRotation;
 
-			public override void BeginWithTarget()
-			{
-				oldRotation = Target.rotation;
-			}
+            public override int CanFill => Target != null && Target.rotation != Rotation ? 1 : 0;
 
-			public override void UpdateWithTarget(float progress)
-			{
-				Target.rotation = Quaternion.SlerpUnclamped(oldRotation, Rotation, Smooth(Ease, progress));
-			}
+            public override void FillWithTarget()
+            {
+                Rotation = Target.rotation;
+            }
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+            public override void BeginWithTarget()
+            {
+                oldRotation = Target.rotation;
+            }
 
-		public State Data;
-	}
+            public override void UpdateWithTarget(float progress)
+            {
+                Target.rotation = Quaternion.SlerpUnclamped(oldRotation, Rotation, Smooth(Ease, progress));
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static Transform rotationTransition(this Transform target, Quaternion rotation, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformRotation.Register(target, rotation, duration, ease); return target;
-		}
-	}
+    public static partial class LeanExtensions
+    {
+        public static Transform rotationTransition(this Transform target, Quaternion rotation, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformRotation.Register(target, rotation, duration, ease);
+            return target;
+        }
+    }
 }

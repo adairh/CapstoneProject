@@ -3,9 +3,8 @@ using UnityEngine.UI;
 
 public class MuteButton : MonoBehaviour
 {
-    private Image image;
-
     public Sprite soundOn, soundOff;
+    private Image image;
 
     private void Start()
     {

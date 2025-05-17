@@ -1,212 +1,219 @@
-using UnityEngine;
-using UnityEngine.Events;
+using System;
 using System.Collections.Generic;
 using Lean.Common;
+using Lean.Common.Editor;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Events;
 
 namespace Lean.Touch
 {
-	/// <summary>This component allows you to select LeanSelectable components.
-	/// To use it, you can call the SelectScreenPosition method from somewhere (e.g. the LeanFingerTap.OnTap event).</summary>
+	/// <summary>
+	///     This component allows you to select LeanSelectable components.
+	///     To use it, you can call the SelectScreenPosition method from somewhere (e.g. the LeanFingerTap.OnTap event).
+	/// </summary>
 	[HelpURL(LeanTouch.HelpUrlPrefix + "LeanSelectByFinger")]
-	[AddComponentMenu(LeanTouch.ComponentPathPrefix + "Select By Finger")]
-	public class LeanSelectByFinger : LeanSelect
-	{
-		[System.Serializable] public class LeanSelectableLeanFingerEvent : UnityEvent<LeanSelectable, LeanFinger> {}
+    [AddComponentMenu(LeanTouch.ComponentPathPrefix + "Select By Finger")]
+    public class LeanSelectByFinger : LeanSelect
+    {
+        public LeanScreenQuery ScreenQuery = new(LeanScreenQuery.MethodType.Raycast);
+        [SerializeField] private bool deselectWithFingers;
+        [SerializeField] private LeanSelectableLeanFingerEvent onSelectedFinger;
 
-		public LeanScreenQuery ScreenQuery = new LeanScreenQuery(LeanScreenQuery.MethodType.Raycast);
+        /// <summary>
+        ///     If you enable this then any selected object will automatically be deselected if the finger used to select it
+        ///     is no longer touching the screen.
+        /// </summary>
+        public bool DeselectWithFingers
+        {
+            set => deselectWithFingers = value;
+            get => deselectWithFingers;
+        }
 
-		/// <summary>If you enable this then any selected object will automatically be deselected if the finger used to select it is no longer touching the screen.</summary>
-		public bool DeselectWithFingers { set { deselectWithFingers = value; } get { return deselectWithFingers; } } [SerializeField] private bool deselectWithFingers;
+        /// <summary>This is invoked when an object is selected.</summary>
+        public LeanSelectableLeanFingerEvent OnSelectedFinger
+        {
+            get
+            {
+                if (onSelectedFinger == null) onSelectedFinger = new LeanSelectableLeanFingerEvent();
+                return onSelectedFinger;
+            }
+        }
 
-		/// <summary>This is invoked when an object is selected.</summary>
-		public LeanSelectableLeanFingerEvent OnSelectedFinger { get { if (onSelectedFinger == null) onSelectedFinger = new LeanSelectableLeanFingerEvent(); return onSelectedFinger; } } [SerializeField] private LeanSelectableLeanFingerEvent onSelectedFinger;
+        protected virtual void Update()
+        {
+            if (deselectWithFingers && selectables != null)
+                for (var i = selectables.Count - 1; i >= 0; i--)
+                {
+                    var selectable = selectables[i];
 
-		public static event System.Action<LeanSelectByFinger, LeanSelectable, LeanFinger> OnAnySelectedFinger;
+                    if (ShouldRemoveSelectable(selectable)) Deselect(selectable);
+                }
+        }
 
-		/// <summary>This method allows you to initiate selection at the finger's <b>StartScreenPosition</b>.
-		/// NOTE: This method be called from somewhere for this component to work (e.g. LeanFingerTap).</summary>
-		public void SelectStartScreenPosition(LeanFinger finger)
-		{
-			SelectScreenPosition(finger, finger.StartScreenPosition);
-		}
+        public static event Action<LeanSelectByFinger, LeanSelectable, LeanFinger> OnAnySelectedFinger;
 
-		/// <summary>This method allows you to initiate selection at the finger's current <b>ScreenPosition</b>.
-		/// NOTE: This method be called from somewhere for this component to work (e.g. LeanFingerTap).</summary>
-		public void SelectScreenPosition(LeanFinger finger)
-		{
-			SelectScreenPosition(finger, finger.ScreenPosition);
-		}
+        /// <summary>
+        ///     This method allows you to initiate selection at the finger's <b>StartScreenPosition</b>.
+        ///     NOTE: This method be called from somewhere for this component to work (e.g. LeanFingerTap).
+        /// </summary>
+        public void SelectStartScreenPosition(LeanFinger finger)
+        {
+            SelectScreenPosition(finger, finger.StartScreenPosition);
+        }
 
-		/// <summary>This method allows you to initiate selection of a finger at a custom screen position.
-		/// NOTE: This method be called from a custom script for this component to work.</summary>
-		public void SelectScreenPosition(LeanFinger finger, Vector2 screenPosition)
-		{
-			var result = ScreenQuery.Query<LeanSelectable>(gameObject, screenPosition);
+        /// <summary>
+        ///     This method allows you to initiate selection at the finger's current <b>ScreenPosition</b>.
+        ///     NOTE: This method be called from somewhere for this component to work (e.g. LeanFingerTap).
+        /// </summary>
+        public void SelectScreenPosition(LeanFinger finger)
+        {
+            SelectScreenPosition(finger, finger.ScreenPosition);
+        }
 
-			Select(result, finger);
-		}
+        /// <summary>
+        ///     This method allows you to initiate selection of a finger at a custom screen position.
+        ///     NOTE: This method be called from a custom script for this component to work.
+        /// </summary>
+        public void SelectScreenPosition(LeanFinger finger, Vector2 screenPosition)
+        {
+            var result = ScreenQuery.Query<LeanSelectable>(gameObject, screenPosition);
 
-		/// <summary>This method allows you to manually select an object with the specified finger using this component's selection settings.</summary>
-		public void Select(LeanSelectable selectable, LeanFinger finger)
-		{
-			var pair = new LeanSelectableByFinger.SelectedPair() { Finger = finger, Select = this };
+            Select(result, finger);
+        }
 
-			if (TrySelect(selectable) == true)
-			{
-				var selectableByFinger = selectable as LeanSelectableByFinger;
+        /// <summary>
+        ///     This method allows you to manually select an object with the specified finger using this component's selection
+        ///     settings.
+        /// </summary>
+        public void Select(LeanSelectable selectable, LeanFinger finger)
+        {
+            var pair = new LeanSelectableByFinger.SelectedPair { Finger = finger, Select = this };
 
-				if (selectableByFinger != null)
-				{
-					if (selectableByFinger.SelectingPairs.Contains(pair) == false)
-					{
-						selectableByFinger.SelectingPairs.Add(pair);
-					}
-					
-					selectableByFinger.OnSelectedFinger.Invoke(finger);
-					selectableByFinger.OnSelectedSelectFinger.Invoke(this, finger);
+            if (TrySelect(selectable))
+            {
+                var selectableByFinger = selectable as LeanSelectableByFinger;
 
-					LeanSelectableByFinger.InvokeAnySelectedFinger(this, selectableByFinger, finger);
+                if (selectableByFinger != null)
+                {
+                    if (selectableByFinger.SelectingPairs.Contains(pair) == false)
+                        selectableByFinger.SelectingPairs.Add(pair);
 
-					if (finger.Up == true)
-					{
-						selectableByFinger.OnSelectedFingerUp.Invoke(finger);
-						selectableByFinger.OnSelectedSelectFingerUp.Invoke(this, finger);
+                    selectableByFinger.OnSelectedFinger.Invoke(finger);
+                    selectableByFinger.OnSelectedSelectFinger.Invoke(this, finger);
 
-						selectableByFinger.SelectingPairs.Remove(pair);
-					}
-				}
+                    LeanSelectableByFinger.InvokeAnySelectedFinger(this, selectableByFinger, finger);
 
-				if (onSelectedFinger != null) onSelectedFinger.Invoke(selectable, finger);
+                    if (finger.Up)
+                    {
+                        selectableByFinger.OnSelectedFingerUp.Invoke(finger);
+                        selectableByFinger.OnSelectedSelectFingerUp.Invoke(this, finger);
 
-				if (OnAnySelectedFinger != null) OnAnySelectedFinger.Invoke(this, selectable, finger);
-			}
-			else
-			{
-				if (finger.Up == false)
-				{
-					var selectableByFinger = selectable as LeanSelectableByFinger;
+                        selectableByFinger.SelectingPairs.Remove(pair);
+                    }
+                }
 
-					if (selectableByFinger != null)
-					{
-						if (selectableByFinger.SelectingPairs.Contains(pair) == false)
-						{
-							selectableByFinger.SelectingPairs.Add(pair);
-						}
-					}
-				}
-			}
-		}
+                if (onSelectedFinger != null) onSelectedFinger.Invoke(selectable, finger);
 
-		protected virtual void Update()
-		{
-			if (deselectWithFingers == true && selectables != null)
-			{
-				for (var i = selectables.Count - 1; i >= 0; i--)
-				{
-					var selectable = selectables[i];
+                if (OnAnySelectedFinger != null) OnAnySelectedFinger.Invoke(this, selectable, finger);
+            }
+            else
+            {
+                if (finger.Up == false)
+                {
+                    var selectableByFinger = selectable as LeanSelectableByFinger;
 
-					if (ShouldRemoveSelectable(selectable) == true)
-					{
-						Deselect(selectable);
-					}
-				}
-			}
-		}
+                    if (selectableByFinger != null)
+                        if (selectableByFinger.SelectingPairs.Contains(pair) == false)
+                            selectableByFinger.SelectingPairs.Add(pair);
+                }
+            }
+        }
 
-		private bool ShouldRemoveSelectable(LeanSelectable selectable)
-		{
-			var selectableByFinger = selectable as LeanSelectableByFinger;
+        private bool ShouldRemoveSelectable(LeanSelectable selectable)
+        {
+            var selectableByFinger = selectable as LeanSelectableByFinger;
 
-			if (selectableByFinger != null)
-			{
-				foreach (var pair in selectableByFinger.SelectingPairs)
-				{
-					if (pair.Finger.Up == false)
-					{
-						return false;
-					}
-				}
-			}
+            if (selectableByFinger != null)
+                foreach (var pair in selectableByFinger.SelectingPairs)
+                    if (pair.Finger.Up == false)
+                        return false;
 
-			return true;
-		}
+            return true;
+        }
 
-		/// <summary>This allows you to replace the currently selected objects with the ones in the specified list. This is useful if you're doing box selection or switching selection groups.</summary>
-		public void ReplaceSelection(List<LeanSelectable> newSelectables, LeanFinger finger)
-		{
-			if (newSelectables != null)
-			{
-				// Deselect missing selectables
-				if (selectables != null)
-				{
-					for (var i = selectables.Count - 1; i >= 0; i--)
-					{
-						var selectable = selectables[i];
+        /// <summary>
+        ///     This allows you to replace the currently selected objects with the ones in the specified list. This is useful
+        ///     if you're doing box selection or switching selection groups.
+        /// </summary>
+        public void ReplaceSelection(List<LeanSelectable> newSelectables, LeanFinger finger)
+        {
+            if (newSelectables != null)
+            {
+                // Deselect missing selectables
+                if (selectables != null)
+                    for (var i = selectables.Count - 1; i >= 0; i--)
+                    {
+                        var selectable = selectables[i];
 
-						if (newSelectables.Contains(selectable) == false)
-						{
-							Deselect(selectable);
-						}
-					}
-				}
+                        if (newSelectables.Contains(selectable) == false) Deselect(selectable);
+                    }
 
-				// Select new selectables
-				foreach (var selectable in newSelectables)
-				{
-					if (selectables == null || selectables.Contains(selectable) == false)
-					{
-						var selectableByFinger = selectable as LeanSelectableByFinger;
+                // Select new selectables
+                foreach (var selectable in newSelectables)
+                    if (selectables == null || selectables.Contains(selectable) == false)
+                    {
+                        var selectableByFinger = selectable as LeanSelectableByFinger;
 
-						if (selectableByFinger != null)
-						{
-							Select(selectableByFinger, finger);
-						}
-						else
-						{
-							Select(selectable);
-						}
-					}
-				}
-			}
-			else
-			{
-				DeselectAll();
-			}
-		}
-	}
+                        if (selectableByFinger != null)
+                            Select(selectableByFinger, finger);
+                        else
+                            Select(selectable);
+                    }
+            }
+            else
+            {
+                DeselectAll();
+            }
+        }
+
+        [Serializable]
+        public class LeanSelectableLeanFingerEvent : UnityEvent<LeanSelectable, LeanFinger>
+        {
+        }
+    }
 }
 
 #if UNITY_EDITOR
 namespace Lean.Touch.Editor
 {
-	using UnityEditor;
-	using TARGET = LeanSelectByFinger;
+    using TARGET = LeanSelectByFinger;
 
-	[CanEditMultipleObjects]
-	[CustomEditor(typeof(TARGET))]
-	public class LeanSelectByFinger_Editor : Common.Editor.LeanSelect_Editor
-	{
-		[System.NonSerialized] TARGET tgt; [System.NonSerialized] TARGET[] tgts;
+    [CanEditMultipleObjects]
+    [CustomEditor(typeof(TARGET))]
+    public class LeanSelectByFinger_Editor : LeanSelect_Editor
+    {
+        [NonSerialized] private TARGET tgt;
+        [NonSerialized] private TARGET[] tgts;
 
-		protected override void OnInspector()
-		{
-			GetTargets(out tgt, out tgts);
+        protected override void OnInspector()
+        {
+            GetTargets(out tgt, out tgts);
 
-			Draw("ScreenQuery");
-			Draw("deselectWithFingers", "If you enable this then any selected object will automatically be deselected if the finger used to select it is no longer touching the screen.");
+            Draw("ScreenQuery");
+            Draw("deselectWithFingers",
+                "If you enable this then any selected object will automatically be deselected if the finger used to select it is no longer touching the screen.");
 
-			base.OnInspector();
-		}
+            base.OnInspector();
+        }
 
-		protected override void DrawEvents(bool showUnusedEvents)
-		{
-			base.DrawEvents(showUnusedEvents);
+        protected override void DrawEvents(bool showUnusedEvents)
+        {
+            base.DrawEvents(showUnusedEvents);
 
-			if (Any(tgts, t => t.OnSelectedFinger.GetPersistentEventCount() > 0) == true || showUnusedEvents == true)
-			{
-				Draw("onSelectedFinger");
-			}
-		}
-	}
+            if (Any(tgts, t => t.OnSelectedFinger.GetPersistentEventCount() > 0) || showUnusedEvents)
+                Draw("onSelectedFinger");
+        }
+    }
 }
 #endif

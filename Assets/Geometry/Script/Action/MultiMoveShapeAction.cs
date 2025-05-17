@@ -13,8 +13,6 @@ namespace Manipulator
                 moveActions.Add(new MoveShapeAction(id, from, to));
         }
 
-        public IEnumerable<MoveShapeAction> GetSubActions() => moveActions;
-
         public void Undo()
         {
             foreach (var move in moveActions)
@@ -26,8 +24,10 @@ namespace Manipulator
             foreach (var move in moveActions)
                 move.Redo();
         }
+
+        public IEnumerable<MoveShapeAction> GetSubActions()
+        {
+            return moveActions;
+        }
     }
-
-
-
 }

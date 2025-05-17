@@ -2,7 +2,11 @@
 
 namespace Manipulator
 {
-    public enum RelativeTargetType { Segment, Plane }
+    public enum RelativeTargetType
+    {
+        Segment,
+        Plane
+    }
 
     [Serializable]
     public class RelativePointConstraintData : ConstraintData
@@ -10,8 +14,8 @@ namespace Manipulator
         public string PointId;
         public string TargetShapeId;
         public RelativeTargetType TargetType;
-        public float T;     // nếu là segment
-        public float U, V;  // nếu là plane
+        public float T; // nếu là segment
+        public float U, V; // nếu là plane
         public int IndexA, IndexB, IndexC; // nếu là polygon tam giác con
 
         public override void Restore()

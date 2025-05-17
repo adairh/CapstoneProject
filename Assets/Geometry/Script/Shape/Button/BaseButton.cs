@@ -32,12 +32,8 @@ public class BaseButton : MonoBehaviour
     protected virtual void OnButtonClick()
     {
         if (ButtonController.Instance != null)
-        {
             ButtonController.Instance.OnButtonClicked(this);
-        }
         else
-        {
             Debug.LogError("[BaseButton] ButtonController.Instance is NULL on click!");
-        }
     }
 }

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 //To use this, attach to a button to your main panel, then add a button event that calls OnCloseWindow.
@@ -7,28 +5,22 @@ using UnityEngine;
 
 public class CloseGUIWindowButton : MonoBehaviour
 {
-
     public GameObject m_windowToClose;
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        
+    }
+
+    // Update is called once per frame
+    private void Update()
+    {
     }
 
     public void OnCloseWindow()
     {
-        if (m_windowToClose == null)
-        {
-            m_windowToClose = gameObject;
-        }
+        if (m_windowToClose == null) m_windowToClose = gameObject;
 
-        GameObject.Destroy(m_windowToClose);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        Destroy(m_windowToClose);
     }
 }

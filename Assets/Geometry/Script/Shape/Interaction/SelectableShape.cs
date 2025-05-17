@@ -5,9 +5,9 @@ namespace Manipulator
 {
     public class SelectableShape : ShapeBehaviourBase
     {
-        private Renderer rend; 
+        private bool isSelected;
+        private Renderer rend;
         private Material selectedMat;
-        private bool isSelected = false;
 
         private void Start()
         {
@@ -16,21 +16,18 @@ namespace Manipulator
             //SetSelected(false);
         }
 
-        public override void SetShape(Shape s)
-        {
-            base.SetShape(s);
-        }
-
         private void Update()
         {
             foreach (var s in shape.GetDependentShapesForDelete())
             {
                 var select = s.GetComponent<SelectableShape>();
-                if (select != null)
-                {
-                    select.SetSelected(shape.GetComponent<SelectableShape>().IsSelected());
-                }
+                if (select != null) select.SetSelected(shape.GetComponent<SelectableShape>().IsSelected());
             }
+        }
+
+        public override void SetShape(Shape s)
+        {
+            base.SetShape(s);
         }
 
         public void SetSelected(bool selected)
@@ -44,9 +41,11 @@ namespace Manipulator
             }
         }
 
-        public bool IsSelected() => isSelected;
-        
-        public event Action<SelectableShape> OnSelectedChanged;
+        public bool IsSelected()
+        {
+            return isSelected;
+        }
 
+        public event Action<SelectableShape> OnSelectedChanged;
     }
 }

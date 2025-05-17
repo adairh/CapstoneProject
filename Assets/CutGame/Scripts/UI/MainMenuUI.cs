@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace An_An
 {
@@ -9,25 +9,22 @@ namespace An_An
         public Transform content;
         public GameObject buttonPrefab;
 
-        [Space]
-        public LevelData levelData;
+        [Space] public LevelData levelData;
+
         public LevelLoader levelLoader;
 
-        [Space]
-        public GameObject mainMenu;
+        [Space] public GameObject mainMenu;
+
         public GameObject levelGrid;
 
+        [Space] public float fadeSpeed = 0.25f;
+
+        [Space] public GameObject quitButton;
+
+        [Space] public Text resetProgress;
+
         private GameObject currentView;
-
-        [Space]
-        public float fadeSpeed = 0.25f;
-
-        [Space]
-        public GameObject quitButton;
-
-        [Space]
-        public Text resetProgress;
-        private int resetProgressStage = 0;
+        private int resetProgressStage;
 
         private void Awake()
         {
@@ -56,13 +53,13 @@ namespace An_An
         // Initializes level grid for every level
         private void InitLevelGrid()
         {
-            int levelCount = levelData.levels.Count;
+            var levelCount = levelData.levels.Count;
 
-            for (int i = 0; i < levelCount; i++)
+            for (var i = 0; i < levelCount; i++)
             {
-                GameObject go = Instantiate(buttonPrefab, content);
+                var go = Instantiate(buttonPrefab, content);
 
-                GridButtonUI btn = go.GetComponent<GridButtonUI>();
+                var btn = go.GetComponent<GridButtonUI>();
                 btn.SetUpButton(levelLoader, i, levelData.levels[i]);
             }
         }
@@ -79,14 +76,15 @@ namespace An_An
         // Makes smooth transition beteween views
         private void FadeToView(GameObject from, GameObject to)
         {
-            CanvasGroup fromCanvas = from.GetComponent<CanvasGroup>();
-            CanvasGroup toCanvas = to.GetComponent<CanvasGroup>();
+            var fromCanvas = from.GetComponent<CanvasGroup>();
+            var toCanvas = to.GetComponent<CanvasGroup>();
 
             toCanvas.alpha = 0.0f;
 
             var seq = LeanTween.sequence();
             seq.append(fromCanvas.LeanAlpha(0, fadeSpeed));
-            seq.append(() => {
+            seq.append(() =>
+            {
                 from.SetActive(false);
                 to.SetActive(true);
             });
@@ -104,7 +102,10 @@ namespace An_An
                         resetProgressStage++;
                     }
                     else
+                    {
                         resetProgress.text = "THERE\'S NOTHING TO RESET YET!";
+                    }
+
                     break;
                 case 1:
                     resetProgress.text = "BUT ARE YOU REALLY SURE ABOUT THAT?";
@@ -124,12 +125,10 @@ namespace An_An
         public void QuitGame()
         {
             AudioManager.Play(SFX.Click);
-            
+
             //Application.Quit();
 
             SceneManager.LoadScene("MAIN"); // quay ve scene Main
-
+        }
     }
-}
-
 }

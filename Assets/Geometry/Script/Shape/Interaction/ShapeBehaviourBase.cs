@@ -11,6 +11,9 @@ namespace Manipulator
             shape = s;
         }
 
-        public Shape GetShape() => shape;
+        public Shape GetShape()
+        {
+            return shape;
+        }
     }
 }

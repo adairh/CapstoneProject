@@ -1,23 +1,23 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.UI;
 
-public class ScoreTracker : MonoBehaviour {
-
-    private int score;
+public class ScoreTracker : MonoBehaviour
+{
     public static ScoreTracker Instance;
     public Text ScoreText;
     public Text HighScoreText;
 
+    private int score;
+
     public int Score
     {
-        get { return score; }
+        get => score;
         set
         {
             score = value;
             ScoreText.text = score.ToString();
 
-            if(PlayerPrefs.GetInt("HighScore") < score)
+            if (PlayerPrefs.GetInt("HighScore") < score)
             {
                 PlayerPrefs.SetInt("HighScore", score);
                 HighScoreText.text = score.ToString();
@@ -25,7 +25,7 @@ public class ScoreTracker : MonoBehaviour {
         }
     }
 
-    void Awake()
+    private void Awake()
     {
         Instance = this;
 

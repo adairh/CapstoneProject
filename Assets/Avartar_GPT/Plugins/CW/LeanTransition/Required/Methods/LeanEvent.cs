@@ -1,97 +1,93 @@
-﻿using UnityEngine;
-using UnityEngine.Events;
+﻿using System;
 using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
+using UnityEngine.Events;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to invoke a custom action after the specified duration.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanEvent")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Event" + LeanTransition.MethodsMenuSuffix + "(LeanEvent)")]
-	public class LeanEvent : LeanMethodWithState
-	{
-		public override void Register()
-		{
-			PreviousState = Register(Data.Event, Data.Duration);
-		}
+    /// <summary>This component allows you to invoke a custom action after the specified duration.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanEvent")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Event" + LeanTransition.MethodsMenuSuffix + "(LeanEvent)")]
+    public class LeanEvent : LeanMethodWithState
+    {
+        public State Data;
 
-		public static LeanState Register(System.Action action, float duration)
-		{
-			var state = LeanTransition.Spawn(State.Pool);
+        public override void Register()
+        {
+            PreviousState = Register(Data.Event, Data.Duration);
+        }
 
-			state.Action = action;
-			state.Event  = null;
+        public static LeanState Register(Action action, float duration)
+        {
+            var state = LeanTransition.Spawn(State.Pool);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Action = action;
+            state.Event = null;
 
-		public static LeanState Register(UnityEvent action, float duration)
-		{
-			var state = LeanTransition.Spawn(State.Pool);
+            return LeanTransition.Register(state, duration);
+        }
 
-			state.Action = null;
-			state.Event  = action;
+        public static LeanState Register(UnityEvent action, float duration)
+        {
+            var state = LeanTransition.Spawn(State.Pool);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Action = null;
+            state.Event = action;
 
-		[System.Serializable]
-		public class State : LeanState
-		{
-			[Tooltip("The event that will be invoked.")]
-			public UnityEvent Event;
+            return LeanTransition.Register(state, duration);
+        }
 
-			[System.NonSerialized]
-			public System.Action Action;
-			
-			public override ConflictType Conflict
-			{
-				get
-				{
-					return ConflictType.None;
-				}
-			}
+        [Serializable]
+        public class State : LeanState
+        {
+            public static Stack<State> Pool = new();
 
-			public override void Begin()
-			{
-				// No state to begin from
-			}
+            [Tooltip("The event that will be invoked.")]
+            public UnityEvent Event;
 
-			public override void Update(float progress)
-			{
-				if (progress == 1.0f)
-				{
-					if (Event != null)
-					{
-						Event.Invoke();
-					}
+            [NonSerialized] public Action Action;
 
-					if (Action != null)
-					{
-						Action.Invoke();
-					}
-				}
-			}
+            public override ConflictType Conflict => ConflictType.None;
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+            public override void Begin()
+            {
+                // No state to begin from
+            }
 
-		public State Data;
-	}
+            public override void Update(float progress)
+            {
+                if (progress == 1.0f)
+                {
+                    if (Event != null) Event.Invoke();
+
+                    if (Action != null) Action.Invoke();
+                }
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static T EventTransition<T>(this T target, System.Action action, float duration = 0.0f)
-			where T : Component
-		{
-			Method.LeanEvent.Register(action, duration); return target;
-		}
+    public static partial class LeanExtensions
+    {
+        public static T EventTransition<T>(this T target, Action action, float duration = 0.0f)
+            where T : Component
+        {
+            LeanEvent.Register(action, duration);
+            return target;
+        }
 
-		public static GameObject EventTransition(this GameObject target, System.Action action, float duration = 0.0f)
-		{
-			Method.LeanEvent.Register(action, duration); return target;
-		}
-	}
+        public static GameObject EventTransition(this GameObject target, Action action, float duration = 0.0f)
+        {
+            LeanEvent.Register(action, duration);
+            return target;
+        }
+    }
 }

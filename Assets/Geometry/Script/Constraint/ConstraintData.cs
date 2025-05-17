@@ -3,7 +3,7 @@
 namespace Manipulator
 {
     /// <summary>
-    /// Dữ liệu cơ bản cho constraint dùng để serialize.
+    ///     Dữ liệu cơ bản cho constraint dùng để serialize.
     /// </summary>
     [Serializable]
     public abstract class ConstraintData

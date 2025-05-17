@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Manipulator
 {
@@ -11,9 +12,10 @@ namespace Manipulator
             NONNUMERIC
         }
 
+        SettingType Type { get; }
+
         object GetValue(); // Returns value as an object
         GameObject GetUI();
-        SettingType Type { get; }
 
         void Apply();
         void Update();
@@ -24,6 +26,13 @@ namespace Manipulator
 // Generic Abstract Class for Settings
     public abstract class Setting<T> : ISetting
     {
+        protected Setting(T data, ISetting.SettingType settingType, Type targetShape)
+        {
+            Value = data;
+            Type = settingType;
+            TargetShape = targetShape;
+        }
+
         public T Value { get; set; }
 
         public Shape targetShape { get; set; }
@@ -31,35 +40,27 @@ namespace Manipulator
         public GameObject prefab { get; protected set; }
 
 
-        public System.Type TargetShape { get; protected set; }
+        public Type TargetShape { get; protected set; }
         public ISetting.SettingType Type { get; } // Ensure it's correctly initialized
-
-        protected Setting(T data, ISetting.SettingType settingType, System.Type targetShape)
-        {
-            Value = data;
-            Type = settingType;
-            TargetShape = targetShape;
-        }
 
         public abstract GameObject GetUI();
         public abstract void Apply();
         public abstract float Height();
         public abstract void Update();
 
-        public object GetValue() => Value;
+        public object GetValue()
+        {
+            return Value;
+        }
 
         // Allow setting values from object (used for UI input)
         public void SetValue(object value)
         {
             if (value is T castValue)
-            {
                 SetValue(castValue);
-            }
             else
-            {
                 Debug.LogError(
                     $"Invalid value type for setting {GetType().Name}. Expected {typeof(T)}, got {value.GetType()}.");
-            }
         }
 
         // Virtual method allows customization in child classes

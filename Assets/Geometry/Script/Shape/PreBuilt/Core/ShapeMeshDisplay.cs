@@ -33,10 +33,11 @@ namespace Manipulator
             meshFilter = gameObject.GetComponent<MeshFilter>() ?? gameObject.AddComponent<MeshFilter>();
             meshRenderer = gameObject.GetComponent<MeshRenderer>() ?? gameObject.AddComponent<MeshRenderer>();
 
-            Material fallback = MaterialLibrary.Get(MaterialType.Default);
+            var fallback = MaterialLibrary.Get(MaterialType.Default);
             if (fallback == null)
             {
-                Debug.LogWarning("No mesh material assigned and MaterialLibrary.Default is missing. Using built-in Standard.");
+                Debug.LogWarning(
+                    "No mesh material assigned and MaterialLibrary.Default is missing. Using built-in Standard.");
                 fallback = new Material(Shader.Find("Standard"));
             }
 
@@ -47,10 +48,8 @@ namespace Manipulator
         private bool AreAllPointsReady()
         {
             foreach (var p in pendingPoints)
-            {
                 if (p == null || p.transform == null || !p.gameObject.activeInHierarchy)
                     return false;
-            }
             return true;
         }
 

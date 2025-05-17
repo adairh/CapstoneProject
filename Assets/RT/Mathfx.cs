@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 //taken from http://wiki.unity3d.com/index.php?title=Mathfx
 
@@ -19,7 +17,8 @@ public sealed class Mathfx
 
     public static Vector3 Hermite(Vector3 start, Vector3 end, float value)
     {
-        return new Vector3(Hermite(start.x, end.x, value), Hermite(start.y, end.y, value), Hermite(start.z, end.z, value));
+        return new Vector3(Hermite(start.x, end.x, value), Hermite(start.y, end.y, value),
+            Hermite(start.z, end.z, value));
     }
 
     //Ease out
@@ -30,13 +29,17 @@ public sealed class Mathfx
 
     public static Vector2 Sinerp(Vector2 start, Vector2 end, float value)
     {
-        return new Vector2(Mathf.Lerp(start.x, end.x, Mathf.Sin(value * Mathf.PI * 0.5f)), Mathf.Lerp(start.y, end.y, Mathf.Sin(value * Mathf.PI * 0.5f)));
+        return new Vector2(Mathf.Lerp(start.x, end.x, Mathf.Sin(value * Mathf.PI * 0.5f)),
+            Mathf.Lerp(start.y, end.y, Mathf.Sin(value * Mathf.PI * 0.5f)));
     }
 
     public static Vector3 Sinerp(Vector3 start, Vector3 end, float value)
     {
-        return new Vector3(Mathf.Lerp(start.x, end.x, Mathf.Sin(value * Mathf.PI * 0.5f)), Mathf.Lerp(start.y, end.y, Mathf.Sin(value * Mathf.PI * 0.5f)), Mathf.Lerp(start.z, end.z, Mathf.Sin(value * Mathf.PI * 0.5f)));
+        return new Vector3(Mathf.Lerp(start.x, end.x, Mathf.Sin(value * Mathf.PI * 0.5f)),
+            Mathf.Lerp(start.y, end.y, Mathf.Sin(value * Mathf.PI * 0.5f)),
+            Mathf.Lerp(start.z, end.z, Mathf.Sin(value * Mathf.PI * 0.5f)));
     }
+
     //Ease in
     public static float Coserp(float start, float end, float value)
     {
@@ -57,7 +60,8 @@ public sealed class Mathfx
     public static float Berp(float start, float end, float value)
     {
         value = Mathf.Clamp01(value);
-        value = (Mathf.Sin(value * Mathf.PI * (0.2f + 2.5f * value * value * value)) * Mathf.Pow(1f - value, 2.2f) + value) * (1f + (1.2f * (1f - value)));
+        value = (Mathf.Sin(value * Mathf.PI * (0.2f + 2.5f * value * value * value)) * Mathf.Pow(1f - value, 2.2f) +
+                 value) * (1f + 1.2f * (1f - value));
         return start + (end - start) * value;
     }
 
@@ -75,8 +79,8 @@ public sealed class Mathfx
     public static float SmoothStep(float x, float min, float max)
     {
         x = Mathf.Clamp(x, min, max);
-        float v1 = (x - min) / (max - min);
-        float v2 = (x - min) / (max - min);
+        var v1 = (x - min) / (max - min);
+        var v2 = (x - min) / (max - min);
         return -2 * v1 * v1 * v1 + 3 * v2 * v2;
     }
 
@@ -92,22 +96,22 @@ public sealed class Mathfx
 
     public static float Lerp(float start, float end, float value)
     {
-        return ((1.0f - value) * start) + (value * end);
+        return (1.0f - value) * start + value * end;
     }
 
     public static Vector3 NearestPoint(Vector3 lineStart, Vector3 lineEnd, Vector3 point)
     {
-        Vector3 lineDirection = Vector3.Normalize(lineEnd - lineStart);
-        float closestPoint = Vector3.Dot((point - lineStart), lineDirection);
-        return lineStart + (closestPoint * lineDirection);
+        var lineDirection = Vector3.Normalize(lineEnd - lineStart);
+        var closestPoint = Vector3.Dot(point - lineStart, lineDirection);
+        return lineStart + closestPoint * lineDirection;
     }
 
     public static Vector3 NearestPointStrict(Vector3 lineStart, Vector3 lineEnd, Vector3 point)
     {
-        Vector3 fullDirection = lineEnd - lineStart;
-        Vector3 lineDirection = Vector3.Normalize(fullDirection);
-        float closestPoint = Vector3.Dot((point - lineStart), lineDirection);
-        return lineStart + (Mathf.Clamp(closestPoint, 0.0f, Vector3.Magnitude(fullDirection)) * lineDirection);
+        var fullDirection = lineEnd - lineStart;
+        var lineDirection = Vector3.Normalize(fullDirection);
+        var closestPoint = Vector3.Dot(point - lineStart, lineDirection);
+        return lineStart + Mathf.Clamp(closestPoint, 0.0f, Vector3.Magnitude(fullDirection)) * lineDirection;
     }
 
     //Bounce
@@ -130,7 +134,7 @@ public sealed class Mathfx
     // all thanks to Opless for this!
     public static bool Approx(float val, float about, float range)
     {
-        return ((Mathf.Abs(val - about) < range));
+        return Mathf.Abs(val - about) < range;
     }
 
     // test if a Vector3 is close to another Vector3 (due to floating point inprecision)
@@ -138,7 +142,7 @@ public sealed class Mathfx
     // avoids calculating a square root which is much slower than squaring the range
     public static bool Approx(Vector3 val, Vector3 about, float range)
     {
-        return ((val - about).sqrMagnitude < range * range);
+        return (val - about).sqrMagnitude < range * range;
     }
 
     /*
@@ -149,26 +153,28 @@ public sealed class Mathfx
       */
     public static float Clerp(float start, float end, float value)
     {
-        float min = 0.0f;
-        float max = 360.0f;
-        float half = Mathf.Abs((max - min) / 2.0f);//half the distance between min and max
-        float retval = 0.0f;
-        float diff = 0.0f;
+        var min = 0.0f;
+        var max = 360.0f;
+        var half = Mathf.Abs((max - min) / 2.0f); //half the distance between min and max
+        var retval = 0.0f;
+        var diff = 0.0f;
 
-        if ((end - start) < -half)
+        if (end - start < -half)
         {
-            diff = ((max - start) + end) * value;
+            diff = (max - start + end) * value;
             retval = start + diff;
         }
-        else if ((end - start) > half)
+        else if (end - start > half)
         {
-            diff = -((max - end) + start) * value;
+            diff = -(max - end + start) * value;
             retval = start + diff;
         }
-        else retval = start + (end - start) * value;
+        else
+        {
+            retval = start + (end - start) * value;
+        }
 
         // Debug.Log("Start: "  + start + "   End: " + end + "  Value: " + value + "  Half: " + half + "  Diff: " + diff + "  Retval: " + retval);
         return retval;
     }
-
 }

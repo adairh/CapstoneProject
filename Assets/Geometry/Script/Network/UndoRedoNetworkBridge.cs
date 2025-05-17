@@ -1,7 +1,7 @@
-﻿using UnityEngine;
-using Unity.Netcode; 
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Unity.Netcode;
+using UnityEngine;
 
 namespace Manipulator
 {
@@ -21,7 +21,6 @@ namespace Manipulator
 
             //.LogError($"[DoAndBroadcast] IsHost: {IsHost}");
             if (IsHost)
-            {
                 switch (action)
                 {
                     case MoveShapeAction msa:
@@ -36,7 +35,7 @@ namespace Manipulator
                         break;
                     case CreateShapeBatchAction csba:
                         var wrapper = new ShapeDataListWrapper { Shapes = csba.shapeDataList };
-                        string json = JsonUtility.ToJson(wrapper);
+                        var json = JsonUtility.ToJson(wrapper);
                         BroadcastCreateShapeBatchClientRpc(json);
                         break;
                     case MultiMoveShapeAction mma:
@@ -47,13 +46,7 @@ namespace Manipulator
                         foreach (var s in dsba.shapes) // nếu cần broadcast từng shape
                             BroadcastDeleteShapeClientRpc(s.ShapeId);
                         break;
-
-
-                    default:
-                        //Debug.LogError($"[DoAndBroadcast] Type: {action.GetType()}");
-                        break;
                 }
-            }
         }
 
         [ClientRpc]
@@ -67,10 +60,8 @@ namespace Manipulator
             {
                 var shape = ShapeFactory.CreateFromData(data);
                 if (shape == null)
-                {
                     //Debug.LogError($"[ClientBatchCreate] Failed to create shape of type {data.Type}");
                     continue;
-                }
 
                 shape.ShapeId = data.Id;
                 shape.Deserialize(data);
@@ -79,13 +70,6 @@ namespace Manipulator
         }
 
 
-        [Serializable]
-        public class ShapeDataListWrapper
-        {
-            public List<ShapeData> Shapes;
-        }
-
-        
         [ClientRpc]
         private void BroadcastMoveShapeClientRpc(string shapeId, Vector3 pos)
         {
@@ -95,12 +79,10 @@ namespace Manipulator
 
             var shape = ShapeStorage.GetById(shapeId);
             if (shape == null)
-            {
                 //Debug.LogError($"[BroadcastMoveShapeClientRpc] shape NOT found in ShapeStorage");
                 return;
-            }
 
-            shape.MoveTo(pos, silent: true);
+            shape.MoveTo(pos, true);
         }
 
 
@@ -121,7 +103,7 @@ namespace Manipulator
             var data = JsonUtility.FromJson<ShapeData>(json);
             ShapeFactory.CreateFromData(data);
         }
-        
+
         [ServerRpc(RequireOwnership = false)]
         public void RequestUndoServerRpc()
         {
@@ -136,19 +118,17 @@ namespace Manipulator
 
         public void SpawnFromData(ShapeData data, Action<Shape> onCreated)
         {
-            CreateShapeNetworked(data, out Shape shape);
+            CreateShapeNetworked(data, out var shape);
             onCreated?.Invoke(shape);
         }
 
-        
+
         public void CreateShapeNetworked(ShapeData data, out Shape shape)
         {
             shape = ShapeFactory.CreateFromData(data); // Factory sẽ gán đúng prefab, type, component
             if (shape == null)
-            {
                 //Debug.LogError($"[CreateShapeNetworked] Failed to create shape for type={data.Type}");
                 return;
-            }
 
             shape.ShapeId = data.Id; // Đảm bảo giữ ID gốc để match Undo/Redo
             shape.Deserialize(data);
@@ -165,7 +145,11 @@ namespace Manipulator
             }
         }
 
-        
+
+        [Serializable]
+        public class ShapeDataListWrapper
+        {
+            public List<ShapeData> Shapes;
+        }
     }
- 
 }

@@ -13,7 +13,8 @@ namespace Manipulator
         Select,
         AngleCons,
         Config,
-        Delete,
+
+        Delete
         // … thêm tùy bạn
     }
 
@@ -22,16 +23,15 @@ namespace Manipulator
     {
         public static InputManager Instance { get; private set; }
 
-        // Sự kiện chung, truyền kèm action và vị trí
-        public event Action<UserAction, Vector2> OnAction;
-
         private void Awake()
         {
-            if (Instance == null) Instance = this;
+            if (Instance == null)
+            {
+                Instance = this;
+            }
             else
             {
                 Destroy(gameObject);
-                return;
             }
         }
 
@@ -55,7 +55,7 @@ namespace Manipulator
 
             if (Input.GetKeyDown(KeyCode.Delete))
                 OnAction?.Invoke(UserAction.Delete, Input.mousePosition);
- 
+
             if (Input.GetKeyDown(KeyCode.S) && Input.GetKey(KeyCode.LeftAlt))
                 SaveLoadManager.SaveAll();
 
@@ -68,7 +68,7 @@ namespace Manipulator
             if (Input.GetKeyDown(KeyCode.Y))
                 UndoRedoNetworkBridge.Instance.RequestRedoServerRpc();
 
-            
+
 #elif UNITY_IOS || UNITY_ANDROID
             if (Input.touchCount > 0)
             {
@@ -80,5 +80,8 @@ namespace Manipulator
             }
 #endif
         }
+
+        // Sự kiện chung, truyền kèm action và vị trí
+        public event Action<UserAction, Vector2> OnAction;
     }
 }

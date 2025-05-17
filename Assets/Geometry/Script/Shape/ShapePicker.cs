@@ -1,4 +1,3 @@
-
 using System.Collections;
 using UnityEngine;
 
@@ -16,17 +15,14 @@ namespace Manipulator
             while (true)
             {
                 if (Input.GetMouseButtonDown(0))
-                {
-                    if (PerformDrawing.RaycastMouse(out Vector3 pos, out Shape shape))
-                    {
+                    if (PerformDrawing.RaycastMouse(out var pos, out var shape))
                         if (shape is Point)
                         {
                             LastPicked = shape;
                             UIHint.Hide();
                             yield break;
                         }
-                    }
-                }
+
                 yield return null;
             }
         }
@@ -39,17 +35,14 @@ namespace Manipulator
             while (true)
             {
                 if (Input.GetMouseButtonDown(0))
-                {
-                    if (PerformDrawing.RaycastMouse(out Vector3 pos, out Shape shape))
-                    {
+                    if (PerformDrawing.RaycastMouse(out var pos, out var shape))
                         if (shape is Segment)
                         {
                             LastPicked = shape;
                             UIHint.Hide();
                             yield break;
                         }
-                    }
-                }
+
                 yield return null;
             }
         }

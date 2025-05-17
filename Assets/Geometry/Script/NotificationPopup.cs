@@ -1,23 +1,20 @@
-
 /// <summary>
 /// By Khoa
 /// This script is used to show a notification when a player joins.
 /// <!---->
 
-using UnityEngine.UI;
-using UnityEngine;
-using TMPro;
 using System.Collections;
-using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+
 namespace Khoa
 {
-
     public class NotificationPopup : MonoBehaviour
     {
         public TextMeshProUGUI clientNameText;
-        private float displayTime = 3f;
-        private float fadeTime = 1f;
         private CanvasGroup canvasGroup;
+        private readonly float displayTime = 3f;
+        private readonly float fadeTime = 1f;
 
         private void Awake()
         {
@@ -28,14 +25,10 @@ namespace Khoa
         public void SetMessage(string message)
         {
             if (clientNameText != null)
-            {
                 clientNameText.text = message;
-                //Debug.Log($"Notification set with message: {message}");
-            }
+            //Debug.Log($"Notification set with message: {message}");
             else
-            {
                 Debug.LogError("ClientNameText is not assigned in NotificationPopup!");
-            }
             Invoke(nameof(StartFade), displayTime);
         }
 
@@ -44,17 +37,17 @@ namespace Khoa
             StartCoroutine(FadeOut());
         }
 
-        private System.Collections.IEnumerator FadeOut()
+        private IEnumerator FadeOut()
         {
-            float elapsedTime = 0f;
+            var elapsedTime = 0f;
             while (elapsedTime < fadeTime)
             {
                 elapsedTime += Time.deltaTime;
                 canvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsedTime / fadeTime);
                 yield return null;
             }
+
             Destroy(gameObject);
         }
     }
 }
-

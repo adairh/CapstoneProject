@@ -2,12 +2,6 @@ namespace CrazyMinnow.SALSA.OneClicks
 {
     public class OneClickComponent
     {
-        public ComponentType type;
-        public string componentName;
-        public float durOn;
-        public float durHold;
-        public float durOff;
-
         public enum ComponentType
         {
             Shape,
@@ -15,15 +9,21 @@ namespace CrazyMinnow.SALSA.OneClicks
             Bone,
             Animator
         }
+
+        public string componentName;
+        public float durHold;
+        public float durOff;
+        public float durOn;
+        public ComponentType type;
     }
 
     public class OneClickShapeComponent : OneClickComponent
     {
         public string[] blendshapeNames;
-        public float maxAmount;
-        public bool useRegex = false;
         public bool isSpecificSmr = false;
+        public float maxAmount;
         public string specificSmr = "";
+        public bool useRegex;
 
         public OneClickShapeComponent(string componentName,
             string[] blendshapeNames,
@@ -66,7 +66,7 @@ namespace CrazyMinnow.SALSA.OneClicks
             float durOff,
             ComponentType type)
         {
-            this.componentSearchName = boneSearchName;
+            componentSearchName = boneSearchName;
             this.componentName = componentName;
             this.max = max;
             this.usePos = usePos;
@@ -81,8 +81,8 @@ namespace CrazyMinnow.SALSA.OneClicks
 
     public class OneClickUepComponent : OneClickComponent
     {
-        public string poseName;
         public float maxAmount;
+        public string poseName;
 
         public OneClickUepComponent(string componentName,
             string poseName,
@@ -104,8 +104,8 @@ namespace CrazyMinnow.SALSA.OneClicks
 
     public class OneClickAnimatorComponent : OneClickComponent
     {
-        public string componentSearchName;
         public int animationParmIndex;
+        public string componentSearchName;
         public bool isTriggerParmBiDirectional;
 
         public OneClickAnimatorComponent(string componentName,
@@ -118,7 +118,7 @@ namespace CrazyMinnow.SALSA.OneClicks
             ComponentType type)
         {
             this.componentName = componentName;
-            this.componentSearchName = animatorSearchName;
+            componentSearchName = animatorSearchName;
             this.animationParmIndex = animationParmIndex;
             this.isTriggerParmBiDirectional = isTriggerParmBiDirectional;
             this.durOn = durOn;

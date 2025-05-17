@@ -1,17 +1,18 @@
 //place this script in the Editor folder within Assets.
-using UnityEditor;
-using System.Collections;
+
+using System;
 using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
 
 //to be used on the command line:
 //$ Unity -quit -batchmode -executeMethod WebGLBuilder.build
 
-class RTBuildTools
+internal class RTBuildTools
 {
-
     public static void AddDefine(BuildTargetGroup buildGroup, string newDefine)
     {
-        UnityEngine.Debug.Log("Adding define: '" + newDefine + "'");
+        Debug.Log("Adding define: '" + newDefine + "'");
 
         string defines;
         defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildGroup);
@@ -21,7 +22,7 @@ class RTBuildTools
 
     public static void RemoveDefine(BuildTargetGroup buildGroup, string newDefine)
     {
-        UnityEngine.Debug.Log("Removing define: '" + newDefine + "'");
+        Debug.Log("Removing define: '" + newDefine + "'");
 
         string defines;
         defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildGroup);
@@ -32,7 +33,7 @@ class RTBuildTools
 
     public static string AddCompilerDefines(string defines, params string[] toAdd)
     {
-        List<string> splitDefines = new List<string>(defines.Split(new char[] { ';' }, System.StringSplitOptions.RemoveEmptyEntries));
+        var splitDefines = new List<string>(defines.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
         foreach (var add in toAdd)
             if (!splitDefines.Contains(add))
                 splitDefines.Add(add);
@@ -42,7 +43,7 @@ class RTBuildTools
 
     public static string RemoveCompilerDefines(string defines, params string[] toRemove)
     {
-        List<string> splitDefines = new List<string>(defines.Split(new char[] { ';' }, System.StringSplitOptions.RemoveEmptyEntries));
+        var splitDefines = new List<string>(defines.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
         foreach (var remove in toRemove)
             splitDefines.Remove(remove);
 

@@ -1,31 +1,41 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿using System;
 using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
-namespace SlimUI.ModernMenu{
-	[System.Serializable]
-	public class ThemedUIElement : ThemedUI {
-		[Header("Parameters")]
-		Color outline;
-		Image image;
-		GameObject message;
-		public enum OutlineStyle {solidThin, solidThick, dottedThin, dottedThick};
-		public bool hasImage = false;
-		public bool isText = false;
+namespace SlimUI.ModernMenu
+{
+    [Serializable]
+    public class ThemedUIElement : ThemedUI
+    {
+        public enum OutlineStyle
+        {
+            solidThin,
+            solidThick,
+            dottedThin,
+            dottedThick
+        }
 
-		protected override void OnSkinUI(){
-			base.OnSkinUI();
+        public bool hasImage;
+        public bool isText;
+        private Image image;
+        private GameObject message;
 
-			if(hasImage){
-				image = GetComponent<Image>();
-				image.color = themeController.currentColor;
-			}
+        [Header("Parameters")] private Color outline;
 
-			message = gameObject;
+        protected override void OnSkinUI()
+        {
+            base.OnSkinUI();
 
-			if(isText){
-				message.GetComponent<TextMeshPro>().color = themeController.textColor;
-			}
-		}
-	}
+            if (hasImage)
+            {
+                image = GetComponent<Image>();
+                image.color = themeController.currentColor;
+            }
+
+            message = gameObject;
+
+            if (isText) message.GetComponent<TextMeshPro>().color = themeController.textColor;
+        }
+    }
 }

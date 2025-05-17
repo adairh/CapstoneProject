@@ -1,26 +1,25 @@
-﻿using UnityEngine; 
+﻿using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    public GameObject playerPathRendererPrefab;
     private Plane _shapePlane;
-    private Camera mainCamera;
-    private Vector3 position;
+
+    private GameManager gm;
 
     private RaycastHit[] hits;
 
-    public GameObject playerPathRendererPrefab;
-    private PlayerPathRenderer pathRenderer;
-
     private bool isMovePossible, isPlayerMoving;
-    
-    private GameManager gm; 
+    private Camera mainCamera;
+    private PlayerPathRenderer pathRenderer;
+    private Vector3 position;
 
     private float upperBound;
 
     private void Start()
     {
         gm = GameManager.instance;
-        
+
         _shapePlane = new Plane(Vector3.back, 0.0f);
         mainCamera = Camera.main;
         position = Vector3.one;
@@ -28,7 +27,7 @@ public class PlayerController : MonoBehaviour
         isMovePossible = false;
         isPlayerMoving = false;
 
-        GameObject go = Instantiate(playerPathRendererPrefab, transform.parent);
+        var go = Instantiate(playerPathRendererPrefab, transform.parent);
         pathRenderer = go.GetComponent<PlayerPathRenderer>();
 
         upperBound = LevelBounds.upperBound + 0.1f;
@@ -45,10 +44,10 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetMouseButton(0) && !isPlayerMoving && !gm.Quiz.gameObject.activeSelf)
         {
-            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             float distanceToPlane;
 
-            Vector3 nextPosition = Vector3.one;
+            var nextPosition = Vector3.one;
 
             if (_shapePlane.Raycast(ray, out distanceToPlane))
                 nextPosition = ray.GetPoint(distanceToPlane);
@@ -80,18 +79,17 @@ public class PlayerController : MonoBehaviour
                         foreach (var hit in hits)
                         {
                             //hit.collider.gameObject.GetComponent<Destructible>().Destroy();
-                            Destructible go = hit.collider.gameObject.GetComponent<Destructible>();
+                            var go = hit.collider.gameObject.GetComponent<Destructible>();
 
                             if (go is Virus)
                             {
-                                Virus v = (Virus)go;
+                                var v = (Virus)go;
                                 v.onHit();
                             }
                             else
-                            {   
+                            {
                                 go.Destroy();
                             }
-                            
                         }
 
                         isPlayerMoving = false;
@@ -107,10 +105,10 @@ public class PlayerController : MonoBehaviour
     // Sends raycast and checks collision hits
     private void DetectHits()
     {
-        Vector3 heading = position - transform.position;
+        var heading = position - transform.position;
 
-        float distance = heading.magnitude;
-        Vector3 direction = heading / distance;
+        var distance = heading.magnitude;
+        var direction = heading / distance;
 
         hits = Physics.RaycastAll(transform.position, direction, distance);
     }
@@ -119,7 +117,7 @@ public class PlayerController : MonoBehaviour
     private void CheckIfMoveIsPossible()
     {
         bool virusFound = false, fatFound = false;
-        Vector3 lastVirusPosition = Vector3.zero;
+        var lastVirusPosition = Vector3.zero;
 
         foreach (var hit in hits)
         {
@@ -137,7 +135,7 @@ public class PlayerController : MonoBehaviour
 
         if (isMovePossible)
         {
-            float distance = Vector3.Distance(lastVirusPosition, position);
+            var distance = Vector3.Distance(lastVirusPosition, position);
 
             if (distance < 0.5f)
                 isMovePossible = false;

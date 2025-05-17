@@ -1,3 +1,4 @@
+using System.Collections;
 
 namespace Manipulator
 {
@@ -9,7 +10,7 @@ namespace Manipulator
             StartCoroutine(SelectTwoAndDivide());
         }
 
-        private System.Collections.IEnumerator SelectTwoAndDivide()
+        private IEnumerator SelectTwoAndDivide()
         {
             yield return ShapePicker.WaitForPoint("Select Point A");
             var a = ShapePicker.LastPicked as Point;

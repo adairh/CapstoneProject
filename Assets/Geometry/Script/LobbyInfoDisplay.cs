@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class LobbyInfoDisplay : MonoBehaviour
 {
@@ -26,24 +23,12 @@ public class LobbyInfoDisplay : MonoBehaviour
         }
 
         // Ensure the info window is hidden at start
-        if (infoWindow != null)
-        {
-            infoWindow.SetActive(false);
-        }
+        if (infoWindow != null) infoWindow.SetActive(false);
 
         // Add listeners
-        if (showInfoButton != null)
-        {
-            showInfoButton.onClick.AddListener(ShowLobbyInfo);
-        }
-        if (closeButton != null)
-        {
-            closeButton.onClick.AddListener(HideInfoWindow);
-        }
-        if (copyButton != null)
-        {
-            copyButton.onClick.AddListener(CopyLobbyInfoToClipboard);
-        }
+        if (showInfoButton != null) showInfoButton.onClick.AddListener(ShowLobbyInfo);
+        if (closeButton != null) closeButton.onClick.AddListener(HideInfoWindow);
+        if (copyButton != null) copyButton.onClick.AddListener(CopyLobbyInfoToClipboard);
     }
 
     private void ShowLobbyInfo()
@@ -60,8 +45,9 @@ public class LobbyInfoDisplay : MonoBehaviour
             return;
         }
 
-        string lobbyName = gameLobby.GetJoinedLobby().Name;
-        string password = gameLobby.GetJoinedLobby().Data != null && gameLobby.GetJoinedLobby().Data.TryGetValue("Password", out var passwordData)
+        var lobbyName = gameLobby.GetJoinedLobby().Name;
+        var password = gameLobby.GetJoinedLobby().Data != null &&
+                       gameLobby.GetJoinedLobby().Data.TryGetValue("Password", out var passwordData)
             ? passwordData.Value
             : "No Password";
 
@@ -95,12 +81,13 @@ public class LobbyInfoDisplay : MonoBehaviour
             return;
         }
 
-        string lobbyName = gameLobby.GetJoinedLobby().Name;
-        string password = gameLobby.GetJoinedLobby().Data != null && gameLobby.GetJoinedLobby().Data.TryGetValue("Password", out var passwordData)
+        var lobbyName = gameLobby.GetJoinedLobby().Name;
+        var password = gameLobby.GetJoinedLobby().Data != null &&
+                       gameLobby.GetJoinedLobby().Data.TryGetValue("Password", out var passwordData)
             ? passwordData.Value
             : "No Password";
 
-        string clipboardText = $"Lobby ID: {lobbyName}\nPassword: {password}";
+        var clipboardText = $"Lobby ID: {lobbyName}\nPassword: {password}";
         GUIUtility.systemCopyBuffer = clipboardText;
         Debug.Log($"Copied to clipboard: {clipboardText}");
     }

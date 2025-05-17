@@ -5,7 +5,7 @@ namespace Manipulator
 {
     public class PanelCloser : MonoBehaviour
     {
-        private bool isInitialized = false;
+        private bool isInitialized;
 
         private void Start()
         {
@@ -13,36 +13,28 @@ namespace Manipulator
             Invoke(nameof(EnableCloseDetection), 0.1f);
         }
 
-        private void EnableCloseDetection()
-        {
-            isInitialized = true;
-        }
-
-        private void OnDestroy()
-        {
-            // Use the public method to clear the panel reference
-            if (gameObject == SpawnPanel.CurrentPanel)
-            {
-                SpawnPanel.ClearCurrentPanel();
-            }
-        }
-
         private void Update()
         {
             if (!isInitialized) return;
 
             if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2))
-            {
                 if (!IsPointerOverUIElement())
                 {
                     // Use the public method to clear the panel reference
-                    if (gameObject == SpawnPanel.CurrentPanel)
-                    {
-                        SpawnPanel.ClearCurrentPanel();
-                    }
+                    if (gameObject == SpawnPanel.CurrentPanel) SpawnPanel.ClearCurrentPanel();
                     Destroy(gameObject);
                 }
-            }
+        }
+
+        private void OnDestroy()
+        {
+            // Use the public method to clear the panel reference
+            if (gameObject == SpawnPanel.CurrentPanel) SpawnPanel.ClearCurrentPanel();
+        }
+
+        private void EnableCloseDetection()
+        {
+            isInitialized = true;
         }
 
         private bool IsPointerOverUIElement()

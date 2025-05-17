@@ -1,28 +1,27 @@
 ﻿// UndoManager.cs
 
-using System;
 using System.Collections.Generic;
-using UnityEngine;
 using Unity.Netcode;
+using UnityEngine;
 
 namespace Manipulator
 {
     public class UndoRedoManager : MonoBehaviour
     {
+        private readonly Stack<IUndoableAction> redoStack = new();
+
+        private readonly Stack<IUndoableAction> undoStack = new();
         public static UndoRedoManager Instance { get; private set; }
 
         public static bool SuppressRecording { get; set; } = false;
-        
-        private readonly Stack<IUndoableAction> undoStack = new();
-        private readonly Stack<IUndoableAction> redoStack = new();
 
-        void Awake()
+        private void Awake()
         {
             if (Instance != null) Destroy(gameObject);
             Instance = this;
         }
 
-        
+
         public void Do(IUndoableAction action)
         {
             if (SuppressRecording) return;
@@ -72,6 +71,5 @@ namespace Manipulator
             undoStack.Pop();
             undoStack.Push(action);
         }
-
     }
 }

@@ -2,11 +2,9 @@
 
 public class PlayerPathRenderer : MonoBehaviour
 {
-    [SerializeField]
-    private LineRenderer lineRenderer = null;
+    [SerializeField] private LineRenderer lineRenderer;
 
-    [SerializeField]
-    private SpriteRenderer spriteRenderer = null;
+    [SerializeField] private SpriteRenderer spriteRenderer;
 
     // Draws a line indicating if moves is possible between two points
     public void Draw(Vector3 startPosition, Vector3 endPosition, bool isMovePossible)

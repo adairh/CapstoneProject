@@ -1,19 +1,38 @@
-
 using UnityEngine;
 
 namespace Manipulator
 {
     public class PrebuiltDrawingHandler : MonoBehaviour
     {
-        public static PrebuiltDrawingHandler Instance { get; private set; }
-
         private IPrebuiltDrawer currentDrawer;
-        private bool isDrawing = false;
+        private bool isDrawing;
         private Vector3 startPos;
+        public static PrebuiltDrawingHandler Instance { get; private set; }
 
         private void Awake()
         {
             Instance = this;
+        }
+
+        private void Update()
+        {
+            if (!isDrawing || currentDrawer == null) return;
+
+            if (Input.GetMouseButton(0))
+            {
+                if (PerformDrawing.RaycastMouse(out var pos))
+                    currentDrawer.Working(pos);
+            }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                if (PerformDrawing.RaycastMouse(out var pos))
+                    currentDrawer.End(pos);
+
+                ManipulationManager.Instance.IsDrawing = false;
+                PerformDrawing.ResetMode();
+                isDrawing = false;
+                currentDrawer = null;
+            }
         }
 
         public void StartDrawing(IPrebuiltDrawer drawer)
@@ -31,29 +50,7 @@ namespace Manipulator
                 {
                     drawer.Begin(startPos);
                     ManipulationManager.Instance.IsDrawing = true;
-
                 }
-            }
-        }
-
-        private void Update()
-        {
-            if (!isDrawing || currentDrawer == null) return;
-
-            if (Input.GetMouseButton(0))
-            {
-                if (PerformDrawing.RaycastMouse(out Vector3 pos))
-                    currentDrawer.Working(pos);
-            }
-            else if (Input.GetMouseButtonUp(0))
-            {
-                if (PerformDrawing.RaycastMouse(out Vector3 pos))
-                    currentDrawer.End(pos);
-                
-                ManipulationManager.Instance.IsDrawing = false;
-                PerformDrawing.ResetMode();
-                isDrawing = false;
-                currentDrawer = null;
             }
         }
 

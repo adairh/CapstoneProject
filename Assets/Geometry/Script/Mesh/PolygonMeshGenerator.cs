@@ -4,7 +4,7 @@ public static class PolygonMeshGenerator
 {
     public static Mesh CreateExtrudedPolygon(Vector3[] vertices, float thickness = 0.01f)
     {
-        int vertexCount = vertices.Length;
+        var vertexCount = vertices.Length;
 
         if (vertexCount < 3)
         {
@@ -12,22 +12,22 @@ public static class PolygonMeshGenerator
             return null;
         }
 
-        Mesh mesh = new Mesh();
-        Vector3[] extrudedVertices = new Vector3[vertexCount * 2];
-        int[] triangles = new int[vertexCount * 6];
+        var mesh = new Mesh();
+        var extrudedVertices = new Vector3[vertexCount * 2];
+        var triangles = new int[vertexCount * 6];
 
         // Compute normal direction (assumes coplanar points)
-        Vector3 normal = Vector3.Cross(vertices[1] - vertices[0], vertices[2] - vertices[0]).normalized;
+        var normal = Vector3.Cross(vertices[1] - vertices[0], vertices[2] - vertices[0]).normalized;
 
         // Front & Back Faces
-        for (int i = 0; i < vertexCount; i++)
+        for (var i = 0; i < vertexCount; i++)
         {
             extrudedVertices[i] = vertices[i]; // Front face
-            extrudedVertices[i + vertexCount] = vertices[i] + (normal * thickness); // Back face
+            extrudedVertices[i + vertexCount] = vertices[i] + normal * thickness; // Back face
         }
 
         // Generate triangles for front face
-        for (int i = 0; i < vertexCount - 2; i++)
+        for (var i = 0; i < vertexCount - 2; i++)
         {
             triangles[i * 3] = 0;
             triangles[i * 3 + 1] = i + 1;
@@ -35,8 +35,8 @@ public static class PolygonMeshGenerator
         }
 
         // Generate triangles for back face
-        int offset = (vertexCount - 2) * 3;
-        for (int i = 0; i < vertexCount - 2; i++)
+        var offset = (vertexCount - 2) * 3;
+        for (var i = 0; i < vertexCount - 2; i++)
         {
             triangles[offset + i * 3] = vertexCount + 0;
             triangles[offset + i * 3 + 1] = vertexCount + i + 2;

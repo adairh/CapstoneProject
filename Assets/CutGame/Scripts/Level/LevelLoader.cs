@@ -3,18 +3,17 @@ using UnityEngine.SceneManagement;
 
 public class LevelLoader : MonoBehaviour
 {
-    public LevelData levelData;
-
     public static int currentLevelIndex;
     public static LevelData.Level levelToLoad;
 
     public static bool loadLevelGrid;
+    public LevelData levelData;
 
     public void LoadLevel(int index)
     {
         currentLevelIndex = index;
         levelToLoad = levelData.levels[index];
-        
+
         SceneManager.LoadScene(3, LoadSceneMode.Single);
     }
 
@@ -25,21 +24,17 @@ public class LevelLoader : MonoBehaviour
 
     public void LoadNextLevel()
     {
-        if (IsNextLevelAvailable())
-        {
-            LoadLevel(currentLevelIndex + 1);
-        }
+        if (IsNextLevelAvailable()) LoadLevel(currentLevelIndex + 1);
     }
 
     public bool IsNextLevelAvailable()
     {
-        int nextLevelIndex = currentLevelIndex + 1;
+        var nextLevelIndex = currentLevelIndex + 1;
 
         if (levelData.levels.Count > nextLevelIndex &&
             levelData.levels[nextLevelIndex].unlocked)
             return true;
-        else
-            return false;
+        return false;
     }
 
     public void LoadMenu(bool levelGrid)

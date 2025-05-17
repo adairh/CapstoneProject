@@ -4,7 +4,10 @@ namespace Manipulator
 {
     public class RegularTetrahedronButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.RegularTetrahedron;
+        public IShapeButton.ShapeType GetShapeType()
+        {
+            return IShapeButton.ShapeType.RegularTetrahedron;
+        }
 
         protected override void OnButtonClick()
         {

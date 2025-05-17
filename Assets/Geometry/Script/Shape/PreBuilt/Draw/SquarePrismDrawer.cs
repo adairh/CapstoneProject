@@ -1,4 +1,5 @@
 // Refactored SquarePrismDrawer with Mesh Display for base square
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,10 +9,10 @@ namespace Manipulator
     public class SquarePrismDrawer : IPrebuiltDrawer
     {
         private string idA, idB, idC, idD, idE, idF, idG, idH;
-        private List<string> segmentIds;
-        private Dictionary<string, Point> points = new();
-        private Dictionary<string, Segment> segments = new();
         private ShapeMeshDisplay meshDisplay;
+        private readonly Dictionary<string, Point> points = new();
+        private List<string> segmentIds;
+        private readonly Dictionary<string, Segment> segments = new();
 
         public void Begin(Vector3 startPos)
         {
@@ -24,32 +25,56 @@ namespace Manipulator
             idG = Guid.NewGuid().ToString();
             idH = Guid.NewGuid().ToString();
 
-            segmentIds = new();
-            for (int i = 0; i < 12; i++) segmentIds.Add(Guid.NewGuid().ToString());
+            segmentIds = new List<string>();
+            for (var i = 0; i < 12; i++) segmentIds.Add(Guid.NewGuid().ToString());
 
             var datas = new List<ShapeData>
             {
-                new ShapeData { Id = idA, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idD, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idE, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idF, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idG, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idH, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new()
+                {
+                    Id = idA, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idD, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idE, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idF, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idG, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idH, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
 
-                new ShapeData { Id = segmentIds[0], Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = segmentIds[1], Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = segmentIds[2], Type = "Segment", ConnectedPoints = new() { idC, idD } },
-                new ShapeData { Id = segmentIds[3], Type = "Segment", ConnectedPoints = new() { idD, idA } },
-                new ShapeData { Id = segmentIds[4], Type = "Segment", ConnectedPoints = new() { idE, idF } },
-                new ShapeData { Id = segmentIds[5], Type = "Segment", ConnectedPoints = new() { idF, idG } },
-                new ShapeData { Id = segmentIds[6], Type = "Segment", ConnectedPoints = new() { idG, idH } },
-                new ShapeData { Id = segmentIds[7], Type = "Segment", ConnectedPoints = new() { idH, idE } },
-                new ShapeData { Id = segmentIds[8], Type = "Segment", ConnectedPoints = new() { idA, idE } },
-                new ShapeData { Id = segmentIds[9], Type = "Segment", ConnectedPoints = new() { idB, idF } },
-                new ShapeData { Id = segmentIds[10], Type = "Segment", ConnectedPoints = new() { idC, idG } },
-                new ShapeData { Id = segmentIds[11], Type = "Segment", ConnectedPoints = new() { idD, idH } },
+                new() { Id = segmentIds[0], Type = "Segment", ConnectedPoints = new List<string> { idA, idB } },
+                new() { Id = segmentIds[1], Type = "Segment", ConnectedPoints = new List<string> { idB, idC } },
+                new() { Id = segmentIds[2], Type = "Segment", ConnectedPoints = new List<string> { idC, idD } },
+                new() { Id = segmentIds[3], Type = "Segment", ConnectedPoints = new List<string> { idD, idA } },
+                new() { Id = segmentIds[4], Type = "Segment", ConnectedPoints = new List<string> { idE, idF } },
+                new() { Id = segmentIds[5], Type = "Segment", ConnectedPoints = new List<string> { idF, idG } },
+                new() { Id = segmentIds[6], Type = "Segment", ConnectedPoints = new List<string> { idG, idH } },
+                new() { Id = segmentIds[7], Type = "Segment", ConnectedPoints = new List<string> { idH, idE } },
+                new() { Id = segmentIds[8], Type = "Segment", ConnectedPoints = new List<string> { idA, idE } },
+                new() { Id = segmentIds[9], Type = "Segment", ConnectedPoints = new List<string> { idB, idF } },
+                new() { Id = segmentIds[10], Type = "Segment", ConnectedPoints = new List<string> { idC, idG } },
+                new() { Id = segmentIds[11], Type = "Segment", ConnectedPoints = new List<string> { idD, idH } }
             };
 
             var batch = new CreateShapeBatchAction(datas);
@@ -61,6 +86,38 @@ namespace Manipulator
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
+        }
+
+        public void Working(Vector3 currentPos)
+        {
+            if (!points.ContainsKey(idA) || !points.ContainsKey(idB)) return;
+            var a = points[idA];
+            var b = points[idB];
+            var snappedPos = currentPos;
+            snappedPos.y = 0f;
+            b.MoveTo(snappedPos, queue: false);
+            var ab = b.transform.position - a.transform.position;
+            var right = Vector3.Cross(Vector3.up, ab.normalized);
+            var length = ab.magnitude;
+            var height = length * 0.8f;
+            points[idC].MoveTo(b.transform.position + right * length, queue: false);
+            points[idD].MoveTo(a.transform.position + right * length, queue: false);
+            points[idE].MoveTo(a.transform.position + Vector3.up * height, queue: false);
+            points[idF].MoveTo(b.transform.position + Vector3.up * height, queue: false);
+            points[idG].MoveTo(points[idC].transform.position + Vector3.up * height, queue: false);
+            points[idH].MoveTo(points[idD].transform.position + Vector3.up * height, queue: false);
+        }
+
+        public void End(Vector3 finalPos)
+        {
+            foreach (var pt in points.Values) pt.SetRaycastIgnore(false);
+            foreach (var seg in segments.Values) seg.SetRaycastIgnore(false);
+        }
+
+        public void Cancel()
+        {
+            foreach (var pt in points.Values) pt?.DestroyShape();
+            foreach (var seg in segments.Values) seg?.DestroyShape();
         }
 
         private void TryConnect()
@@ -108,37 +165,6 @@ namespace Manipulator
                 seg.SetStartPoint(p1);
                 seg.SetEndPoint(p2);
             }
-        }
-
-        public void Working(Vector3 currentPos)
-        {
-            if (!points.ContainsKey(idA) || !points.ContainsKey(idB)) return;
-            Point a = points[idA];
-            Point b = points[idB];
-            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
-            b.MoveTo(snappedPos, queue: false);
-            Vector3 ab = b.transform.position - a.transform.position;
-            Vector3 right = Vector3.Cross(Vector3.up, ab.normalized);
-            float length = ab.magnitude;
-            float height = length * 0.8f;
-            points[idC].MoveTo(b.transform.position + right * length, queue: false);
-            points[idD].MoveTo(a.transform.position + right * length, queue: false);
-            points[idE].MoveTo(a.transform.position + Vector3.up * height, queue: false);
-            points[idF].MoveTo(b.transform.position + Vector3.up * height, queue: false);
-            points[idG].MoveTo(points[idC].transform.position + Vector3.up * height, queue: false);
-            points[idH].MoveTo(points[idD].transform.position + Vector3.up * height, queue: false);
-        }
-
-        public void End(Vector3 finalPos)
-        {
-            foreach (var pt in points.Values) pt.SetRaycastIgnore(false);
-            foreach (var seg in segments.Values) seg.SetRaycastIgnore(false);
-        }
-
-        public void Cancel()
-        {
-            foreach (var pt in points.Values) pt?.DestroyShape();
-            foreach (var seg in segments.Values) seg?.DestroyShape();
         }
     }
 }

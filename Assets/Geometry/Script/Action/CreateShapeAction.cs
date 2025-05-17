@@ -24,8 +24,8 @@ namespace Manipulator
 
             shapeWasAlreadyPresent = false;
             //createdShape = ShapeFactory.CreateFromData(data);
-            
-            
+
+
             UndoRedoNetworkBridge.Instance.SpawnFromData(data, shape =>
             {
                 createdShape = shape;
@@ -35,8 +35,8 @@ namespace Manipulator
                 else if (shape is Segment seg)
                     Segment.Drawer.OnSegmentReady(seg);
             });
-            
-            
+
+
             /*if (createdShape is Point pt)
             {
                 Segment.Drawer.OnStartPointReady(pt);
@@ -46,8 +46,6 @@ namespace Manipulator
                 Segment.Drawer.OnSegmentReady(seg);
                 Debug.LogError($"Start point {seg.StartPoint != null} ; End point {seg.EndPoint != null}");
             }*/
-
-
         }
 
         public void Undo()
@@ -58,15 +56,10 @@ namespace Manipulator
             // Ensure it's not used elsewhere before deletion (e.g., shared snap point)
             if (createdShape is Point pt)
             {
-                int referenceCount = 0;
+                var referenceCount = 0;
                 foreach (var shape in ShapeStorage.GetAllShapes())
-                {
-
                     if (shape is Segment seg && (seg.StartPoint == pt || seg.EndPoint == pt))
-                    {
                         referenceCount++;
-                    }
-                }
 
                 if (referenceCount > 0)
                 {

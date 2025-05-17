@@ -1,9 +1,9 @@
-﻿namespace Script
-{
-    using System;
-    using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-// Enum to define modes
+namespace Script
+{
+    // Enum to define modes
     public enum Mode
     {
         Light,
@@ -13,8 +13,8 @@
 // Class to manage the mode and colors
     public class ThemeManager
     {
+        private readonly Dictionary<Mode, (string BackgroundColor, string TextColor)> colorSettings;
         private Mode currentMode;
-        private Dictionary<Mode, (string BackgroundColor, string TextColor)> colorSettings;
 
         public ThemeManager()
         {
@@ -24,8 +24,8 @@
             // Define color settings for each mode
             colorSettings = new Dictionary<Mode, (string, string)>
             {
-                { Mode.Light, ("#FFFFFF", "#000000") },  // White background, Black text
-                { Mode.Dark, ("#000000", "#FFFFFF") }    // Black background, White text
+                { Mode.Light, ("#FFFFFF", "#000000") }, // White background, Black text
+                { Mode.Dark, ("#000000", "#FFFFFF") } // Black background, White text
             };
         }
 
@@ -57,6 +57,4 @@
             Console.WriteLine($"Text Color: {colors.TextColor}");
         }
     }
-
-    
 }

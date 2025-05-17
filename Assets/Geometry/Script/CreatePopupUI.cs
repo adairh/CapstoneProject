@@ -1,18 +1,14 @@
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System;
-using UnityEngine.SceneManagement;
-using An_An;
-using Manipulator;
-using Khoa;
 
 public class CreatePopupUI : MonoBehaviour
 {
     [SerializeField] private TMP_InputField lobbyNameInputField;
     [SerializeField] private TMP_InputField passwordInputField;
     [SerializeField] private Toggle privateToggle; // New Toggle for private/public setting
-    
+
     [SerializeField] private Button confirmButton;
     [SerializeField] private Button cancelButton;
     [SerializeField] private GameObject darkOverlay; // Optional: for dimming background when popup is active
@@ -29,15 +25,16 @@ public class CreatePopupUI : MonoBehaviour
 
         confirmButton.onClick.AddListener(() =>
         {
-            string lobbyName = lobbyNameInputField.text?.Trim();
-            string password = passwordInputField.text?.Trim();
-            bool isPrivate = privateToggle.isOn; // Get the state of the toggle (true = private, false = public)
+            var lobbyName = lobbyNameInputField.text?.Trim();
+            var password = passwordInputField.text?.Trim();
+            var isPrivate = privateToggle.isOn; // Get the state of the toggle (true = private, false = public)
             Debug.Log($"Popup Input: Name={lobbyName}, Password={password}, IsPrivate={isPrivate}");
             if (string.IsNullOrEmpty(lobbyName) || string.IsNullOrEmpty(password))
             {
                 Debug.LogWarning("Lobby name and password cannot be empty!");
                 return;
             }
+
             onConfirm?.Invoke(lobbyName, password, isPrivate);
             Debug.Log("Confirm Clicked: Checking GameLobby.Instance...");
             if (GameLobby.Instance == null)
@@ -49,6 +46,7 @@ public class CreatePopupUI : MonoBehaviour
                 Debug.Log("GameLobby.Instance is valid: " + GameLobby.Instance);
                 GameLobby.Instance.CreateLobby(lobbyName, password, isPrivate);
             }
+
             Hide();
         });
 

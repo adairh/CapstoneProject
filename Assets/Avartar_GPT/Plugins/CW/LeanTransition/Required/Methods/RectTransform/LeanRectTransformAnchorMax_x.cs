@@ -1,85 +1,91 @@
+using System;
+using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
 using TARGET = UnityEngine.RectTransform;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to transition the RectTransform's anchorMax.x value.</summary>
-	[UnityEngine.HelpURL(LeanTransition.HelpUrlPrefix + "LeanRectTransformAnchorMax_x")]
-	[UnityEngine.AddComponentMenu(LeanTransition.MethodsMenuPrefix + "RectTransform/RectTransform.anchorMax.x" + LeanTransition.MethodsMenuSuffix + "(LeanRectTransformAnchorMax_x)")]
-	public class LeanRectTransformAnchorMax_x : LeanMethodWithStateAndTarget
-	{
-		public override System.Type GetTargetType()
-		{
-			return typeof(TARGET);
-		}
+    /// <summary>This component allows you to transition the RectTransform's anchorMax.x value.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanRectTransformAnchorMax_x")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "RectTransform/RectTransform.anchorMax.x" +
+                      LeanTransition.MethodsMenuSuffix + "(LeanRectTransformAnchorMax_x)")]
+    public class LeanRectTransformAnchorMax_x : LeanMethodWithStateAndTarget
+    {
+        public State Data;
 
-		public override void Register()
-		{
-			PreviousState = Register(GetAliasedTarget(Data.Target), Data.Value, Data.Duration, Data.Ease);
-		}
+        public override Type GetTargetType()
+        {
+            return typeof(TARGET);
+        }
 
-		public static LeanState Register(TARGET target, float value, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+        public override void Register()
+        {
+            PreviousState = Register(GetAliasedTarget(Data.Target), Data.Value, Data.Duration, Data.Ease);
+        }
 
-			state.Value = value;
-			
-			state.Ease = ease;
+        public static LeanState Register(TARGET target, float value, float duration, LeanEase ease = LeanEase.Smooth)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Value = value;
 
-		[System.Serializable]
-		public class State : LeanStateWithTarget<TARGET>
-		{
-			[UnityEngine.Tooltip("The anchorMax value will transition to this.")]
-			public float Value;
+            state.Ease = ease;
 
-			[UnityEngine.Tooltip("This allows you to control how the transition will look.")]
-			public LeanEase Ease = LeanEase.Smooth;
+            return LeanTransition.Register(state, duration);
+        }
 
-			[System.NonSerialized] private float oldValue;
+        [Serializable]
+        public class State : LeanStateWithTarget<TARGET>
+        {
+            public static Stack<State> Pool = new();
 
-			public override int CanFill
-			{
-				get
-				{
-					return Target != null && Target.anchorMax.x != Value ? 1 : 0;
-				}
-			}
+            [Tooltip("The anchorMax value will transition to this.")]
+            public float Value;
 
-			public override void FillWithTarget()
-			{
-				Value = Target.anchorMax.x;
-			}
+            [Tooltip("This allows you to control how the transition will look.")]
+            public LeanEase Ease = LeanEase.Smooth;
 
-			public override void BeginWithTarget()
-			{
-				oldValue = Target.anchorMax.x;
-			}
+            [NonSerialized] private float oldValue;
 
-			public override void UpdateWithTarget(float progress)
-			{
-				var vector = Target.anchorMax;
-				
-				vector.x = UnityEngine.Mathf.LerpUnclamped(oldValue, Value, Smooth(Ease, progress));
-				 
-				Target.anchorMax = vector;
-			}
+            public override int CanFill => Target != null && Target.anchorMax.x != Value ? 1 : 0;
 
-			public static System.Collections.Generic.Stack<State> Pool = new System.Collections.Generic.Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+            public override void FillWithTarget()
+            {
+                Value = Target.anchorMax.x;
+            }
 
-		public State Data;
-	}
+            public override void BeginWithTarget()
+            {
+                oldValue = Target.anchorMax.x;
+            }
+
+            public override void UpdateWithTarget(float progress)
+            {
+                var vector = Target.anchorMax;
+
+                vector.x = Mathf.LerpUnclamped(oldValue, Value, Smooth(Ease, progress));
+
+                Target.anchorMax = vector;
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static TARGET anchorMaxTransition_x(this TARGET target, float value, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanRectTransformAnchorMax_x.Register(target, value, duration, ease); return target;
-		}
-	}
+    public static partial class LeanExtensions
+    {
+        public static TARGET anchorMaxTransition_x(this TARGET target, float value, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            LeanRectTransformAnchorMax_x.Register(target, value, duration, ease);
+            return target;
+        }
+    }
 }

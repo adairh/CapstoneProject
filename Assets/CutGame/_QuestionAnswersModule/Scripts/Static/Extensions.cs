@@ -23,13 +23,16 @@ namespace QuestBase._QuestionAnswersModule.Scripts.Static
             return true;
         }
     }
+
     public static class Extensions
     {
-        public static void Shuffle<T>(this IList<T> ts) {
+        public static void Shuffle<T>(this IList<T> ts)
+        {
             var count = ts.Count;
             var last = count - 1;
-            for (var i = 0; i < last; ++i) {
-                var r = UnityEngine.Random.Range(i, count);
+            for (var i = 0; i < last; ++i)
+            {
+                var r = Random.Range(i, count);
                 var tmp = ts[i];
                 ts[i] = ts[r];
                 ts[r] = tmp;
@@ -38,10 +41,7 @@ namespace QuestBase._QuestionAnswersModule.Scripts.Static
 
         public static void SetActiveFast(this GameObject gameObject, bool isActive)
         {
-            if (gameObject.activeInHierarchy != isActive)
-            {
-                gameObject.SetActive(isActive);
-            }
+            if (gameObject.activeInHierarchy != isActive) gameObject.SetActive(isActive);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // This class handles platform specific stuff (scaling, android action handlin etc.)
@@ -21,7 +20,9 @@ public class PlatformManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F12))
         {
             if (Screen.fullScreen)
+            {
                 TurnOffFullscreen();
+            }
             else
             {
                 var res = Screen.currentResolution;
@@ -29,10 +30,7 @@ public class PlatformManager : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            TurnOffFullscreen();
-        }
+        if (Input.GetKeyDown(KeyCode.Escape)) TurnOffFullscreen();
     }
 
     private void TurnOffFullscreen()

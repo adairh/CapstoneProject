@@ -1,10 +1,9 @@
-﻿using UnityEngine;
-using System.Collections;
-using System;
+﻿using System;
+using UnityEngine;
 
 [Serializable]
-public class CellStyle {
-
+public class CellStyle
+{
     public int Number;
     public Color32 CellColor;
     public Color32 TextColor;

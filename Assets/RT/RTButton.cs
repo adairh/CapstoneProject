@@ -1,22 +1,35 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿using System;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using System;
+using UnityEngine.UI;
 
 //Based on code from Xarbrough: https://answers.unity.com/questions/1226851/addlistener-to-onpointerdown-of-button-instead-of.html
 
 // Button that raises onDown event when OnPointerDown is called.
 [AddComponentMenu("RT/RTButton")]
 public class RTButton : Button
-{ 
+{
     // Event delegate triggered on mouse or touch down.
-    [SerializeField]
-    ButtonDownEvent _onDown = new ButtonDownEvent();
-    [SerializeField]
-    ButtonUpEvent _onUp = new ButtonUpEvent();
+    [SerializeField] private ButtonDownEvent _onDown = new();
 
-    protected RTButton() { }
+    [SerializeField] private ButtonUpEvent _onUp = new();
+
+    protected RTButton()
+    {
+    }
+
+    public ButtonDownEvent onDown
+    {
+        get => _onDown;
+        set => _onDown = value;
+    }
+
+    public ButtonUpEvent onUp
+    {
+        get => _onUp;
+        set => _onUp = value;
+    }
 
     public override void OnPointerDown(PointerEventData eventData)
     {
@@ -26,12 +39,6 @@ public class RTButton : Button
             return;
 
         _onDown.Invoke();
-    }
-
-    public ButtonDownEvent onDown
-    {
-        get { return _onDown; }
-        set { _onDown = value; }
     }
 
     public override void OnPointerUp(PointerEventData eventData)
@@ -44,14 +51,13 @@ public class RTButton : Button
         _onUp.Invoke();
     }
 
-    public ButtonUpEvent onUp
+    [Serializable]
+    public class ButtonDownEvent : UnityEvent
     {
-        get { return _onUp; }
-        set { _onUp = value; }
     }
 
     [Serializable]
-    public class ButtonDownEvent : UnityEvent { }
-    [Serializable]
-    public class ButtonUpEvent : UnityEvent { }
+    public class ButtonUpEvent : UnityEvent
+    {
+    }
 }

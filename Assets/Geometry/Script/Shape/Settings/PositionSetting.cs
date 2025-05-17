@@ -16,16 +16,14 @@ namespace Manipulator
         {
             uiInstance = Object.Instantiate(prefab);
             if (UIManager.Instance == null)
-            {
                 //Debug.LogError("UIManager instance not found in the scene!");
                 return null;
-            }
 
-            TMP_InputField[] inputFields = uiInstance.GetComponentsInChildren<TMP_InputField>();
+            var inputFields = uiInstance.GetComponentsInChildren<TMP_InputField>();
 
             if (inputFields.Length >= 3) // Ensure we have three input fields (X, Y, Z)
             {
-                Vector3 tempValue = Value; // Store Value in a local variable
+                var tempValue = Value; // Store Value in a local variable
 
                 // Set input fields to current values
                 inputFields[0].text = tempValue.x + "";
@@ -35,7 +33,7 @@ namespace Manipulator
                 // Add listeners for each field
                 inputFields[0].onEndEdit.AddListener(value =>
                 {
-                    if (float.TryParse(value, out float result))
+                    if (float.TryParse(value, out var result))
                     {
                         tempValue.x = result; // Modify tempValue
                         Value = tempValue; // Assign back to Value
@@ -47,7 +45,7 @@ namespace Manipulator
 
                 inputFields[1].onEndEdit.AddListener(value =>
                 {
-                    if (float.TryParse(value, out float result))
+                    if (float.TryParse(value, out var result))
                     {
                         tempValue.y = result;
                         Value = tempValue;
@@ -59,7 +57,7 @@ namespace Manipulator
 
                 inputFields[2].onEndEdit.AddListener(value =>
                 {
-                    if (float.TryParse(value, out float result))
+                    if (float.TryParse(value, out var result))
                     {
                         tempValue.z = result;
                         Value = tempValue;
@@ -79,7 +77,6 @@ namespace Manipulator
             //targetShape. = Value;
             //targetShape.ModifySetting(this, Value);
             targetShape.MoveToPosition(Value);
-
         }
 
         public override void Update()
@@ -90,12 +87,9 @@ namespace Manipulator
         public override float Height()
         {
             if (prefab.TryGetComponent<RectTransform>(out var rectTransform))
-            {
                 return rectTransform.rect.height; // Get height of UI panel
-            }
 
             return 0f; // Default if no RectTransform is found
         }
-
     }
 }

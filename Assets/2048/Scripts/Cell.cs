@@ -1,46 +1,53 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.UI;
 
-public class Cell : MonoBehaviour {
-
-    public bool HasMerged = false; 
-    private Text CellText;
-    private Image CellImage;
+public class Cell : MonoBehaviour
+{
+    public bool HasMerged;
 
     public int RowIndex;
     public int ColumnIndex;
 
+    private Animator animator;
+    private Image CellImage;
+
+    //The style of the cell.
+    private int cellStyle;
+    private Text CellText;
+
     //The text on the cell.
     private SimpleWord word;
+
     public SimpleWord Word
     {
-        get { return word; }
+        get => word;
         set
         {
             word = value;
 
             if (word.Word == "")
+            {
                 SetHidden();
+            }
             else
             {
-                CellText.text = this.Word.Word.ToString();
+                CellText.text = Word.Word;
                 SetVisible();
             }
         }
     }
 
-    //The style of the cell.
-    private int cellStyle;
     public int CellStyle
     {
-        get { return cellStyle; }
+        get => cellStyle;
         set
         {
             cellStyle = value;
 
             if (cellStyle == 0)
+            {
                 SetHidden();
+            }
             else
             {
                 ApplyStyle(cellStyle);
@@ -49,21 +56,22 @@ public class Cell : MonoBehaviour {
         }
     }
 
-    private Animator animator;
-
-	void Awake () {
+    private void Awake()
+    {
         CellText = GetComponentInChildren<Text>();
         CellImage = transform.Find("Panel").GetComponent<Image>();
         animator = GetComponent<Animator>();
-	}
+    }
 
     public void SetText(SimpleWord word, int style)
     {
         cellStyle = style;
-        this.Word = word;
+        Word = word;
 
         if (cellStyle == 0)
+        {
             SetHidden();
+        }
         else
         {
             ApplyStyle(cellStyle);
@@ -81,25 +89,25 @@ public class Cell : MonoBehaviour {
         animator.SetTrigger("Appear");
     }
 
-    void SetVisible()
+    private void SetVisible()
     {
         CellImage.enabled = true;
         CellText.enabled = true;
     }
-    
-    void SetHidden()
+
+    private void SetHidden()
     {
         CellImage.enabled = false;
         CellText.enabled = false;
     }
 
-    void ApplyStyleFromHolder(int index)
+    private void ApplyStyleFromHolder(int index)
     {
         CellText.color = CellStyleHolder.Instance.CellStyles[index].TextColor;
         CellImage.color = CellStyleHolder.Instance.CellStyles[index].CellColor;
     }
 
-    void ApplyStyle(int num)
+    private void ApplyStyle(int num)
     {
         switch (num)
         {

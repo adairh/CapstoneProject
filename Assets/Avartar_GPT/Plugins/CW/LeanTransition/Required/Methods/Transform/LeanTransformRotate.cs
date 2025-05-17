@@ -1,99 +1,111 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to rotate the specified Transform by the target value.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanTransformRotate")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Transform/Transform.Rotate" + LeanTransition.MethodsMenuSuffix + "(LeanTransformRotate)")]
-	public class LeanTransformRotate : LeanMethodWithStateAndTarget
-	{
-		public override System.Type GetTargetType()
-		{
-			return typeof(Transform);
-		}
+    /// <summary>This component allows you to rotate the specified Transform by the target value.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanTransformRotate")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Transform/Transform.Rotate" +
+                      LeanTransition.MethodsMenuSuffix + "(LeanTransformRotate)")]
+    public class LeanTransformRotate : LeanMethodWithStateAndTarget
+    {
+        public State Data;
 
-		public override void Register()
-		{
-			PreviousState = Register(GetAliasedTarget(Data.Target), Data.EulerAngles, Data.Space, Data.Duration, Data.Ease);
-		}
+        public override Type GetTargetType()
+        {
+            return typeof(Transform);
+        }
 
-		public static LeanState Register(Transform target, Vector3 eulerAngles, Space space, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+        public override void Register()
+        {
+            PreviousState = Register(GetAliasedTarget(Data.Target), Data.EulerAngles, Data.Space, Data.Duration,
+                Data.Ease);
+        }
 
-			state.EulerAngles = eulerAngles;
-			state.Space       = space;
-			state.Ease        = ease;
+        public static LeanState Register(Transform target, Vector3 eulerAngles, Space space, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.EulerAngles = eulerAngles;
+            state.Space = space;
+            state.Ease = ease;
 
-		[System.Serializable]
-		public class State : LeanStateWithTarget<Transform>
-		{
-			[Tooltip("The amount we will rotate.")]
-			public Vector3 EulerAngles;
+            return LeanTransition.Register(state, duration);
+        }
 
-			[Tooltip("The space we will transition in.")]
-			public Space Space = Space.Self;
+        [Serializable]
+        public class State : LeanStateWithTarget<Transform>
+        {
+            public static Stack<State> Pool = new();
 
-			[Tooltip("The ease method that will be used for the transition.")]
-			public LeanEase Ease = LeanEase.Smooth;
+            [Tooltip("The amount we will rotate.")]
+            public Vector3 EulerAngles;
 
-			[System.NonSerialized] private Vector3 previousEulerAngles;
+            [Tooltip("The space we will transition in.")]
+            public Space Space = Space.Self;
 
-			public override ConflictType Conflict
-			{
-				get
-				{
-					return ConflictType.None;
-				}
-			}
+            [Tooltip("The ease method that will be used for the transition.")]
+            public LeanEase Ease = LeanEase.Smooth;
 
-			public override void BeginWithTarget()
-			{
-				previousEulerAngles = Vector3.zero;
-			}
+            [NonSerialized] private Vector3 previousEulerAngles;
 
-			public override void UpdateWithTarget(float progress)
-			{
-				var eulerAngles = EulerAngles * Smooth(Ease, progress);
+            public override ConflictType Conflict => ConflictType.None;
 
-				Target.Rotate(eulerAngles - previousEulerAngles, Space);
+            public override void BeginWithTarget()
+            {
+                previousEulerAngles = Vector3.zero;
+            }
 
-				previousEulerAngles = eulerAngles;
-			}
+            public override void UpdateWithTarget(float progress)
+            {
+                var eulerAngles = EulerAngles * Smooth(Ease, progress);
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+                Target.Rotate(eulerAngles - previousEulerAngles, Space);
 
-		public State Data;
-	}
+                previousEulerAngles = eulerAngles;
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static Transform RotateTransition(this Transform target, float x, float y, float z, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformRotate.Register(target, new Vector3(x, y, z), Space.Self, duration, ease); return target;
-		}
+    public static partial class LeanExtensions
+    {
+        public static Transform RotateTransition(this Transform target, float x, float y, float z, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformRotate.Register(target, new Vector3(x, y, z), Space.Self, duration, ease);
+            return target;
+        }
 
-		public static Transform RotateTransition(this Transform target, Vector3 eulerAngles, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformRotate.Register(target, eulerAngles, Space.Self, duration, ease); return target;
-		}
+        public static Transform RotateTransition(this Transform target, Vector3 eulerAngles, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformRotate.Register(target, eulerAngles, Space.Self, duration, ease);
+            return target;
+        }
 
-		public static Transform RotateTransition(this Transform target, float x, float y, float z, Space space, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformRotate.Register(target, new Vector3(x, y, z), space, duration, ease); return target;
-		}
+        public static Transform RotateTransition(this Transform target, float x, float y, float z, Space space,
+            float duration, LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformRotate.Register(target, new Vector3(x, y, z), space, duration, ease);
+            return target;
+        }
 
-		public static Transform RotateTransition(this Transform target, Vector3 eulerAngles, Space space, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTransformRotate.Register(target, eulerAngles, space, duration, ease); return target;
-		}
-	}
+        public static Transform RotateTransition(this Transform target, Vector3 eulerAngles, Space space,
+            float duration, LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTransformRotate.Register(target, eulerAngles, space, duration, ease);
+            return target;
+        }
+    }
 }

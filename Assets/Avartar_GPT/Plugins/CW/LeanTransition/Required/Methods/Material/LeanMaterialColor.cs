@@ -1,85 +1,91 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to transition the specified <b>Material</b>'s <b>color</b> to the target value.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanMaterialColor")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Material/Material color" + LeanTransition.MethodsMenuSuffix + "(LeanMaterialColor)")]
-	public class LeanMaterialColor : LeanMethodWithStateAndTarget
-	{
-		public override System.Type GetTargetType()
-		{
-			return typeof(Material);
-		}
+    /// <summary>This component allows you to transition the specified <b>Material</b>'s <b>color</b> to the target value.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanMaterialColor")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Material/Material color" + LeanTransition.MethodsMenuSuffix +
+                      "(LeanMaterialColor)")]
+    public class LeanMaterialColor : LeanMethodWithStateAndTarget
+    {
+        public State Data;
 
-		public override void Register()
-		{
-			PreviousState = Register(GetAliasedTarget(Data.Target), Data.Property, Data.Color, Data.Duration, Data.Ease);
-		}
+        public override Type GetTargetType()
+        {
+            return typeof(Material);
+        }
 
-		public static LeanState Register(Material target, string property, Color color, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+        public override void Register()
+        {
+            PreviousState = Register(GetAliasedTarget(Data.Target), Data.Property, Data.Color, Data.Duration,
+                Data.Ease);
+        }
 
-			state.Property = property;
-			state.Color    = color;
-			state.Ease     = ease;
+        public static LeanState Register(Material target, string property, Color color, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Property = property;
+            state.Color = color;
+            state.Ease = ease;
 
-		[System.Serializable]
-		public class State : LeanStateWithTarget<Material>
-		{
-			[Tooltip("The name of the color property in the shader.")]
-			public string Property = "_Color";
+            return LeanTransition.Register(state, duration);
+        }
 
-			[Tooltip("The color we will transition to.")]
-			public Color Color = Color.white;
+        [Serializable]
+        public class State : LeanStateWithTarget<Material>
+        {
+            public static Stack<State> Pool = new();
 
-			[Tooltip("The ease method that will be used for the transition.")]
-			public LeanEase Ease  = LeanEase.Smooth;
+            [Tooltip("The name of the color property in the shader.")]
+            public string Property = "_Color";
 
-			[System.NonSerialized] private Color oldColor;
+            [Tooltip("The color we will transition to.")]
+            public Color Color = Color.white;
 
-			public override int CanFill
-			{
-				get
-				{
-					return Target != null && Target.GetColor(Property) != Color ? 1 : 0;
-				}
-			}
+            [Tooltip("The ease method that will be used for the transition.")]
+            public LeanEase Ease = LeanEase.Smooth;
 
-			public override void FillWithTarget()
-			{
-				Color = Target.GetColor(Property);
-			}
+            [NonSerialized] private Color oldColor;
 
-			public override void BeginWithTarget()
-			{
-				oldColor = Target.GetColor(Property);
-			}
+            public override int CanFill => Target != null && Target.GetColor(Property) != Color ? 1 : 0;
 
-			public override void UpdateWithTarget(float progress)
-			{
-				Target.SetColor(Property, Color.LerpUnclamped(oldColor, Color, Smooth(Ease, progress)));
-			}
+            public override void FillWithTarget()
+            {
+                Color = Target.GetColor(Property);
+            }
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+            public override void BeginWithTarget()
+            {
+                oldColor = Target.GetColor(Property);
+            }
 
-		public State Data;
-	}
+            public override void UpdateWithTarget(float progress)
+            {
+                Target.SetColor(Property, Color.LerpUnclamped(oldColor, Color, Smooth(Ease, progress)));
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static Material colorTransition(this Material target, string property, Color color, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanMaterialColor.Register(target, property, color, duration, ease); return target;
-		}
-	}
+    public static partial class LeanExtensions
+    {
+        public static Material colorTransition(this Material target, string property, Color color, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            LeanMaterialColor.Register(target, property, color, duration, ease);
+            return target;
+        }
+    }
 }

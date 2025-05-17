@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,24 +7,25 @@ using UnityEngine.UI;
 public class SliderStep : MonoBehaviour
 {
     public float stepAmount = 0.5f;
-    Slider mySlider = null;
-    int numberOfSteps = 0;
+    private Slider mySlider;
+    private int numberOfSteps;
 
     // Start is called before the first frame update
     private void Awake()
     {
-        mySlider = this.gameObject.GetComponent<Slider>();
+        mySlider = gameObject.GetComponent<Slider>();
     }
-    void Start()
+
+    private void Start()
     {
         mySlider = GetComponent<Slider>();
-        numberOfSteps = Mathf.CeilToInt( (float)mySlider.maxValue / stepAmount);
+        numberOfSteps = Mathf.CeilToInt(mySlider.maxValue / stepAmount);
     }
-   
+
     public void UpdateStep()
     {
-        float range = (mySlider.value / mySlider.maxValue) * numberOfSteps;
-        int ceil = Mathf.CeilToInt(range);
+        var range = mySlider.value / mySlider.maxValue * numberOfSteps;
+        var ceil = Mathf.CeilToInt(range);
         mySlider.value = ceil * stepAmount;
     }
 }

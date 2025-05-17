@@ -1,191 +1,213 @@
-﻿using UnityEngine;
-using UnityEngine.Events;
+﻿using CW.Common;
 using Lean.Transition;
-using Lean.Common;
-using CW.Common;
-using Selectable = UnityEngine.UI.Selectable;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
 
 namespace Lean.Gui
 {
-	/// <summary>This component provides an alternative to Unity's UI button, allowing you to easily add custom transitions, as well as add an OnDown event.</summary>
+	/// <summary>
+	///     This component provides an alternative to Unity's UI button, allowing you to easily add custom transitions, as
+	///     well as add an OnDown event.
+	/// </summary>
 	public abstract class LeanSelectable : Selectable
-	{
-		public new bool interactable
-		{
-			set
-			{
-				base.interactable = value;
+    {
+        [SerializeField] private LeanPlayer interactableTransitions;
+        [SerializeField] private LeanPlayer nonInteractableTransitions;
+        [SerializeField] private UnityEvent onInteractable;
+        [SerializeField] private UnityEvent onNonInteractable;
 
-				UpdateInteractable();
-			}
+        [SerializeField] private bool expectedInteractable = true;
 
-			get
-			{
-				return base.interactable;
-			}
-		}
+        public new bool interactable
+        {
+            set
+            {
+                base.interactable = value;
 
-		/// <summary>This allows you to perform a transition when this element becomes interactable.
-		/// You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
-		/// For example, the <b>Graphic.color Transition (LeanGraphicColor)</b> component can be used to change the color.
-		/// NOTE: Any transitions you perform here must be reverted in the <b>Landscape Transitions</b> setting using a matching transition component.</summary>
-		public LeanPlayer InteractableTransitions { get { if (interactableTransitions == null) interactableTransitions = new LeanPlayer(); return interactableTransitions; } } [SerializeField] private LeanPlayer interactableTransitions;
+                UpdateInteractable();
+            }
 
-		/// <summary>This allows you to perform a transition when this element becomes non-interactable.
-		/// You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
-		/// For example, the <b>Graphic.color Transition (LeanGraphicColor)</b> component can be used to change the color.
-		/// NOTE: Any transitions you perform here must be reverted in the <b>Landscape Transitions</b> setting using a matching transition component.</summary>
-		public LeanPlayer NonInteractableTransitions { get { if (nonInteractableTransitions == null) nonInteractableTransitions = new LeanPlayer(); return nonInteractableTransitions; } } [SerializeField] private LeanPlayer nonInteractableTransitions;
+            get => base.interactable;
+        }
 
-		public UnityEvent OnInteractable { get { if (onInteractable == null) onInteractable = new UnityEvent(); return onInteractable; } } [SerializeField] private UnityEvent onInteractable;
+        /// <summary>
+        ///     This allows you to perform a transition when this element becomes interactable.
+        ///     You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
+        ///     For example, the <b>Graphic.color Transition (LeanGraphicColor)</b> component can be used to change the color.
+        ///     NOTE: Any transitions you perform here must be reverted in the <b>Landscape Transitions</b> setting using a
+        ///     matching transition component.
+        /// </summary>
+        public LeanPlayer InteractableTransitions
+        {
+            get
+            {
+                if (interactableTransitions == null) interactableTransitions = new LeanPlayer();
+                return interactableTransitions;
+            }
+        }
 
-		public UnityEvent OnNonInteractable { get { if (onNonInteractable == null) onNonInteractable = new UnityEvent(); return onNonInteractable; } } [SerializeField] private UnityEvent onNonInteractable;
+        /// <summary>
+        ///     This allows you to perform a transition when this element becomes non-interactable.
+        ///     You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
+        ///     For example, the <b>Graphic.color Transition (LeanGraphicColor)</b> component can be used to change the color.
+        ///     NOTE: Any transitions you perform here must be reverted in the <b>Landscape Transitions</b> setting using a
+        ///     matching transition component.
+        /// </summary>
+        public LeanPlayer NonInteractableTransitions
+        {
+            get
+            {
+                if (nonInteractableTransitions == null) nonInteractableTransitions = new LeanPlayer();
+                return nonInteractableTransitions;
+            }
+        }
 
-		[SerializeField]
-		private bool expectedInteractable = true;
+        public UnityEvent OnInteractable
+        {
+            get
+            {
+                if (onInteractable == null) onInteractable = new UnityEvent();
+                return onInteractable;
+            }
+        }
 
-		protected override void OnCanvasGroupChanged()
-		{
-			base.OnCanvasGroupChanged();
-
-			UpdateInteractable();
-		}
+        public UnityEvent OnNonInteractable
+        {
+            get
+            {
+                if (onNonInteractable == null) onNonInteractable = new UnityEvent();
+                return onNonInteractable;
+            }
+        }
 
 #if UNITY_EDITOR
-		protected override void Reset()
-		{
-			base.Reset();
+        protected override void Reset()
+        {
+            base.Reset();
 
-			transition = Selectable.Transition.None;
-		}
+            transition = Transition.None;
+        }
 #endif
 
-		private void UpdateInteractable()
-		{
-			var currentInteractable = IsInteractable();
+        protected override void OnCanvasGroupChanged()
+        {
+            base.OnCanvasGroupChanged();
 
-			if (currentInteractable != expectedInteractable)
-			{
-				expectedInteractable = currentInteractable;
+            UpdateInteractable();
+        }
 
-				if (expectedInteractable == true)
-				{
-					if (interactableTransitions != null)
-					{
-						interactableTransitions.Begin();
-					}
+        private void UpdateInteractable()
+        {
+            var currentInteractable = IsInteractable();
 
-					if (onInteractable != null)
-					{
-						onInteractable.Invoke();
-					}
-				}
-				else
-				{
-					if (nonInteractableTransitions != null)
-					{
-						nonInteractableTransitions.Begin();
-					}
+            if (currentInteractable != expectedInteractable)
+            {
+                expectedInteractable = currentInteractable;
 
-					if (onNonInteractable != null)
-					{
-						onNonInteractable.Invoke();
-					}
-				}
-			}
-		}
-	}
+                if (expectedInteractable)
+                {
+                    if (interactableTransitions != null) interactableTransitions.Begin();
+
+                    if (onInteractable != null) onInteractable.Invoke();
+                }
+                else
+                {
+                    if (nonInteractableTransitions != null) nonInteractableTransitions.Begin();
+
+                    if (onNonInteractable != null) onNonInteractable.Invoke();
+                }
+            }
+        }
+    }
 }
 
 #if UNITY_EDITOR
 namespace Lean.Gui.Editor
 {
-	using TARGET = LeanSelectable;
+    using TARGET = LeanSelectable;
 
-	public class LeanSelectable_Editor : CwEditor
-	{
-		protected override void OnInspector()
-		{
-			DrawSelectableSettings();
+    public class LeanSelectable_Editor : CwEditor
+    {
+        protected override void OnInspector()
+        {
+            DrawSelectableSettings();
 
-			Separator();
+            Separator();
 
-			var showUnusedEvents = DrawFoldout("Show Unused Events", "Show all events?");
+            var showUnusedEvents = DrawFoldout("Show Unused Events", "Show all events?");
 
-			Separator();
+            Separator();
 
-			DrawSelectableTransitions(showUnusedEvents);
+            DrawSelectableTransitions(showUnusedEvents);
 
-			Separator();
+            Separator();
 
-			DrawSelectableEvents(showUnusedEvents);
-		}
+            DrawSelectableEvents(showUnusedEvents);
+        }
 
-		protected virtual void DrawSelectableSettings()
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+        protected virtual void DrawSelectableSettings()
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			if (Draw("m_Interactable") == true)
-			{
-				Each(tgts, t => t.interactable = serializedObject.FindProperty("expectedInteractable").boolValue = serializedObject.FindProperty("m_Interactable").boolValue, true);
-			}
-			Draw("m_Transition");
+            if (Draw("m_Interactable"))
+                Each(tgts,
+                    t => t.interactable = serializedObject.FindProperty("expectedInteractable").boolValue =
+                        serializedObject.FindProperty("m_Interactable").boolValue, true);
+            Draw("m_Transition");
 
-			if (Any(tgts, t => t.transition == Selectable.Transition.ColorTint))
-			{
-				BeginIndent();
-					Draw("m_TargetGraphic");
-					Draw("m_Colors");
-				EndIndent();
-			}
+            if (Any(tgts, t => t.transition == Selectable.Transition.ColorTint))
+            {
+                BeginIndent();
+                Draw("m_TargetGraphic");
+                Draw("m_Colors");
+                EndIndent();
+            }
 
-			if (Any(tgts, t => t.transition == Selectable.Transition.SpriteSwap))
-			{
-				BeginIndent();
-					Draw("m_TargetGraphic");
-					Draw("m_SpriteState");
-				EndIndent();
-			}
+            if (Any(tgts, t => t.transition == Selectable.Transition.SpriteSwap))
+            {
+                BeginIndent();
+                Draw("m_TargetGraphic");
+                Draw("m_SpriteState");
+                EndIndent();
+            }
 
-			if (Any(tgts, t => t.transition == Selectable.Transition.Animation))
-			{
-				BeginIndent();
-					Draw("m_AnimationTriggers");
-				EndIndent();
-			}
+            if (Any(tgts, t => t.transition == Selectable.Transition.Animation))
+            {
+                BeginIndent();
+                Draw("m_AnimationTriggers");
+                EndIndent();
+            }
 
-			Draw("m_Navigation");
-		}
+            Draw("m_Navigation");
+        }
 
-		protected virtual void DrawSelectableTransitions(bool showUnusedEvents)
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+        protected virtual void DrawSelectableTransitions(bool showUnusedEvents)
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			if (showUnusedEvents == true || Any(tgts, t => t.InteractableTransitions.IsUsed == true))
-			{
-				Draw("interactableTransitions");
-			}
+            if (showUnusedEvents || Any(tgts, t => t.InteractableTransitions.IsUsed)) Draw("interactableTransitions");
 
-			if (showUnusedEvents == true || Any(tgts, t => t.NonInteractableTransitions.IsUsed == true))
-			{
-				Draw("nonInteractableTransitions");
-			}
-		}
+            if (showUnusedEvents || Any(tgts, t => t.NonInteractableTransitions.IsUsed))
+                Draw("nonInteractableTransitions");
+        }
 
-		protected virtual void DrawSelectableEvents(bool showUnusedEvents)
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+        protected virtual void DrawSelectableEvents(bool showUnusedEvents)
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			if (showUnusedEvents == true || Any(tgts, t => t.OnInteractable.GetPersistentEventCount() > 0))
-			{
-				Draw("onInteractable");
-			}
+            if (showUnusedEvents || Any(tgts, t => t.OnInteractable.GetPersistentEventCount() > 0))
+                Draw("onInteractable");
 
-			if (showUnusedEvents == true || Any(tgts, t => t.OnNonInteractable.GetPersistentEventCount() > 0))
-			{
-				Draw("onNonInteractable");
-			}
-		}
-	}
+            if (showUnusedEvents || Any(tgts, t => t.OnNonInteractable.GetPersistentEventCount() > 0))
+                Draw("onNonInteractable");
+        }
+    }
 }
 #endif

@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Manipulator;
+using UnityEngine.Rendering;
 
 namespace Manipulator
 {
     public class Polygon : Shape
     {
-        public List<Point> Points { get; private set; } = new();
-
-        private GameObject visual;
+        private MeshCollider meshCollider;
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
-        private MeshCollider meshCollider;
+
+        private GameObject visual;
+        public List<Point> Points { get; } = new();
 
         protected override void Awake()
         {
@@ -29,6 +28,14 @@ namespace Manipulator
 
             meshRenderer.material = DefaultMat;
             meshCollider.convex = true;
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            foreach (var p in Points)
+                if (p != null)
+                    p.OnPositionChanged -= OnPivotMoved;
         }
 
         public void AddPoint(Point p)
@@ -51,8 +58,8 @@ namespace Manipulator
         {
             if (Points.Count < 3) return;
 
-            Vector3[] vertices = Points.Select(p => transform.InverseTransformPoint(p.transform.position)).ToArray();
-            int[] triangles = Triangulate(vertices);
+            var vertices = Points.Select(p => transform.InverseTransformPoint(p.transform.position)).ToArray();
+            var triangles = Triangulate(vertices);
 
             var mesh = new Mesh
             {
@@ -61,101 +68,91 @@ namespace Manipulator
                 triangles = triangles
             };
             mesh.RecalculateNormals();
-            mesh.RecalculateBounds(); 
+            mesh.RecalculateBounds();
 
             meshFilter.sharedMesh = mesh;
             if (Points.Count >= 4)
             {
-                
-try
-{
-    if (Points.Count >= 4)
-    {
-        meshCollider.sharedMesh = mesh;
+                try
+                {
+                    if (Points.Count >= 4)
+                    {
+                        meshCollider.sharedMesh = mesh;
 
-        // Apply colored transparent material
-        meshRenderer.material = new Material(DefaultMat);
-        meshRenderer.material.color = new Color(0.4f, 0.8f, 1f, 0.3f); // light blue transparent
-        meshRenderer.material.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-        meshRenderer.material.SetFloat("_Mode", 3);
-        meshRenderer.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        meshRenderer.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        meshRenderer.material.SetInt("_ZWrite", 0);
-        meshRenderer.material.EnableKeyword("_ALPHABLEND_ON");
-        meshRenderer.material.renderQueue = 3000;
+                        // Apply colored transparent material
+                        meshRenderer.material = new Material(DefaultMat);
+                        meshRenderer.material.color = new Color(0.4f, 0.8f, 1f, 0.3f); // light blue transparent
+                        meshRenderer.material.SetInt("_Cull", (int)CullMode.Off);
+                        meshRenderer.material.SetFloat("_Mode", 3);
+                        meshRenderer.material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+                        meshRenderer.material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+                        meshRenderer.material.SetInt("_ZWrite", 0);
+                        meshRenderer.material.EnableKeyword("_ALPHABLEND_ON");
+                        meshRenderer.material.renderQueue = 3000;
 
-        meshCollider.convex = true;
-    }
-    else
-    {
-        meshCollider.sharedMesh = mesh;
+                        meshCollider.convex = true;
+                    }
+                    else
+                    {
+                        meshCollider.sharedMesh = mesh;
 
-        // Apply colored transparent material
-        meshRenderer.material = new Material(DefaultMat);
-        meshRenderer.material.color = new Color(0.4f, 0.8f, 1f, 0.3f); // light blue transparent
-        meshRenderer.material.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-        meshRenderer.material.SetFloat("_Mode", 3);
-        meshRenderer.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        meshRenderer.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        meshRenderer.material.SetInt("_ZWrite", 0);
-        meshRenderer.material.EnableKeyword("_ALPHABLEND_ON");
-        meshRenderer.material.renderQueue = 3000;
+                        // Apply colored transparent material
+                        meshRenderer.material = new Material(DefaultMat);
+                        meshRenderer.material.color = new Color(0.4f, 0.8f, 1f, 0.3f); // light blue transparent
+                        meshRenderer.material.SetInt("_Cull", (int)CullMode.Off);
+                        meshRenderer.material.SetFloat("_Mode", 3);
+                        meshRenderer.material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+                        meshRenderer.material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+                        meshRenderer.material.SetInt("_ZWrite", 0);
+                        meshRenderer.material.EnableKeyword("_ALPHABLEND_ON");
+                        meshRenderer.material.renderQueue = 3000;
 
-        meshCollider.convex = false;
-    }
-}
-catch
-{
-    Debug.LogWarning("[Polygon] MeshCollider failed. Using non-convex fallback.");
-    meshCollider.sharedMesh = mesh;
+                        meshCollider.convex = false;
+                    }
+                }
+                catch
+                {
+                    Debug.LogWarning("[Polygon] MeshCollider failed. Using non-convex fallback.");
+                    meshCollider.sharedMesh = mesh;
 
-        // Apply colored transparent material
-        meshRenderer.material = new Material(DefaultMat);
-        meshRenderer.material.color = new Color(0.4f, 0.8f, 1f, 0.3f); // light blue transparent
-        meshRenderer.material.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-        meshRenderer.material.SetFloat("_Mode", 3);
-        meshRenderer.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        meshRenderer.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        meshRenderer.material.SetInt("_ZWrite", 0);
-        meshRenderer.material.EnableKeyword("_ALPHABLEND_ON");
-        meshRenderer.material.renderQueue = 3000;
+                    // Apply colored transparent material
+                    meshRenderer.material = new Material(DefaultMat);
+                    meshRenderer.material.color = new Color(0.4f, 0.8f, 1f, 0.3f); // light blue transparent
+                    meshRenderer.material.SetInt("_Cull", (int)CullMode.Off);
+                    meshRenderer.material.SetFloat("_Mode", 3);
+                    meshRenderer.material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+                    meshRenderer.material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+                    meshRenderer.material.SetInt("_ZWrite", 0);
+                    meshRenderer.material.EnableKeyword("_ALPHABLEND_ON");
+                    meshRenderer.material.renderQueue = 3000;
 
-    meshCollider.convex = false;
-}
+                    meshCollider.convex = false;
+                }
 
                 meshCollider.convex = true;
             }
             else
             {
                 meshCollider.sharedMesh = null;
-            } 
+            }
         }
 
         private int[] Triangulate(Vector3[] vertices)
         {
             List<int> indices = new();
-            for (int i = 1; i < vertices.Length - 1; i++)
+            for (var i = 1; i < vertices.Length - 1; i++)
             {
                 indices.Add(0);
                 indices.Add(i);
                 indices.Add(i + 1);
             }
+
             return indices.ToArray();
         }
 
         private void OnPivotMoved(Point pt)
         {
             GenerateMesh();
-        }
-
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-            foreach (var p in Points)
-            {
-                if (p != null)
-                    p.OnPositionChanged -= OnPivotMoved;
-            }
         }
 
         public override ShapeData Serialize()
@@ -173,10 +170,11 @@ catch
 
             foreach (var id in data.ConnectedPoints)
             {
-                Shape shape = ShapeStorage.GetById(id);   
-                if ( shape is Point p)
+                var shape = ShapeStorage.GetById(id);
+                if (shape is Point p)
                     AddPoint(p);
             }
+
             CompletePolygon();
         }
 
@@ -187,16 +185,16 @@ catch
                 if (p != null && p.IsOnlyConnectedTo(this))
                     yield return p;
         }
-        
+
         public static class Drawer
         {
-            private static List<Point> points = new();
+            private const float SnapDistance = 0.2f;
+            private static readonly List<Point> points = new();
             private static Segment previewSegment;
             private static Point previewPoint;
             private static string pendingPointId;
             private static string pendingPolygonId;
             private static CreateShapeBatchAction batch;
-            private const float SnapDistance = 0.2f;
 
             public static void UpdatePolygonInput()
             {
@@ -206,10 +204,10 @@ catch
 
             private static void Click()
             {
-                if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
+                if (!PerformDrawing.RaycastMouse(out var pos)) return;
 
-                Point snap = FindNearbyPoint(pos);
-                bool closing = snap != null && points.Count >= 3 && snap == points[0];
+                var snap = FindNearbyPoint(pos);
+                var closing = snap != null && points.Count >= 3 && snap == points[0];
                 if (closing)
                 {
                     CompletePolygon();
@@ -217,7 +215,7 @@ catch
                 }
 
                 // Tạo point thật
-                string newPointId = Guid.NewGuid().ToString();
+                var newPointId = Guid.NewGuid().ToString();
                 var pointData = new ShapeData
                 {
                     Id = newPointId,
@@ -225,8 +223,8 @@ catch
                     Position = pos,
                     Rotation = Quaternion.identity,
                     Scale = Vector3.one,
-                    ConnectedPoints = new(),
-                    Settings = new()
+                    ConnectedPoints = new List<string>(),
+                    Settings = new Dictionary<string, string>()
                 };
 
                 pendingPointId = newPointId;
@@ -239,7 +237,7 @@ catch
                         // Spawn segment thật từ điểm trước tới điểm mới
                         if (points.Count > 0)
                         {
-                            string segId = Guid.NewGuid().ToString();
+                            var segId = Guid.NewGuid().ToString();
                             var segData = new ShapeData
                             {
                                 Id = segId,
@@ -247,8 +245,8 @@ catch
                                 Position = Vector3.zero,
                                 Rotation = Quaternion.identity,
                                 Scale = Vector3.one,
-                                ConnectedPoints = new() { points.Last().ShapeId, pt.ShapeId },
-                                Settings = new()
+                                ConnectedPoints = new List<string> { points.Last().ShapeId, pt.ShapeId },
+                                Settings = new Dictionary<string, string>()
                             };
 
                             var segBatch = new CreateShapeBatchAction(new List<ShapeData> { segData });
@@ -283,7 +281,7 @@ catch
             private static void UpdatePreview()
             {
                 if (previewPoint == null || previewSegment == null || points.Count == 0) return;
-                if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
+                if (!PerformDrawing.RaycastMouse(out var pos)) return;
 
                 previewPoint.MoveTo(pos, queue: false);
                 previewSegment.SetEndPoint(previewPoint);
@@ -294,7 +292,7 @@ catch
                 if (points.Count < 3) return;
 
                 // Tạo đoạn cuối cùng nối từ điểm cuối → điểm đầu
-                string lastSegId = Guid.NewGuid().ToString();
+                var lastSegId = Guid.NewGuid().ToString();
                 var finalSegData = new ShapeData
                 {
                     Id = lastSegId,
@@ -302,8 +300,8 @@ catch
                     Position = Vector3.zero,
                     Rotation = Quaternion.identity,
                     Scale = Vector3.one,
-                    ConnectedPoints = new() { points.Last().ShapeId, points[0].ShapeId },
-                    Settings = new()
+                    ConnectedPoints = new List<string> { points.Last().ShapeId, points[0].ShapeId },
+                    Settings = new Dictionary<string, string>()
                 };
 
                 var segBatch = new CreateShapeBatchAction(new List<ShapeData> { finalSegData });
@@ -319,7 +317,7 @@ catch
                     Rotation = Quaternion.identity,
                     Scale = Vector3.one,
                     ConnectedPoints = points.Select(p => p.ShapeId).ToList(),
-                    Settings = new()
+                    Settings = new Dictionary<string, string>()
                 };
 
                 var polyAction = new CreateShapeBatchAction(new List<ShapeData> { polyData });
@@ -341,14 +339,14 @@ catch
                 if (previewPoint != null)
                 {
                     ShapeStorage.Unregister(previewPoint);
-                    GameObject.Destroy(previewPoint.gameObject);
+                    Destroy(previewPoint.gameObject);
                     previewPoint = null;
                 }
 
                 if (previewSegment != null)
                 {
                     ShapeStorage.Unregister(previewSegment);
-                    GameObject.Destroy(previewSegment.gameObject);
+                    Destroy(previewSegment.gameObject);
                     previewSegment = null;
                 }
 
@@ -363,14 +361,10 @@ catch
             private static Point FindNearbyPoint(Vector3 pos)
             {
                 foreach (var shape in ShapeStorage.GetAllShapes())
-                {
                     if (shape is Point p && Vector3.Distance(p.transform.position, pos) < SnapDistance)
                         return p;
-                }
                 return null;
             }
         }
-
-
     }
 }

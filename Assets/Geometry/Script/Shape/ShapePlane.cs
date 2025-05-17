@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
@@ -21,19 +22,19 @@ namespace Manipulator
         {
             if (pivotPoints.Count < 3) return;
 
-            Vector3 p0 = pivotPoints[0].transform.position;
-            Vector3 p1 = pivotPoints[1].transform.position;
-            Vector3 p2 = pivotPoints[2].transform.position;
+            var p0 = pivotPoints[0].transform.position;
+            var p1 = pivotPoints[1].transform.position;
+            var p2 = pivotPoints[2].transform.position;
 
-            Vector3 center = (p0 + p1 + p2) / 3f;
-            Vector3 dir1 = (p1 - p0);
-            Vector3 dir2 = (p2 - p0);
+            var center = (p0 + p1 + p2) / 3f;
+            var dir1 = p1 - p0;
+            var dir2 = p2 - p0;
 
-            float extent1 = dir1.magnitude;
-            float extent2 = dir2.magnitude;
+            var extent1 = dir1.magnitude;
+            var extent2 = dir2.magnitude;
 
-            Vector3 normal = Vector3.Cross(dir1, dir2).normalized;
-            Vector3 upHint = Vector3.Cross(dir1, normal); // giúp cố định "trục lên" của collider
+            var normal = Vector3.Cross(dir1, dir2).normalized;
+            var upHint = Vector3.Cross(dir1, normal); // giúp cố định "trục lên" của collider
 
             transform.position = center;
             transform.rotation = Quaternion.LookRotation(normal, upHint); // ✅ chuẩn hóa hướng xoay
@@ -46,8 +47,6 @@ namespace Manipulator
         }
 
 
-
-        
         public void SetPoints(List<Point> points)
         {
             pivotPoints.Clear();
@@ -57,7 +56,7 @@ namespace Manipulator
             meshFilter.mesh = MeshGenerator.CreatePlane(points);
         }
 
-        public event System.Action<Mesh> OnMeshUpdated;
+        public event Action<Mesh> OnMeshUpdated;
 
         public override void CompleteDraw()
         {

@@ -5,8 +5,7 @@ public class PingPong : MonoBehaviour
     public Transform destination;
     public float time;
 
-    [Space]
-    public float delay = 0;
+    [Space] public float delay;
 
     private Vector3 origin;
     private bool toOrigin = true;
@@ -19,6 +18,11 @@ public class PingPong : MonoBehaviour
             Loop();
         else
             DelayedLoop(destination.position);
+    }
+
+    private void OnDestroy()
+    {
+        LeanTween.cancel(gameObject);
     }
 
     // Animates moving from point A -> B and B -> A endlessly without delay
@@ -50,10 +54,5 @@ public class PingPong : MonoBehaviour
                     DelayedLoop(destination.position);
                 }
             });
-    }
-
-    private void OnDestroy()
-    {
-        LeanTween.cancel(gameObject);
     }
 }

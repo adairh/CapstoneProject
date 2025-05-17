@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-namespace Manipulator
+﻿namespace Manipulator
 {
     public class DeleteShapeAction : IUndoableAction
     {
@@ -10,7 +8,7 @@ namespace Manipulator
         public DeleteShapeAction(Shape shape)
         {
             this.shape = shape;
-            this.shapeData = shape.Serialize();
+            shapeData = shape.Serialize();
         }
 
         public void Undo()
@@ -33,6 +31,9 @@ namespace Manipulator
             }
         }
 
-        public Shape GetShape() => shape;
+        public Shape GetShape()
+        {
+            return shape;
+        }
     }
 }

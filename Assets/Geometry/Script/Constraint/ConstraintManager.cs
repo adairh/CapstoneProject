@@ -5,9 +5,8 @@ namespace Manipulator
 {
     public class ConstraintManager : MonoBehaviour
     {
-        public static ConstraintManager Instance { get; private set; }
-
         private readonly List<Constraint> allConstraints = new();
+        public static ConstraintManager Instance { get; private set; }
 
         private void Awake()
         {
@@ -16,6 +15,7 @@ namespace Manipulator
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
         }
 
@@ -33,10 +33,8 @@ namespace Manipulator
         public void ApplyConstraints(Shape changedShape, Vector3 delta)
         {
             foreach (var constraint in allConstraints)
-            {
                 if (constraint.HasShape(changedShape))
                     constraint.ApplyConstraint(changedShape, delta);
-            }
         }
 
         public IEnumerable<ConstraintData> SerializeAll()

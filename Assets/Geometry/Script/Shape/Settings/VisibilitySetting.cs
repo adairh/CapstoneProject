@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 namespace Manipulator
 {
@@ -62,8 +62,7 @@ namespace Manipulator
                 var holo = go.GetComponentInChildren<HolographicShapeDisplay>();
                 if (holo != null)
                     holo.BindToSetting(this);
-            } 
-
+            }
         }
 
         public override void Update()
@@ -72,6 +71,9 @@ namespace Manipulator
                 Value = targetShape.GetComponentInChildren<Renderer>()?.enabled ?? true;
         }
 
-        public override float Height() => 50;
+        public override float Height()
+        {
+            return 50;
+        }
     }
 }

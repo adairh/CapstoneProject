@@ -14,10 +14,7 @@ public class StatusPopup : MonoBehaviour
         if (canvasGroup == null)
         {
             canvasGroup = gameObject.GetComponent<CanvasGroup>();
-            if (canvasGroup == null)
-            {
-                canvasGroup = gameObject.AddComponent<CanvasGroup>();
-            }
+            if (canvasGroup == null) canvasGroup = gameObject.AddComponent<CanvasGroup>();
             canvasGroup.alpha = 1f;
         }
     }
@@ -52,13 +49,14 @@ public class StatusPopup : MonoBehaviour
 
         EnsureCanvasGroupInitialized();
 
-        float elapsedTime = 0f;
+        var elapsedTime = 0f;
         while (elapsedTime < fadeTime)
         {
             elapsedTime += Time.deltaTime;
             canvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsedTime / fadeTime);
             yield return null;
         }
+
         canvasGroup.alpha = 0f;
         Destroy(gameObject);
         Debug.Log("Status popup destroyed");

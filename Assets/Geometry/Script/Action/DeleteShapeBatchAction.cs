@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
 
 namespace Manipulator
 {
@@ -13,16 +12,12 @@ namespace Manipulator
             HashSet<Shape> unique = new();
 
             foreach (var shape in shapesToDelete)
-            {
-                foreach (var dep in shape.GetDependentShapesForDelete())
+            foreach (var dep in shape.GetDependentShapesForDelete())
+                if (dep != null && unique.Add(dep))
                 {
-                    if (dep != null && unique.Add(dep))
-                    {
-                        shapes.Add(dep);
-                        shapeDataList.Add(dep.Serialize());
-                    }
+                    shapes.Add(dep);
+                    shapeDataList.Add(dep.Serialize());
                 }
-            }
         }
 
 
@@ -39,10 +34,7 @@ namespace Manipulator
 
         public void Redo()
         {
-            foreach (var shape in shapes)
-            {
-                shape.DestroyShape();
-            }
+            foreach (var shape in shapes) shape.DestroyShape();
             shapes.Clear();
         }
     }

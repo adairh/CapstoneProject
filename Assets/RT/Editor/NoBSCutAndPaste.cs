@@ -36,10 +36,10 @@ using UnityEngine;
 
 public class NoBSCutAndPaste
 {
-    static GameObject _tempObj;
+    private static GameObject _tempObj;
 
     [MenuItem("GameObject/Cut without changing shit (Shift-Ctrl-X) %#x", false, 0)]
-    static void CutWithoutChangingShit()
+    private static void CutWithoutChangingShit()
     {
         var go = Selection.activeTransform;
 
@@ -53,15 +53,16 @@ public class NoBSCutAndPaste
 
         if (EditorWindow.focusedWindow.ToString() != " (UnityEditor.SceneHierarchyWindow)")
         {
-            EditorUtility.DisplayDialog("Woah!", "Don't use the 3D window, click on the gameobject in the hierarchy tree instead before doing cut/paste.", "Ok");
+            EditorUtility.DisplayDialog("Woah!",
+                "Don't use the 3D window, click on the gameobject in the hierarchy tree instead before doing cut/paste.",
+                "Ok");
             _tempObj = null;
             return;
         }
 
         _tempObj = go.gameObject;
 
-        Debug.Log("Cutting" + _tempObj.name+ ", now choose Paste without changing shit");
-
+        Debug.Log("Cutting" + _tempObj.name + ", now choose Paste without changing shit");
     }
 
     //This part by Jlpeebles taken from https://answers.unity.com/questions/656869/foldunfold-gameobject-from-code.html
@@ -76,18 +77,21 @@ public class NoBSCutAndPaste
     }
 
     [MenuItem("GameObject/Paste without changing shit (Shift-Ctrl-V) %#v", false, 0)]
-    static void PasteWithoutChangingShit()
+    private static void PasteWithoutChangingShit()
     {
-
         if (_tempObj == null)
         {
-            EditorUtility.DisplayDialog("Woah!", "Nothing to paste.  Highlight an object, right click, and choose 'Paste without changing shit' first.", "Ok");
+            EditorUtility.DisplayDialog("Woah!",
+                "Nothing to paste.  Highlight an object, right click, and choose 'Paste without changing shit' first.",
+                "Ok");
             return;
         }
 
         if (EditorWindow.focusedWindow.ToString() != " (UnityEditor.SceneHierarchyWindow)")
         {
-            EditorUtility.DisplayDialog("Woah!", "Don't use the 3D window, click on objects in the hierarchy tree instead before doing cut/paste.", "Ok");
+            EditorUtility.DisplayDialog("Woah!",
+                "Don't use the 3D window, click on objects in the hierarchy tree instead before doing cut/paste.",
+                "Ok");
             _tempObj = null;
             return;
         }
@@ -95,7 +99,8 @@ public class NoBSCutAndPaste
         var go = Selection.activeTransform;
         if (go == null || go.gameObject == null)
         {
-            Debug.Log("Pasting " + _tempObj.name + " without changing its local transform stuff.  (Pasted to root as a gameobject wasn't highlighted to parent it to)");
+            Debug.Log("Pasting " + _tempObj.name +
+                      " without changing its local transform stuff.  (Pasted to root as a gameobject wasn't highlighted to parent it to)");
 
             //Move the object to the root
             _tempObj.transform.SetParent(null, false);
@@ -103,7 +108,8 @@ public class NoBSCutAndPaste
             return;
         }
 
-        Debug.Log("Pasting " + _tempObj.name + " under "+go.gameObject.name+" without changing its local transform stuff.");
+        Debug.Log("Pasting " + _tempObj.name + " under " + go.gameObject.name +
+                  " without changing its local transform stuff.");
         _tempObj.transform.SetParent(go.transform, false);
         _tempObj = null;
 
@@ -124,6 +130,4 @@ public class NoBSCutAndPaste
     }
 
     */
-
 }
- 

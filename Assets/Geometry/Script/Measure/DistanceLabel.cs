@@ -1,4 +1,3 @@
-
 using TMPro;
 using UnityEngine;
 
@@ -8,10 +7,10 @@ namespace Manipulator
     {
         public Shape PointA;
         public Shape PointB;
-        private TextMeshPro text;
         private Camera mainCam;
+        private TextMeshPro text;
 
-        void Start()
+        private void Start()
         {
             mainCam = Camera.main;
 
@@ -26,23 +25,21 @@ namespace Manipulator
             text.enableCulling = false;
         }
 
-        void Update()
+        private void Update()
         {
             if (PointA == null || PointB == null) return;
 
-            Vector3 posA = PointA.transform.position;
-            Vector3 posB = PointB.transform.position;
-            Vector3 mid = (posA + posB) / 2;
+            var posA = PointA.transform.position;
+            var posB = PointB.transform.position;
+            var mid = (posA + posB) / 2;
 
             transform.position = mid;
 
-            float dist = Vector3.Distance(posA, posB);
+            var dist = Vector3.Distance(posA, posB);
             text.text = dist.ToString("F2");
 
             if (mainCam != null)
-            {
                 text.transform.rotation = Quaternion.LookRotation(text.transform.position - mainCam.transform.position);
-            }
         }
     }
 }

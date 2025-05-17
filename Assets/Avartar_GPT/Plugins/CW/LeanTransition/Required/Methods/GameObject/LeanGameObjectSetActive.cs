@@ -1,73 +1,76 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component will call <b>GameObject.SetActive</b> with the specified <b>Active</b> state when this transition completes.</summary>
+	/// <summary>
+	///     This component will call <b>GameObject.SetActive</b> with the specified <b>Active</b> state when this
+	///     transition completes.
+	/// </summary>
 	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanGameObjectSetActive")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "GameObject/GameObject.SetActive" + LeanTransition.MethodsMenuSuffix + "(LeanGameObjectSetActive)")]
-	public class LeanGameObjectSetActive : LeanMethodWithStateAndTarget
-	{
-		public override System.Type GetTargetType()
-		{
-			return typeof(GameObject);
-		}
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "GameObject/GameObject.SetActive" +
+                      LeanTransition.MethodsMenuSuffix + "(LeanGameObjectSetActive)")]
+    public class LeanGameObjectSetActive : LeanMethodWithStateAndTarget
+    {
+        public State Data;
 
-		public override void Register()
-		{
-			PreviousState = Register(GetAliasedTarget(Data.Target), Data.Active, Data.Duration);
-		}
+        public override Type GetTargetType()
+        {
+            return typeof(GameObject);
+        }
 
-		public static LeanState Register(GameObject target, bool active, float duration)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+        public override void Register()
+        {
+            PreviousState = Register(GetAliasedTarget(Data.Target), Data.Active, Data.Duration);
+        }
 
-			state.Active = active;
+        public static LeanState Register(GameObject target, bool active, float duration)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Active = active;
 
-		[System.Serializable]
-		public class State : LeanStateWithTarget<GameObject>
-		{
-			[Tooltip("The state we will transition to.")]
-			public bool Active;
+            return LeanTransition.Register(state, duration);
+        }
 
-			public override int CanFill
-			{
-				get
-				{
-					return Target != null && Target.activeSelf != Active ? 1 : 0;
-				}
-			}
+        [Serializable]
+        public class State : LeanStateWithTarget<GameObject>
+        {
+            public static Stack<State> Pool = new();
 
-			public override void FillWithTarget()
-			{
-				Active = Target.activeSelf;
-			}
+            [Tooltip("The state we will transition to.")]
+            public bool Active;
 
-			public override void UpdateWithTarget(float progress)
-			{
-				if (progress == 1.0f)
-				{
-					Target.SetActive(Active);
-				}
-			}
+            public override int CanFill => Target != null && Target.activeSelf != Active ? 1 : 0;
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+            public override void FillWithTarget()
+            {
+                Active = Target.activeSelf;
+            }
 
-		public State Data;
-	}
+            public override void UpdateWithTarget(float progress)
+            {
+                if (progress == 1.0f) Target.SetActive(Active);
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static GameObject SetActiveTransition(this GameObject target, bool active, float duration)
-		{
-			Method.LeanGameObjectSetActive.Register(target, active, duration); return target;
-		}
-	}
+    public static partial class LeanExtensions
+    {
+        public static GameObject SetActiveTransition(this GameObject target, bool active, float duration)
+        {
+            LeanGameObjectSetActive.Register(target, active, duration);
+            return target;
+        }
+    }
 }

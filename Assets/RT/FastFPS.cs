@@ -1,30 +1,25 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using TMPro;
 using UnityEngine;
 
 //Super simple FPS counter for VR as my fancy one doesn't work right there
 
 public class FastFPS : MonoBehaviour
 {
-    int _frameCounter;
-    float _oneSecondTimer;
+    private int _frameCounter;
+    private float _oneSecondTimer;
 
-    TMPro.TextMeshProUGUI _textMeshPro;
+    private TextMeshProUGUI _textMeshPro;
 
-    void Start()
+    private void Start()
     {
-        _textMeshPro = GetComponent<TMPro.TextMeshProUGUI>();
-        if (_textMeshPro == null)
-        {
-            Debug.Log("Put this script on a Textmeshpro text thingie");
-        }
+        _textMeshPro = GetComponent<TextMeshProUGUI>();
+        if (_textMeshPro == null) Debug.Log("Put this script on a Textmeshpro text thingie");
         _oneSecondTimer = Time.unscaledTime;
     }
 
 
-    void Update()
+    private void Update()
     {
-
         _frameCounter++;
 
         if (Time.unscaledTime > _oneSecondTimer + 1)
@@ -34,6 +29,5 @@ public class FastFPS : MonoBehaviour
             _frameCounter = 0;
             _oneSecondTimer = Time.unscaledTime;
         }
-
     }
 }

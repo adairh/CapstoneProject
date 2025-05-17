@@ -5,9 +5,9 @@ namespace Manipulator
 {
     public class FieldDefinition
     {
+        public Func<Dictionary<string, float>, float> ComputeFromOthers;
+        public bool IsRequired;
         public string Name;
         public FieldType Type;
-        public bool IsRequired;
-        public Func<Dictionary<string, float>, float> ComputeFromOthers;
     }
 }

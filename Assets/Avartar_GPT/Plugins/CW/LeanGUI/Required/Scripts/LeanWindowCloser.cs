@@ -1,130 +1,142 @@
-using UnityEngine;
 using System.Collections.Generic;
-using Lean.Common;
 using CW.Common;
+using UnityEditor;
+using UnityEngine;
 
 namespace Lean.Gui
 {
-	/// <summary>This component allows you to automatically close the top-most LeanWindow when you press the specified key.</summary>
-	[ExecuteInEditMode]
-	[HelpURL(LeanGui.HelpUrlPrefix + "LeanWindowCloser")]
-	[AddComponentMenu(LeanGui.ComponentMenuPrefix + "Window Closer")]
-	public class LeanWindowCloser : MonoBehaviour
-	{
-		/// <summary>This stores all active and enabled LeanWindowCloser instances.</summary>
-		public static List<LeanWindowCloser> Instances = new List<LeanWindowCloser>();
+    /// <summary>This component allows you to automatically close the top-most LeanWindow when you press the specified key.</summary>
+    [ExecuteInEditMode]
+    [HelpURL(LeanGui.HelpUrlPrefix + "LeanWindowCloser")]
+    [AddComponentMenu(LeanGui.ComponentMenuPrefix + "Window Closer")]
+    public class LeanWindowCloser : MonoBehaviour
+    {
+        /// <summary>This stores all active and enabled LeanWindowCloser instances.</summary>
+        public static List<LeanWindowCloser> Instances = new();
 
-		/// <summary>This allows you to set the key that must be pressed to close the window on top.</summary>
-		public KeyCode CloseKey { set { closeKey = value; } get { return closeKey; } } [SerializeField] private KeyCode closeKey = KeyCode.Escape;
+        [SerializeField] private KeyCode closeKey = KeyCode.Escape;
+        [SerializeField] private LeanWindow emptyWindow;
+        [SerializeField] private List<LeanWindow> windowOrder;
 
-		/// <summary>If every window is closed and you press the close key, this window will be opened. This can be used to open an options menu.</summary>
-		public LeanWindow EmptyWindow { set { emptyWindow = value; } get { return emptyWindow; } } [SerializeField] private LeanWindow emptyWindow;
+        /// <summary>This allows you to set the key that must be pressed to close the window on top.</summary>
+        public KeyCode CloseKey
+        {
+            set => closeKey = value;
+            get => closeKey;
+        }
 
-		/// <summary>This stores a list of all opened windows, in order of opening, so they can be closed in reverse order.</summary>
-		public List<LeanWindow> WindowOrder { get { if (windowOrder == null) windowOrder = new List<LeanWindow>(); return windowOrder; } } [SerializeField] private List<LeanWindow> windowOrder;
+        /// <summary>
+        ///     If every window is closed and you press the close key, this window will be opened. This can be used to open an
+        ///     options menu.
+        /// </summary>
+        public LeanWindow EmptyWindow
+        {
+            set => emptyWindow = value;
+            get => emptyWindow;
+        }
 
-		public static void Register(LeanWindow window)
-		{
-			if (Instances.Count > 0 && window != null)
-			{
-				Instances[0].RegisterNow(window);
-			}
-		}
+        /// <summary>This stores a list of all opened windows, in order of opening, so they can be closed in reverse order.</summary>
+        public List<LeanWindow> WindowOrder
+        {
+            get
+            {
+                if (windowOrder == null) windowOrder = new List<LeanWindow>();
+                return windowOrder;
+            }
+        }
 
-		/// <summary>This allows you to close all open LeanWindows.</summary>
-		[ContextMenu("Close All")]
-		public void CloseAll()
-		{
-			for (var i = WindowOrder.Count - 1; i >= 0; i--) // NOTE: Property
-			{
-				var window = windowOrder[i];
+        protected virtual void Update()
+        {
+            if (this == Instances[0])
+                if (CwInput.GetKeyWentDown(CloseKey))
+                    CloseTopMost();
+        }
 
-				if (window != null && window.On == true)
-				{
-					window.TurnOff();
-				}
-			}
+        protected virtual void OnEnable()
+        {
+            Instances.Add(this);
+        }
 
-			windowOrder.Clear();
-		}
+        protected virtual void OnDisable()
+        {
+            Instances.Remove(this);
+        }
 
-		/// <summary>This allows you to close the top most LeanWindow.</summary>
-		[ContextMenu("Close Top Most")]
-		public void CloseTopMost()
-		{
-			for (var i = WindowOrder.Count - 1; i >= 0; i--) // NOTE: Property
-			{
-				var window = windowOrder[i];
+        public static void Register(LeanWindow window)
+        {
+            if (Instances.Count > 0 && window != null) Instances[0].RegisterNow(window);
+        }
 
-				windowOrder.RemoveAt(i);
+        /// <summary>This allows you to close all open LeanWindows.</summary>
+        [ContextMenu("Close All")]
+        public void CloseAll()
+        {
+            for (var i = WindowOrder.Count - 1; i >= 0; i--) // NOTE: Property
+            {
+                var window = windowOrder[i];
 
-				if (window != null && window.On == true)
-				{
-					window.TurnOff();
+                if (window != null && window.On) window.TurnOff();
+            }
 
-					return;
-				}
-			}
+            windowOrder.Clear();
+        }
 
-			if (emptyWindow != null)
-			{
-				emptyWindow.TurnOn();
-			}
-		}
+        /// <summary>This allows you to close the top most LeanWindow.</summary>
+        [ContextMenu("Close Top Most")]
+        public void CloseTopMost()
+        {
+            for (var i = WindowOrder.Count - 1; i >= 0; i--) // NOTE: Property
+            {
+                var window = windowOrder[i];
 
-		protected virtual void OnEnable()
-		{
-			Instances.Add(this);
-		}
+                windowOrder.RemoveAt(i);
 
-		protected virtual void OnDisable()
-		{
-			Instances.Remove(this);
-		}
+                if (window != null && window.On)
+                {
+                    window.TurnOff();
 
-		protected virtual void Update()
-		{
-			if (this == Instances[0])
-			{
-				if (CwInput.GetKeyWentDown(CloseKey) == true)
-				{
-					CloseTopMost();
-				}
-			}
-		}
+                    return;
+                }
+            }
 
-		private void RegisterNow(LeanWindow window)
-		{
-			WindowOrder.Remove(window); // NOTE: Property
+            if (emptyWindow != null) emptyWindow.TurnOn();
+        }
 
-			windowOrder.Add(window);
-		}
-	}
+        private void RegisterNow(LeanWindow window)
+        {
+            WindowOrder.Remove(window); // NOTE: Property
+
+            windowOrder.Add(window);
+        }
+    }
 }
 
 #if UNITY_EDITOR
 namespace Lean.Gui.Editor
 {
-	using UnityEditor;
-	using TARGET = LeanWindowCloser;
+    using TARGET = LeanWindowCloser;
 
-	[CanEditMultipleObjects]
-	[CustomEditor(typeof(TARGET))]
-	public class LeanWindowCloser_Editor : CwEditor
-	{
-		protected override void OnInspector()
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+    [CanEditMultipleObjects]
+    [CustomEditor(typeof(TARGET))]
+    public class LeanWindowCloser_Editor : CwEditor
+    {
+        protected override void OnInspector()
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			Draw("closeKey", "This allows you to set the key that must be pressed to close the window on top.");
-			Draw("emptyWindow", "If every window is closed and you press the close key, this window will be opened. This can be used to open an options menu.");
+            Draw("closeKey", "This allows you to set the key that must be pressed to close the window on top.");
+            Draw("emptyWindow",
+                "If every window is closed and you press the close key, this window will be opened. This can be used to open an options menu.");
 
-			Separator();
+            Separator();
 
-			BeginDisabled(true);
-				Draw("windowOrder", "This stores a list of all opened windows, in order of opening, so they can be closed in reverse order.");
-			EndDisabled();
-		}
-	}
+            BeginDisabled();
+            Draw("windowOrder",
+                "This stores a list of all opened windows, in order of opening, so they can be closed in reverse order.");
+            EndDisabled();
+        }
+    }
 }
 #endif

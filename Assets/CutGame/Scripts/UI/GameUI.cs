@@ -8,31 +8,28 @@ public class GameUI : MonoBehaviour
     public Text clockText;
     public Color clockTextColor;
 
-    private int time;
+    [Space] public GameObject timesUp;
 
-    [Space]
-    public GameObject timesUp;
     public GameObject complete;
 
-    [Space]
-    public LevelLoader levelLoader;
+    [Space] public LevelLoader levelLoader;
 
     public Button nextLevel;
 
-    [Space]
-    public Image[] stars;
-    public Color starColor;    
+    [Space] public Image[] stars;
+
+    public Color starColor;
+
+    [Space] public Text countdown;
+
+    [Space] public Text starCount;
 
     private int clockID;
+    private readonly Vector3 countdownScale = new(1.25f, 1.25f);
 
-    [Space]
-    public Text countdown;
-    private Vector3 countdownScale = new Vector3(1.25f, 1.25f);
+    private int time;
 
-    [Space]
-    public Text starCount;
-
-    void Start()
+    private void Start()
     {
         GameManager.instance.OnCountdown += OnCountdown;
 
@@ -55,18 +52,19 @@ public class GameUI : MonoBehaviour
     // Updates the clock on every tick
     private void OnClockUpdate()
     {
-        int currTime = GameManager.timeLeft - 1;
+        var currTime = GameManager.timeLeft - 1;
 
-        float from = clockFill.fillAmount;
-        float to = currTime / (float)time;
+        var from = clockFill.fillAmount;
+        var to = currTime / (float)time;
 
         clockID = LeanTween.value(from, to, 1)
             .setOnUpdate(fill => clockFill.fillAmount = fill)
-            .setOnComplete(() => {
+            .setOnComplete(() =>
+            {
                 if (currTime == 0)
                     clockText.color = clockTextColor;
                 clockText.text = currTime.ToString();
-                })
+            })
             .id;
 
         if (currTime < 3)
@@ -82,23 +80,23 @@ public class GameUI : MonoBehaviour
         if (GameManager.instance.countdown > 0)
         {
             countdown.rectTransform.localScale = Vector3.one;
-            
+
             countdown.text = GameManager.instance.countdown.ToString();
 
             LeanTween.scale(countdown.rectTransform, countdownScale, 0.33f)
                 .setEaseOutElastic();
-            
+
             AudioManager.Play(SFX.Countdown);
-        }   
+        }
         else
         {
-            GameObject go = countdown.transform.parent.gameObject;
-            
+            var go = countdown.transform.parent.gameObject;
+
             go.GetComponent<CanvasGroup>().LeanAlpha(0, 0.1f)
                 .setOnComplete(() => go.SetActive(false));
 
             AudioManager.Play(SFX.Go);
-        }   
+        }
     }
 
     // Occurs when player failed or didn't finish level in time
@@ -137,11 +135,12 @@ public class GameUI : MonoBehaviour
     // Fades in the complete or timesup screen
     private void FadeIn(GameObject gameObject, Action onComplete = null)
     {
-        CanvasGroup canvas = gameObject.GetComponent<CanvasGroup>();
+        var canvas = gameObject.GetComponent<CanvasGroup>();
 
         var seq = LeanTween.sequence();
         seq.append(1);
-        seq.append(() => {
+        seq.append(() =>
+        {
             canvas.alpha = 0;
             gameObject.SetActive(true);
         });
@@ -156,14 +155,14 @@ public class GameUI : MonoBehaviour
         {
             var star = Instantiate(stars[n], stars[n].transform.parent);
             var scale = star.rectTransform.localScale;
-            
+
             star.rectTransform.localScale = Vector3.zero;
             star.color = starColor;
 
             star.rectTransform.LeanScale(scale, 0.2f)
                 .setEaseOutElastic()
                 .setOnComplete(() => ShowStar(n + 1));
-            
+
             AudioManager.Play(SFX.Collect);
         }
     }
@@ -171,7 +170,7 @@ public class GameUI : MonoBehaviour
     // Updates star count in UI
     private void UpdateStarCount()
     {
-        int count = GameManager.instance.rating;
+        var count = GameManager.instance.rating;
 
         if (count < 0)
             starCount.text = "!";

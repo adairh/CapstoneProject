@@ -2,8 +2,6 @@ namespace Manipulator
 {
     public interface IShapeButton
     {
-        ShapeType GetShapeType();
-
         public enum ShapeType
         {
             None,
@@ -15,7 +13,7 @@ namespace Manipulator
             Line,
             RayShape,
             Polygon,
-            
+
             EquilateralPyramid,
             EquilateralTriangle,
             GenericPyramid,
@@ -24,11 +22,12 @@ namespace Manipulator
             RegularTetrahedron,
             Rhombus,
             RightTriangle,
-            Square, 
+            Square,
             SquarePrism,
             SquarePyramid,
             Tetrahedron
-            
         }
+
+        ShapeType GetShapeType();
     }
 }

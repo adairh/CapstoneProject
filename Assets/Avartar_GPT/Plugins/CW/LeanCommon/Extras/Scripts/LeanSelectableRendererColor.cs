@@ -1,88 +1,105 @@
-using UnityEngine;
+using System;
 using CW.Common;
+using UnityEditor;
+using UnityEngine;
 
 namespace Lean.Common
 {
-	/// <summary>This component allows you to change the color of the Renderer (e.g. MeshRenderer) attached to the current GameObject when selected.</summary>
+	/// <summary>
+	///     This component allows you to change the color of the Renderer (e.g. MeshRenderer) attached to the current
+	///     GameObject when selected.
+	/// </summary>
 	[ExecuteInEditMode]
-	[RequireComponent(typeof(Renderer))]
-	[HelpURL(LeanCommon.HelpUrlPrefix + "LeanSelectableRendererColor")]
-	[AddComponentMenu(LeanCommon.ComponentPathPrefix + "Selectable Renderer Color")]
-	public class LeanSelectableRendererColor : LeanSelectableBehaviour
-	{
-		/// <summary>The default color given to the SpriteRenderer.</summary>
-		public Color DefaultColor { set { defaultColor = value; UpdateColor(); } get { return defaultColor; } } [SerializeField] private Color defaultColor = Color.white;
+    [RequireComponent(typeof(Renderer))]
+    [HelpURL(LeanCommon.HelpUrlPrefix + "LeanSelectableRendererColor")]
+    [AddComponentMenu(LeanCommon.ComponentPathPrefix + "Selectable Renderer Color")]
+    public class LeanSelectableRendererColor : LeanSelectableBehaviour
+    {
+        [SerializeField] private Color defaultColor = Color.white;
+        [SerializeField] private Color selectedColor = Color.green;
 
-		/// <summary>The color given to the SpriteRenderer when selected.</summary>
-		public Color SelectedColor { set { selectedColor = value; UpdateColor(); } get { return selectedColor; } } [SerializeField] private Color selectedColor = Color.green;
+        [NonSerialized] private Renderer cachedRenderer;
 
-		[System.NonSerialized]
-		private Renderer cachedRenderer;
+        [NonSerialized] private MaterialPropertyBlock properties;
 
-		[System.NonSerialized]
-		private MaterialPropertyBlock properties;
+        /// <summary>The default color given to the SpriteRenderer.</summary>
+        public Color DefaultColor
+        {
+            set
+            {
+                defaultColor = value;
+                UpdateColor();
+            }
+            get => defaultColor;
+        }
 
-		protected override void OnSelected(LeanSelect select)
-		{
-			UpdateColor();
-		}
+        /// <summary>The color given to the SpriteRenderer when selected.</summary>
+        public Color SelectedColor
+        {
+            set
+            {
+                selectedColor = value;
+                UpdateColor();
+            }
+            get => selectedColor;
+        }
 
-		protected override void OnDeselected(LeanSelect select)
-		{
-			UpdateColor();
-		}
+        protected override void Start()
+        {
+            base.Start();
 
-		protected override void Start()
-		{
-			base.Start();
+            UpdateColor();
+        }
 
-			UpdateColor();
-		}
+        protected override void OnSelected(LeanSelect select)
+        {
+            UpdateColor();
+        }
 
-		public void UpdateColor()
-		{
-			if (cachedRenderer == null) cachedRenderer = GetComponent<Renderer>();
+        protected override void OnDeselected(LeanSelect select)
+        {
+            UpdateColor();
+        }
 
-			var color = Selectable != null && Selectable.IsSelected == true ? selectedColor : defaultColor;
+        public void UpdateColor()
+        {
+            if (cachedRenderer == null) cachedRenderer = GetComponent<Renderer>();
 
-			if (properties == null)
-			{
-				properties = new MaterialPropertyBlock();
-			}
+            var color = Selectable != null && Selectable.IsSelected ? selectedColor : defaultColor;
 
-			cachedRenderer.GetPropertyBlock(properties);
+            if (properties == null) properties = new MaterialPropertyBlock();
 
-			properties.SetColor("_Color", color);
+            cachedRenderer.GetPropertyBlock(properties);
 
-			cachedRenderer.SetPropertyBlock(properties);
-		}
-	}
+            properties.SetColor("_Color", color);
+
+            cachedRenderer.SetPropertyBlock(properties);
+        }
+    }
 }
 
 #if UNITY_EDITOR
 namespace Lean.Common.Editor
 {
-	using UnityEditor;
-	using TARGET = LeanSelectableRendererColor;
+    using TARGET = LeanSelectableRendererColor;
 
-	[CanEditMultipleObjects]
-	[CustomEditor(typeof(TARGET))]
-	public class LeanSelectableRendererColor_Editor : CwEditor
-	{
-		protected override void OnInspector()
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+    [CanEditMultipleObjects]
+    [CustomEditor(typeof(TARGET))]
+    public class LeanSelectableRendererColor_Editor : CwEditor
+    {
+        protected override void OnInspector()
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			var updateColor = false;
+            var updateColor = false;
 
-			Draw("defaultColor", ref updateColor, "The default color given to the SpriteRenderer.");
-			Draw("selectedColor", ref updateColor, "The color given to the SpriteRenderer when selected.");
+            Draw("defaultColor", ref updateColor, "The default color given to the SpriteRenderer.");
+            Draw("selectedColor", ref updateColor, "The color given to the SpriteRenderer when selected.");
 
-			if (updateColor == true)
-			{
-				Each(tgts, t => t.UpdateColor(), true);
-			}
-		}
-	}
+            if (updateColor) Each(tgts, t => t.UpdateColor(), true);
+        }
+    }
 }
 #endif

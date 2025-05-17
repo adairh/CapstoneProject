@@ -4,16 +4,8 @@ namespace Manipulator
 {
     public class ShapeClickHandler : MonoBehaviour
     {
-        private Shape shape;
         private SpawnPanel panelSpawner;
-
-        public void SetShape(Shape shape)
-        {
-            // luôn lấy root shape (nếu có nested)
-            this.shape = shape;/*
-            while (this.shape.Parent != null)
-                this.shape = this.shape.Parent;*/
-        }
+        private Shape shape;
 
         private void Start()
         {
@@ -28,8 +20,8 @@ namespace Manipulator
                 var cam = Camera.main;
                 if (cam == null) return;
 
-                Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-                if (Physics.Raycast(ray, out RaycastHit hit))
+                var ray = cam.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out var hit))
                 {
                     // debug
                     Debug.Log($"[ShapeClickHandler] Raycast hit: {hit.collider.gameObject.name}");
@@ -40,6 +32,14 @@ namespace Manipulator
                     }
                 }
             }
+        }
+
+        public void SetShape(Shape shape)
+        {
+            // luôn lấy root shape (nếu có nested)
+            this.shape = shape; /*
+            while (this.shape.Parent != null)
+                this.shape = this.shape.Parent;*/
         }
     }
 }

@@ -1,4 +1,5 @@
 // Refactored SquarePyramidDrawer with Mesh Display for base square
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,10 +8,10 @@ namespace Manipulator
 {
     public class SquarePyramidDrawer : IPrebuiltDrawer
     {
-        private string idA, idB, idC, idD, idApex;
-        private string idAB, idBC, idCD, idDA, idAApex, idBApex, idCApex, idDApex;
         private Point a, b, c, d, apex;
         private Segment ab, bc, cd, da, aa, ba, ca, da2;
+        private string idA, idB, idC, idD, idApex;
+        private string idAB, idBC, idCD, idDA, idAApex, idBApex, idCApex, idDApex;
         private ShapeMeshDisplay meshDisplay;
 
         public void Begin(Vector3 startPos)
@@ -31,21 +32,37 @@ namespace Manipulator
 
             var datas = new List<ShapeData>
             {
-                new ShapeData { Id = idA, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idD, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idApex, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new()
+                {
+                    Id = idA, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idD, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idApex, Type = "Point", Position = startPos, Rotation = Quaternion.identity,
+                    Scale = Vector3.one
+                },
 
-                new ShapeData { Id = idAB, Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = idBC, Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = idCD, Type = "Segment", ConnectedPoints = new() { idC, idD } },
-                new ShapeData { Id = idDA, Type = "Segment", ConnectedPoints = new() { idD, idA } },
+                new() { Id = idAB, Type = "Segment", ConnectedPoints = new List<string> { idA, idB } },
+                new() { Id = idBC, Type = "Segment", ConnectedPoints = new List<string> { idB, idC } },
+                new() { Id = idCD, Type = "Segment", ConnectedPoints = new List<string> { idC, idD } },
+                new() { Id = idDA, Type = "Segment", ConnectedPoints = new List<string> { idD, idA } },
 
-                new ShapeData { Id = idAApex, Type = "Segment", ConnectedPoints = new() { idA, idApex } },
-                new ShapeData { Id = idBApex, Type = "Segment", ConnectedPoints = new() { idB, idApex } },
-                new ShapeData { Id = idCApex, Type = "Segment", ConnectedPoints = new() { idC, idApex } },
-                new ShapeData { Id = idDApex, Type = "Segment", ConnectedPoints = new() { idD, idApex } },
+                new() { Id = idAApex, Type = "Segment", ConnectedPoints = new List<string> { idA, idApex } },
+                new() { Id = idBApex, Type = "Segment", ConnectedPoints = new List<string> { idB, idApex } },
+                new() { Id = idCApex, Type = "Segment", ConnectedPoints = new List<string> { idC, idApex } },
+                new() { Id = idDApex, Type = "Segment", ConnectedPoints = new List<string> { idD, idApex } }
             };
 
             var batch = new CreateShapeBatchAction(datas);
@@ -70,54 +87,26 @@ namespace Manipulator
                     if (s.ShapeId == idCApex) ca = s;
                     if (s.ShapeId == idDApex) da2 = s;
                 }
+
                 TryConnect();
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
         }
 
-        private void TryConnect()
-        {
-            if (a != null && b != null && c != null && d != null && apex != null &&
-                ab != null && bc != null && cd != null && da != null &&
-                aa != null && ba != null && ca != null && da2 != null)
-            {
-                foreach (var pt in new[] { a, b, c, d, apex }) pt.SetRaycastIgnore(true);
-                foreach (var seg in new[] { ab, bc, cd, da, aa, ba, ca, da2 })
-                {
-                    seg.MarkAsPreview();
-                    seg.SetRaycastIgnore(true);
-                }
-
-                ab.SetStartPoint(a); ab.SetEndPoint(b);
-                bc.SetStartPoint(b); bc.SetEndPoint(c);
-                cd.SetStartPoint(c); cd.SetEndPoint(d);
-                da.SetStartPoint(d); da.SetEndPoint(a);
-                aa.SetStartPoint(a); aa.SetEndPoint(apex);
-                ba.SetStartPoint(b); ba.SetEndPoint(apex);
-                ca.SetStartPoint(c); ca.SetEndPoint(apex);
-                da2.SetStartPoint(d); da2.SetEndPoint(apex);
-
-                if (meshDisplay == null)
-                {
-                    meshDisplay = a.gameObject.AddComponent<ShapeMeshDisplay>();
-                    meshDisplay.Initialize(new List<Point> { a, b, c, d });
-                }
-            }
-        }
-
         public void Working(Vector3 currentPos)
         {
             if (a == null || b == null || c == null || d == null || apex == null) return;
-            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
-            Vector3 ab = snappedPos - a.transform.position;
-            Vector3 dir = ab.normalized;
-            float side = ab.magnitude;
-            Vector3 right = Vector3.Cross(Vector3.up, dir);
-            Vector3 bPos = a.transform.position + dir * side;
-            Vector3 cPos = bPos + right * side;
-            Vector3 dPos = a.transform.position + right * side;
-            Vector3 apexPos = (a.transform.position + bPos + cPos + dPos) / 4f + Vector3.up * (side * 0.8f);
+            var snappedPos = currentPos;
+            snappedPos.y = 0f;
+            var ab = snappedPos - a.transform.position;
+            var dir = ab.normalized;
+            var side = ab.magnitude;
+            var right = Vector3.Cross(Vector3.up, dir);
+            var bPos = a.transform.position + dir * side;
+            var cPos = bPos + right * side;
+            var dPos = a.transform.position + right * side;
+            var apexPos = (a.transform.position + bPos + cPos + dPos) / 4f + Vector3.up * (side * 0.8f);
             b.MoveTo(bPos, queue: false);
             c.MoveTo(cPos, queue: false);
             d.MoveTo(dPos, queue: false);
@@ -134,6 +123,44 @@ namespace Manipulator
         {
             foreach (var pt in new[] { a, b, c, d, apex }) pt?.DestroyShape();
             foreach (var seg in new[] { ab, bc, cd, da, aa, ba, ca, da2 }) seg?.DestroyShape();
+        }
+
+        private void TryConnect()
+        {
+            if (a != null && b != null && c != null && d != null && apex != null &&
+                ab != null && bc != null && cd != null && da != null &&
+                aa != null && ba != null && ca != null && da2 != null)
+            {
+                foreach (var pt in new[] { a, b, c, d, apex }) pt.SetRaycastIgnore(true);
+                foreach (var seg in new[] { ab, bc, cd, da, aa, ba, ca, da2 })
+                {
+                    seg.MarkAsPreview();
+                    seg.SetRaycastIgnore(true);
+                }
+
+                ab.SetStartPoint(a);
+                ab.SetEndPoint(b);
+                bc.SetStartPoint(b);
+                bc.SetEndPoint(c);
+                cd.SetStartPoint(c);
+                cd.SetEndPoint(d);
+                da.SetStartPoint(d);
+                da.SetEndPoint(a);
+                aa.SetStartPoint(a);
+                aa.SetEndPoint(apex);
+                ba.SetStartPoint(b);
+                ba.SetEndPoint(apex);
+                ca.SetStartPoint(c);
+                ca.SetEndPoint(apex);
+                da2.SetStartPoint(d);
+                da2.SetEndPoint(apex);
+
+                if (meshDisplay == null)
+                {
+                    meshDisplay = a.gameObject.AddComponent<ShapeMeshDisplay>();
+                    meshDisplay.Initialize(new List<Point> { a, b, c, d });
+                }
+            }
         }
     }
 }

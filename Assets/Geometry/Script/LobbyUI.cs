@@ -1,13 +1,10 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using An_An;
-using Khoa;
-using Manipulator;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Geometry;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class LobbyUI : MonoBehaviour
 {
@@ -18,23 +15,23 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private JoinPopupUI joinPopupUI;
     [SerializeField] private GameObject statusPopupPrefab;
     [SerializeField] private GameObject loadingPanel;
-
-    public static LobbyUI Instance { get; private set; }
+    private bool isShowingPopup;
+    private string lastStatusMessage = "";
+    private float lastStatusTime;
+    private Coroutine loadingCoroutine;
+    private float loadingStartTime;
+    private readonly float minLoadingDisplayTime = 8.0f;
+    private readonly Queue<string> statusMessageQueue = new();
+    private readonly float statusRepeatCooldown = 3.0f;
 
     private Canvas uiCanvas;
-    private string lastStatusMessage = "";
-    private float lastStatusTime = 0f;
-    private float statusRepeatCooldown = 3.0f;
-    private float minLoadingDisplayTime = 8.0f;
-    private float loadingStartTime;
-    private Coroutine loadingCoroutine;
-    private bool isShowingPopup = false;
-    private Queue<string> statusMessageQueue = new Queue<string>();
+
+    public static LobbyUI Instance { get; private set; }
 
     private void Awake()
     {
         Debug.Log("LobbyUI Awake");
-        
+
         if (Instance == null)
         {
             Instance = this;
@@ -54,10 +51,7 @@ public class LobbyUI : MonoBehaviour
         if (loadingPanel == null) Debug.LogError("LoadingPanel is not assigned!");
 
         uiCanvas = GetComponentInParent<Canvas>();
-        if (uiCanvas == null)
-        {
-            Debug.LogError("No Canvas found in the parent hierarchy of LobbyUI!");
-        }
+        if (uiCanvas == null) Debug.LogError("No Canvas found in the parent hierarchy of LobbyUI!");
 
         if (loadingPanel != null)
         {
@@ -77,6 +71,7 @@ public class LobbyUI : MonoBehaviour
                 Debug.LogError("createPopupUI is null when trying to show popup!");
                 return;
             }
+
             createPopupUI.Show((lobbyName, password, isPrivate) =>
             {
                 Debug.Log($"User confirmed creation of lobby: {lobbyName}, Private: {isPrivate}");
@@ -101,6 +96,7 @@ public class LobbyUI : MonoBehaviour
                 Debug.LogError("joinPopupUI is null when trying to show popup!");
                 return;
             }
+
             joinPopupUI.Show((lobbyName, password) =>
             {
                 Debug.Log($"User confirmed joining lobby: {lobbyName}");
@@ -116,9 +112,6 @@ public class LobbyUI : MonoBehaviour
                 }
             });
         });
-        
-
-        
     }
 
     private void Start()
@@ -126,43 +119,33 @@ public class LobbyUI : MonoBehaviour
         Debug.Log("Lobby Start");
         gameObject.SetActive(true);
         if (createPopupUI != null)
-        {
             createPopupUI.Hide();
-        }
         else
-        {
             Debug.LogError("createPopupUI is null in Start!");
-        }
 
         if (joinPopupUI != null)
-        {
             joinPopupUI.Hide();
-        }
         else
-        {
             Debug.LogError("joinPopupUI is null in Start!");
-        }
-        
-        
+
+
         Debug.LogWarning("Lobby UI:" + SceneFlag.IsRandom);
         if (SceneFlag.IsRandom)
         {
             CallDelayedLobbyCreation();
             SceneFlag.IsRandom = false;
-            return;
         }
-
     }
- 
+
     private async void CallDelayedLobbyCreation()
     {
-        ShowLoading();             
-        await Task.Delay(1000);                         
-        await GameLobby.Instance.CreateRandomLobby(); 
-        HideLoading();             
+        ShowLoading();
+        await Task.Delay(1000);
+        await GameLobby.Instance.CreateRandomLobby();
+        HideLoading();
     }
 
-    
+
     public void Hide()
     {
         Debug.Log("Hiding LobbyUI");
@@ -178,10 +161,7 @@ public class LobbyUI : MonoBehaviour
             loadingStartTime = Time.time;
             Debug.Log("Loading panel shown at: " + loadingStartTime);
 
-            if (loadingCoroutine != null)
-            {
-                StopCoroutine(loadingCoroutine);
-            }
+            if (loadingCoroutine != null) StopCoroutine(loadingCoroutine);
             loadingCoroutine = StartCoroutine(MinLoadingDisplayTime());
         }
         else
@@ -192,16 +172,14 @@ public class LobbyUI : MonoBehaviour
 
     private IEnumerator MinLoadingDisplayTime()
     {
-        while (Time.time - loadingStartTime < minLoadingDisplayTime)
-        {
-            yield return null;
-        }
+        while (Time.time - loadingStartTime < minLoadingDisplayTime) yield return null;
         Debug.Log("Minimum loading display time elapsed at: " + Time.time);
         if (loadingPanel != null && loadingPanel.activeSelf)
         {
             loadingPanel.SetActive(false);
             Debug.Log("Loading panel hidden due to minimum time.");
         }
+
         loadingCoroutine = null;
     }
 
@@ -214,6 +192,7 @@ public class LobbyUI : MonoBehaviour
                 StopCoroutine(loadingCoroutine);
                 loadingCoroutine = null;
             }
+
             // Hide loading panel only for errors that are not rate limit related
             if (lastStatusMessage.StartsWith("Error:") && !lastStatusMessage.Contains("Rate limit has been exceeded"))
             {
@@ -238,9 +217,9 @@ public class LobbyUI : MonoBehaviour
 
     public void UpdateStatus(string message)
     {
-        float now = Time.time;
+        var now = Time.time;
 
-        if (message == lastStatusMessage && (now - lastStatusTime) < statusRepeatCooldown)
+        if (message == lastStatusMessage && now - lastStatusTime < statusRepeatCooldown)
         {
             Debug.Log($"Duplicate status ignored due to cooldown: {message}");
             return;
@@ -261,9 +240,7 @@ public class LobbyUI : MonoBehaviour
         // Hide loading panel only on success or final error (excluding rate limit errors)
         if (message == "Host Started" || message == "Client Connected" ||
             (message.StartsWith("Error:") && !message.Contains("Rate limit has been exceeded")))
-        {
             HideLoading();
-        }
 
         if ((message.Contains("Lobby '") && message.Contains("already exists!")) ||
             message.Contains("No lobby named") ||
@@ -271,16 +248,16 @@ public class LobbyUI : MonoBehaviour
             message.Contains("Failed to create lobby after"))
         {
             isShowingPopup = true;
-            GameObject notification = Instantiate(statusPopupPrefab, Vector3.zero, Quaternion.identity);
+            var notification = Instantiate(statusPopupPrefab, Vector3.zero, Quaternion.identity);
             notification.transform.SetParent(uiCanvas.transform, false);
 
-            RectTransform rect = notification.GetComponent<RectTransform>();
-            int activePopups = uiCanvas.transform.childCount - 1;
+            var rect = notification.GetComponent<RectTransform>();
+            var activePopups = uiCanvas.transform.childCount - 1;
             float yOffset = -50 * activePopups;
             rect.anchoredPosition = new Vector2(0, 50 + yOffset);
             rect.localScale = Vector3.one;
 
-            StatusPopup popup = notification.GetComponent<StatusPopup>();
+            var popup = notification.GetComponent<StatusPopup>();
             if (popup != null)
             {
                 popup.SetStatus(message);
@@ -303,7 +280,7 @@ public class LobbyUI : MonoBehaviour
 
         if (statusMessageQueue.Count > 0)
         {
-            string nextMessage = statusMessageQueue.Dequeue();
+            var nextMessage = statusMessageQueue.Dequeue();
             Debug.Log($"Processing queued message: {nextMessage}");
             UpdateStatus(nextMessage);
         }

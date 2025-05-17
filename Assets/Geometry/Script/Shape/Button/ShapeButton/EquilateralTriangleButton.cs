@@ -4,7 +4,10 @@ namespace Manipulator
 {
     public class EquilateralTriangleButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.EquilateralTriangle;
+        public IShapeButton.ShapeType GetShapeType()
+        {
+            return IShapeButton.ShapeType.EquilateralTriangle;
+        }
 
         protected override void OnButtonClick()
         {

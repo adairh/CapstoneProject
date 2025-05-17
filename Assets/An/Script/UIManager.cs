@@ -1,15 +1,9 @@
 using UnityEngine;
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using System.Collections.Generic;
 
 namespace An_An
 {
     public class UIManager : MonoBehaviour
     {
-        public static UIManager Instance { get; private set; }
-
         /*private void Awake()
         {
             if (Instance == null)
@@ -25,17 +19,18 @@ namespace An_An
         }*/
         public GameObject canvasOnboarding;
         public GameObject canvasHome;
+        public static UIManager Instance { get; private set; }
+
+        private void Start()
+        {
+            canvasOnboarding.SetActive(true);
+            canvasHome.SetActive(false); // An home khi bat dau
+        }
 
         public void ShowHome()
         {
             canvasOnboarding.SetActive(false);
             canvasHome.SetActive(true);
-        }
-
-        void Start()
-        {
-            canvasOnboarding.SetActive(true);
-            canvasHome.SetActive(false); // An home khi bat dau
         }
     }
 }

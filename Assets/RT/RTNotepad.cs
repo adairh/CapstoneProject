@@ -1,6 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 /*
@@ -33,31 +32,29 @@ Somewhere, do this:
 
 public class RTNotepad : MonoBehaviour
 {
-    public TMPro.TMP_InputField m_textInput;
-    public Action<String> m_onClickedSavedCallback;
-    public Action<String> m_onClickedCancelCallback;
+    public TMP_InputField m_textInput;
+    public Action<string> m_onClickedCancelCallback;
+    public Action<string> m_onClickedSavedCallback;
 
     //This is a little helper object designed to be called statically to create the real thing
     public static RTNotepad OpenFile(string defaultText, GameObject prefab)
     {
-        GameObject go = Instantiate(prefab);
-        RTNotepad goScript = go.GetComponent<RTNotepad>();
+        var go = Instantiate(prefab);
+        var goScript = go.GetComponent<RTNotepad>();
         goScript.m_textInput.text = defaultText;
         return goScript;
     }
 
-  
+
     public void OnClickedSave()
     {
         m_onClickedSavedCallback.Invoke(m_textInput.text);
-        GameObject.Destroy(gameObject);
+        Destroy(gameObject);
     }
 
     public void OnClickedCancel()
     {
         m_onClickedCancelCallback.Invoke(m_textInput.text);
-        GameObject.Destroy(gameObject);
+        Destroy(gameObject);
     }
-
-   
 }

@@ -1,17 +1,15 @@
 ﻿//This source from https://github.com/artbobrov/ConvolutionFilter and modified by Seth A. Robinson to work with Unity's Texture2D
-using System.Collections.Generic;
+
 using System.Collections;
-using System.Threading;
-using System;
 using UnityEngine;
-namespace ConvFilter {
 
-    public class ConvolutionProcessor 
+namespace ConvFilter
+{
+    public class ConvolutionProcessor
     {
-
         public Texture2D m_originalMap;
 
-        public ConvolutionProcessor(Texture2D bitmap) 
+        public ConvolutionProcessor(Texture2D bitmap)
         {
             m_originalMap = bitmap;
         }
@@ -20,32 +18,30 @@ namespace ConvFilter {
         {
             var result = new Texture2D(m_originalMap.width, m_originalMap.height, TextureFormat.RGBA32, false);
             var offset = filter.Size / 2;
-            int takeABreakEveryNX = m_originalMap.width / 60;
+            var takeABreakEveryNX = m_originalMap.width / 60;
 
-            for (int x = 0; x < m_originalMap.width; x++) 
+            for (var x = 0; x < m_originalMap.width; x++)
             {
-
-                if (x% takeABreakEveryNX == 0)
-                {
-                    yield return null;
-                }
-                for (int y = 0; y < m_originalMap.height; y++) 
+                if (x % takeABreakEveryNX == 0) yield return null;
+                for (var y = 0; y < m_originalMap.height; y++)
                 {
                     var colorMap = new Color[filter.Size, filter.Size];
 
-                    for (int filterY = 0; filterY < filter.Size; filterY++) 
+                    for (var filterY = 0; filterY < filter.Size; filterY++)
                     {
-                        int pk = (filterY + x - offset <= 0) ? 0 :
-                            (filterY + x - offset >= m_originalMap.width - 1) ? m_originalMap.width - 1 : filterY + x - offset;
-                        for (int filterX = 0; filterX < filter.Size; filterX++)
+                        var pk = filterY + x - offset <= 0 ? 0 :
+                            filterY + x - offset >= m_originalMap.width - 1 ? m_originalMap.width - 1 :
+                            filterY + x - offset;
+                        for (var filterX = 0; filterX < filter.Size; filterX++)
                         {
-                            int pl = (filterX + y - offset <= 0) ? 0 :
-                                (filterX + y - offset >= m_originalMap.height - 1) ? m_originalMap.height - 1 : filterX + y - offset;
+                            var pl = filterX + y - offset <= 0 ? 0 :
+                                filterX + y - offset >= m_originalMap.height - 1 ? m_originalMap.height - 1 :
+                                filterX + y - offset;
 
                             colorMap[filterY, filterX] = m_originalMap.GetPixel(pk, pl);
                         }
                     }
-              
+
                     result.SetPixel(x, y, colorMap * filter);
                 }
             }
@@ -90,31 +86,29 @@ namespace ConvFilter {
         private void Calculate(int start, int finish, Filter filter, Texture2D result)
         {
             var offset = filter.Size / 2;
-            for (int x = start; x < finish; x++) 
+            for (var x = start; x < finish; x++)
+            for (var y = 0; y < m_originalMap.height; y++)
             {
-                for (int y = 0; y < m_originalMap.height; y++) 
+                var colorMap = new Color[filter.Size, filter.Size];
+
+                for (var filterY = 0; filterY < filter.Size; filterY++)
                 {
-                    var colorMap = new Color[filter.Size, filter.Size];
+                    var pk = filterY + x - offset <= 0 ? 0 :
+                        filterY + x - offset >= m_originalMap.width - 1 ? m_originalMap.width - 1 :
+                        filterY + x - offset;
 
-                    for (int filterY = 0; filterY < filter.Size; filterY++) 
+                    for (var filterX = 0; filterX < filter.Size; filterX++)
                     {
-                        int pk = (filterY + x - offset <= 0) ? 0 :
-                            (filterY + x - offset >= m_originalMap.width - 1) ? m_originalMap.width - 1 : filterY + x - offset;
+                        var pl = filterX + y - offset <= 0 ? 0 :
+                            filterX + y - offset >= m_originalMap.height - 1 ? m_originalMap.height - 1 :
+                            filterX + y - offset;
 
-                        for (int filterX = 0; filterX < filter.Size; filterX++) 
-                        {
-                            int pl = (filterX + y - offset <= 0) ? 0 :
-                                (filterX + y - offset >= m_originalMap.height - 1) ? m_originalMap.height - 1 : filterX + y - offset;
-
-                            colorMap[filterY, filterX] = m_originalMap.GetPixel(pk, pl);
-                        }
+                        colorMap[filterY, filterX] = m_originalMap.GetPixel(pk, pl);
                     }
-
-                    result.SetPixel(x, y, colorMap * filter);
                 }
+
+                result.SetPixel(x, y, colorMap * filter);
             }
         }
-
     }
-
 }

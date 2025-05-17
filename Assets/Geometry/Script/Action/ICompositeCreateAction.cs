@@ -7,5 +7,4 @@ namespace Manipulator
         List<ShapeData> GetAllShapeData();
         void LinkReferences(Dictionary<string, Shape> createdShapes);
     }
-
 }

@@ -1,4 +1,5 @@
 // Refactored EquilateralTriangleDrawer with Mesh Display
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,11 +8,11 @@ namespace Manipulator
 {
     public class EquilateralTriangleDrawer : IPrebuiltDrawer
     {
-        private string idA, idB, idC, idAB, idBC, idCA;
         private Point a, b, c;
         private Segment ab, bc, ca;
-        private ShapeMeshDisplay meshDisplay;
         private float baseLength;
+        private string idA, idB, idC, idAB, idBC, idCA;
+        private ShapeMeshDisplay meshDisplay;
 
         public void Begin(Vector3 startPos)
         {
@@ -24,12 +25,21 @@ namespace Manipulator
 
             var datas = new List<ShapeData>
             {
-                new ShapeData { Id = idA, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new ShapeData { Id = idAB, Type = "Segment", ConnectedPoints = new() { idA, idB } },
-                new ShapeData { Id = idBC, Type = "Segment", ConnectedPoints = new() { idB, idC } },
-                new ShapeData { Id = idCA, Type = "Segment", ConnectedPoints = new() { idC, idA } },
+                new()
+                {
+                    Id = idA, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idB, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new()
+                {
+                    Id = idC, Type = "Point", Position = startPos, Rotation = Quaternion.identity, Scale = Vector3.one
+                },
+                new() { Id = idAB, Type = "Segment", ConnectedPoints = new List<string> { idA, idB } },
+                new() { Id = idBC, Type = "Segment", ConnectedPoints = new List<string> { idB, idC } },
+                new() { Id = idCA, Type = "Segment", ConnectedPoints = new List<string> { idC, idA } }
             };
 
             var batch = new CreateShapeBatchAction(datas);
@@ -55,40 +65,20 @@ namespace Manipulator
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
         }
 
-        private void TryConnectSegments()
-        {
-            if (a != null && b != null && c != null && ab != null && bc != null && ca != null)
-            {
-                a.SetRaycastIgnore(true); b.SetRaycastIgnore(true); c.SetRaycastIgnore(true);
-                ab.SetRaycastIgnore(true); bc.SetRaycastIgnore(true); ca.SetRaycastIgnore(true);
-                ab.MarkAsPreview(); bc.MarkAsPreview(); ca.MarkAsPreview();
-
-                ab.SetStartPoint(a); ab.SetEndPoint(b);
-                bc.SetStartPoint(b); bc.SetEndPoint(c);
-                ca.SetStartPoint(c); ca.SetEndPoint(a);
-
-                if (meshDisplay == null)
-                {
-                    meshDisplay = a.gameObject.AddComponent<ShapeMeshDisplay>();
-                    meshDisplay.Initialize(new List<Point> { a, b, c });
-                }
-            }
-        }
-
         public void Working(Vector3 currentPos)
         {
             if (a == null || b == null || c == null) return;
-            Vector3 snappedPos = currentPos; snappedPos.y = 0f;
+            var snappedPos = currentPos;
+            snappedPos.y = 0f;
             b.MoveTo(snappedPos, queue: false);
-            Vector3 dir = (b.transform.position - a.transform.position).normalized;
-            float baseLength = Vector3.Distance(a.transform.position, b.transform.position);
-            Vector3 right = Vector3.Cross(Vector3.up, dir); // Plane is XZ
-            float height = Mathf.Sqrt(3f) / 2f * baseLength;
-            Vector3 midpoint = (a.transform.position + b.transform.position) / 2f;
-            Vector3 cPos = midpoint + right * height;
+            var dir = (b.transform.position - a.transform.position).normalized;
+            var baseLength = Vector3.Distance(a.transform.position, b.transform.position);
+            var right = Vector3.Cross(Vector3.up, dir); // Plane is XZ
+            var height = Mathf.Sqrt(3f) / 2f * baseLength;
+            var midpoint = (a.transform.position + b.transform.position) / 2f;
+            var cPos = midpoint + right * height;
             c.MoveTo(cPos, queue: false);
         }
-
 
 
         public void End(Vector3 finalPos)
@@ -103,8 +93,41 @@ namespace Manipulator
 
         public void Cancel()
         {
-            a?.DestroyShape(); b?.DestroyShape(); c?.DestroyShape();
-            ab?.DestroyShape(); bc?.DestroyShape(); ca?.DestroyShape();
+            a?.DestroyShape();
+            b?.DestroyShape();
+            c?.DestroyShape();
+            ab?.DestroyShape();
+            bc?.DestroyShape();
+            ca?.DestroyShape();
+        }
+
+        private void TryConnectSegments()
+        {
+            if (a != null && b != null && c != null && ab != null && bc != null && ca != null)
+            {
+                a.SetRaycastIgnore(true);
+                b.SetRaycastIgnore(true);
+                c.SetRaycastIgnore(true);
+                ab.SetRaycastIgnore(true);
+                bc.SetRaycastIgnore(true);
+                ca.SetRaycastIgnore(true);
+                ab.MarkAsPreview();
+                bc.MarkAsPreview();
+                ca.MarkAsPreview();
+
+                ab.SetStartPoint(a);
+                ab.SetEndPoint(b);
+                bc.SetStartPoint(b);
+                bc.SetEndPoint(c);
+                ca.SetStartPoint(c);
+                ca.SetEndPoint(a);
+
+                if (meshDisplay == null)
+                {
+                    meshDisplay = a.gameObject.AddComponent<ShapeMeshDisplay>();
+                    meshDisplay.Initialize(new List<Point> { a, b, c });
+                }
+            }
         }
     }
 }

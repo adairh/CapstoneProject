@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,7 +9,6 @@ public class PlayerMovement : MonoBehaviour
     public float gravity = -9.81f;
     public float jumpHeight = 3f;
     public float sprintingSpeed = 15f;
-    private float walkingSpeed;
     public float stamina = 100f;
 
 
@@ -20,34 +17,72 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask groundMask;
     public Slider staminaBar;
     public AudioSource footStepSound;
-
-    Vector3 velocity;
-    bool isGrounded;
+    private bool canSprint;
     private float defaultFOV;
-    bool canSprint;
+    private bool isGrounded;
     private float maxStamina;
 
-    void Start()
+    private Vector3 velocity;
+    private float walkingSpeed;
+
+    private void Start()
     {
         defaultFOV = Camera.main.fieldOfView;
         walkingSpeed = speed;
         maxStamina = stamina;
     }
 
-    void Sprint(bool toggle)
+    private void Update()
     {
+        //if(controller.isGrounded && Input.GetAxis("Vertical") != 0 | Input.GetAxis("Horizontal") != 0 && !footStepSound.isPlaying)    //If statement for footsteps. You should probably make this better later
+        // {
+        // footStepSound.Play();
+        //}
 
-        if (stamina >= maxStamina/2)
-        {
-            canSprint = true;
-        }
+        if ((Input.GetAxis("Vertical") != 0) | (Input.GetAxis("Horizontal") != 0) && isGrounded)
+            Camera.main.GetComponent<Animator>().Play("Head Bobbing");
+        else
+            Camera.main.GetComponent<Animator>().CrossFade("Not Bobbing", 0.1f);
 
-        if (toggle && stamina > 0f && canSprint == true)
+
+        if (Input.GetKey(KeyCode.LeftShift) && Input.GetAxis("Vertical") != 0) //If holding shift and moving
+            Sprint(true); //Enable sprint
+        if ((Input.GetAxis("Vertical") == 0) | !Input.GetKey(KeyCode.LeftShift)) //If not holding shift and not moving
+            Sprint(false); //Disable sprint
+
+
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+
+        if (isGrounded && velocity.y < 0) velocity.y = -2f;
+
+        var x = Input.GetAxis("Horizontal");
+        var z = Input.GetAxis("Vertical");
+
+        var move = Vector3.ClampMagnitude(transform.right * x + transform.forward * z, 1f);
+
+        controller.Move(move * speed * Time.deltaTime);
+
+        //Camera.main.fieldOfView = defaultFOV + controller.velocity.magnitude;
+
+        if (Input.GetButtonDown("Jump") && isGrounded) velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+
+        velocity.y += gravity * Time.deltaTime;
+
+        controller.Move(velocity * Time.deltaTime);
+    }
+
+    private void Sprint(bool toggle)
+    {
+        if (stamina >= maxStamina / 2) canSprint = true;
+
+        if (toggle && stamina > 0f && canSprint)
         {
             speed = sprintingSpeed;
             stamina -= 50 * Time.deltaTime;
             //staminaBar.value = stamina;
-            Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, defaultFOV + sprintingSpeed, 10f * Time.deltaTime);   //Multiplying by deltatime makes the animation consistent with all framerates :). This is the same for each line that this occurs in.... 
+            Camera.main.fieldOfView =
+                Mathf.Lerp(Camera.main.fieldOfView, defaultFOV + sprintingSpeed,
+                    10f * Time.deltaTime); //Multiplying by deltatime makes the animation consistent with all framerates :). This is the same for each line that this occurs in.... 
             Camera.main.GetComponent<Animator>().speed = 2f;
         }
 
@@ -67,62 +102,5 @@ public class PlayerMovement : MonoBehaviour
             Camera.main.fieldOfView = Mathf.Lerp(Camera.main.fieldOfView, defaultFOV, 10f * Time.deltaTime);
             Camera.main.GetComponent<Animator>().speed = 1f;
         }
-
-    }
-    void Update()
-    {
-        //if(controller.isGrounded && Input.GetAxis("Vertical") != 0 | Input.GetAxis("Horizontal") != 0 && !footStepSound.isPlaying)    //If statement for footsteps. You should probably make this better later
-       // {
-           // footStepSound.Play();
-        //}
-
-        if (Input.GetAxis("Vertical") != 0 | Input.GetAxis("Horizontal") != 0 && isGrounded)
-        {
-            Camera.main.GetComponent<Animator>().Play("Head Bobbing");
-        }
-        else
-        {
-            Camera.main.GetComponent<Animator>().CrossFade("Not Bobbing", 0.1f);
-        }
-
-
-
-        if (Input.GetKey(KeyCode.LeftShift) && Input.GetAxis("Vertical") != 0)  //If holding shift and moving
-        {
-            Sprint(true);   //Enable sprint
-
-        }
-        if (Input.GetAxis("Vertical") == 0 | !Input.GetKey(KeyCode.LeftShift))  //If not holding shift and not moving
-        {
-            Sprint(false);  //Disable sprint
-
-        }
-
-
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-
-        if(isGrounded && velocity.y < 0)
-        {
-            velocity.y = -2f;
-        }
-
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
-
-        Vector3 move = Vector3.ClampMagnitude((transform.right * x + transform.forward * z) , 1f);
-
-        controller.Move(move * speed * Time.deltaTime);
-
-        //Camera.main.fieldOfView = defaultFOV + controller.velocity.magnitude;
-
-        if (Input.GetButtonDown("Jump") && isGrounded)
-        {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-        }
-
-        velocity.y += gravity * Time.deltaTime;
-
-        controller.Move(velocity * Time.deltaTime);
-
     }
 }

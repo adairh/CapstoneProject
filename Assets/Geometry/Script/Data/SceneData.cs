@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Manipulator
 {
-    [System.Serializable]
+    [Serializable]
     public class SceneData
     {
         public List<ShapeData> Shapes = new();

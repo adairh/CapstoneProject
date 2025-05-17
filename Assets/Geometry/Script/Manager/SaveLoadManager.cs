@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using UnityEngine; 
+using UnityEngine;
 
 namespace Manipulator
 {
@@ -12,7 +11,7 @@ namespace Manipulator
         {
             var allShapes = ShapeStorage.GetAllShapes();
             var saveData = allShapes.Select(shape => shape.Serialize()).ToList();
-            string json = JsonUtility.ToJson(new ShapeDataList { shapes = saveData });
+            var json = JsonUtility.ToJson(new ShapeDataList { shapes = saveData });
             PlayerPrefs.SetString("SaveData", json);
         }
 
@@ -22,10 +21,7 @@ namespace Manipulator
             var json = PlayerPrefs.GetString("SaveData");
             var dataList = JsonUtility.FromJson<ShapeDataList>(json);
 
-            foreach (var data in dataList.shapes)
-            {
-                ShapeFactory.CreateFromData(data);
-            }
+            foreach (var data in dataList.shapes) ShapeFactory.CreateFromData(data);
         }
 
         [Serializable]
@@ -34,5 +30,4 @@ namespace Manipulator
             public List<ShapeData> shapes;
         }
     }
-
 }

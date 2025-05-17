@@ -13,18 +13,16 @@ namespace Manipulator
             {
                 changed = false;
                 foreach (var field in fields)
-                {
                     if (!results.ContainsKey(field.Name) && field.ComputeFromOthers != null)
-                    {
                         try
                         {
-                            float value = field.ComputeFromOthers(results);
+                            var value = field.ComputeFromOthers(results);
                             results[field.Name] = value;
                             changed = true;
                         }
-                        catch { }
-                    }
-                }
+                        catch
+                        {
+                        }
             } while (changed);
 
             return results;

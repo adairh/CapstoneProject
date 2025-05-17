@@ -1,14 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class DraggablePanel : MonoBehaviour, IDragHandler, IBeginDragHandler
 {
-    private RectTransform rectTransform;
     private Vector2 offset;
+    private RectTransform rectTransform;
 
-    void Awake()
+    private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
     }
@@ -24,9 +22,7 @@ public class DraggablePanel : MonoBehaviour, IDragHandler, IBeginDragHandler
     {
         Vector2 localPoint;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            rectTransform.parent as RectTransform, eventData.position, eventData.pressEventCamera, out localPoint))
-        {
+                rectTransform.parent as RectTransform, eventData.position, eventData.pressEventCamera, out localPoint))
             rectTransform.anchoredPosition = localPoint + offset;
-        }
     }
 }

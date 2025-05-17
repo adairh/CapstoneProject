@@ -1,7 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System.Collections.Generic;
 
 namespace Manipulator
 {
@@ -34,7 +33,7 @@ namespace Manipulator
 
             foreach (var matType in colorOptions)
             {
-                GameObject btn = new GameObject("ColorBtn", typeof(Image), typeof(Button));
+                var btn = new GameObject("ColorBtn", typeof(Image), typeof(Button));
                 btn.transform.SetParent(container, false);
 
                 var img = btn.GetComponent<Image>();
@@ -63,16 +62,14 @@ namespace Manipulator
                 var newMat = new Material(MaterialLibrary.Get(Value));
                 s.DefaultMat = newMat;
 
-                foreach (var r in s.GetComponentsInChildren<Renderer>())
-                {
-                    r.material = newMat;
-                }
+                foreach (var r in s.GetComponentsInChildren<Renderer>()) r.material = newMat;
             }
+
             // Force SelectableShape to refresh its material
             var selectable = targetShape.GetComponent<SelectableShape>();
             if (selectable != null)
             {
-                bool sel = selectable.IsSelected();
+                var sel = selectable.IsSelected();
                 selectable.SetSelected(!sel); // flip
                 selectable.SetSelected(sel); // restore
             }
@@ -89,5 +86,4 @@ namespace Manipulator
             // Optional: dựa vào renderer.material == X để gán Value tương ứng nếu cần
         }
     }
-
 }

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace Manipulator
@@ -6,9 +6,9 @@ namespace Manipulator
     public class ShapeInputController : MonoBehaviour
     {
         public DynamicInputPanel inputPanel;
-        public static ShapeInputController Instance { get; private set; }
 
         private IShapeSpawner currentSpawner;
+        public static ShapeInputController Instance { get; private set; }
 
         private void Awake()
         {
@@ -37,11 +37,11 @@ namespace Manipulator
 
             if (solved.Count >= 3) // Tùy vào hình học mà quyết định điều kiện đủ
             {
-                ShapeData shape = currentSpawner.ComputeShape(solved);
+                var shape = currentSpawner.ComputeShape(solved);
 
                 // ✅ Ensure Id is generated
                 if (string.IsNullOrEmpty(shape.Id))
-                    shape.Id = System.Guid.NewGuid().ToString();
+                    shape.Id = Guid.NewGuid().ToString();
 
                 ShapeFactory.CreateFromData(shape);
             }

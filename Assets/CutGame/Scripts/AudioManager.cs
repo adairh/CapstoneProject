@@ -1,9 +1,9 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class AudioManager : MonoBehaviour
 {
-    public static bool isMuted = false;
+    public static bool isMuted;
 
     private static AudioManager instance;
 
@@ -24,9 +24,7 @@ public class AudioManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
-            return;
         }
-
     }
 
     // Switches sound volume between 0 and 1
@@ -54,7 +52,7 @@ public class AudioManager : MonoBehaviour
 }
 
 public enum SFX
-{ 
+{
     Collect,
     Death,
     Failure,
@@ -64,5 +62,4 @@ public enum SFX
     Tick,
     Countdown,
     Go
-};
-
+}

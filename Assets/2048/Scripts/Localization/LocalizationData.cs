@@ -1,10 +1,12 @@
-﻿[System.Serializable]
+﻿using System;
+
+[Serializable]
 public class LocalizationData
 {
     public LocalizationItem[] items;
 }
 
-[System.Serializable]
+[Serializable]
 public class LocalizationItem
 {
     public string key;

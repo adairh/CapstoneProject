@@ -1,301 +1,314 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿using System;
+using System.Collections.Generic;
+using CW.Common;
+using Lean.Transition;
+using UnityEditor;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using System.Collections.Generic;
-using Lean.Transition;
-using CW.Common;
+using UnityEngine.UI;
 
 namespace Lean.Gui
 {
-	/// <summary>This component provides an alternative to Unity's UI button, allowing you to easily add custom transitions, as well as add an OnDown event.</summary>
+	/// <summary>
+	///     This component provides an alternative to Unity's UI button, allowing you to easily add custom transitions, as
+	///     well as add an OnDown event.
+	/// </summary>
 	[HelpURL(LeanGui.HelpUrlPrefix + "LeanButton")]
-	[AddComponentMenu(LeanGui.ComponentMenuPrefix + "Button")]
-	public class LeanButton : LeanSelectable, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, ISubmitHandler
-	{
-		[System.Flags]
-		public enum ButtonTypes
-		{
-			LeftMouse   = 1 << 0,
-			RightMouse  = 1 << 1,
-			MiddleMouse = 1 << 2,
-			Touch       = 1 << 5
-		}
+    [AddComponentMenu(LeanGui.ComponentMenuPrefix + "Button")]
+    public class LeanButton : LeanSelectable, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler,
+        ISubmitHandler
+    {
+        [Flags]
+        public enum ButtonTypes
+        {
+            LeftMouse = 1 << 0,
+            RightMouse = 1 << 1,
+            MiddleMouse = 1 << 2,
+            Touch = 1 << 5
+        }
 
-		/// <summary>Which buttons should this component react to?</summary>
-		public ButtonTypes RequiredButtons { set { requiredButtons = value; } get { return requiredButtons; } } [SerializeField] private ButtonTypes requiredButtons = (ButtonTypes)~0;
+        [SerializeField] private ButtonTypes requiredButtons = (ButtonTypes)~0;
+        [SerializeField] private bool multiDown;
+        [SerializeField] private float dragThreshold = 10.0f;
+        [SerializeField] private LeanPlayer normalTransitions;
+        [SerializeField] private LeanPlayer downTransitions;
+        [SerializeField] private LeanPlayer clickTransitions;
+        [SerializeField] private UnityEvent onDown;
+        [SerializeField] private UnityEvent onClick;
 
-		/// <summary>If you enable this then OnDown + DownTransition be invoked once for each finger that begins touching the button.
-		/// If you disable this then OnDown + DownTransition will only be invoked for the first finger that begins touching the button.</summary>
-		public bool MultiDown { set { multiDown = value; } get { return multiDown; } } [SerializeField] private bool multiDown;
+        /// <summary>Track the currently down pointers so we can toggle the transition.</summary>
+        private readonly List<int> downPointers = new();
 
-		/// <summary>If your finger presses down on the button and drags more than this many pixels, then selection will be canceled.
-		/// -1 = Unlimited drag distance.
-		/// 0 = Until the finger exits the button graphic.</summary>
-		public float DragThreshold { set { dragThreshold = value; } get { return dragThreshold; } } [SerializeField] private float dragThreshold = 10.0f;
+        [NonSerialized] private LeanDrag parentDrag;
 
-		/// <summary>This allows you to perform a transition when there are no longer any fingers touching the button.
-		/// You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
-		/// For example, the <b>Graphic.color Transition (LeanGraphicColor)</b> component can be used to change the color back to normal.</summary>
-		public LeanPlayer NormalTransitions { get { if (normalTransitions == null) normalTransitions = new LeanPlayer(); return normalTransitions; } } [SerializeField] private LeanPlayer normalTransitions;
+        [NonSerialized] private ScrollRect parentScrollRect;
 
-		/// <summary>This allows you to perform a transition when a finger begins touching the button.
-		/// You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
-		/// For example, the <b>Graphic.color Transition (LeanGraphicColor)</b> component can be used to change the color.
-		/// NOTE: Any transitions you perform here must be reverted in the <b>Normal Transitions</b> setting using a matching transition component.</summary>
-		public LeanPlayer DownTransitions { get { if (downTransitions == null) downTransitions = new LeanPlayer(); return downTransitions; } } [SerializeField] private LeanPlayer downTransitions;
+        [NonSerialized] private Vector2 totalDelta;
 
-		/// <summary>This allows you to perform a transition when you click or tap on this button.
-		/// You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
-		/// For example, the <b>Play Sound Transition (LeanPlaySound)</b> component can be used to play a click sound.</summary>
-		public LeanPlayer ClickTransitions { get { if (clickTransitions == null) clickTransitions = new LeanPlayer(); return clickTransitions; } } [SerializeField] private LeanPlayer clickTransitions;
+        /// <summary>Which buttons should this component react to?</summary>
+        public ButtonTypes RequiredButtons
+        {
+            set => requiredButtons = value;
+            get => requiredButtons;
+        }
 
-		/// <summary>This allows you to perform an action when a finger begins touching the button.</summary>
-		public UnityEvent OnDown { get { if (onDown == null) onDown = new UnityEvent(); return onDown; } } [SerializeField] private UnityEvent onDown;
+        /// <summary>
+        ///     If you enable this then OnDown + DownTransition be invoked once for each finger that begins touching the button.
+        ///     If you disable this then OnDown + DownTransition will only be invoked for the first finger that begins touching the
+        ///     button.
+        /// </summary>
+        public bool MultiDown
+        {
+            set => multiDown = value;
+            get => multiDown;
+        }
 
-		/// <summary>This allows you to perform an action when you click or tap on this button.</summary>
-		public UnityEvent OnClick { get { if (onClick == null) onClick = new UnityEvent(); return onClick; } } [SerializeField] private UnityEvent onClick;
+        /// <summary>
+        ///     If your finger presses down on the button and drags more than this many pixels, then selection will be canceled.
+        ///     -1 = Unlimited drag distance.
+        ///     0 = Until the finger exits the button graphic.
+        /// </summary>
+        public float DragThreshold
+        {
+            set => dragThreshold = value;
+            get => dragThreshold;
+        }
 
-		[System.NonSerialized] private Vector2 totalDelta;
+        /// <summary>
+        ///     This allows you to perform a transition when there are no longer any fingers touching the button.
+        ///     You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
+        ///     For example, the <b>Graphic.color Transition (LeanGraphicColor)</b> component can be used to change the color back
+        ///     to normal.
+        /// </summary>
+        public LeanPlayer NormalTransitions
+        {
+            get
+            {
+                if (normalTransitions == null) normalTransitions = new LeanPlayer();
+                return normalTransitions;
+            }
+        }
 
-		/// <summary>Track the currently down pointers so we can toggle the transition.</summary>
-		private List<int> downPointers = new List<int>();
+        /// <summary>
+        ///     This allows you to perform a transition when a finger begins touching the button.
+        ///     You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
+        ///     For example, the <b>Graphic.color Transition (LeanGraphicColor)</b> component can be used to change the color.
+        ///     NOTE: Any transitions you perform here must be reverted in the <b>Normal Transitions</b> setting using a matching
+        ///     transition component.
+        /// </summary>
+        public LeanPlayer DownTransitions
+        {
+            get
+            {
+                if (downTransitions == null) downTransitions = new LeanPlayer();
+                return downTransitions;
+            }
+        }
 
-		[System.NonSerialized]
-		private ScrollRect parentScrollRect;
+        /// <summary>
+        ///     This allows you to perform a transition when you click or tap on this button.
+        ///     You can create a new transition GameObject by right clicking the transition name, and selecting <b>Create</b>.
+        ///     For example, the <b>Play Sound Transition (LeanPlaySound)</b> component can be used to play a click sound.
+        /// </summary>
+        public LeanPlayer ClickTransitions
+        {
+            get
+            {
+                if (clickTransitions == null) clickTransitions = new LeanPlayer();
+                return clickTransitions;
+            }
+        }
 
-		[System.NonSerialized]
-		private LeanDrag parentDrag;
+        /// <summary>This allows you to perform an action when a finger begins touching the button.</summary>
+        public UnityEvent OnDown
+        {
+            get
+            {
+                if (onDown == null) onDown = new UnityEvent();
+                return onDown;
+            }
+        }
 
-		public override void OnPointerDown(PointerEventData eventData)
-		{
-			base.OnPointerDown(eventData);
+        /// <summary>This allows you to perform an action when you click or tap on this button.</summary>
+        public UnityEvent OnClick
+        {
+            get
+            {
+                if (onClick == null) onClick = new UnityEvent();
+                return onClick;
+            }
+        }
 
-			if (IsInteractable() == true)
-			{
-				if (RequiredButtonPressed(eventData) == false)
-				{
-					return;
-				}
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            parentScrollRect = GetComponentInParent<ScrollRect>();
+            parentDrag = GetComponentInParent<LeanDrag>();
 
-				totalDelta = Vector2.zero;
+            if (parentScrollRect != null) parentScrollRect.OnBeginDrag(eventData);
 
-				downPointers.Add(eventData.pointerId);
+            if (parentDrag != null) parentDrag.OnBeginDrag(eventData);
+        }
 
-				if (multiDown == true || downPointers.Count == 1)
-				{
-					if (downTransitions != null)
-					{
-						downTransitions.Begin();
-					}
+        public void OnDrag(PointerEventData eventData)
+        {
+            if (downPointers.Contains(eventData.pointerId))
+            {
+                totalDelta += eventData.delta;
 
-					if (onDown != null)
-					{
-						onDown.Invoke();
-					}
-				}
-			}
-		}
+                if (dragThreshold > 0.0f && totalDelta.magnitude > dragThreshold)
+                {
+                    downPointers.Remove(eventData.pointerId);
 
-		public override void OnPointerUp(PointerEventData eventData)
-		{
-			base.OnPointerUp(eventData);
+                    TryNormal();
+                }
+            }
 
-			if (downPointers.Remove(eventData.pointerId) == true)
-			{
-				TryNormal();
-				DoClick();
-			}
-		}
+            if (parentScrollRect != null) parentScrollRect.OnDrag(eventData);
 
-		public void OnBeginDrag(PointerEventData eventData)
-		{
-			parentScrollRect = GetComponentInParent<ScrollRect>();
-			parentDrag       = GetComponentInParent<LeanDrag>();
+            if (parentDrag != null) parentDrag.OnDrag(eventData);
+        }
 
-			if (parentScrollRect != null)
-			{
-				parentScrollRect.OnBeginDrag(eventData);
-			}
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            if (parentScrollRect != null) parentScrollRect.OnEndDrag(eventData);
 
-			if (parentDrag != null)
-			{
-				parentDrag.OnBeginDrag(eventData);
-			}
-		}
+            if (parentDrag != null) parentDrag.OnEndDrag(eventData);
+        }
 
-		public void OnDrag(PointerEventData eventData)
-		{
-			if (downPointers.Contains(eventData.pointerId) == true)
-			{
-				totalDelta += eventData.delta;
+        public override void OnPointerDown(PointerEventData eventData)
+        {
+            base.OnPointerDown(eventData);
 
-				if (dragThreshold > 0.0f && totalDelta.magnitude > dragThreshold)
-				{
-					downPointers.Remove(eventData.pointerId);
+            if (IsInteractable())
+            {
+                if (RequiredButtonPressed(eventData) == false) return;
 
-					TryNormal();
-				}
-			}
+                totalDelta = Vector2.zero;
 
-			if (parentScrollRect != null)
-			{
-				parentScrollRect.OnDrag(eventData);
-			}
+                downPointers.Add(eventData.pointerId);
 
-			if (parentDrag != null)
-			{
-				parentDrag.OnDrag(eventData);
-			}
-		}
+                if (multiDown || downPointers.Count == 1)
+                {
+                    if (downTransitions != null) downTransitions.Begin();
 
-		public void OnEndDrag(PointerEventData eventData)
-		{
-			if (parentScrollRect != null)
-			{
-				parentScrollRect.OnEndDrag(eventData);
-			}
+                    if (onDown != null) onDown.Invoke();
+                }
+            }
+        }
 
-			if (parentDrag != null)
-			{
-				parentDrag.OnEndDrag(eventData);
-			}
-		}
+        public void OnSubmit(BaseEventData eventData)
+        {
+            if (enabled) DoClick();
+        }
 
-		public void OnSubmit(BaseEventData eventData)
-		{
-			if (enabled == true)
-			{
-				DoClick();
-			}
-		}
+        public override void OnPointerUp(PointerEventData eventData)
+        {
+            base.OnPointerUp(eventData);
 
-		public override void OnPointerExit(PointerEventData eventData)
-		{
-			base.OnPointerExit(eventData);
+            if (downPointers.Remove(eventData.pointerId))
+            {
+                TryNormal();
+                DoClick();
+            }
+        }
 
-			if (dragThreshold == 0.0f)
-			{
-				downPointers.Remove(eventData.pointerId);
+        public override void OnPointerExit(PointerEventData eventData)
+        {
+            base.OnPointerExit(eventData);
 
-				TryNormal();
-			}
-		}
+            if (dragThreshold == 0.0f)
+            {
+                downPointers.Remove(eventData.pointerId);
 
-		private void TryNormal()
-		{
-			if (downPointers.Count == 0)
-			{
-				if (normalTransitions != null)
-				{
-					normalTransitions.Begin();
-				}
-			}
-		}
+                TryNormal();
+            }
+        }
 
-		private void DoClick()
-		{
-			if (clickTransitions != null)
-			{
-				clickTransitions.Begin();
-			}
+        private void TryNormal()
+        {
+            if (downPointers.Count == 0)
+                if (normalTransitions != null)
+                    normalTransitions.Begin();
+        }
 
-			if (onClick != null)
-			{
-				onClick.Invoke();
-			}
-		}
+        private void DoClick()
+        {
+            if (clickTransitions != null) clickTransitions.Begin();
 
-		private bool RequiredButtonPressed(PointerEventData eventData)
-		{
-			if (CwInput.GetMouseExists() == true)
-			{
-				if ((requiredButtons & ButtonTypes.LeftMouse) != 0 && eventData.button == PointerEventData.InputButton.Left)
-				{
-					return true;
-				}
+            if (onClick != null) onClick.Invoke();
+        }
 
-				if ((requiredButtons & ButtonTypes.RightMouse) != 0 && eventData.button == PointerEventData.InputButton.Right)
-				{
-					return true;
-				}
+        private bool RequiredButtonPressed(PointerEventData eventData)
+        {
+            if (CwInput.GetMouseExists())
+            {
+                if ((requiredButtons & ButtonTypes.LeftMouse) != 0 &&
+                    eventData.button == PointerEventData.InputButton.Left) return true;
 
-				if ((requiredButtons & ButtonTypes.MiddleMouse) != 0 && eventData.button == PointerEventData.InputButton.Middle)
-				{
-					return true;
-				}
-			}
+                if ((requiredButtons & ButtonTypes.RightMouse) != 0 &&
+                    eventData.button == PointerEventData.InputButton.Right) return true;
 
-			if (CwInput.GetTouchCount() > 0)
-			{
-				if ((requiredButtons & ButtonTypes.Touch) != 0 && eventData.button == PointerEventData.InputButton.Left)
-				{
-					return true;
-				}
-			}
+                if ((requiredButtons & ButtonTypes.MiddleMouse) != 0 &&
+                    eventData.button == PointerEventData.InputButton.Middle) return true;
+            }
 
-			return false;
-		}
-	}
+            if (CwInput.GetTouchCount() > 0)
+                if ((requiredButtons & ButtonTypes.Touch) != 0 && eventData.button == PointerEventData.InputButton.Left)
+                    return true;
+
+            return false;
+        }
+    }
 }
 
 #if UNITY_EDITOR
 namespace Lean.Gui.Editor
 {
-	using UnityEditor;
-	using TARGET = LeanButton;
+    using TARGET = LeanButton;
 
-	[CanEditMultipleObjects]
-	[CustomEditor(typeof(TARGET))]
-	public class LeanButton_Editor : LeanSelectable_Editor
-	{
-		protected override void DrawSelectableSettings()
-		{
-			base.DrawSelectableSettings();
+    [CanEditMultipleObjects]
+    [CustomEditor(typeof(TARGET))]
+    public class LeanButton_Editor : LeanSelectable_Editor
+    {
+        protected override void DrawSelectableSettings()
+        {
+            base.DrawSelectableSettings();
 
-			Draw("dragThreshold", "If your finger presses down on the button and drags more than this many pixels, then selection will be canceled.\n\n-1 = Unlimited drag distance.\n\n0 = Until the finger exits the button graphic.");
-			Draw("requiredButtons", "Which buttons should this component react to?");
-			Draw("multiDown", "If you press multiple fingers on this button at the same time, should OnDown and DownTransition be invoked multiple times?");
-		}
+            Draw("dragThreshold",
+                "If your finger presses down on the button and drags more than this many pixels, then selection will be canceled.\n\n-1 = Unlimited drag distance.\n\n0 = Until the finger exits the button graphic.");
+            Draw("requiredButtons", "Which buttons should this component react to?");
+            Draw("multiDown",
+                "If you press multiple fingers on this button at the same time, should OnDown and DownTransition be invoked multiple times?");
+        }
 
-		protected override void DrawSelectableTransitions(bool showUnusedEvents)
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+        protected override void DrawSelectableTransitions(bool showUnusedEvents)
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			if (showUnusedEvents == true || Any(tgts, t => t.NormalTransitions.IsUsed == true))
-			{
-				Draw("normalTransitions");
-			}
+            if (showUnusedEvents || Any(tgts, t => t.NormalTransitions.IsUsed)) Draw("normalTransitions");
 
-			if (showUnusedEvents == true || Any(tgts, t => t.DownTransitions.IsUsed == true))
-			{
-				Draw("downTransitions");
-			}
+            if (showUnusedEvents || Any(tgts, t => t.DownTransitions.IsUsed)) Draw("downTransitions");
 
-			if (showUnusedEvents == true || Any(tgts, t => t.ClickTransitions.IsUsed == true))
-			{
-				Draw("clickTransitions");
-			}
+            if (showUnusedEvents || Any(tgts, t => t.ClickTransitions.IsUsed)) Draw("clickTransitions");
 
-			base.DrawSelectableTransitions(showUnusedEvents);
-		}
+            base.DrawSelectableTransitions(showUnusedEvents);
+        }
 
-		protected override void DrawSelectableEvents(bool showUnusedEvents)
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+        protected override void DrawSelectableEvents(bool showUnusedEvents)
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			if (showUnusedEvents == true || Any(tgts, t => t.OnDown.GetPersistentEventCount() > 0))
-			{
-				Draw("onDown");
-			}
+            if (showUnusedEvents || Any(tgts, t => t.OnDown.GetPersistentEventCount() > 0)) Draw("onDown");
 
-			if (showUnusedEvents == true || Any(tgts, t => t.OnClick.GetPersistentEventCount() > 0))
-			{
-				Draw("onClick");
-			}
+            if (showUnusedEvents || Any(tgts, t => t.OnClick.GetPersistentEventCount() > 0)) Draw("onClick");
 
-			base.DrawSelectableEvents(showUnusedEvents);
-		}
-	}
+            base.DrawSelectableEvents(showUnusedEvents);
+        }
+    }
 }
 #endif

@@ -1,11 +1,14 @@
 ﻿// Manipulator/Data/ShapeData.cs
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Manipulator {
+namespace Manipulator
+{
     [Serializable]
-    public class ShapeData {
+    public class ShapeData
+    {
         public string Id;
         public string Type;
         public Vector3 Position;

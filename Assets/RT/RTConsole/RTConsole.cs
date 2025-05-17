@@ -1,9 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using System;
 using TMPro;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 /*
 
@@ -25,53 +26,27 @@ using TMPro;
 
 public class RTConsole : MonoBehaviour
 {
+    private static RTConsole _this;
     public TextMeshProUGUI _consoleText;
-    public event Action<string> OnGotConsoleInputEvent;
-
-    static RTConsole _this;
-    ScrollRect _scrollRect;
     public InputField _inputField;
 
-    bool _isDisplayingUnityDebugLog = false;
-    bool _isSendingToUnityDebugLog = false;
-    bool _isHeadlessMode = false;
-    Queue<String> _lines;
-    int _maxConsoleLines = 500;
-    string _logPrependString = "RTLOG"; //only applies to the Unity internal debug logs, this helps me filter for it when watching Android stuff with logcat
+    private bool _isDisplayingUnityDebugLog;
+    private bool _isHeadlessMode;
+    private bool _isSendingToUnityDebugLog;
+    private Queue<string> _lines;
 
-    bool _requiresRefresh = false;
+    private string
+        _logPrependString =
+            "RTLOG"; //only applies to the Unity internal debug logs, this helps me filter for it when watching Android stuff with logcat
 
-    // Use this for initialization
-    public static RTConsole Get()
-    {
-        
-        if (!_this)
-        {
-            GameObject us = RTUtil.FindIncludingInactive("RTConsole");
-            if (us)
-            {
-                if (us.activeSelf == false)
-                {
-                    us.SetActive(true);
-                }
-            }
-            else
-            {
-                //Actually, let's just create it
-                //_this = new GameObject("RTConsole").AddComponent<RTConsole>();
-                return null;
-            }
-        }
-        return _this;
-    }
-    public void SetLogPrependString(string s)
-    {
-        _logPrependString = s;
-    }
+    private int _maxConsoleLines = 500;
+
+    private bool _requiresRefresh;
+    private ScrollRect _scrollRect;
+
     private void Awake()
     {
-
-        _lines = new Queue<String>();
+        _lines = new Queue<string>();
 
         _this = GetComponent<RTConsole>();
 
@@ -84,21 +59,51 @@ public class RTConsole : MonoBehaviour
         _scrollRect = GetComponent<ScrollRect>();
     }
 
-    void Start ()
+    private void Start()
     {
         if (_consoleText != null)
-          _consoleText.text = "";
-       
+            _consoleText.text = "";
+    }
+
+    // Update is called once per frame
+    private void Update()
+    {
+        if (_requiresRefresh) TrimAndUpdateWidget();
+    }
+
+    public event Action<string> OnGotConsoleInputEvent;
+
+    // Use this for initialization
+    public static RTConsole Get()
+    {
+        if (!_this)
+        {
+            var us = RTUtil.FindIncludingInactive("RTConsole");
+            if (us)
+            {
+                if (us.activeSelf == false) us.SetActive(true);
+            }
+            else
+            {
+                //Actually, let's just create it
+                //_this = new GameObject("RTConsole").AddComponent<RTConsole>();
+                return null;
+            }
+        }
+
+        return _this;
+    }
+
+    public void SetLogPrependString(string s)
+    {
+        _logPrependString = s;
     }
 
     public void CopyToClipboard()
     {
         //put all the lines of text into a string, then copy that to the system clipboard
-        string s = "";
-        foreach (string sLine in _lines)
-        {
-            s += sLine + "\n";
-        }
+        var s = "";
+        foreach (var sLine in _lines) s += sLine + "\n";
         GUIUtility.systemCopyBuffer = s;
     }
 
@@ -114,37 +119,47 @@ public class RTConsole : MonoBehaviour
     {
         _isHeadlessMode = bNew;
     }
-    
-    void HandleLog(string logString, string stackTrace, LogType type)
+
+    private void HandleLog(string logString, string stackTrace, LogType type)
     {
-        string color = "";
-        string colorEnd = "";
+        var color = "";
+        var colorEnd = "";
 
         switch (type)
         {
-            case LogType.Error:  color = "`4"; colorEnd = "``"; break;
-            case LogType.Warning: color = "`$"; colorEnd = "``"; break;
-            case LogType.Exception: color = "`#"; colorEnd = "``"; logString += stackTrace;  break;
-            case LogType.Assert: color = "`@"; logString += stackTrace;  colorEnd = "``"; break;
+            case LogType.Error:
+                color = "`4";
+                colorEnd = "``";
+                break;
+            case LogType.Warning:
+                color = "`$";
+                colorEnd = "``";
+                break;
+            case LogType.Exception:
+                color = "`#";
+                colorEnd = "``";
+                logString += stackTrace;
+                break;
+            case LogType.Assert:
+                color = "`@";
+                logString += stackTrace;
+                colorEnd = "``";
+                break;
         }
 
-        RTConsole.Log(color+logString+colorEnd);
+        Log(color + logString + colorEnd);
     }
 
-     public void SetShowUnityDebugLogInConsole(bool bNew)
+    public void SetShowUnityDebugLogInConsole(bool bNew)
     {
         if (bNew == _isDisplayingUnityDebugLog) return;
 
         _isDisplayingUnityDebugLog = bNew;
 
         if (bNew)
-        {
             Application.logMessageReceived += HandleLog;
-        }
         else
-        {
             Application.logMessageReceived -= HandleLog;
-        }
     }
 
     public void SetMirrorToDebugLog(bool bNew)
@@ -157,11 +172,8 @@ public class RTConsole : MonoBehaviour
         if (Get() == null) return;
 
         //I tend to send huge texts with \r\n for the lines, so I'm going to be slow and split them
-        string[] strings = text.Split('\n');
-        foreach (string s in strings)
-        {
-            _this.Add(s + "\n");
-        }
+        var strings = text.Split('\n');
+        foreach (var s in strings) _this.Add(s + "\n");
     }
 
     //just adds red. 
@@ -170,18 +182,19 @@ public class RTConsole : MonoBehaviour
         if (Get() == null) return;
 
         //I tend to send huge texts with \r\n for the lines, so I'm going to be slow and split them
-        string[] strings = text.Split('\n');
-        foreach (string s in strings)
-        {
-            _this.Add("`4"+s + "``\n");
-        }
+        var strings = text.Split('\n');
+        foreach (var s in strings) _this.Add("`4" + s + "``\n");
     }
 
     public static void LogRaw(string text)
     {
         _this.Add(text);
     }
-    public string GetCurrentText() { return _inputField.text; }
+
+    public string GetCurrentText()
+    {
+        return _inputField.text;
+    }
 
     public void SetFocusOnInput(string text)
     {
@@ -191,46 +204,43 @@ public class RTConsole : MonoBehaviour
         //trick to de-highlight text:  https://answers.unity.com/questions/1103287/how-to-deselect-text-in-an-inputfield.html
     }
 
-    IEnumerator MoveTextEnd_NextFrame()
+    private IEnumerator MoveTextEnd_NextFrame()
     {
         yield return 0; // Skip the first frame in which this is called.
-         _inputField.MoveTextEnd(false); // Do this during the next frame.
+        _inputField.MoveTextEnd(false); // Do this during the next frame.
     }
 
     public void OnEndEdit(string text)
     {
         //if (!Input.GetKeyDown(KeyCode.Return)) return; //probably not wanted/needed on touch screens...
-        if (!UnityEngine.InputSystem.Keyboard.current.enterKey.isPressed) return; //new input system
-        
+        if (!Keyboard.current.enterKey.isPressed) return; //new input system
+
         SetFocusOnInput("");
         if (text.Length == 0) return;
-       // print(text);
+        // print(text);
         _inputField.text = "";
         if (OnGotConsoleInputEvent == null)
-        {
-            print("RTConsole::OnEndEdit:  User typed something in, but you didn't add a handler to OnGotConsoleInputEvent");
-        } else
-        {
+            print(
+                "RTConsole::OnEndEdit:  User typed something in, but you didn't add a handler to OnGotConsoleInputEvent");
+        else
             OnGotConsoleInputEvent(text);
-        }
     }
 
-    void Add(string text)
+    private void Add(string text)
     {
         if (_isSendingToUnityDebugLog)
         {
-
             if (_isDisplayingUnityDebugLog)
             {
                 //yes, this is bad, but it's only used for debug stuff
                 SetShowUnityDebugLogInConsole(false);
                 Debug.unityLogger.Log(_logPrependString, text);
                 SetShowUnityDebugLogInConsole(true);
-            } else
+            }
+            else
             {
                 Debug.Log(text);
             }
-           
         }
 
         if (!_isHeadlessMode && _consoleText)
@@ -239,18 +249,13 @@ public class RTConsole : MonoBehaviour
             _lines.Enqueue(RTUtil.ConvertSansiToUnityColors(text));
             _requiresRefresh = true;
         }
-
     }
 
-    void TrimAndUpdateWidget()
+    private void TrimAndUpdateWidget()
     {
-
         _requiresRefresh = false;
         //if we have too many lines, kill the oldest one.  Unity's Text widget sucks btw, it can't show that many lines
-        while (_lines.Count > _maxConsoleLines)
-        {
-            _lines.Dequeue();
-        }
+        while (_lines.Count > _maxConsoleLines) _lines.Dequeue();
 
         //copy them to the text object
 
@@ -259,14 +264,5 @@ public class RTConsole : MonoBehaviour
         // _consoleText.text = _consoleText.text + RTUtil.ConvertSansiToUnityColors(text);
         Canvas.ForceUpdateCanvases();
         _scrollRect.verticalNormalizedPosition = 0f;
-    }
-
-	// Update is called once per frame
-	void Update ()
-    {
-        if (_requiresRefresh)
-        {
-            TrimAndUpdateWidget();
-        }
     }
 }

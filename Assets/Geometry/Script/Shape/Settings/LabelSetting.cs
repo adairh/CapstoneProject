@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using TMPro;
+﻿using TMPro;
+using UnityEngine;
 
 namespace Manipulator
 {
@@ -51,6 +51,9 @@ namespace Manipulator
             }
         }
 
-        public override float Height() => 50;
+        public override float Height()
+        {
+            return 50;
+        }
     }
 }

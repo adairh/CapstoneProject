@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
-using UnityEngine; 
 using Unity.Netcode;
-using Unity.VisualScripting;
-using Object = UnityEngine.Object;
+using UnityEngine;
 
 namespace Manipulator
 {
@@ -17,9 +15,6 @@ namespace Manipulator
         private SphereCollider collider;
         private FixedPointConstraint constraint;
         private NetworkPositionSync positionSync;
-
-        public event System.Action<Point> OnChanged;
-        public event Action<Point> OnPositionChanged;
 
         #region INIT
 
@@ -54,54 +49,125 @@ namespace Manipulator
             //AppendSettings(new PositionSetting(transform.position, this));
             ShapeStorage.Register(this);
             AutoConstraintManager.TryAutoAttachConstraint(this);
-
         }
 
         #endregion
 
+        public event Action<Point> OnChanged;
+        public event Action<Point> OnPositionChanged;
+
+        #region ATTACH
+
+        /*
+        public void AttachProcess()
+        {
+            var mm = ManipulationManager.Instance;
+            var shape = mm.GetPinnedShape();
+
+            if (shape != null && shape != this && !(shape is Point))
+            {
+                constraint.AddDepend(this, shape);
+            }
+        }*/
+
+        public FixedPointConstraint GetPointConstraint()
+        {
+            return constraint;
+        }
+
+        #endregion
+
+
+        public bool IsOnlyConnectedTo(Shape shape)
+        {
+            return ShapeStorage.GetAllShapes().OfType<Segment>()
+                .Count(seg => seg.StartPoint == this || seg.EndPoint == this) == 1;
+        }
+
+        public override List<ISetting> GetSettings()
+        {
+            return new List<ISetting>(base.GetSettings())
+            {
+                new LabelSetting(LabelGenerator.Next(), this)
+            };
+        }
+
+
+        public static class Drawer
+        {
+            public static void UpdatePointInput()
+            {
+                if (!NetworkManager.Singleton.IsHost) return;
+
+                if (Input.GetMouseButtonDown(0))
+                {
+                    if (!PerformDrawing.RaycastMouse(out var pos)) return;
+
+                    var id = Guid.NewGuid().ToString();
+                    var data = new ShapeData
+                    {
+                        Id = id,
+                        Type = "Point",
+                        Position = pos,
+                        Rotation = Quaternion.identity,
+                        Scale = Vector3.one,
+                        ConnectedPoints = new List<string>(),
+                        Settings = new Dictionary<string, string>()
+                    };
+
+                    var v = new CreateShapeAction(data);
+                    UndoRedoNetworkBridge.Instance.DoAndBroadcast(v);
+
+                    PerformDrawing.ResetMode();
+                }
+            }
+        }
+
         #region MOVE
 
         /// <summary>
-        /// Di chuyển point đến vị trí mới. Nếu silent = true, không gửi sự kiện NotifyChanged.
+        ///     Di chuyển point đến vị trí mới. Nếu silent = true, không gửi sự kiện NotifyChanged.
         /// </summary>
         public override void MoveTo(Vector3 newPosition, bool silent = false, bool queue = true)
         {
             if (transform.position == newPosition) return;
 
-            Vector3 oldPosition = transform.position;
+            var oldPosition = transform.position;
             transform.position = newPosition;
-            
-            Vector3 delta = newPosition - oldPosition;
+
+            var delta = newPosition - oldPosition;
 // ✅ Apply constraint với delta đúng
             // constraint.ApplyConstraint(this, delta);
             // ConstraintManager.Instance.ApplyConstraints(this, delta);
-            
+
             // Gửi sync vị trí nếu là host
 
             //Debug.LogError($"[Point Move To] {newPosition}");
-            
+
             OnPositionChanged?.Invoke(this);
 
 
             if (!silent && IsHost && TryGetComponent<NetworkPositionSync>(out var sync))
-            {
                 sync.syncedPosition.Value = newPosition;
-            }
 
             // Ghi undo và thông báo thay đổi
             if (!silent)
             {
-                UndoRedoNetworkBridge.Instance.DoAndBroadcast(new MoveShapeAction(ShapeId, oldPosition, newPosition), queue);
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(new MoveShapeAction(ShapeId, oldPosition, newPosition),
+                    queue);
                 NotifyChanged();
             }
-        } 
+        }
 
-        
-        private NetworkVariable<string> label = new("", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        private readonly NetworkVariable<string> label = new("");
 
         private GameObject labelDisplay;
 
-        public string GetLabel() => label.Value;
+        public string GetLabel()
+        {
+            return label.Value;
+        }
 
         public void SetLabel(string value)
         {
@@ -130,10 +196,7 @@ namespace Manipulator
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-            label.OnValueChanged += (oldVal, newVal) =>
-            {
-                UpdateLabelDisplay(newVal);
-            };
+            label.OnValueChanged += (oldVal, newVal) => { UpdateLabelDisplay(newVal); };
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -142,22 +205,26 @@ namespace Manipulator
             label.Value = newLabel;
         }
 
-        private static int labelCounter = 0;
+        private static int labelCounter;
 
         private string GenerateNextLabel()
         {
-            int n = labelCounter++;
-            string label = "";
+            var n = labelCounter++;
+            var label = "";
             do
             {
-                label = (char)('A' + (n % 26)) + label;
-                n = (n / 26) - 1;
+                label = (char)('A' + n % 26) + label;
+                n = n / 26 - 1;
             } while (n >= 0);
+
             return label;
         }
 
-        
-        public Vector3 GetCurrentPosition() => transform.position;
+
+        public Vector3 GetCurrentPosition()
+        {
+            return transform.position;
+        }
 
         #endregion
 
@@ -174,24 +241,6 @@ namespace Manipulator
         {
             base.Deserialize(data);
         }
-
-        #endregion
-
-        #region ATTACH
-
-        /*
-        public void AttachProcess()
-        {
-            var mm = ManipulationManager.Instance;
-            var shape = mm.GetPinnedShape();
-
-            if (shape != null && shape != this && !(shape is Point))
-            {
-                constraint.AddDepend(this, shape);
-            }
-        }*/
-
-        public FixedPointConstraint GetPointConstraint() => constraint;
 
         #endregion
 
@@ -215,61 +264,7 @@ namespace Manipulator
             if (!silent)
                 OnChanged?.Invoke(this);
         }
-        
-
 
         #endregion
-        
-        
-        
-        public static class Drawer
-        {
-            public static void UpdatePointInput()
-            {
-                if (!NetworkManager.Singleton.IsHost) return;
-
-                if (Input.GetMouseButtonDown(0))
-                {
-                    if (!PerformDrawing.RaycastMouse(out Vector3 pos)) return;
-
-                    string id = Guid.NewGuid().ToString();
-                    var data = new ShapeData
-                    {
-                        Id = id,
-                        Type = "Point",
-                        Position = pos,
-                        Rotation = Quaternion.identity,
-                        Scale = Vector3.one,
-                        ConnectedPoints = new(),
-                        Settings = new()
-                    };
-                    
-                    var v = new CreateShapeAction(data);
-                    UndoRedoNetworkBridge.Instance.DoAndBroadcast(v);
-                    
-                    PerformDrawing.ResetMode();
-                }
-            }
-        }
-
-
-        public bool IsOnlyConnectedTo(Shape shape)
-        {
-            return ShapeStorage.GetAllShapes().OfType<Segment>()
-                .Count(seg => seg.StartPoint == this || seg.EndPoint == this) == 1;
-        }
-        
-        public override List<ISetting> GetSettings()
-        {
-            return new List<ISetting>(base.GetSettings())
-            {
-                new LabelSetting(LabelGenerator.Next(), this)
-            }; 
-        }
-
-
     }
-    
-    
-    
 }

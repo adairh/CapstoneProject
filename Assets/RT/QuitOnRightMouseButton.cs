@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 //allows right mouse to close the app, useful during development, probably not a great idea for your
@@ -7,14 +6,13 @@ using UnityEngine;
 
 public class QuitOnRightMouseButton : MonoBehaviour
 {
-  
-    void Update()
+    private void Update()
     {
         if (Input.GetMouseButtonDown(1))
         {
             Debug.Log("Quitting app because right mouse button was pressed!");
 #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
+            EditorApplication.isPlaying = false;
 #endif
             Application.Quit();
         }

@@ -1,4 +1,5 @@
-
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
@@ -7,14 +8,14 @@ namespace Manipulator
     {
         public static Segment CreateParallelThrough(Point a, Point b, Point p, float length = 2f)
         {
-            Vector3 dir = (b.transform.position - a.transform.position).normalized;
+            var dir = (b.transform.position - a.transform.position).normalized;
             return CreateSegmentFromDirection(p.transform.position, dir, length);
         }
 
         public static Segment CreatePerpendicularThrough(Point a, Point b, Point p, float length = 2f)
         {
-            Vector3 dir = (b.transform.position - a.transform.position).normalized;
-            Vector3 perp = Vector3.Cross(dir, Vector3.up).normalized;
+            var dir = (b.transform.position - a.transform.position).normalized;
+            var perp = Vector3.Cross(dir, Vector3.up).normalized;
             if (perp == Vector3.zero) perp = Vector3.Cross(dir, Vector3.forward).normalized;
 
             return CreateSegmentFromDirection(p.transform.position, perp, length);
@@ -22,12 +23,12 @@ namespace Manipulator
 
         private static Segment CreateSegmentFromDirection(Vector3 center, Vector3 dir, float length)
         {
-            Vector3 p1 = center - dir * (length / 2f);
-            Vector3 p2 = center + dir * (length / 2f);
+            var p1 = center - dir * (length / 2f);
+            var p2 = center + dir * (length / 2f);
 
-            string id1 = System.Guid.NewGuid().ToString();
-            string id2 = System.Guid.NewGuid().ToString();
-            string idSeg = System.Guid.NewGuid().ToString();
+            var id1 = Guid.NewGuid().ToString();
+            var id2 = Guid.NewGuid().ToString();
+            var idSeg = Guid.NewGuid().ToString();
 
             var point1 = new ShapeData
             {
@@ -36,8 +37,8 @@ namespace Manipulator
                 Position = p1,
                 Rotation = Quaternion.identity,
                 Scale = Vector3.one,
-                ConnectedPoints = new(),
-                Settings = new()
+                ConnectedPoints = new List<string>(),
+                Settings = new Dictionary<string, string>()
             };
 
             var point2 = new ShapeData
@@ -47,8 +48,8 @@ namespace Manipulator
                 Position = p2,
                 Rotation = Quaternion.identity,
                 Scale = Vector3.one,
-                ConnectedPoints = new(),
-                Settings = new()
+                ConnectedPoints = new List<string>(),
+                Settings = new Dictionary<string, string>()
             };
 
             var segment = new ShapeData
@@ -58,11 +59,11 @@ namespace Manipulator
                 Position = center,
                 Rotation = Quaternion.identity,
                 Scale = Vector3.one,
-                ConnectedPoints = new() { id1, id2 },
-                Settings = new()
+                ConnectedPoints = new List<string> { id1, id2 },
+                Settings = new Dictionary<string, string>()
             };
 
-            var batch = new CreateShapeBatchAction(new() { point1, point2, segment });
+            var batch = new CreateShapeBatchAction(new List<ShapeData> { point1, point2, segment });
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
 
             return null; // do callback batch xử lý

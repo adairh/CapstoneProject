@@ -7,9 +7,9 @@ using UnityEditor.UI;
 [CustomEditor(typeof(RTButton), true)]
 public class RTButtonEditor : ButtonEditor
 {
-    SerializedProperty _onDownProperty;
-    SerializedProperty _onUpProperty;
-     
+    private SerializedProperty _onDownProperty;
+    private SerializedProperty _onUpProperty;
+
     protected override void OnEnable()
     {
         base.OnEnable();

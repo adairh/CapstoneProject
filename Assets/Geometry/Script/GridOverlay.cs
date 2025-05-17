@@ -1,33 +1,33 @@
 ﻿using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Manipulator
 {
-
     [ExecuteAlways]
     public class GridOverlay : MonoBehaviour
     {
         public float spacing = 1f;
         public int halfGridCount = 10;
-        public Color lineColor = new Color(1f, 1f, 1f, 0.1f); // mờ mờ
+        public Color lineColor = new(1f, 1f, 1f, 0.1f); // mờ mờ
 
         public Vector3 axis1 = Vector3.right;
         public Vector3 axis2 = Vector3.forward;
 
         private Material lineMaterial;
 
-        void OnEnable()
+        private void OnEnable()
         {
             // Material cho GL.LINES (Unlit, transparent)
-            Shader shader = Shader.Find("Hidden/Internal-Colored");
+            var shader = Shader.Find("Hidden/Internal-Colored");
             lineMaterial = new Material(shader);
             lineMaterial.hideFlags = HideFlags.HideAndDontSave;
-            lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            lineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+            lineMaterial.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            lineMaterial.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+            lineMaterial.SetInt("_Cull", (int)CullMode.Off);
             lineMaterial.SetInt("_ZWrite", 0);
         }
 
-        void OnRenderObject()
+        private void OnRenderObject()
         {
             if (!lineMaterial) return;
 
@@ -38,16 +38,16 @@ namespace Manipulator
             GL.Begin(GL.LINES);
             GL.Color(lineColor);
 
-            for (int i = -halfGridCount; i <= halfGridCount; i++)
+            for (var i = -halfGridCount; i <= halfGridCount; i++)
             {
-                Vector3 offset = i * spacing * axis1;
+                var offset = i * spacing * axis1;
                 GL.Vertex(-halfGridCount * spacing * axis2 + offset);
                 GL.Vertex(halfGridCount * spacing * axis2 + offset);
             }
 
-            for (int j = -halfGridCount; j <= halfGridCount; j++)
+            for (var j = -halfGridCount; j <= halfGridCount; j++)
             {
-                Vector3 offset = j * spacing * axis2;
+                var offset = j * spacing * axis2;
                 GL.Vertex(-halfGridCount * spacing * axis1 + offset);
                 GL.Vertex(halfGridCount * spacing * axis1 + offset);
             }
@@ -56,5 +56,4 @@ namespace Manipulator
             GL.PopMatrix();
         }
     }
-
 }

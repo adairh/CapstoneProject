@@ -1,18 +1,16 @@
-
-using System;
-using UnityEngine;
-
 namespace Manipulator
 {
     public class CreateConstraintAction : IUndoableAction
     {
-        private ConstraintData data;
         private Constraint created;
+        private readonly ConstraintData data;
 
         public CreateConstraintAction(ConstraintData data)
         {
             this.data = data;
         }
+
+        public string Name => "CreateConstraint";
 
         public void Redo()
         {
@@ -27,7 +25,5 @@ namespace Manipulator
                 created = null;
             }
         }
-
-        public string Name => "CreateConstraint";
     }
 }

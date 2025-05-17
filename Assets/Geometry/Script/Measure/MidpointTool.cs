@@ -1,4 +1,5 @@
-
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
@@ -7,22 +8,21 @@ namespace Manipulator
     {
         public static void CreateMidpoint(Point a, Point b)
         {
-            Vector3 pos = (a.transform.position + b.transform.position) / 2f;
+            var pos = (a.transform.position + b.transform.position) / 2f;
 
             var data = new ShapeData
             {
-                Id = System.Guid.NewGuid().ToString(),
+                Id = Guid.NewGuid().ToString(),
                 Type = "Point",
                 Position = pos,
                 Rotation = Quaternion.identity,
                 Scale = Vector3.one,
-                ConnectedPoints = new(),
-                Settings = new()
+                ConnectedPoints = new List<string>(),
+                Settings = new Dictionary<string, string>()
             };
 
             var v = new CreateShapeAction(data);
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(v);
-            
         }
     }
 }

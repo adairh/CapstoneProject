@@ -1,81 +1,88 @@
+using System;
+using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
+using UnityEngine.Serialization;
 using TARGET = UnityEngine.RectTransform;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to transition the RectTransform's anchoredPosition value.</summary>
-	[UnityEngine.HelpURL(LeanTransition.HelpUrlPrefix + "LeanRectTransformAnchoredPosition")]
-	[UnityEngine.AddComponentMenu(LeanTransition.MethodsMenuPrefix + "RectTransform/RectTransform.anchoredPosition" + LeanTransition.MethodsMenuSuffix + "(LeanRectTransformAnchoredPosition)")]
-	public class LeanRectTransformAnchoredPosition : LeanMethodWithStateAndTarget
-	{
-		public override System.Type GetTargetType()
-		{
-			return typeof(TARGET);
-		}
+    /// <summary>This component allows you to transition the RectTransform's anchoredPosition value.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanRectTransformAnchoredPosition")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "RectTransform/RectTransform.anchoredPosition" +
+                      LeanTransition.MethodsMenuSuffix + "(LeanRectTransformAnchoredPosition)")]
+    public class LeanRectTransformAnchoredPosition : LeanMethodWithStateAndTarget
+    {
+        public State Data;
 
-		public override void Register()
-		{
-			PreviousState = Register(GetAliasedTarget(Data.Target), Data.Value, Data.Duration, Data.Ease);
-		}
+        public override Type GetTargetType()
+        {
+            return typeof(TARGET);
+        }
 
-		public static LeanState Register(TARGET target, UnityEngine.Vector2 value, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+        public override void Register()
+        {
+            PreviousState = Register(GetAliasedTarget(Data.Target), Data.Value, Data.Duration, Data.Ease);
+        }
 
-			state.Value = value;
-			
-			state.Ease = ease;
+        public static LeanState Register(TARGET target, Vector2 value, float duration, LeanEase ease = LeanEase.Smooth)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Value = value;
 
-		[System.Serializable]
-		public class State : LeanStateWithTarget<TARGET>
-		{
-			[UnityEngine.Tooltip("The anchoredPosition value will transition to this.")]
-			[UnityEngine.Serialization.FormerlySerializedAs("Position")]public UnityEngine.Vector2 Value;
+            state.Ease = ease;
 
-			[UnityEngine.Tooltip("This allows you to control how the transition will look.")]
-			public LeanEase Ease = LeanEase.Smooth;
+            return LeanTransition.Register(state, duration);
+        }
 
-			[System.NonSerialized] private UnityEngine.Vector2 oldValue;
+        [Serializable]
+        public class State : LeanStateWithTarget<TARGET>
+        {
+            public static Stack<State> Pool = new();
 
-			public override int CanFill
-			{
-				get
-				{
-					return Target != null && Target.anchoredPosition != Value ? 1 : 0;
-				}
-			}
+            [Tooltip("The anchoredPosition value will transition to this.")] [FormerlySerializedAs("Position")]
+            public Vector2 Value;
 
-			public override void FillWithTarget()
-			{
-				Value = Target.anchoredPosition;
-			}
+            [Tooltip("This allows you to control how the transition will look.")]
+            public LeanEase Ease = LeanEase.Smooth;
 
-			public override void BeginWithTarget()
-			{
-				oldValue = Target.anchoredPosition;
-			}
+            [NonSerialized] private Vector2 oldValue;
 
-			public override void UpdateWithTarget(float progress)
-			{
-				Target.anchoredPosition = UnityEngine.Vector2.LerpUnclamped(oldValue, Value, Smooth(Ease, progress));
-			}
+            public override int CanFill => Target != null && Target.anchoredPosition != Value ? 1 : 0;
 
-			public static System.Collections.Generic.Stack<State> Pool = new System.Collections.Generic.Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+            public override void FillWithTarget()
+            {
+                Value = Target.anchoredPosition;
+            }
 
-		public State Data;
-	}
+            public override void BeginWithTarget()
+            {
+                oldValue = Target.anchoredPosition;
+            }
+
+            public override void UpdateWithTarget(float progress)
+            {
+                Target.anchoredPosition = Vector2.LerpUnclamped(oldValue, Value, Smooth(Ease, progress));
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static TARGET anchoredPositionTransition(this TARGET target, UnityEngine.Vector2 value, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanRectTransformAnchoredPosition.Register(target, value, duration, ease); return target;
-		}
-	}
+    public static partial class LeanExtensions
+    {
+        public static TARGET anchoredPositionTransition(this TARGET target, Vector2 value, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            LeanRectTransformAnchoredPosition.Register(target, value, duration, ease);
+            return target;
+        }
+    }
 }

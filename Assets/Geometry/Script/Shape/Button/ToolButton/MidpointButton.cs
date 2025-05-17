@@ -1,3 +1,4 @@
+using System.Collections;
 
 namespace Manipulator
 {
@@ -9,7 +10,7 @@ namespace Manipulator
             StartCoroutine(SelectTwoAndMidpoint());
         }
 
-        private System.Collections.IEnumerator SelectTwoAndMidpoint()
+        private IEnumerator SelectTwoAndMidpoint()
         {
             yield return ShapePicker.WaitForPoint("Select First Point");
             var a = ShapePicker.LastPicked as Point;

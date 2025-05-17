@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.IO;
-using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Callbacks;
 #if UNITY_IOS
@@ -12,12 +10,12 @@ public class MyBuildPostprocessor
     [PostProcessBuild(999)]
     public static void OnPostProcessBuild(BuildTarget buildTarget, string path)
     {
-        Debug.Print("Doing the post build fix that is required to get iOS builds actually building in xcode, remove all this if/when they fix it! - Seth");
+        Debug.Print(
+            "Doing the post build fix that is required to get iOS builds actually building in xcode, remove all this if/when they fix it! - Seth");
         if (buildTarget != BuildTarget.iOS)
             return;
 
-        #if UNITY_IOS
-        
+#if UNITY_IOS
         var projectPath = path + "/Unity-iPhone.xcodeproj/project.pbxproj";
         //UNITY 2022.2.X FIX https://forum.unity.com/threads/xcode-build-error-after-upgrading-to-2022-2-0.1371966/
         var projRaw = File.ReadAllText(projectPath);
@@ -37,6 +35,6 @@ public class MyBuildPostprocessor
         }
         pbxProject.WriteToFile(projectPath);
 
-        #endif
+#endif
     }
 }

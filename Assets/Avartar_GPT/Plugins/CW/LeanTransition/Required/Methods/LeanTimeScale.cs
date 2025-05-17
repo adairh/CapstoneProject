@@ -1,82 +1,88 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to transition <b>Time.timeScale</b> to the target value.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanTimeScale")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Time.timeScale" + LeanTransition.MethodsMenuSuffix + "(LeanTimeScale)")]
-	public class LeanTimeScale : LeanMethodWithState
-	{
-		public override void Register()
-		{
-			PreviousState = Register(Data.TimeScale, Data.Duration, Data.Ease);
-		}
+    /// <summary>This component allows you to transition <b>Time.timeScale</b> to the target value.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanTimeScale")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Time.timeScale" + LeanTransition.MethodsMenuSuffix +
+                      "(LeanTimeScale)")]
+    public class LeanTimeScale : LeanMethodWithState
+    {
+        public State Data;
 
-		public static LeanState Register(float fillAmount, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			var state = LeanTransition.Spawn(State.Pool);
+        public override void Register()
+        {
+            PreviousState = Register(Data.TimeScale, Data.Duration, Data.Ease);
+        }
 
-			state.TimeScale = fillAmount;
-			state.Ease       = ease;
+        public static LeanState Register(float fillAmount, float duration, LeanEase ease = LeanEase.Smooth)
+        {
+            var state = LeanTransition.Spawn(State.Pool);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.TimeScale = fillAmount;
+            state.Ease = ease;
 
-		[System.Serializable]
-		public class State : LeanState
-		{
-			[Tooltip("The timeScale we will transition to.")]
-			public float TimeScale = 1.0f;
+            return LeanTransition.Register(state, duration);
+        }
 
-			[Tooltip("The ease method that will be used for the transition.")]
-			public LeanEase Ease = LeanEase.Smooth;
+        [Serializable]
+        public class State : LeanState
+        {
+            public static Stack<State> Pool = new();
 
-			[System.NonSerialized] private float oldTimeScale;
+            [Tooltip("The timeScale we will transition to.")]
+            public float TimeScale = 1.0f;
 
-			public override int CanFill
-			{
-				get
-				{
-					return Time.timeScale != TimeScale ? 1 : 0;
-				}
-			}
+            [Tooltip("The ease method that will be used for the transition.")]
+            public LeanEase Ease = LeanEase.Smooth;
 
-			public override void Fill()
-			{
-				TimeScale = Time.timeScale;
-			}
+            [NonSerialized] private float oldTimeScale;
 
-			public override void Begin()
-			{
-				oldTimeScale = Time.timeScale;
-			}
+            public override int CanFill => Time.timeScale != TimeScale ? 1 : 0;
 
-			public override void Update(float progress)
-			{
-				Time.timeScale = Mathf.LerpUnclamped(oldTimeScale, TimeScale, Smooth(Ease, progress));
-			}
+            public override void Fill()
+            {
+                TimeScale = Time.timeScale;
+            }
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
+            public override void Begin()
+            {
+                oldTimeScale = Time.timeScale;
+            }
 
-		public State Data;
-	}
+            public override void Update(float progress)
+            {
+                Time.timeScale = Mathf.LerpUnclamped(oldTimeScale, TimeScale, Smooth(Ease, progress));
+            }
+
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static T timeScaleTransition<T>(this T target, float timeScale, float duration, LeanEase ease = LeanEase.Smooth)
-			where T : Component
-		{
-			Method.LeanTimeScale.Register(timeScale, duration, ease); return target;
-		}
+    public static partial class LeanExtensions
+    {
+        public static T timeScaleTransition<T>(this T target, float timeScale, float duration,
+            LeanEase ease = LeanEase.Smooth)
+            where T : Component
+        {
+            LeanTimeScale.Register(timeScale, duration, ease);
+            return target;
+        }
 
-		public static GameObject timeScaleTransition(this GameObject target, float timeScale, float duration, LeanEase ease = LeanEase.Smooth)
-		{
-			Method.LeanTimeScale.Register(timeScale, duration, ease); return target;
-		}
-	}
+        public static GameObject timeScaleTransition(this GameObject target, float timeScale, float duration,
+            LeanEase ease = LeanEase.Smooth)
+        {
+            LeanTimeScale.Register(timeScale, duration, ease);
+            return target;
+        }
+    }
 }

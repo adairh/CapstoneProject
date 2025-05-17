@@ -4,7 +4,10 @@ namespace Manipulator
 {
     public class RectangleButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.Rectangle;
+        public IShapeButton.ShapeType GetShapeType()
+        {
+            return IShapeButton.ShapeType.Rectangle;
+        }
 
         protected override void OnButtonClick()
         {

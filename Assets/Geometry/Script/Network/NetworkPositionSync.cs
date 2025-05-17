@@ -7,13 +7,29 @@ namespace Manipulator
     {
         public NetworkVariable<Vector3> syncedPosition = new(writePerm: NetworkVariableWritePermission.Server);
         public NetworkVariable<Vector3> syncedScale = new(writePerm: NetworkVariableWritePermission.Server);
+        private bool isInitialized;
 
         private Transform target;
-        private bool isInitialized = false;
 
         private void Awake()
         {
             target = transform;
+        }
+
+        private void Update()
+        {
+            if (!isInitialized) return;
+
+            if (IsHost)
+            {
+                syncedPosition.Value = target.position;
+                syncedScale.Value = target.localScale;
+            }
+            else
+            {
+                target.position = syncedPosition.Value;
+                target.localScale = syncedScale.Value;
+            }
         }
 
         public override void OnNetworkSpawn()
@@ -32,23 +48,6 @@ namespace Manipulator
             }
 
             isInitialized = true;
-        }
-
-        private void Update()
-        {
-            if (!isInitialized) return;
-
-            if (IsHost)
-            {
-                syncedPosition.Value = target.position;
-                syncedScale.Value = target.localScale;
-
-            }
-            else
-            {
-                target.position = syncedPosition.Value;
-                target.localScale = syncedScale.Value;
-            }
         }
     }
 }

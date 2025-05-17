@@ -1,139 +1,173 @@
+using UnityEditor;
 using UnityEngine;
 
 namespace CW.Common
 {
-	/// <summary>This makes the current <b>Transform</b> follow the <b>Target</b> Transform as if it were a child.</summary>
-	[ExecuteInEditMode]
-	[HelpURL(CwShared.HelpUrlPrefix + "CwFollow")]
-	[AddComponentMenu(CwShared.ComponentMenuPrefix + "Follow")]
-	public class CwFollow : MonoBehaviour
-	{
-		public enum FollowType
-		{
-			TargetTransform,
-			MainCamera
-		}
+    /// <summary>This makes the current <b>Transform</b> follow the <b>Target</b> Transform as if it were a child.</summary>
+    [ExecuteInEditMode]
+    [HelpURL(CwShared.HelpUrlPrefix + "CwFollow")]
+    [AddComponentMenu(CwShared.ComponentMenuPrefix + "Follow")]
+    public class CwFollow : MonoBehaviour
+    {
+        public enum FollowType
+        {
+            TargetTransform,
+            MainCamera
+        }
 
-		public enum UpdateType
-		{
-			Update,
-			LateUpdate
-		}
+        public enum UpdateType
+        {
+            Update,
+            LateUpdate
+        }
 
-		/// <summary>What should this component follow?</summary>
-		public FollowType Follow { set { follow = value; } get { return follow; } } [SerializeField] private FollowType follow;
+        [SerializeField] private FollowType follow;
+        [SerializeField] private Transform target;
+        [SerializeField] private float damping = -1.0f;
+        [SerializeField] private bool rotate = true;
+        [SerializeField] private bool ignoreZ;
+        [SerializeField] private UpdateType followIn = UpdateType.LateUpdate;
+        [SerializeField] private Vector3 localPosition;
+        [SerializeField] private Vector3 localRotation;
 
-		/// <summary>The transform that will be followed.</summary>
-		public Transform Target { set { target = value; } get { return target; } } [SerializeField] private Transform target;
+        /// <summary>What should this component follow?</summary>
+        public FollowType Follow
+        {
+            set => follow = value;
+            get => follow;
+        }
 
-		/// <summary>How quickly this Transform follows the target.
-		/// -1 = instant.</summary>
-		public float Damping { set { damping = value; } get { return damping; } } [SerializeField] private float damping = -1.0f;
+        /// <summary>The transform that will be followed.</summary>
+        public Transform Target
+        {
+            set => target = value;
+            get => target;
+        }
 
-		/// <summary>Follow the target's rotation too?</summary>
-		public bool Rotate { set { rotate = value; } get { return rotate; } } [SerializeField] private bool rotate = true;
+        /// <summary>
+        ///     How quickly this Transform follows the target.
+        ///     -1 = instant.
+        /// </summary>
+        public float Damping
+        {
+            set => damping = value;
+            get => damping;
+        }
 
-		/// <summary>Ignore Z axis for 2D?</summary>
-		public bool IgnoreZ { set { ignoreZ = value; } get { return ignoreZ; } } [SerializeField] private bool ignoreZ;
+        /// <summary>Follow the target's rotation too?</summary>
+        public bool Rotate
+        {
+            set => rotate = value;
+            get => rotate;
+        }
 
-		/// <summary>Where in the game loop should this component update?</summary>
-		public UpdateType FollowIn { set { followIn = value; } get { return followIn; } } [SerializeField] private UpdateType followIn = UpdateType.LateUpdate;
+        /// <summary>Ignore Z axis for 2D?</summary>
+        public bool IgnoreZ
+        {
+            set => ignoreZ = value;
+            get => ignoreZ;
+        }
 
-		/// <summary>This allows you to specify a positional offset relative to the <b>Target</b>.</summary>
-		public Vector3 LocalPosition { set { localPosition = value; } get { return localPosition; } } [SerializeField] private Vector3 localPosition;
+        /// <summary>Where in the game loop should this component update?</summary>
+        public UpdateType FollowIn
+        {
+            set => followIn = value;
+            get => followIn;
+        }
 
-		/// <summary>This allows you to specify a rotational offset relative to the <b>Target</b>.</summary>
-		public Vector3 LocalRotation { set { localRotation = value; } get { return localRotation; } } [SerializeField] private Vector3 localRotation;
+        /// <summary>This allows you to specify a positional offset relative to the <b>Target</b>.</summary>
+        public Vector3 LocalPosition
+        {
+            set => localPosition = value;
+            get => localPosition;
+        }
 
-		/// <summary>This method will update the follow position now.</summary>
-		[ContextMenu("UpdatePosition")]
-		public void UpdatePosition()
-		{
-			var finalTarget = target;
+        /// <summary>This allows you to specify a rotational offset relative to the <b>Target</b>.</summary>
+        public Vector3 LocalRotation
+        {
+            set => localRotation = value;
+            get => localRotation;
+        }
 
-			if (follow == FollowType.MainCamera)
-			{
-				var mainCamera = Camera.main;
+        protected virtual void Update()
+        {
+            if (followIn == UpdateType.Update) UpdatePosition();
+        }
 
-				if (mainCamera != null)
-				{
-					finalTarget = mainCamera.transform;
-				}
-			}
+        protected virtual void LateUpdate()
+        {
+            if (followIn == UpdateType.LateUpdate) UpdatePosition();
+        }
 
-			if (finalTarget != null)
-			{
-				var currentPosition = transform.position;
-				var targetPosition  = finalTarget.TransformPoint(localPosition);
-				var factor          = CwHelper.DampenFactor(damping, Time.deltaTime);
+        /// <summary>This method will update the follow position now.</summary>
+        [ContextMenu("UpdatePosition")]
+        public void UpdatePosition()
+        {
+            var finalTarget = target;
 
-				if (ignoreZ == true)
-				{
-					targetPosition.z = currentPosition.z;
-				}
+            if (follow == FollowType.MainCamera)
+            {
+                var mainCamera = Camera.main;
 
-				transform.position = Vector3.Lerp(currentPosition, targetPosition, factor);
+                if (mainCamera != null) finalTarget = mainCamera.transform;
+            }
 
-				if (rotate == true)
-				{
-					var targetRotation = finalTarget.rotation * Quaternion.Euler(localRotation);
+            if (finalTarget != null)
+            {
+                var currentPosition = transform.position;
+                var targetPosition = finalTarget.TransformPoint(localPosition);
+                var factor = CwHelper.DampenFactor(damping, Time.deltaTime);
 
-					transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, factor);
-				}
-			}
-		}
+                if (ignoreZ) targetPosition.z = currentPosition.z;
 
-		protected virtual void Update()
-		{
-			if (followIn == UpdateType.Update)
-			{
-				UpdatePosition();
-			}
-		}
+                transform.position = Vector3.Lerp(currentPosition, targetPosition, factor);
 
-		protected virtual void LateUpdate()
-		{
-			if (followIn == UpdateType.LateUpdate)
-			{
-				UpdatePosition();
-			}
-		}
-	}
+                if (rotate)
+                {
+                    var targetRotation = finalTarget.rotation * Quaternion.Euler(localRotation);
+
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, factor);
+                }
+            }
+        }
+    }
 }
 
 #if UNITY_EDITOR
 namespace CW.Common
 {
-	using UnityEditor;
-	using TARGET = CwFollow;
+    using TARGET = CwFollow;
 
-	[CanEditMultipleObjects]
-	[CustomEditor(typeof(TARGET))]
-	public class CwFollow_Editor : CwEditor
-	{
-		protected override void OnInspector()
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+    [CanEditMultipleObjects]
+    [CustomEditor(typeof(TARGET))]
+    public class CwFollow_Editor : CwEditor
+    {
+        protected override void OnInspector()
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			Draw("follow", "What should this component follow?");
-			if (Any(tgts, t => t.Follow == CwFollow.FollowType.TargetTransform))
-			{
-				BeginIndent();
-					BeginError(Any(tgts, t => t.Target == null));
-						Draw("target", "The transform that will be followed.");
-					EndError();
-				EndIndent();
-			}
-			Draw("damping", "How quickly this Transform follows the target.\n\n-1 = instant.");
-			Draw("rotate", "Follow the target's rotation too?");
-			Draw("ignoreZ", "Ignore Z axis for 2D?");
-			Draw("followIn", "Where in the game loop should this component update?");
+            Draw("follow", "What should this component follow?");
+            if (Any(tgts, t => t.Follow == CwFollow.FollowType.TargetTransform))
+            {
+                BeginIndent();
+                BeginError(Any(tgts, t => t.Target == null));
+                Draw("target", "The transform that will be followed.");
+                EndError();
+                EndIndent();
+            }
 
-			Separator();
+            Draw("damping", "How quickly this Transform follows the target.\n\n-1 = instant.");
+            Draw("rotate", "Follow the target's rotation too?");
+            Draw("ignoreZ", "Ignore Z axis for 2D?");
+            Draw("followIn", "Where in the game loop should this component update?");
 
-			Draw("localPosition", "This allows you to specify a positional offset relative to the Target transform.");
-			Draw("localRotation", "This allows you to specify a rotational offset relative to the Target transform.");
-		}
-	}
+            Separator();
+
+            Draw("localPosition", "This allows you to specify a positional offset relative to the Target transform.");
+            Draw("localRotation", "This allows you to specify a rotational offset relative to the Target transform.");
+        }
+    }
 }
 #endif

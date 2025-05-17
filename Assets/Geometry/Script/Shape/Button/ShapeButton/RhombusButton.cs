@@ -4,7 +4,10 @@ namespace Manipulator
 {
     public class RhombusButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.Rhombus;
+        public IShapeButton.ShapeType GetShapeType()
+        {
+            return IShapeButton.ShapeType.Rhombus;
+        }
 
         protected override void OnButtonClick()
         {

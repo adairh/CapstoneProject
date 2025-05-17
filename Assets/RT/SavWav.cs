@@ -1,5 +1,4 @@
-﻿
-//	Copyright (c) 2012 Calvin Rien
+﻿//	Copyright (c) 2012 Calvin Rien
 //        http://the.darktable.com
 //
 //	This software is provided 'as-is', without any express or implied warranty. In
@@ -46,13 +45,10 @@ public static class SavWav
 
     public static void Save(string filename, AudioClip clip, bool trim = false)
     {
-        if (!filename.ToLower().EndsWith(".wav"))
-        {
-            filename += ".wav";
-        }
+        if (!filename.ToLower().EndsWith(".wav")) filename += ".wav";
 
         //var filepath = Path.Combine(Application.persistentDataPath, filename);
-        string filepath = filename;
+        var filepath = filename;
         // Make sure directory exists if user is saving to sub dir.
         //Directory.CreateDirectory(Path.GetDirectoryName(filepath));
 
@@ -105,7 +101,7 @@ public static class SavWav
             }
         }
 
-        var buffer = new byte[(sampleCount * 2) + HeaderSize];
+        var buffer = new byte[sampleCount * 2 + HeaderSize];
 
         var p = HeaderSize;
         for (var i = start; i <= end; i++)
@@ -122,10 +118,7 @@ public static class SavWav
 
     private static void AddDataToBuffer(byte[] buffer, ref uint offset, byte[] addBytes)
     {
-        foreach (var b in addBytes)
-        {
-            buffer[offset++] = b;
-        }
+        foreach (var b in addBytes) buffer[offset++] = b;
     }
 
     private static void WriteHeader(byte[] stream, AudioClip clip, uint length, uint samples)
@@ -150,7 +143,7 @@ public static class SavWav
         var subChunk1 = BitConverter.GetBytes(16u);
         AddDataToBuffer(stream, ref offset, subChunk1);
 
-       // const ushort two = 2;
+        // const ushort two = 2;
         const ushort one = 1;
 
         var audioFormat = BitConverter.GetBytes(one);
@@ -162,7 +155,8 @@ public static class SavWav
         var sampleRate = BitConverter.GetBytes(hz);
         AddDataToBuffer(stream, ref offset, sampleRate);
 
-        var byteRate = BitConverter.GetBytes(hz * channels * 2); // sampleRate * bytesPerSample*number of channels, here 44100*2*2
+        var byteRate =
+            BitConverter.GetBytes(hz * channels * 2); // sampleRate * bytesPerSample*number of channels, here 44100*2*2
         AddDataToBuffer(stream, ref offset, byteRate);
 
         var blockAlign = (ushort)(channels * 2);

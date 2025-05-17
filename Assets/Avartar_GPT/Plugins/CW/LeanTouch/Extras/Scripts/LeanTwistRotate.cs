@@ -1,229 +1,250 @@
-using UnityEngine;
 using CW.Common;
+using UnityEditor;
+using UnityEngine;
 
 namespace Lean.Touch
 {
-	/// <summary>This component allows you to transform the current GameObject relative to the specified camera using a twist gesture.</summary>
+	/// <summary>
+	///     This component allows you to transform the current GameObject relative to the specified camera using a twist
+	///     gesture.
+	/// </summary>
 	[HelpURL(LeanTouch.HelpUrlPrefix + "LeanTwistRotate")]
-	[AddComponentMenu(LeanTouch.ComponentPathPrefix + "Twist Rotate")]
-	public class LeanTwistRotate : MonoBehaviour
-	{
-		/// <summary>The method used to find fingers to use with this component. See LeanFingerFilter documentation for more information.</summary>
-		public LeanFingerFilter Use = new LeanFingerFilter(true);
+    [AddComponentMenu(LeanTouch.ComponentPathPrefix + "Twist Rotate")]
+    public class LeanTwistRotate : MonoBehaviour
+    {
+	    /// <summary>
+	    ///     The method used to find fingers to use with this component. See LeanFingerFilter documentation for more
+	    ///     information.
+	    /// </summary>
+	    public LeanFingerFilter Use = new(true);
 
-		/// <summary>The camera we will be used to calculate relative rotations.
-		/// None/null = MainCamera.</summary>
-		public Camera Camera { set { _camera = value; } get { return _camera; } } [SerializeField] private Camera _camera;
+        [SerializeField] private Camera _camera;
+        [SerializeField] private bool relative;
+        [SerializeField] private float damping = -1.0f;
 
-		/// <summary>Should the rotation be performed relative to the finger center?</summary>
-		public bool Relative { set { relative = value; } get { return relative; } } [SerializeField] private bool relative;
+        [SerializeField] private Vector3 remainingTranslation;
 
-		/// <summary>If you want this component to change smoothly over time, then this allows you to control how quick the changes reach their target value.
-		/// -1 = Instantly change.
-		/// 1 = Slowly change.
-		/// 10 = Quickly change.</summary>
-		public float Damping { set { damping = value; } get { return damping; } } [SerializeField] private float damping = -1.0f;
+        [SerializeField] private Quaternion remainingRotation = Quaternion.identity;
 
-		[SerializeField]
-		private Vector3 remainingTranslation;
+        /// <summary>
+        ///     The camera we will be used to calculate relative rotations.
+        ///     None/null = MainCamera.
+        /// </summary>
+        public Camera Camera
+        {
+            set => _camera = value;
+            get => _camera;
+        }
 
-		[SerializeField]
-		private Quaternion remainingRotation = Quaternion.identity;
+        /// <summary>Should the rotation be performed relative to the finger center?</summary>
+        public bool Relative
+        {
+            set => relative = value;
+            get => relative;
+        }
 
-		/// <summary>If you've set Use to ManuallyAddedFingers, then you can call this method to manually add a finger.</summary>
-		public void AddFinger(LeanFinger finger)
-		{
-			Use.AddFinger(finger);
-		}
+        /// <summary>
+        ///     If you want this component to change smoothly over time, then this allows you to control how quick the changes
+        ///     reach their target value.
+        ///     -1 = Instantly change.
+        ///     1 = Slowly change.
+        ///     10 = Quickly change.
+        /// </summary>
+        public float Damping
+        {
+            set => damping = value;
+            get => damping;
+        }
 
-		/// <summary>If you've set Use to ManuallyAddedFingers, then you can call this method to manually remove a finger.</summary>
-		public void RemoveFinger(LeanFinger finger)
-		{
-			Use.RemoveFinger(finger);
-		}
-
-		/// <summary>If you've set Use to ManuallyAddedFingers, then you can call this method to manually remove all fingers.</summary>
-		public void RemoveAllFingers()
-		{
-			Use.RemoveAllFingers();
-		}
+        protected virtual void Awake()
+        {
+            Use.UpdateRequiredSelectable(gameObject);
+        }
 
 #if UNITY_EDITOR
-		protected virtual void Reset()
-		{
-			Use.UpdateRequiredSelectable(gameObject);
-		}
+        protected virtual void Reset()
+        {
+            Use.UpdateRequiredSelectable(gameObject);
+        }
 #endif
 
-		protected virtual void Awake()
-		{
-			Use.UpdateRequiredSelectable(gameObject);
-		}
+        protected virtual void Update()
+        {
+            // Store
+            var oldPosition = transform.localPosition;
+            var oldRotation = transform.localRotation;
 
-		protected virtual void Update()
-		{
-			// Store
-			var oldPosition = transform.localPosition;
-			var oldRotation = transform.localRotation;
+            // Get the fingers we want to use
+            var fingers = Use.UpdateAndGetFingers();
 
-			// Get the fingers we want to use
-			var fingers = Use.UpdateAndGetFingers();
+            // Calculate the rotation values based on these fingers
+            var twistDegrees = LeanGesture.GetTwistDegrees(fingers);
 
-			// Calculate the rotation values based on these fingers
-			var twistDegrees = LeanGesture.GetTwistDegrees(fingers);
+            if (twistDegrees != 0.0f)
+            {
+                if (relative)
+                {
+                    var twistScreenCenter = LeanGesture.GetScreenCenter(fingers);
 
-			if (twistDegrees != 0.0f)
-			{
-				if (relative == true)
-				{
-					var twistScreenCenter = LeanGesture.GetScreenCenter(fingers);
+                    if (transform is RectTransform)
+                    {
+                        TranslateUI(twistDegrees, twistScreenCenter);
+                        RotateUI(twistDegrees);
+                    }
+                    else
+                    {
+                        Translate(twistDegrees, twistScreenCenter);
+                        Rotate(twistDegrees);
+                    }
+                }
+                else
+                {
+                    if (transform is RectTransform)
+                        RotateUI(twistDegrees);
+                    else
+                        Rotate(twistDegrees);
+                }
+            }
 
-					if (transform is RectTransform)
-					{
-						TranslateUI(twistDegrees, twistScreenCenter);
-						RotateUI(twistDegrees);
-					}
-					else
-					{
-						Translate(twistDegrees, twistScreenCenter);
-						Rotate(twistDegrees);
-					}
-				}
-				else
-				{
-					if (transform is RectTransform)
-					{
-						RotateUI(twistDegrees);
-					}
-					else
-					{
-						Rotate(twistDegrees);
-					}
-				}
-			}
+            // Increment
+            remainingTranslation += transform.localPosition - oldPosition;
+            remainingRotation *= Quaternion.Inverse(oldRotation) * transform.localRotation;
 
-			// Increment
-			remainingTranslation += transform.localPosition - oldPosition;
-			remainingRotation    *= Quaternion.Inverse(oldRotation) * transform.localRotation;
+            // Get t value
+            var factor = CwHelper.DampenFactor(damping, Time.deltaTime);
 
-			// Get t value
-			var factor = CwHelper.DampenFactor(damping, Time.deltaTime);
+            // Dampen remainingDelta
+            var newRemainingTranslation = Vector3.Lerp(remainingTranslation, Vector3.zero, factor);
+            var newRemainingRotation = Quaternion.Slerp(remainingRotation, Quaternion.identity, factor);
 
-			// Dampen remainingDelta
-			var newRemainingTranslation = Vector3.Lerp(remainingTranslation, Vector3.zero, factor);
-			var newRemainingRotation    = Quaternion.Slerp(remainingRotation, Quaternion.identity, factor);
+            // Shift this transform by the change in delta
+            transform.localPosition = oldPosition + remainingTranslation - newRemainingTranslation;
+            transform.localRotation = oldRotation * Quaternion.Inverse(newRemainingRotation) * remainingRotation;
 
-			// Shift this transform by the change in delta
-			transform.localPosition = oldPosition + remainingTranslation - newRemainingTranslation;
-			transform.localRotation = oldRotation * Quaternion.Inverse(newRemainingRotation) * remainingRotation;
+            // Update remainingDelta with the dampened value
+            remainingTranslation = newRemainingTranslation;
+            remainingRotation = newRemainingRotation;
+        }
 
-			// Update remainingDelta with the dampened value
-			remainingTranslation = newRemainingTranslation;
-			remainingRotation    = newRemainingRotation;
-		}
+        /// <summary>If you've set Use to ManuallyAddedFingers, then you can call this method to manually add a finger.</summary>
+        public void AddFinger(LeanFinger finger)
+        {
+            Use.AddFinger(finger);
+        }
 
-		protected virtual void TranslateUI(float twistDegrees, Vector2 twistScreenCenter)
-		{
-			var camera = _camera;
+        /// <summary>If you've set Use to ManuallyAddedFingers, then you can call this method to manually remove a finger.</summary>
+        public void RemoveFinger(LeanFinger finger)
+        {
+            Use.RemoveFinger(finger);
+        }
 
-			if (camera == null)
-			{
-				var canvas = transform.GetComponentInParent<Canvas>();
+        /// <summary>If you've set Use to ManuallyAddedFingers, then you can call this method to manually remove all fingers.</summary>
+        public void RemoveAllFingers()
+        {
+            Use.RemoveAllFingers();
+        }
 
-				if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
-				{
-					camera = canvas.worldCamera;
-				}
-			}
+        protected virtual void TranslateUI(float twistDegrees, Vector2 twistScreenCenter)
+        {
+            var camera = _camera;
 
-			// Screen position of the transform
-			var screenPoint = RectTransformUtility.WorldToScreenPoint(camera, transform.position);
+            if (camera == null)
+            {
+                var canvas = transform.GetComponentInParent<Canvas>();
 
-			// Twist screen point around the twistScreenCenter by twistDegrees
-			var twistRotation = Quaternion.Euler(0.0f, 0.0f, twistDegrees);
-			var screenDelta   = twistRotation * (screenPoint - twistScreenCenter);
+                if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay) camera = canvas.worldCamera;
+            }
 
-			screenPoint.x = twistScreenCenter.x + screenDelta.x;
-			screenPoint.y = twistScreenCenter.y + screenDelta.y;
+            // Screen position of the transform
+            var screenPoint = RectTransformUtility.WorldToScreenPoint(camera, transform.position);
 
-			// Convert back to world space
-			var worldPoint = default(Vector3);
+            // Twist screen point around the twistScreenCenter by twistDegrees
+            var twistRotation = Quaternion.Euler(0.0f, 0.0f, twistDegrees);
+            var screenDelta = twistRotation * (screenPoint - twistScreenCenter);
 
-			if (RectTransformUtility.ScreenPointToWorldPointInRectangle(transform.parent as RectTransform, screenPoint, camera, out worldPoint) == true)
-			{
-				transform.position = worldPoint;
-			}
-		}
+            screenPoint.x = twistScreenCenter.x + screenDelta.x;
+            screenPoint.y = twistScreenCenter.y + screenDelta.y;
 
-		protected virtual void Translate(float twistDegrees, Vector2 twistScreenCenter)
-		{
-			// Make sure the camera exists
-			var camera = CwHelper.GetCamera(_camera, gameObject);
+            // Convert back to world space
+            var worldPoint = default(Vector3);
 
-			if (camera != null)
-			{
-				// Screen position of the transform
-				var screenPoint = camera.WorldToScreenPoint(transform.position);
+            if (RectTransformUtility.ScreenPointToWorldPointInRectangle(transform.parent as RectTransform, screenPoint,
+                    camera, out worldPoint)) transform.position = worldPoint;
+        }
 
-				// Twist screen point around the twistScreenCenter by twistDegrees
-				var twistRotation = Quaternion.Euler(0.0f, 0.0f, twistDegrees);
-				var screenDelta   = twistRotation * ((Vector2)screenPoint - twistScreenCenter);
+        protected virtual void Translate(float twistDegrees, Vector2 twistScreenCenter)
+        {
+            // Make sure the camera exists
+            var camera = CwHelper.GetCamera(_camera, gameObject);
 
-				screenPoint.x = twistScreenCenter.x + screenDelta.x;
-				screenPoint.y = twistScreenCenter.y + screenDelta.y;
+            if (camera != null)
+            {
+                // Screen position of the transform
+                var screenPoint = camera.WorldToScreenPoint(transform.position);
 
-				// Convert back to world space
-				transform.position = camera.ScreenToWorldPoint(screenPoint);
-			}
-			else
-			{
-				Debug.LogError("Failed to find camera. Either tag your cameras MainCamera, or set one in this component.", this);
-			}
-		}
+                // Twist screen point around the twistScreenCenter by twistDegrees
+                var twistRotation = Quaternion.Euler(0.0f, 0.0f, twistDegrees);
+                var screenDelta = twistRotation * ((Vector2)screenPoint - twistScreenCenter);
 
-		protected virtual void RotateUI(float twistDegrees)
-		{
-			transform.rotation *= Quaternion.Euler(0.0f, 0.0f, twistDegrees);
-		}
+                screenPoint.x = twistScreenCenter.x + screenDelta.x;
+                screenPoint.y = twistScreenCenter.y + screenDelta.y;
 
-		protected virtual void Rotate(float twistDegrees)
-		{
-			// Make sure the camera exists
-			var camera = CwHelper.GetCamera(_camera, gameObject);
+                // Convert back to world space
+                transform.position = camera.ScreenToWorldPoint(screenPoint);
+            }
+            else
+            {
+                Debug.LogError(
+                    "Failed to find camera. Either tag your cameras MainCamera, or set one in this component.", this);
+            }
+        }
 
-			if (camera != null)
-			{
-				var axis = transform.InverseTransformDirection(camera.transform.forward);
+        protected virtual void RotateUI(float twistDegrees)
+        {
+            transform.rotation *= Quaternion.Euler(0.0f, 0.0f, twistDegrees);
+        }
 
-				transform.rotation *= Quaternion.AngleAxis(twistDegrees, axis);
-			}
-			else
-			{
-				Debug.LogError("Failed to find camera. Either tag your cameras MainCamera, or set one in this component.", this);
-			}
-		}
-	}
+        protected virtual void Rotate(float twistDegrees)
+        {
+            // Make sure the camera exists
+            var camera = CwHelper.GetCamera(_camera, gameObject);
+
+            if (camera != null)
+            {
+                var axis = transform.InverseTransformDirection(camera.transform.forward);
+
+                transform.rotation *= Quaternion.AngleAxis(twistDegrees, axis);
+            }
+            else
+            {
+                Debug.LogError(
+                    "Failed to find camera. Either tag your cameras MainCamera, or set one in this component.", this);
+            }
+        }
+    }
 }
 
 #if UNITY_EDITOR
 namespace Lean.Touch.Editor
 {
-	using UnityEditor;
-	using TARGET = LeanTwistRotate;
+    using TARGET = LeanTwistRotate;
 
-	[CanEditMultipleObjects]
-	[CustomEditor(typeof(TARGET))]
-	public class LeanTwistRotate_Editor : CwEditor
-	{
-		protected override void OnInspector()
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+    [CanEditMultipleObjects]
+    [CustomEditor(typeof(TARGET))]
+    public class LeanTwistRotate_Editor : CwEditor
+    {
+        protected override void OnInspector()
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			Draw("Use");
-			Draw("_camera", "The camera we will be used to calculate relative rotations.\n\nNone/null = MainCamera.");
-			Draw("relative", "Should the rotation be performed relative to the finger center?");
-			Draw("damping", "If you want this component to change smoothly over time, then this allows you to control how quick the changes reach their target value.\n\n-1 = Instantly change.\n\n1 = Slowly change.\n\n10 = Quickly change.");
-		}
-	}
+            Draw("Use");
+            Draw("_camera", "The camera we will be used to calculate relative rotations.\n\nNone/null = MainCamera.");
+            Draw("relative", "Should the rotation be performed relative to the finger center?");
+            Draw("damping",
+                "If you want this component to change smoothly over time, then this allows you to control how quick the changes reach their target value.\n\n-1 = Instantly change.\n\n1 = Slowly change.\n\n10 = Quickly change.");
+        }
+    }
 }
 #endif

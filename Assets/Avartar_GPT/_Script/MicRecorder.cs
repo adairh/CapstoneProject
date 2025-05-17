@@ -1,5 +1,5 @@
-using UnityEngine;
 using System;
+using UnityEngine;
 
 #if unusedjunk
 using NAudio.Wave;
@@ -70,12 +70,28 @@ public class MicRecorder : MonoBehaviour
 public class MicRecorder : MonoBehaviour
 {
     private AudioClip audioClip;
-    private int recordingLength = 0;
- 
-    bool isRecording = false;
 
-    void Start()
+    private bool isRecording;
+    private int recordingLength;
+
+    private void Start()
     {
+    }
+
+    private void Update()
+    {
+        /*
+        if (!isRecording && Input.GetKey(KeyCode.M))
+        {
+            Debug.Log("Recording started");
+            StartRecording();
+        }
+
+        if (isRecording && !Input.GetKey(KeyCode.M))
+        {
+           StopRecordingAndProcess();
+        }
+        */
     }
 
     public void StartRecording()
@@ -96,9 +112,9 @@ public class MicRecorder : MonoBehaviour
             isRecording = false;
         }
     }
+
     public void StopRecordingAndProcess(string outputFileName)
     {
-
         if (!isRecording)
             return;
 
@@ -109,31 +125,18 @@ public class MicRecorder : MonoBehaviour
         recordingLength = Mathf.RoundToInt(audioClip.length * audioClip.channels * audioClip.frequency) * 2;
 
         // Convert AudioClip data to a WAV file and save it
-        float[] audioData = new float[recordingLength];
+        var audioData = new float[recordingLength];
         audioClip.GetData(audioData, 0);
 
         SavWav.Save(outputFileName, audioClip, true);
 
-        AIManager aiScript = GetComponent<AIManager>();
+        var aiScript = GetComponent<AIManager>();
         aiScript.ProcessMicAudioByFileName(outputFileName);
     }
 
-   public bool IsRecording() { return isRecording; }
-    private void Update()
+    public bool IsRecording()
     {
-
-        /*
-        if (!isRecording && Input.GetKey(KeyCode.M))
-        {
-            Debug.Log("Recording started");
-            StartRecording();
-        }
-
-        if (isRecording && !Input.GetKey(KeyCode.M))
-        {
-           StopRecordingAndProcess();
-        }
-        */
+        return isRecording;
     }
 }
 #endif

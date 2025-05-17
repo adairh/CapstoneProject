@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 
 /*
@@ -11,31 +9,28 @@ by Seth A Robinson
 
 public class WindowDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerClickHandler
 {
+    private bool _bDragging;
 
-    Vector2 _vStartDragPos;
-    bool _bDragging = false;
+    private Vector2 _vStartDragPos;
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left) return;
+        gameObject.transform.SetAsLastSibling();
+
+        _vStartDragPos = eventData.position;
+        _bDragging = true;
+    }
 
     public void OnDrag(PointerEventData eventData)
     {
         if (_bDragging)
         {
-            Vector2 vOffset = eventData.position - _vStartDragPos;
+            var vOffset = eventData.position - _vStartDragPos;
             _vStartDragPos = eventData.position;
 
             gameObject.transform.Translate(vOffset); //2d to 3d so z will be 0
         }
-    }
-
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-        if (eventData.button != PointerEventData.InputButton.Left)
-        {
-            return;
-        }
-        gameObject.transform.SetAsLastSibling();
-
-        _vStartDragPos = eventData.position;
-        _bDragging = true;
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -47,5 +42,4 @@ public class WindowDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDr
     {
         gameObject.transform.SetAsLastSibling();
     }
-
 }

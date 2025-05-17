@@ -4,14 +4,44 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public static int timeLeft = 0;
+    public static int timeLeft;
 
-    private Level level = null;
-
-    private int alliesCount = 0, alliesDestroyed = 0,
-                enemiesCount = 0, enemiesDestroyed = 0;
+    public static GameManager instance;
 
     public GameUI gameUI;
+
+    [HideInInspector] public int rating;
+
+    [SerializeField] private LevelData levelData;
+
+    [HideInInspector] public bool failed;
+
+    [HideInInspector] public bool hasEnded;
+
+    public int countdown = 3;
+
+    public Canvas Quiz;
+
+    private int alliesCount,
+        alliesDestroyed,
+        enemiesCount,
+        enemiesDestroyed;
+
+    private Level level;
+
+    private Virus virus;
+
+    private void Start()
+    {
+        instance = this;
+        InitGame();
+        //Debug.Log($"Game has started with {enemiesCount} enemies and {alliesCount} allies.");
+    }
+
+    private void OnDestroy()
+    {
+        LeanTween.cancelAll();
+    }
 
     public event Action OnCountdown;
     public event Action OnStart;
@@ -22,25 +52,6 @@ public class GameManager : MonoBehaviour
     public event Action OnTimesUp;
     public event Action OnComplete;
 
-    public static GameManager instance;
-
-    [HideInInspector] 
-    public int rating = 0;
-    [SerializeField]
-    private LevelData levelData = null;
-
-    [HideInInspector]
-    public bool failed = false;
-
-    [HideInInspector]
-    public bool hasEnded = false;
-
-    public int countdown = 3;
-
-    public Canvas Quiz;
-    
-    private Virus virus = null;
-
     public void SetVirus(Virus virus)
     {
         this.virus = virus;
@@ -48,7 +59,7 @@ public class GameManager : MonoBehaviour
 
     public void DeleteVirus()
     {
-        if (this.virus != null)
+        if (virus != null)
         {
             virus.Destroy();
             virus = null;
@@ -59,18 +70,11 @@ public class GameManager : MonoBehaviour
     {
         return virus;
     }
-    
-    private void Start()
-    {
-        instance = this;
-        InitGame();
-        //Debug.Log($"Game has started with {enemiesCount} enemies and {alliesCount} allies.");
-    }
 
     // Initializes the game (selected level) in Game scene
     private void InitGame()
     {
-        GameObject go = Instantiate(LevelLoader.levelToLoad.levelPrefab);
+        var go = Instantiate(LevelLoader.levelToLoad.levelPrefab);
 
         level = go.GetComponent<Level>();
         timeLeft = LevelLoader.levelToLoad.timeLimit;
@@ -84,7 +88,7 @@ public class GameManager : MonoBehaviour
         level.enabled = true;
 
         gameUI.Init(timeLeft);
-        
+
         //OnTick += () => { };
         //OnTimesUp += () => { };
         //OnComplete += () => { };
@@ -102,7 +106,7 @@ public class GameManager : MonoBehaviour
         OnAllyKilled();
 
         if (alliesDestroyed > 3)
-            failed = true;     
+            failed = true;
     }
 
     // Executes when Virus is destoyed
@@ -134,12 +138,12 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(0.1f);
 
-        WaitForSecondsRealtime delay = new WaitForSecondsRealtime(0.33f);
+        var delay = new WaitForSecondsRealtime(0.33f);
 
         for (; countdown >= 0; countdown--)
         {
             OnCountdown();
-            
+
             if (countdown > 0)
                 yield return delay;
         }
@@ -150,7 +154,7 @@ public class GameManager : MonoBehaviour
 
         delay = new WaitForSecondsRealtime(1.0f);
 
-        for (; timeLeft > 0 ; timeLeft--)
+        for (; timeLeft > 0; timeLeft--)
         {
             OnTick();
             yield return delay;
@@ -170,10 +174,10 @@ public class GameManager : MonoBehaviour
     // Executes when game is in "complete" state
     public void Complete()
     {
-        int index = LevelLoader.currentLevelIndex;
+        var index = LevelLoader.currentLevelIndex;
         var level = levelData.levels[index];
 
-        bool progress = false;
+        var progress = false;
 
         //Debug.Log("Allies destroyed " + alliesDestroyed);
         UpdateRating();
@@ -186,19 +190,14 @@ public class GameManager : MonoBehaviour
 
         index++;
 
-        if (index < levelData.levels.Count 
+        if (index < levelData.levels.Count
             && !levelData.levels[index].unlocked)
         {
             levelData.Unlock(index);
             progress = true;
         }
-            
+
         if (progress)
             levelData.Save();
-    }
-
-    private void OnDestroy()
-    {
-        LeanTween.cancelAll();
     }
 }

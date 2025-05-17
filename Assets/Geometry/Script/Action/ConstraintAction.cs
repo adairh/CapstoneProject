@@ -4,8 +4,8 @@ namespace Manipulator
 {
     public class ConstraintAction : IUndoableAction
     {
-        private readonly Point point;
         private readonly Vector3 oldPos, newPos;
+        private readonly Point point;
 
         public ConstraintAction(Point point, Vector3 oldPos, Vector3 newPos)
         {
@@ -14,8 +14,14 @@ namespace Manipulator
             this.newPos = newPos;
         }
 
-        public void Undo() => point.MoveTo(oldPos, silent: true);
-        public void Redo() => point.MoveTo(newPos, silent: true);
-    }
+        public void Undo()
+        {
+            point.MoveTo(oldPos, true);
+        }
 
+        public void Redo()
+        {
+            point.MoveTo(newPos, true);
+        }
+    }
 }

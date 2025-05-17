@@ -1,12 +1,12 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 // This class is parent for all destructibles in game
 public abstract class Destructible : MonoBehaviour
 {
-    [HideInInspector]
-    public Level level;
-    
-    protected System.Action onDestroy;
+    [HideInInspector] public Level level;
+
+    protected Action onDestroy;
 
     public virtual void Destroy()
     {

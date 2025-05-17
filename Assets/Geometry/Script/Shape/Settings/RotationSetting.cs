@@ -12,7 +12,6 @@ namespace Manipulator
         {
             //throw new System.NotImplementedException();
             return new GameObject();
-
         }
 
         public override void Apply()

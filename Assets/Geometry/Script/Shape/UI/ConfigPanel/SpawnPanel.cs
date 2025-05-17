@@ -1,20 +1,12 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Manipulator
 {
     public class SpawnPanel
     {
-        // Make currentPanel public static but readonly from outside
-        public static GameObject CurrentPanel { get; private set; }
-        private RectTransform canvasRect;
-        private Canvas canvas;
-
-        // Add a public method to clear the panel
-        public static void ClearCurrentPanel()
-        {
-            CurrentPanel = null;
-        }
+        private readonly Canvas canvas;
+        private readonly RectTransform canvasRect;
 
         public SpawnPanel()
         {
@@ -30,6 +22,15 @@ namespace Manipulator
             {
                 Debug.LogError("[SpawnPanel] No Canvas found in the scene!");
             }
+        }
+
+        // Make currentPanel public static but readonly from outside
+        public static GameObject CurrentPanel { get; private set; }
+
+        // Add a public method to clear the panel
+        public static void ClearCurrentPanel()
+        {
+            CurrentPanel = null;
         }
 
         public void SpawnPanelAtTop(Shape shape)
@@ -50,7 +51,7 @@ namespace Manipulator
             }
 
             // Get settings for the shape
-            List<ISetting> settings = shape.GetSettings();
+            var settings = shape.GetSettings();
             Debug.Log($"[SpawnPanel] shape.GetSettings() returned {settings?.Count ?? 0} entries");
             if (settings == null || settings.Count == 0)
             {
@@ -59,27 +60,28 @@ namespace Manipulator
             }
 
             // Get panel prefab from UIManager
-            if (!UIManager.Instance.UIPrefabs.TryGetValue("Panel", out GameObject panelPrefab) || panelPrefab == null)
+            if (!UIManager.Instance.UIPrefabs.TryGetValue("Panel", out var panelPrefab) || panelPrefab == null)
             {
                 Debug.LogError("[SpawnPanel] Panel Prefab named \"Panel\" is missing in UIManager!");
                 return;
             }
+
             Debug.Log($"[SpawnPanel] Got panel prefab: {panelPrefab.name}");
 
             // Instantiate new panel
             CurrentPanel = Object.Instantiate(panelPrefab, canvas.transform);
             Debug.Log($"[SpawnPanel] Instantiated panel: {CurrentPanel.name}");
-            RectTransform panelRect = CurrentPanel.GetComponent<RectTransform>();
+            var panelRect = CurrentPanel.GetComponent<RectTransform>();
             Debug.Log($"[SpawnPanel] panelRect after GetComponent: {panelRect}");
 
             // Set panel position and anchors
             panelRect.anchorMin = new Vector2(0.5f, 1f);
             panelRect.anchorMax = new Vector2(0.5f, 1f);
-            panelRect.pivot     = new Vector2(0.5f, 1f);
+            panelRect.pivot = new Vector2(0.5f, 1f);
             panelRect.anchoredPosition = new Vector2(0, -20);
 
             // Build and attach settings UI
-            GameObject settingsPanel = UIBuilder.BuildSettingsPanel(shape);
+            var settingsPanel = UIBuilder.BuildSettingsPanel(shape);
             if (settingsPanel == null)
             {
                 Debug.LogError("[SpawnPanel] UIBuilder.BuildSettingsPanel returned null!");
@@ -94,8 +96,8 @@ namespace Manipulator
                 {
                     rt.anchorMin = new Vector2(0, 1);
                     rt.anchorMax = new Vector2(1, 1);
-                    rt.pivot     = new Vector2(0.5f, 1);
-                    Debug.Log($"[SpawnPanel] settingsPanel RectTransform setup");
+                    rt.pivot = new Vector2(0.5f, 1);
+                    Debug.Log("[SpawnPanel] settingsPanel RectTransform setup");
                 }
                 else
                 {
@@ -115,12 +117,12 @@ namespace Manipulator
         private void AdjustPanelSize(RectTransform panelRect, List<ISetting> settings)
         {
             var pixelRect = canvas.pixelRect;
-            float panelWidth = Mathf.Min(pixelRect.width * 0.7f, 400f); // Max width of 400 pixels
-            float panelHeight = Mathf.Min(pixelRect.height * 0.8f, 600f); // Max height of 600 pixels
+            var panelWidth = Mathf.Min(pixelRect.width * 0.7f, 400f); // Max width of 400 pixels
+            var panelHeight = Mathf.Min(pixelRect.height * 0.8f, 600f); // Max height of 600 pixels
 
             // Set the panel size
             panelRect.sizeDelta = new Vector2(panelWidth, panelHeight);
-            
+
             // Ensure the panel is properly anchored at the top
             panelRect.anchorMin = new Vector2(0.5f, 1f);
             panelRect.anchorMax = new Vector2(0.5f, 1f);

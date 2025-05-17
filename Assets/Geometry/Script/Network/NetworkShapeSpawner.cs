@@ -17,13 +17,7 @@ namespace Manipulator
             else
             {
                 Destroy(gameObject);
-                return;
             }
-        }
-
-        public override void OnNetworkSpawn()
-        {
-            Debug.Log($"[NetworkShapeSpawner] Spawned. IsServer: {IsHost}, IsClient: {IsClient}, IsHost: {IsHost}");
         }
 
         private void Start()
@@ -38,6 +32,11 @@ namespace Manipulator
                     Debug.Log("[NetworkShapeSpawner] Manually spawned in Start().");
                 }
             }
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            Debug.Log($"[NetworkShapeSpawner] Spawned. IsServer: {IsHost}, IsClient: {IsClient}, IsHost: {IsHost}");
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -59,19 +58,20 @@ namespace Manipulator
             {
                 var a = ShapeStorage.GetById(data.ConnectedPoints[0]) as Point;
                 var b = ShapeStorage.GetById(data.ConnectedPoints[1]) as Point;
-                if (a && b) {
-                    segment.SetStartPoint(a);  
-                    segment.SetEndPoint(b);  
+                if (a && b)
+                {
+                    segment.SetStartPoint(a);
+                    segment.SetEndPoint(b);
                 }
             }
         }
 
         public void CreateShapeNetworked(ShapeData data, out Shape shape)
         {
-            string json = JsonUtility.ToJson(data);
+            var json = JsonUtility.ToJson(data);
 
             Shape temp = null;
-            
+
             if (IsHost)
             {
                 temp = ShapeFactory.CreateFromData(data);

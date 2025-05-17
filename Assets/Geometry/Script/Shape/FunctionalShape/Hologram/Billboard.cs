@@ -10,5 +10,4 @@ namespace Manipulator
                 transform.forward = Camera.main.transform.forward;
         }
     }
-
 }

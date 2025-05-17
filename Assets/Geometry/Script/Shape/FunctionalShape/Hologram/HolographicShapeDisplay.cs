@@ -6,9 +6,16 @@ namespace Manipulator
     {
         private VisibilitySetting setting;
 
-        public void BindToSetting(VisibilitySetting s)
+        private void LateUpdate()
         {
-            setting = s;
+            if (Camera.main == null) return;
+
+            var camPos = Camera.main.transform.position;
+            var direction = camPos - transform.position;
+
+            direction.y = 0; // giữ cho biển không nghiêng theo trục dọc
+
+            transform.rotation = Quaternion.LookRotation(-direction);
         }
 
         private void OnMouseDown()
@@ -21,22 +28,13 @@ namespace Manipulator
 
             Debug.LogWarning("[Hologram] OK.");
             setting.Value = true;
-            setting.Apply(); 
+            setting.Apply();
             Destroy(gameObject.transform.parent.gameObject); // 👈 phá hủy root của prefab luôn
-            
-
         }
 
-        private void LateUpdate()
+        public void BindToSetting(VisibilitySetting s)
         {
-            if (Camera.main == null) return;
-
-            Vector3 camPos = Camera.main.transform.position;
-            Vector3 direction = camPos - transform.position;
-
-            direction.y = 0; // giữ cho biển không nghiêng theo trục dọc
-
-            transform.rotation = Quaternion.LookRotation(-direction);
+            setting = s;
         }
     }
 }

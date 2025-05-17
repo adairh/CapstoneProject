@@ -6,7 +6,7 @@ public class BrokenStar : MonoBehaviour
 
     private void Start()
     {
-        Vector3 scale = transform.localScale;
+        var scale = transform.localScale;
         transform.localScale = Vector3.zero;
 
         var seq = LeanTween.sequence();

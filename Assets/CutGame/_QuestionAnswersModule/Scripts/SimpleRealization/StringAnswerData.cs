@@ -7,7 +7,7 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
     public class StringAnswerData : ScriptableObject
     {
         [SerializeField] private string _answer;
-        
+
         public IAnswer<string> ConvertToAnswer()
         {
             return new StringAnswer(_answer);

@@ -1,117 +1,145 @@
-using UnityEngine;
 using CW.Common;
+using UnityEditor;
+using UnityEngine;
 
 namespace Lean.Common
 {
-	/// <summary>This component rotates the current GameObject based on the current Angle value.
-	/// NOTE: This component overrides and takes over the rotation of this GameObject, so you can no longer externally influence it.</summary>
+	/// <summary>
+	///     This component rotates the current GameObject based on the current Angle value.
+	///     NOTE: This component overrides and takes over the rotation of this GameObject, so you can no longer externally
+	///     influence it.
+	/// </summary>
 	[ExecuteInEditMode]
-	[HelpURL(LeanCommon.HelpUrlPrefix + "LeanRoll")]
-	[AddComponentMenu(LeanCommon.ComponentPathPrefix + "Roll")]
-	public class LeanRoll : MonoBehaviour
-	{
-		/// <summary>The current angle in degrees.</summary>
-		public float Angle { set { angle = value; } get { return angle; } } [SerializeField] private float angle;
+    [HelpURL(LeanCommon.HelpUrlPrefix + "LeanRoll")]
+    [AddComponentMenu(LeanCommon.ComponentPathPrefix + "Roll")]
+    public class LeanRoll : MonoBehaviour
+    {
+        [SerializeField] private float angle;
+        [SerializeField] private bool clamp;
+        [SerializeField] private float clampMin;
+        [SerializeField] private float clampMax;
+        [SerializeField] private float damping = -1.0f;
 
-		/// <summary>Should the <b>Angle</b> value be clamped?</summary>
-		public bool Clamp { set { clamp = value; } get { return clamp; } } [SerializeField] private bool clamp;
+        [SerializeField] private float currentAngle;
 
-		/// <summary>The minimum <b>Angle</b> value.</summary>
-		public float ClampMin { set { clampMin = value; } get { return clampMin; } } [SerializeField] private float clampMin;
+        /// <summary>The current angle in degrees.</summary>
+        public float Angle
+        {
+            set => angle = value;
+            get => angle;
+        }
 
-		/// <summary>The maximum <b>Angle</b> value.</summary>
-		public float ClampMax { set { clampMax = value; } get { return clampMax; } } [SerializeField] private float clampMax;
+        /// <summary>Should the <b>Angle</b> value be clamped?</summary>
+        public bool Clamp
+        {
+            set => clamp = value;
+            get => clamp;
+        }
 
-		/// <summary>If you want this component to change smoothly over time, then this allows you to control how quick the changes reach their target value.
-		/// -1 = Instantly change.
-		/// 1 = Slowly change.
-		/// 10 = Quickly change.</summary>
-		public float Damping { set { damping = value; } get { return damping; } } [SerializeField] private float damping = -1.0f;
+        /// <summary>The minimum <b>Angle</b> value.</summary>
+        public float ClampMin
+        {
+            set => clampMin = value;
+            get => clampMin;
+        }
 
-		[SerializeField]
-		private float currentAngle;
+        /// <summary>The maximum <b>Angle</b> value.</summary>
+        public float ClampMax
+        {
+            set => clampMax = value;
+            get => clampMax;
+        }
 
-		/// <summary>The <b>Angle</b> value will be incremented by the specified angle in degrees.</summary>
-		public void IncrementAngle(float delta)
-		{
-			angle += delta;
-		}
+        /// <summary>
+        ///     If you want this component to change smoothly over time, then this allows you to control how quick the changes
+        ///     reach their target value.
+        ///     -1 = Instantly change.
+        ///     1 = Slowly change.
+        ///     10 = Quickly change.
+        /// </summary>
+        public float Damping
+        {
+            set => damping = value;
+            get => damping;
+        }
 
-		/// <summary>The <b>Angle</b> value will be decremented by the specified angle in degrees.</summary>
-		public void DecrementAngle(float delta)
-		{
-			angle -= delta;
-		}
+        protected virtual void Start()
+        {
+            currentAngle = angle;
+        }
 
-		/// <summary>This method will update the Angle value based on the specified vector.</summary>
-		public void RotateToDelta(Vector2 delta)
-		{
-			if (delta.sqrMagnitude > 0.0f)
-			{
-				angle = Mathf.Atan2(delta.x, delta.y) * Mathf.Rad2Deg;
-			}
-		}
+        protected virtual void Update()
+        {
+            // Get t value
+            var factor = CwHelper.DampenFactor(damping, Time.deltaTime);
 
-		/// <summary>This method will immediately snap the current angle to its target value.</summary>
-		[ContextMenu("Snap To Target")]
-		public void SnapToTarget()
-		{
-			currentAngle = angle;
-		}
+            if (clamp) angle = Mathf.Clamp(angle, clampMin, clampMax);
 
-		protected virtual void Start()
-		{
-			currentAngle = angle;
-		}
+            // Lerp angle
+            currentAngle = Mathf.LerpAngle(currentAngle, angle, factor);
 
-		protected virtual void Update()
-		{
-			// Get t value
-			var factor = CwHelper.DampenFactor(damping, Time.deltaTime);
+            // Update rotation
+            transform.rotation = Quaternion.Euler(0.0f, 0.0f, -currentAngle);
+        }
 
-			if (clamp == true)
-			{
-				angle = Mathf.Clamp(angle, clampMin, clampMax);
-			}
+        /// <summary>The <b>Angle</b> value will be incremented by the specified angle in degrees.</summary>
+        public void IncrementAngle(float delta)
+        {
+            angle += delta;
+        }
 
-			// Lerp angle
-			currentAngle = Mathf.LerpAngle(currentAngle, angle, factor);
+        /// <summary>The <b>Angle</b> value will be decremented by the specified angle in degrees.</summary>
+        public void DecrementAngle(float delta)
+        {
+            angle -= delta;
+        }
 
-			// Update rotation
-			transform.rotation = Quaternion.Euler(0.0f, 0.0f, -currentAngle);
-		}
-	}
+        /// <summary>This method will update the Angle value based on the specified vector.</summary>
+        public void RotateToDelta(Vector2 delta)
+        {
+            if (delta.sqrMagnitude > 0.0f) angle = Mathf.Atan2(delta.x, delta.y) * Mathf.Rad2Deg;
+        }
+
+        /// <summary>This method will immediately snap the current angle to its target value.</summary>
+        [ContextMenu("Snap To Target")]
+        public void SnapToTarget()
+        {
+            currentAngle = angle;
+        }
+    }
 }
 
 #if UNITY_EDITOR
 namespace Lean.Common.Editor
 {
-	using UnityEditor;
-	using TARGET = LeanRoll;
+    using TARGET = LeanRoll;
 
-	[CanEditMultipleObjects]
-	[CustomEditor(typeof(TARGET))]
-	public class LeanRoll_Editor : CwEditor
-	{
-		protected override void OnInspector()
-		{
-			TARGET tgt; TARGET[] tgts; GetTargets(out tgt, out tgts);
+    [CanEditMultipleObjects]
+    [CustomEditor(typeof(TARGET))]
+    public class LeanRoll_Editor : CwEditor
+    {
+        protected override void OnInspector()
+        {
+            TARGET tgt;
+            TARGET[] tgts;
+            GetTargets(out tgt, out tgts);
 
-			Draw("angle", "The current angle in degrees.");
-			Draw("clamp", "Should the Angle value be clamped?");
+            Draw("angle", "The current angle in degrees.");
+            Draw("clamp", "Should the Angle value be clamped?");
 
-			if (Any(tgts, t => t.Clamp == true))
-			{
-				BeginIndent();
-					Draw("clampMin", "The minimum Angle value.", "Min");
-					Draw("clampMax", "The maximum Angle value.", "Max");
-				EndIndent();
+            if (Any(tgts, t => t.Clamp))
+            {
+                BeginIndent();
+                Draw("clampMin", "The minimum Angle value.", "Min");
+                Draw("clampMax", "The maximum Angle value.", "Max");
+                EndIndent();
 
-				Separator();
-			}
+                Separator();
+            }
 
-			Draw("damping", "If you want this component to change smoothly over time, then this allows you to control how quick the changes reach their target value.\n\n-1 = Instantly change.\n\n1 = Slowly change.\n\n10 = Quickly change.");
-		}
-	}
+            Draw("damping",
+                "If you want this component to change smoothly over time, then this allows you to control how quick the changes reach their target value.\n\n-1 = Instantly change.\n\n1 = Slowly change.\n\n10 = Quickly change.");
+        }
+    }
 }
 #endif

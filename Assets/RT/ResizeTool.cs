@@ -34,16 +34,16 @@ using UnityEngine;
 
 public class ResizeTool
 {
-
- //copy the texture around so if it was a tile all the seams would be in the middle, makes it easy to see the problems with it
- //Pretty sure I wrote the function below? - Seth
-    public static void SetupAsTile(Texture2D texture2D,  FilterMode filter = FilterMode.Bilinear)
+    //copy the texture around so if it was a tile all the seams would be in the middle, makes it easy to see the problems with it
+    //Pretty sure I wrote the function below? - Seth
+    public static void SetupAsTile(Texture2D texture2D, FilterMode filter = FilterMode.Bilinear)
     {
         //create a temporary RenderTexture with the target size
-        int width = texture2D.width;
-        int height = texture2D.height;
-        
-        RenderTexture rt = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+        var width = texture2D.width;
+        var height = texture2D.height;
+
+        var rt = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32,
+            RenderTextureReadWrite.Default);
 
         //set the active RenderTexture to the temporary texture so we can read from it
         RenderTexture.active = rt;
@@ -53,20 +53,22 @@ public class ResizeTool
         var vOffset = new Vector2(0, 0);
 
         Graphics.Blit(texture2D, rt, vScale, vOffset, 0, 0);
-        
+
         //resize the texture to the target values (this sets the pixel data as undefined)
         texture2D.Reinitialize(width, height, texture2D.format, false);
-     
+
         texture2D.filterMode = filter;
 
         try
         {
             //reads the pixel values from the temporary RenderTexture onto the resized texture
-            
+
             //keep in mind Y is backwards from what you would think.  (0,0 is bottom left of image)
-            texture2D.ReadPixels(new Rect(width/2, height/2, width/2, height/2), 0, height/2); //upper left block
-            texture2D.ReadPixels(new Rect(0, height / 2, width / 2, height/2), width/2, height/2); //upper right block
-            texture2D.ReadPixels(new Rect(width/2, 0, width / 2, height / 2), 0, 0); //lower left block
+            texture2D.ReadPixels(new Rect(width / 2, height / 2, width / 2, height / 2), 0,
+                height / 2); //upper left block
+            texture2D.ReadPixels(new Rect(0, height / 2, width / 2, height / 2), width / 2,
+                height / 2); //upper right block
+            texture2D.ReadPixels(new Rect(width / 2, 0, width / 2, height / 2), 0, 0); //lower left block
             texture2D.ReadPixels(new Rect(0, 0, width / 2, height / 2), width / 2, 0); //lower right block
 
             //actually upload the changed pixels to the graphics card
@@ -79,6 +81,7 @@ public class ResizeTool
 
         RenderTexture.ReleaseTemporary(rt);
     }
+
     //Seth wrote this (with ChatGTP help)
     public static Texture2D CropTexture(Texture2D texture, Rect cropRect)
     {
@@ -89,13 +92,13 @@ public class ResizeTool
         cropRect.height = Mathf.Min(cropRect.height, texture.height - cropRect.y);
 
         // Create a new texture to hold the cropped image
-        Texture2D croppedTexture = new Texture2D((int)cropRect.width, (int)cropRect.height, TextureFormat.RGBA32, false);
+        var croppedTexture = new Texture2D((int)cropRect.width, (int)cropRect.height, TextureFormat.RGBA32, false);
 
         // Calculate the flipped Y-coordinate of the top-left pixel in the crop rectangle
-        int startY = texture.height - (int)(cropRect.y + cropRect.height);
+        var startY = texture.height - (int)(cropRect.y + cropRect.height);
 
         // Copy the cropped pixels from the original texture to the new texture
-        Color[] pixels = texture.GetPixels((int)cropRect.x, startY, (int)cropRect.width, (int)cropRect.height);
+        var pixels = texture.GetPixels((int)cropRect.x, startY, (int)cropRect.width, (int)cropRect.height);
         croppedTexture.SetPixels(pixels);
 
         // Apply the changes to the new texture
@@ -108,11 +111,11 @@ public class ResizeTool
     //Seth wrote this (with ChatGTP help)
     public static Texture2D CropTextureToAspectRatio(Texture2D texture, int newWidth, int newHeight)
     {
-        float srcAspectRatio = (float)texture.width / (float)texture.height;
-        float dstAspectRatio = (float)newWidth / (float)newHeight;
+        var srcAspectRatio = texture.width / (float)texture.height;
+        var dstAspectRatio = newWidth / (float)newHeight;
 
-        int width = texture.width;
-        int height = texture.height;
+        var width = texture.width;
+        var height = texture.height;
         int x = 0, y = 0;
 
         if (dstAspectRatio < srcAspectRatio)
@@ -128,8 +131,8 @@ public class ResizeTool
             y = (texture.height - height) / 2;
         }
 
-        Color[] pixels = texture.GetPixels(x, y, width, height);
-        Texture2D croppedTexture = new Texture2D(width, height);
+        var pixels = texture.GetPixels(x, y, width, height);
+        var croppedTexture = new Texture2D(width, height);
         croppedTexture.SetPixels(pixels);
 
         // Apply the changes to the new texture
@@ -139,10 +142,12 @@ public class ResizeTool
         return croppedTexture;
     }
 
-    public static void Resize(Texture2D texture2D, int targetX, int targetY, bool mipmap = true, FilterMode filter = FilterMode.Bilinear)
+    public static void Resize(Texture2D texture2D, int targetX, int targetY, bool mipmap = true,
+        FilterMode filter = FilterMode.Bilinear)
     {
         //create a temporary RenderTexture with the target size
-        RenderTexture rt = RenderTexture.GetTemporary(targetX, targetY, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+        var rt = RenderTexture.GetTemporary(targetX, targetY, 0, RenderTextureFormat.ARGB32,
+            RenderTextureReadWrite.Default);
 
         //set the active RenderTexture to the temporary texture so we can read from it
         RenderTexture.active = rt;
@@ -167,6 +172,4 @@ public class ResizeTool
 
         RenderTexture.ReleaseTemporary(rt);
     }
-
 }
-

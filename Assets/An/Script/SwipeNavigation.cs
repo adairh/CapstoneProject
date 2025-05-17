@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace An_An
@@ -7,15 +5,15 @@ namespace An_An
     public class NewBehaviourScript : MonoBehaviour
     {
         public BottomNavigationBar navBar;
-
-        private Vector2 startTouchPosition;
         private Vector2 endTouchPosition;
 
-        void Update()
+        private Vector2 startTouchPosition;
+
+        private void Update()
         {
             if (Input.touchCount > 0)
             {
-                Touch touch = Input.GetTouch(0);
+                var touch = Input.GetTouch(0);
 
                 if (touch.phase == TouchPhase.Began)
                 {
@@ -29,22 +27,17 @@ namespace An_An
             }
         }
 
-        void HandleSwipe()
+        private void HandleSwipe()
         {
-            float deltaX = endTouchPosition.x - startTouchPosition.x;
+            var deltaX = endTouchPosition.x - startTouchPosition.x;
 
             if (Mathf.Abs(deltaX) > 100f) // Vuot du xa
             {
                 if (deltaX > 0)
-                {
                     navBar.SwipeToPrevious();
-                }
                 else
-                {
                     navBar.SwipeToNext();
-                }
             }
         }
     }
-
 }

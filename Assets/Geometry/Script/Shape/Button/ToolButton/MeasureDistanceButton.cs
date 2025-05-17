@@ -1,4 +1,4 @@
-
+using System.Collections;
 using UnityEngine;
 
 namespace Manipulator
@@ -11,7 +11,7 @@ namespace Manipulator
             StartCoroutine(SelectTwoPointsAndMeasure());
         }
 
-        private System.Collections.IEnumerator SelectTwoPointsAndMeasure()
+        private IEnumerator SelectTwoPointsAndMeasure()
         {
             yield return ShapePicker.WaitForPoint("Select First Point");
             var a = ShapePicker.LastPicked as Point;
@@ -29,4 +29,3 @@ namespace Manipulator
         }
     }
 }
-    

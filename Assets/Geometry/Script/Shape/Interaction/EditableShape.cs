@@ -1,20 +1,17 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Manipulator
 {
-
     public class EditableShape : MonoBehaviour
     {
-
         public ISetting[] Settings { get; set; }
 
-        void Start()
+        private void Start()
         {
             ISetting[] defaultSetting =
             {
                 //new ColorSetting(Color.red, shape),
-                new NameSetting(this.ToString())
+                new NameSetting(ToString())
             };
 
 
@@ -24,12 +21,8 @@ namespace Manipulator
 
         public void ApplySettings()
         {
-            foreach (ISetting setting in Settings) // ✅ Corrected loop
-            {
+            foreach (var setting in Settings) // ✅ Corrected loop
                 setting.Apply(); // ✅ Apply each setting to the GameObject
-            }
         }
-
-
     }
 }

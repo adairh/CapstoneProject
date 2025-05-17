@@ -4,7 +4,10 @@ namespace Manipulator
 {
     public class NoneButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.None;
+        public IShapeButton.ShapeType GetShapeType()
+        {
+            return IShapeButton.ShapeType.None;
+        }
 
         protected override void OnButtonClick()
         {

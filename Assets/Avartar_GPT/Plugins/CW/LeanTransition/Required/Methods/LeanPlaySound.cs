@@ -1,88 +1,90 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using Lean.Transition.Method;
+using UnityEngine;
 
 namespace Lean.Transition.Method
 {
-	/// <summary>This component allows you to play a sound after the specified duration.</summary>
-	[HelpURL(LeanTransition.HelpUrlPrefix + "LeanPlaySound")]
-	[AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Play Sound" + LeanTransition.MethodsMenuSuffix + "(LeanPlaySound)")]
-	public class LeanPlaySound : LeanMethodWithStateAndTarget
-	{
-		public override System.Type GetTargetType()
-		{
-			return typeof(AudioClip);
-		}
+    /// <summary>This component allows you to play a sound after the specified duration.</summary>
+    [HelpURL(LeanTransition.HelpUrlPrefix + "LeanPlaySound")]
+    [AddComponentMenu(LeanTransition.MethodsMenuPrefix + "Play Sound" + LeanTransition.MethodsMenuSuffix +
+                      "(LeanPlaySound)")]
+    public class LeanPlaySound : LeanMethodWithStateAndTarget
+    {
+        public State Data;
 
-		public override void Register()
-		{
-			PreviousState = Register(GetAliasedTarget(Data.Target), Data.Duration, Data.Volume);
-		}
+        public override Type GetTargetType()
+        {
+            return typeof(AudioClip);
+        }
 
-		public static LeanState Register(AudioClip target, float duration, float volume = 1.0f)
-		{
-			var state = LeanTransition.SpawnWithTarget(State.Pool, target);
+        public override void Register()
+        {
+            PreviousState = Register(GetAliasedTarget(Data.Target), Data.Duration, Data.Volume);
+        }
 
-			state.Volume = volume;
+        public static LeanState Register(AudioClip target, float duration, float volume = 1.0f)
+        {
+            var state = LeanTransition.SpawnWithTarget(State.Pool, target);
 
-			return LeanTransition.Register(state, duration);
-		}
+            state.Volume = volume;
 
-		[System.Serializable]
-		public class State : LeanStateWithTarget<AudioClip>
-		{
-			[Range(0.0f, 1.0f)]
-			public float Volume = 1.0f;
+            return LeanTransition.Register(state, duration);
+        }
 
-			public override int CanFill
-			{
-				get
-				{
-					return 0;
-				}
-			}
+        [Serializable]
+        public class State : LeanStateWithTarget<AudioClip>
+        {
+            public static Stack<State> Pool = new();
 
-			public override void UpdateWithTarget(float progress)
-			{
-				if (progress == 1.0f)
-				{
+            [Range(0.0f, 1.0f)] public float Volume = 1.0f;
+
+            public override int CanFill => 0;
+
+            public override void UpdateWithTarget(float progress)
+            {
+                if (progress == 1.0f)
+                {
 #if UNITY_EDITOR
-					if (Application.isPlaying == false)
-					{
-						return;
-					}
+                    if (Application.isPlaying == false) return;
 #endif
-					var gameObject  = new GameObject(Target.name);
-					var audioSource = gameObject.AddComponent<AudioSource>();
+                    var gameObject = new GameObject(Target.name);
+                    var audioSource = gameObject.AddComponent<AudioSource>();
 
-					audioSource.clip   = Target;
-					audioSource.volume = Volume;
+                    audioSource.clip = Target;
+                    audioSource.volume = Volume;
 
-					audioSource.Play();
+                    audioSource.Play();
 
-					Destroy(gameObject, Target.length);
-				}
-			}
+                    Destroy(gameObject, Target.length);
+                }
+            }
 
-			public static Stack<State> Pool = new Stack<State>(); public override void Despawn() { Pool.Push(this); }
-		}
-
-		public State Data;
-	}
+            public override void Despawn()
+            {
+                Pool.Push(this);
+            }
+        }
+    }
 }
 
 namespace Lean.Transition
 {
-	public static partial class LeanExtensions
-	{
-		public static T PlaySoundTransition<T>(this T target, AudioClip clip, float duration = 0.0f, float volume = 1.0f)
-			where T : Component
-		{
-			Method.LeanPlaySound.Register(clip, duration, volume); return target;
-		}
+    public static partial class LeanExtensions
+    {
+        public static T PlaySoundTransition<T>(this T target, AudioClip clip, float duration = 0.0f,
+            float volume = 1.0f)
+            where T : Component
+        {
+            LeanPlaySound.Register(clip, duration, volume);
+            return target;
+        }
 
-		public static GameObject PlaySoundTransition(this GameObject target, AudioClip clip, float duration = 0.0f, float volume = 1.0f)
-		{
-			Method.LeanPlaySound.Register(clip, duration, volume); return target;
-		}
-	}
+        public static GameObject PlaySoundTransition(this GameObject target, AudioClip clip, float duration = 0.0f,
+            float volume = 1.0f)
+        {
+            LeanPlaySound.Register(clip, duration, volume);
+            return target;
+        }
+    }
 }

@@ -1,27 +1,27 @@
 using Geometry;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro;
 
 public class BackToHomeButton : MonoBehaviour
 {
-    [Header("Main Canvases")]
-    public GameObject canvasHome;
+    [Header("Main Canvases")] public GameObject canvasHome;
+
     public GameObject canvasPlaygame;
     public GameObject canvasOnboarding;
     public GameObject canvas;
 
-    [Header("Popups")]
-    public GameObject popupJoinRoom;
+    [Header("Popups")] public GameObject popupJoinRoom;
+
     public GameObject popupCreateRoom;
     public GameObject darkOverlay;
 
-    [Header("Join Room Inputs")]
-    public TMP_InputField joinRoomIDInput;
+    [Header("Join Room Inputs")] public TMP_InputField joinRoomIDInput;
+
     public TMP_InputField joinPasswordInput;
 
-    [Header("Create Room Inputs")]
-    public TMP_InputField createRoomIDInput;
+    [Header("Create Room Inputs")] public TMP_InputField createRoomIDInput;
+
     public TMP_InputField createPasswordInput;
 
     public void OnBackToHome()
@@ -66,13 +66,13 @@ public class BackToHomeButton : MonoBehaviour
     }
 
     public void OnCreateRandomRoomButton()
-    {        
+    {
         Debug.LogWarning("OnCreateRandomRoomButton 1:" + SceneFlag.IsRandom);
 
-        SceneFlag.IsRandom = true;        
+        SceneFlag.IsRandom = true;
         Debug.LogWarning("OnCreateRandomRoomButton 2:" + SceneFlag.IsRandom);
         SceneManager.LoadScene("SampleScene");
-        Debug.LogWarning("OnCreateRandomRoomButton 3:" + SceneFlag.IsRandom); 
+        Debug.LogWarning("OnCreateRandomRoomButton 3:" + SceneFlag.IsRandom);
     }
 
     public void SubmitCreateRoom()

@@ -4,7 +4,10 @@ namespace Manipulator
 {
     public class PolygonButton : BaseButton, IShapeButton
     {
-        public IShapeButton.ShapeType GetShapeType() => IShapeButton.ShapeType.Polygon;
+        public IShapeButton.ShapeType GetShapeType()
+        {
+            return IShapeButton.ShapeType.Polygon;
+        }
 
         protected override void OnButtonClick()
         {

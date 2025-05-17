@@ -5,12 +5,13 @@ using UnityEngine;
 namespace Manipulator
 {
     /// <summary>
-    /// Dữ liệu cố định Point gắn với Shape.
+    ///     Dữ liệu cố định Point gắn với Shape.
     /// </summary>
     [Serializable]
     public class FixedPointConstraintData : ConstraintData
     {
         public string PointId;
+
         public string TargetShapeId;
         //public List<Shape> BelongTo = new();
 
@@ -28,8 +29,8 @@ namespace Manipulator
 
     public class FixedPointConstraint : Constraint
     {
-        public Point Owner { get; set; }
         private readonly List<Shape> dependencies = new();
+        public Point Owner { get; set; }
 
         public void AddDepend(Point point, Shape shape)
         {
@@ -41,14 +42,17 @@ namespace Manipulator
             }
         }
 
-        public override bool HasShape(Shape shape) => dependencies.Contains(shape);
+        public override bool HasShape(Shape shape)
+        {
+            return dependencies.Contains(shape);
+        }
 
         public override void ApplyConstraint(Shape changedShape, Vector3 delta)
         {
             if (Owner == null || changedShape == null) return;
-            Vector3 oldPos = Owner.transform.position;
-            Vector3 newPos = oldPos + delta;
-            Owner.MoveTo(newPos, silent: true);
+            var oldPos = Owner.transform.position;
+            var newPos = oldPos + delta;
+            Owner.MoveTo(newPos, true);
         }
 
         public override ConstraintData Serialize()
@@ -62,14 +66,14 @@ namespace Manipulator
             };
         }
 
-        public override IEnumerable<Shape> GetRelatedShapes() => dependencies;
+        public override IEnumerable<Shape> GetRelatedShapes()
+        {
+            return dependencies;
+        }
 
         public override void Cleanup()
         {
-            foreach (var shape in dependencies)
-            {
-                shape.OnChanged -= OnShapeChanged;
-            }
+            foreach (var shape in dependencies) shape.OnChanged -= OnShapeChanged;
             dependencies.Clear();
         }
 
@@ -78,4 +82,4 @@ namespace Manipulator
             ApplyConstraint(shape, Vector3.zero);
         }
     }
-} 
+}

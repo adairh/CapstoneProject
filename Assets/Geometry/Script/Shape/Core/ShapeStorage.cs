@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Manipulator
 {
     /// <summary>
-    /// Lưu toàn bộ các shape hiện tại trong scene, tra cứu theo ID hoặc Name.
+    ///     Lưu toàn bộ các shape hiện tại trong scene, tra cứu theo ID hoặc Name.
     /// </summary>
     public static class ShapeStorage
     {
@@ -28,22 +28,31 @@ namespace Manipulator
             nameLookup.Remove(shape.name);
         }
 
-        
-        public static bool Contains(string id) =>
-            idLookup.ContainsKey(id);
 
-        public static Shape GetById(string id) =>
-            idLookup.TryGetValue(id, out var s) ? s : null;
+        public static bool Contains(string id)
+        {
+            return idLookup.ContainsKey(id);
+        }
 
-        public static Shape GetByName(string name) =>
-            nameLookup.TryGetValue(name, out var s) ? s : null;
+        public static Shape GetById(string id)
+        {
+            return idLookup.TryGetValue(id, out var s) ? s : null;
+        }
 
-        public static IEnumerable<Shape> GetAllShapes() => idLookup.Values;
+        public static Shape GetByName(string name)
+        {
+            return nameLookup.TryGetValue(name, out var s) ? s : null;
+        }
+
+        public static IEnumerable<Shape> GetAllShapes()
+        {
+            return idLookup.Values;
+        }
+
         public static void Clear()
         {
             idLookup.Clear();
             nameLookup.Clear();
         }
     }
-
 }

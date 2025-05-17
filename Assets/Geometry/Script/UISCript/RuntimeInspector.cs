@@ -13,8 +13,8 @@ namespace Geometry.Script.UIScript
         [Tooltip("Component chứa các property cần hiển thị.")]
         public MonoBehaviour targetComponent;
 
-        [Header("Prefabs kiểm soát")]
-        public GameObject boolControlPrefab;
+        [Header("Prefabs kiểm soát")] public GameObject boolControlPrefab;
+
         public GameObject intControlPrefab;
         public GameObject floatControlPrefab;
         public GameObject enumControlPrefab;
@@ -30,6 +30,7 @@ namespace Geometry.Script.UIScript
                 Debug.LogError("RuntimeInspector: Thiếu targetComponent hoặc contentParent!");
                 return;
             }
+
             BuildInspector();
         }
 
@@ -41,16 +42,16 @@ namespace Geometry.Script.UIScript
 
             var type = targetComponent.GetType();
             var props = type.GetProperties(
-                    BindingFlags.Public 
-                  | BindingFlags.Instance 
-                  | BindingFlags.DeclaredOnly    // chỉ của class này
+                    BindingFlags.Public
+                    | BindingFlags.Instance
+                    | BindingFlags.DeclaredOnly // chỉ của class này
                 )
                 .Where(p => p.CanRead && p.CanWrite);
 
             foreach (var prop in props)
             {
-                Type t = prop.PropertyType;
-                string name = prop.Name;
+                var t = prop.PropertyType;
+                var name = prop.Name;
 
                 // Hàng ngang 2 cột
                 var row = new GameObject("Row_" + name, typeof(RectTransform));
@@ -71,10 +72,10 @@ namespace Geometry.Script.UIScript
 
                 // Cột Control
                 GameObject ctrlGO = null;
-                if (t == typeof(bool))      ctrlGO = Instantiate(boolControlPrefab, row.transform);
-                else if (t == typeof(int))  ctrlGO = Instantiate(intControlPrefab,  row.transform);
-                else if (t == typeof(float))ctrlGO = Instantiate(floatControlPrefab,row.transform);
-                else if (t.IsEnum)          ctrlGO = Instantiate(enumControlPrefab, row.transform);
+                if (t == typeof(bool)) ctrlGO = Instantiate(boolControlPrefab, row.transform);
+                else if (t == typeof(int)) ctrlGO = Instantiate(intControlPrefab, row.transform);
+                else if (t == typeof(float)) ctrlGO = Instantiate(floatControlPrefab, row.transform);
+                else if (t.IsEnum) ctrlGO = Instantiate(enumControlPrefab, row.transform);
                 if (ctrlGO == null) continue;
                 ctrlGO.name = "Control_" + name;
                 var le2 = ctrlGO.GetComponent<LayoutElement>() ?? ctrlGO.AddComponent<LayoutElement>();
@@ -94,7 +95,7 @@ namespace Geometry.Script.UIScript
                     inp.text = prop.GetValue(targetComponent).ToString();
                     inp.onEndEdit.AddListener(s =>
                     {
-                        if (int.TryParse(s, out int v))
+                        if (int.TryParse(s, out var v))
                             prop.SetValue(targetComponent, v);
                         inp.text = prop.GetValue(targetComponent).ToString();
                     });
@@ -106,7 +107,7 @@ namespace Geometry.Script.UIScript
                     inp.text = prop.GetValue(targetComponent).ToString();
                     inp.onEndEdit.AddListener(s =>
                     {
-                        if (float.TryParse(s, out float v))
+                        if (float.TryParse(s, out var v))
                             prop.SetValue(targetComponent, v);
                         inp.text = prop.GetValue(targetComponent).ToString();
                     });

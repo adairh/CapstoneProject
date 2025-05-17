@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 /*    ^ TAVOR TEC ^
@@ -25,51 +22,53 @@ using UnityEngine.InputSystem;
 */
 
 
-public class FPSCounter : MonoBehaviour {
-
+public class FPSCounter : MonoBehaviour
+{
     // Component References
-    public LineRenderer m_fpsLine = null;           // The FPS LineRenderer
-    public TextMesh m_fpsLowHigh = null;            // TextMesh for lowest FPS rate
-    public TextMesh m_frameBufferDisplay = null;    // TextMesh for highest FPS rate
+    public LineRenderer m_fpsLine; // The FPS LineRenderer
+    public TextMesh m_fpsLowHigh; // TextMesh for lowest FPS rate
+    public TextMesh m_frameBufferDisplay; // TextMesh for highest FPS rate
 
     // Key Bindings
-    public KeyCode m_keyActivation = KeyCode.F;     // Activation key. Toggles FPS display visibility
-    public KeyCode m_keyReset = KeyCode.R;          // Reset key. Will clear the FPS rate buffer
-    public KeyCode m_keyPause = KeyCode.P;          // Pause key. Will pause the FPS display
-
-    private Vector3[] m_fpsRates;                   // FPS frame rates
-    private Vector3[] m_bufferRates;                // FPS buffer
-    private int m_displayColumns = 100;              // Buffer length
-
-    private float m_maxWidth = 14f;                 // Camera display width
-    private float m_columnDistance;                 // Distance between LineRenderer points
-
-    private bool m_isRunning = false;               // Display active inidcator. Change to true if you want the display visible on start up
-    private int m_lowFPS = 1000;                    // Lowest FPS value
-    private int m_highFPS = 0;                      // Highest FPS value
+    public KeyCode m_keyActivation = KeyCode.F; // Activation key. Toggles FPS display visibility
+    public KeyCode m_keyReset = KeyCode.R; // Reset key. Will clear the FPS rate buffer
+    public KeyCode m_keyPause = KeyCode.P; // Pause key. Will pause the FPS display
+    private float _acumulateFrames;
+    private int _framesAddedSinceReset;
+    private float _lastAverageFPS;
 
     //private int m_minFrameBuffer = 50;              // Minimum FPS buffer length
-   // private int m_maxFrameBuffer = 200;             // Maximum FPS buffer length
+    // private int m_maxFrameBuffer = 200;             // Maximum FPS buffer length
 
-    private float _updateTimer = 0;
-    private int _framesAddedSinceReset = 0;
-    private float _acumulateFrames;
-    private float _lastAverageFPS = 0;
+    private float _updateTimer;
+    private Vector3[] m_bufferRates; // FPS buffer
+    private float m_columnDistance; // Distance between LineRenderer points
+    private readonly int m_displayColumns = 100; // Buffer length
 
-    void Start()
+    private Vector3[] m_fpsRates; // FPS frame rates
+    private int m_highFPS; // Highest FPS value
+
+    private bool m_isRunning; // Display active inidcator. Change to true if you want the display visible on start up
+    private int m_lowFPS = 1000; // Lowest FPS value
+
+    private readonly float m_maxWidth = 14f; // Camera display width
+
+    private void Start()
     {
         // Check-up for script references
-        bool t_missingReference = false;
+        var t_missingReference = false;
         if (m_fpsLine == null)
         {
             t_missingReference = true;
             Debug.LogError("Missing LineRenderer component reference! Disabling script!");
         }
-        if(m_fpsLowHigh == null)
+
+        if (m_fpsLowHigh == null)
         {
             t_missingReference = true;
             Debug.LogError("Missing TextMesh component reference! Disabling script!");
         }
+
         if (m_frameBufferDisplay == null)
         {
             t_missingReference = true;
@@ -77,46 +76,40 @@ public class FPSCounter : MonoBehaviour {
         }
 
         // Better disable script if there's any missing reference
-        if(t_missingReference)
+        if (t_missingReference)
         {
-            this.enabled = false;
+            enabled = false;
         }
-        
+
         // Otherwise setup the FPS display
         else
         {
-            DontDestroyOnLoad(transform.gameObject);    // Makes game object persistant on scene changes
+            DontDestroyOnLoad(transform.gameObject); // Makes game object persistant on scene changes
             ResetFPSCounter();
             gameObject.GetComponentInChildren<Camera>().enabled = m_isRunning;
         }
-
     }
 
-    void Update()
+    private void Update()
     {
         // Only run FPS calculations if display is running (visible and not paused)
-        if(m_isRunning)
+        if (m_isRunning)
         {
-
-            float t_fps = 1f / Time.deltaTime;                                      // FPS calculation
-            m_bufferRates = m_fpsRates;                                             // Buffer array setup
+            var t_fps = 1f / Time.deltaTime; // FPS calculation
+            m_bufferRates = m_fpsRates; // Buffer array setup
             _acumulateFrames += t_fps;
             _framesAddedSinceReset++;
 
             // Loop through FPS rates array and shift their positions
-            for (int t_count = 0; t_count < m_fpsRates.Length-1; ++t_count)          
-            {
+            for (var t_count = 0; t_count < m_fpsRates.Length - 1; ++t_count)
                 m_bufferRates[t_count].y = m_fpsRates[t_count + 1].y;
-            }
 
             // Add actual frame rate to last buffer element
-            m_bufferRates[m_fpsRates.Length - 1].y =  ( (4f/60f)* t_fps) -3;
-      
+            m_bufferRates[m_fpsRates.Length - 1].y = 4f / 60f * t_fps - 3;
+
             float average = 0;
-            for (int t_count = 0; t_count < Mathf.Min(_framesAddedSinceReset,  m_fpsRates.Length); ++t_count)
-            {
+            for (var t_count = 0; t_count < Mathf.Min(_framesAddedSinceReset, m_fpsRates.Length); ++t_count)
                 average += m_bufferRates[t_count].y;
-            }
 
             average /= m_fpsRates.Length;
 
@@ -127,13 +120,14 @@ public class FPSCounter : MonoBehaviour {
             m_fpsLine.SetPositions(m_fpsRates);
 
             // Check for low and high FPS rates
-            bool t_change = false;
-            if (t_fps > m_highFPS)              // High FPS changed
+            var t_change = false;
+            if (t_fps > m_highFPS) // High FPS changed
             {
                 m_highFPS = (int)t_fps;
                 t_change = true;
             }
-            if (t_fps < m_lowFPS)               // Low FPS changed
+
+            if (t_fps < m_lowFPS) // Low FPS changed
             {
                 m_lowFPS = (int)t_fps;
                 t_change = true;
@@ -147,13 +141,14 @@ public class FPSCounter : MonoBehaviour {
                     _updateTimer = Time.time + 1.0f;
 
                     //round off a bit
-                    _lastAverageFPS = (int) ( (_acumulateFrames / _framesAddedSinceReset) * 100);
+                    _lastAverageFPS = (int)(_acumulateFrames / _framesAddedSinceReset * 100);
                     _lastAverageFPS /= 100.0f;
 
                     _framesAddedSinceReset = 0;
                     _acumulateFrames = 0;
                 }
-                m_fpsLowHigh.text = "FPS: "+ _lastAverageFPS + " (Low/High: "+ m_lowFPS + " / " + m_highFPS+")";
+
+                m_fpsLowHigh.text = "FPS: " + _lastAverageFPS + " (Low/High: " + m_lowFPS + " / " + m_highFPS + ")";
             }
         }
 
@@ -196,19 +191,18 @@ public class FPSCounter : MonoBehaviour {
             }
         */
 
-        if (Keyboard.current.shiftKey.isPressed && Keyboard.current.tabKey.wasPressedThisFrame)      // Activation Key
+        if (Keyboard.current.shiftKey.isPressed && Keyboard.current.tabKey.wasPressedThisFrame) // Activation Key
         {
             m_isRunning = !m_isRunning;
 
             gameObject.GetComponentInChildren<Camera>().enabled = m_isRunning;
         }
-
     }
 
     /// <summary>
-    /// Resets the FPS frame buffer and LineRenderer
+    ///     Resets the FPS frame buffer and LineRenderer
     /// </summary>
-    void ResetFPSCounter()
+    private void ResetFPSCounter()
     {
         _lastAverageFPS = 0;
         _acumulateFrames = 0;
@@ -220,11 +214,8 @@ public class FPSCounter : MonoBehaviour {
         m_fpsRates = new Vector3[m_displayColumns];
 
         // Loop through FPS rates array and set each point to 0 FPS
-        for (int t_count = 0; t_count < m_fpsRates.Length; ++t_count)
-        {
-            m_fpsRates[t_count].Set(-(m_maxWidth * 0.5f) + (t_count * m_columnDistance), -3, 0.5f);
-
-        }
+        for (var t_count = 0; t_count < m_fpsRates.Length; ++t_count)
+            m_fpsRates[t_count].Set(-(m_maxWidth * 0.5f) + t_count * m_columnDistance, -3, 0.5f);
 
         // Update LineRenderer positions
         m_fpsLine.positionCount = m_displayColumns;

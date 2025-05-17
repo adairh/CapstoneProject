@@ -1,4 +1,3 @@
-
 using TMPro;
 using UnityEngine;
 
@@ -9,10 +8,10 @@ namespace Manipulator
         public Shape PointA;
         public Shape PointB;
         public Shape PointC;
-        private TextMeshPro text;
         private Camera mainCam;
+        private TextMeshPro text;
 
-        void Start()
+        private void Start()
         {
             mainCam = Camera.main;
 
@@ -27,25 +26,23 @@ namespace Manipulator
             text.enableCulling = false;
         }
 
-        void Update()
+        private void Update()
         {
             if (PointA == null || PointB == null || PointC == null) return;
 
-            Vector3 a = PointA.transform.position;
-            Vector3 b = PointB.transform.position;
-            Vector3 c = PointC.transform.position;
+            var a = PointA.transform.position;
+            var b = PointB.transform.position;
+            var c = PointC.transform.position;
 
-            Vector3 ab = (a - b).normalized;
-            Vector3 cb = (c - b).normalized;
-            float angle = Vector3.Angle(ab, cb);
+            var ab = (a - b).normalized;
+            var cb = (c - b).normalized;
+            var angle = Vector3.Angle(ab, cb);
 
             text.text = angle.ToString("F1") + "°";
             transform.position = b;
 
             if (mainCam != null)
-            {
                 text.transform.rotation = Quaternion.LookRotation(text.transform.position - mainCam.transform.position);
-            }
         }
     }
 }

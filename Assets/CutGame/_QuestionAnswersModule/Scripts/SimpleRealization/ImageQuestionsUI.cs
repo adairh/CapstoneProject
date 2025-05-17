@@ -9,23 +9,20 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
 {
     public class ImageQuestionsUI : MonoBehaviour
     {
-        private ImageQuestionData[] _questions;
-        
-        [Space]
-        [SerializeField] private TextMeshProUGUI _questionNameText;
+        [Space] [SerializeField] private TextMeshProUGUI _questionNameText;
+
         [SerializeField] private TextMeshProUGUI _questionDescrText;
         [SerializeField] private Image _questionImage;
         [SerializeField] private Transform _answersRoot;
         [SerializeField] private Button _answerButtonPrefab;
-        
+
         private List<Button> _currentButtons;
         private IQuestion<string> _currentQuestion;
         private int _currentQuestionIndex = -1;
-        
+        private ImageQuestionData[] _questions;
+
         private void Awake()
         {
-            
-            
             Assert.IsNotNull(_questionNameText, "_questionNameText != null");
             Assert.IsNotNull(_questionDescrText, "_questionDescrText != null");
             Assert.IsNotNull(_questionImage, "_questionImage != null");
@@ -41,16 +38,13 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
             Assert.IsTrue(_questions.Length > 0, "_questions.Length > 0");
             GoToNextQuestion(LevelLoader.levelToLoad.QuestionDatas._isShuffleQuest);
         }
- 
-        
+
+
         public void GoToNextQuestion(bool rand = false)
         {
             _currentQuestionIndex++;
 
-            if (_currentQuestionIndex > _questions.Length - 1)
-            {
-                _currentQuestionIndex = 0;
-            }
+            if (_currentQuestionIndex > _questions.Length - 1) _currentQuestionIndex = 0;
 
             _currentButtons.ForEach(b => Destroy(b.gameObject));
             _currentButtons.Clear();
@@ -75,23 +69,19 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
                 int nextIndex;
                 do
                 {
-                    nextIndex = UnityEngine.Random.Range(0, _questions.Length);
-                }
-                while (appearedList.Contains(nextIndex));
+                    nextIndex = Random.Range(0, _questions.Length);
+                } while (appearedList.Contains(nextIndex));
 
                 // 4) Gán và đánh dấu đã xuất hiện
                 _currentQuestionIndex = nextIndex;
                 appearedList.Add(nextIndex);
             }
 
-            
+
             var questionData = _questions[_currentQuestionIndex];
             _currentQuestion = questionData.ConvertToQuestion();
             var answers = _currentQuestion.GetAnswers();
-            foreach (var answer in answers)
-            {
-                CreateButtonForAnswer(answer);
-            }
+            foreach (var answer in answers) CreateButtonForAnswer(answer);
 
             _currentQuestion.OnAnswerFailed += OnAnswerFailed;
             _currentQuestion.OnAnswerSuccess += OnAnswerSuccess;
@@ -108,11 +98,9 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
 
         private void OnAnswerSuccess(IAnswer<string> answer)
         {
-            
-            
             //close panel
             //kill virus
-            GameManager gm = GameManager.instance;
+            var gm = GameManager.instance;
             Debug.Log("<color=green>GOOD JOB!</color>");
             GoToNextQuestion();
             gm.Quiz.gameObject.SetActive(false);
@@ -124,16 +112,10 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
             var btnInstance = Instantiate(_answerButtonPrefab, _answersRoot);
             btnInstance.gameObject.SetActive(true);
             var btnText = btnInstance.GetComponentInChildren<TextMeshProUGUI>();
-            if (btnText != null)
-            {
-                btnText.text = answer.GetAnswerData();
-            }
-            
-            btnInstance.onClick.AddListener(() =>
-            {
-                _currentQuestion.CheckAnswer(answer);
-            });
-            
+            if (btnText != null) btnText.text = answer.GetAnswerData();
+
+            btnInstance.onClick.AddListener(() => { _currentQuestion.CheckAnswer(answer); });
+
             _currentButtons.Add(btnInstance);
         }
     }

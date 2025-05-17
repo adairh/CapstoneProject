@@ -1,4 +1,3 @@
-
 using TMPro;
 using UnityEngine;
 
@@ -26,10 +25,7 @@ namespace Manipulator
 
         public static void Hide()
         {
-            if (Instance != null && Instance.hintText != null)
-            {
-                Instance.hintText.gameObject.SetActive(false);
-            }
+            if (Instance != null && Instance.hintText != null) Instance.hintText.gameObject.SetActive(false);
         }
     }
 }

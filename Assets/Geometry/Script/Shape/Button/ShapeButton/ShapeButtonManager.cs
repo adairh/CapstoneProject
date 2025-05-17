@@ -5,8 +5,6 @@ namespace Manipulator
 {
     public static class ShapeButtonManager
     {
-        public static event Action<IShapeButton.ShapeType> OnShapeChanged;
-
         private static IShapeButton.ShapeType activeType = IShapeButton.ShapeType.None;
 
         public static IShapeButton.ShapeType ActiveType
@@ -22,6 +20,8 @@ namespace Manipulator
                 }
             }
         }
+
+        public static event Action<IShapeButton.ShapeType> OnShapeChanged;
 
         public static void SetActiveShape(IShapeButton.ShapeType newType)
         {

@@ -4,16 +4,15 @@ namespace Manipulator
 {
     public class HoverableShape : ShapeBehaviourBase
     {
-        private Renderer rend; 
         private Material hoverMat;
+        private Renderer rend;
 
         private void Start()
         {
-            rend = GetComponentInChildren<Renderer>(); 
+            rend = GetComponentInChildren<Renderer>();
             hoverMat = MaterialLibrary.Get(MaterialType.Hover);
         }
-        
-        
+
 
         private void OnMouseEnter()
         {
@@ -22,10 +21,7 @@ namespace Manipulator
             if (ss != null)
                 if (ss.IsSelected())
                     return;
-            if (rend != null)
-            {
-                rend.material = hoverMat;
-            }
+            if (rend != null) rend.material = hoverMat;
         }
 
         private void OnMouseExit()
@@ -36,10 +32,8 @@ namespace Manipulator
                 var ss = shape.GetComponent<SelectableShape>();
                 if (ss != null)
                     if (ss.IsSelected())
-                    {
                         //MaterialLibrary.Get(MaterialType.Select);
                         return;
-                    }
                 rend.material = shape.DefaultMat;
             }
         }

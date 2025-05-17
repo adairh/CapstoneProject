@@ -3,9 +3,8 @@ using UnityEngine;
 
 public class ButtonController : MonoBehaviour
 {
+    private readonly List<BaseButton> buttons = new();
     public static ButtonController Instance { get; private set; }
-
-    private List<BaseButton> buttons = new List<BaseButton>();
 
     private void Awake()
     {
@@ -16,7 +15,6 @@ public class ButtonController : MonoBehaviour
         else
         {
             Destroy(gameObject);
-            return;  // Prevents further execution if a duplicate exists
         }
     }
 

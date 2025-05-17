@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace Manipulator
@@ -9,15 +8,14 @@ namespace Manipulator
         public static void TryAutoAttachConstraint(Point point)
         {
             foreach (var shape in ShapeStorage.GetAllShapes())
-            {
                 if (shape is Segment seg)
                 {
-                    Vector3 a = seg.StartPoint.transform.position;
-                    Vector3 b = seg.EndPoint.transform.position;
-                    Vector3 p = point.transform.position;
-                    float t = Vector3.Dot(p - a, b - a) / Vector3.Dot(b - a, b - a);
+                    var a = seg.StartPoint.transform.position;
+                    var b = seg.EndPoint.transform.position;
+                    var p = point.transform.position;
+                    var t = Vector3.Dot(p - a, b - a) / Vector3.Dot(b - a, b - a);
                     t = Mathf.Clamp01(t);
-                    Vector3 closest = Vector3.Lerp(a, b, t);
+                    var closest = Vector3.Lerp(a, b, t);
 
                     if (Vector3.Distance(p, closest) < 0.1f)
                     {
@@ -39,7 +37,7 @@ namespace Manipulator
                 else if (shape is Polygon poly)
                 {
                     if (RelativePointHelper.FindContainingTriangleAndUV(point, poly,
-                            out int ia, out int ib, out int ic, out float u, out float v))
+                            out var ia, out var ib, out var ic, out var u, out var v))
                     {
                         var data = new RelativePointConstraintData
                         {
@@ -59,7 +57,6 @@ namespace Manipulator
                         return;
                     }
                 }
-            }
         }
     }
 }

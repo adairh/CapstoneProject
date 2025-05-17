@@ -22,19 +22,15 @@ namespace DemoCode
         private void OnStoppedSalsaing(object sender, Salsa.SalsaNotificationArgs e)
         {
             if (e.salsaInstance == salsa)
-            {
                 // do some stuff...
                 Debug.Log("SALSA fired OnStoppedSalsaing for: " + e.salsaInstance.name);
-            }
         }
 
         private void OnStartedSalsaing(object sender, Salsa.SalsaNotificationArgs e)
         {
             if (e.salsaInstance == salsa)
-            {
                 // do some stuff...
                 Debug.Log("SALSA fired OnStartedSalsaing for: " + e.salsaInstance.name);
-            }
         }
     }
 }

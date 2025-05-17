@@ -1,3 +1,4 @@
+using System.Collections;
 
 namespace Manipulator
 {
@@ -9,7 +10,7 @@ namespace Manipulator
             StartCoroutine(SelectSegmentAndPoint());
         }
 
-        private System.Collections.IEnumerator SelectSegmentAndPoint()
+        private IEnumerator SelectSegmentAndPoint()
         {
             yield return ShapePicker.WaitForSegment("Select Segment");
             var seg = ShapePicker.LastPicked as Segment;
