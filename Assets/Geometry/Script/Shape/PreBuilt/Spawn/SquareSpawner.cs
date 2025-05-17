@@ -39,10 +39,13 @@ namespace Manipulator
         {
             float side = inputs["Side"];
             IPrebuiltDrawer drawer = new SquareDrawer();
-            Vector3 vec = new Vector3();
-            drawer.Begin(vec);
-            drawer.Working(vec + side);
-			drawer.End();
+            Vector3 start = Vector3.zero;
+            Vector3 end = start + new Vector3(side, 0, 0); // mở rộng theo trục X
+
+            drawer.Begin(start);
+            drawer.Working(end);
+            drawer.End(end);
+
             
             return new ShapeData
             {
