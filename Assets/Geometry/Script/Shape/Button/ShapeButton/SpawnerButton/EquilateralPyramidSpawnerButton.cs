@@ -2,11 +2,11 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    public class SquarePyramidButton : BaseButton, IShapeButton
+    public class EquilateralPyramidSpawnerButton : BaseButton, IShapeButton
     {
         public IShapeButton.ShapeType GetShapeType()
         {
-            return IShapeButton.ShapeType.SquarePyramid;
+            return IShapeButton.ShapeType.EquilateralPyramidSpawner;
         }
 
         protected override void OnButtonClick()

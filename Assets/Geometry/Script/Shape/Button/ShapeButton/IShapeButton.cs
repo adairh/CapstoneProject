@@ -7,13 +7,13 @@ namespace Manipulator
             None,
             Point,
             Circle,
-            Triangle,
             Segment,
             StraightLine,
             Line,
             RayShape,
             Polygon,
 
+            Triangle,
             EquilateralPyramid,
             EquilateralTriangle,
             GenericPyramid,
@@ -25,7 +25,21 @@ namespace Manipulator
             Square,
             SquarePrism,
             SquarePyramid,
-            Tetrahedron
+            Tetrahedron,
+            
+            TriangleSpawner,
+            EquilateralPyramidSpawner,
+            EquilateralTriangleSpawner,
+            GenericPyramidSpawner,
+            IsoscelesTriangleSpawner,
+            RectangleSpawner,
+            RegularTetrahedronSpawner,
+            RhombusSpawner,
+            RightTriangleSpawner,
+            SquareSpawner,
+            SquarePrismSpawner,
+            SquarePyramidSpawner,
+            TetrahedronSpawner
         }
 
         ShapeType GetShapeType();

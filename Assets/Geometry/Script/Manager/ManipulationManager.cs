@@ -8,6 +8,8 @@ namespace Manipulator
         public static ManipulationManager Instance { get; private set; }
 
         public bool IsDrawing { get; set; }
+        
+        public Vector3 TrackingPoint { get; set; }
 
 
         private void Awake()

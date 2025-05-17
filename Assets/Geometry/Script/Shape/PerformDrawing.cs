@@ -80,6 +80,44 @@ namespace Manipulator
                 case IShapeButton.ShapeType.SquarePyramid:
                     PrebuiltDrawingHandler.Instance.StartDrawing(new SquarePyramidDrawer());
                     break;
+                
+                case IShapeButton.ShapeType.EquilateralTriangleSpawner:
+                    ShapeInputController.Instance.SetSpawner(new EquilateralTriangleSpawner());
+                    break;
+                case IShapeButton.ShapeType.EquilateralPyramidSpawner:
+                    ShapeInputController.Instance.SetSpawner(new EquilateralPyramidSpawner());
+                    break;
+                case IShapeButton.ShapeType.IsoscelesTriangleSpawner:
+                    ShapeInputController.Instance.SetSpawner(new IsoscelesTriangleSpawner());
+                    break;
+                case IShapeButton.ShapeType.SquareSpawner:
+                    ShapeInputController.Instance.SetSpawner(new SquareSpawner());
+                    break;
+                case IShapeButton.ShapeType.RectangleSpawner:
+                    ShapeInputController.Instance.SetSpawner(new RectangleSpawner());
+                    break;
+                case IShapeButton.ShapeType.RhombusSpawner:
+                    ShapeInputController.Instance.SetSpawner(new RhombusSpawner());
+                    break;
+                case IShapeButton.ShapeType.TetrahedronSpawner:
+                    ShapeInputController.Instance.SetSpawner(new TetrahedronSpawner());
+                    break;
+                case IShapeButton.ShapeType.RegularTetrahedronSpawner:
+                    ShapeInputController.Instance.SetSpawner(new RegularTetrahedronSpawner());
+                    break;
+                case IShapeButton.ShapeType.GenericPyramidSpawner:
+                    ShapeInputController.Instance.SetSpawner(new GenericPyramidSpawner());
+                    break;
+                case IShapeButton.ShapeType.RightTriangleSpawner:
+                    ShapeInputController.Instance.SetSpawner(new RightTriangleSpawner());
+                    break;
+                case IShapeButton.ShapeType.SquarePrismSpawner:
+                    ShapeInputController.Instance.SetSpawner(new SquarePrismSpawner());
+                    break;
+                case IShapeButton.ShapeType.SquarePyramidSpawner:
+                    ShapeInputController.Instance.SetSpawner(new SquarePyramidSpawner());
+                    break;
+                     
             }
         }
 

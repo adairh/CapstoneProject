@@ -31,6 +31,17 @@ namespace Manipulator
 
         public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
+            
+            float side = inputs["Base"];
+            IPrebuiltDrawer drawer = new SquareDrawer();
+            Vector3 start = ManipulationManager.Instance.TrackingPoint;
+            Vector3 end = start + new Vector3(side, 0, 0); // mở rộng theo trục X
+
+            drawer.Begin(start);
+            drawer.Working(end);
+            drawer.End(end);
+            
+            
             return new ShapeData
             {
                 Type = "IsoscelesTriangle",

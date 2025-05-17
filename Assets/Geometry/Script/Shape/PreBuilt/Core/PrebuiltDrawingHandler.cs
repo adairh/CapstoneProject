@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Manipulator
 {
@@ -39,6 +40,11 @@ namespace Manipulator
         {
             if (Input.GetMouseButtonDown(0))
             {
+                if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                {
+                    return;
+                }
+                
                 if (isDrawing || ManipulationManager.Instance.IsDrawing) return;
 
                 Debug.LogError($"[prebuilt] {drawer}");

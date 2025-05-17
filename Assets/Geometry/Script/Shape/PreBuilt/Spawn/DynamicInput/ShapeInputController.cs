@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Manipulator
 {
@@ -17,10 +18,24 @@ namespace Manipulator
 
         public void SetSpawner(IShapeSpawner spawner)
         {
-            if (currentSpawner == spawner || spawner == null) return;
 
-            currentSpawner = spawner;
-            inputPanel.Build(spawner.GetFieldDefinitions());
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                {
+                    return;
+                }
+                
+                Vector3 startPos;
+                if (PerformDrawing.RaycastMouse(out startPos))
+                {
+                    ManipulationManager.Instance.TrackingPoint = startPos;
+                    if (currentSpawner == spawner || spawner == null) return;
+
+                    currentSpawner = spawner;
+                    inputPanel.Build(spawner.GetFieldDefinitions());
+                }
+            }
         }
 
         public void ResetSpawner()

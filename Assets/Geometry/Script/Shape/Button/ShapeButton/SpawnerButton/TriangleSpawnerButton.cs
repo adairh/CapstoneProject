@@ -2,17 +2,17 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    public class SquarePyramidButton : BaseButton, IShapeButton
+    public class TriangleSpawnerButton : BaseButton, IShapeButton
     {
         public IShapeButton.ShapeType GetShapeType()
         {
-            return IShapeButton.ShapeType.SquarePyramid;
+            return IShapeButton.ShapeType.TriangleSpawner;
         }
 
         protected override void OnButtonClick()
         {
             base.OnButtonClick();
-            Debug.Log($"{GetShapeType()} Button Clicked!");
+            Debug.Log("Triangle Button Clicked!");
             ShapeButtonManager.SetActiveShape(GetShapeType());
         }
     }
