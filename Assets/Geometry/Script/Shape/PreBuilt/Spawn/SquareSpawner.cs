@@ -40,6 +40,7 @@ namespace Manipulator
             float side = inputs["Side"];
             return new ShapeData
             {
+                Id = Guid.NewGuid().ToString(),
                 Type = "Square",
                 Position = Vector3.zero,
                 Settings = new Dictionary<string, string>

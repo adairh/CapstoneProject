@@ -92,8 +92,10 @@ namespace Manipulator
         {
             //Debug.LogError($"[CreateFromData] {data.Id}");
 
+            Debug.LogError($"[Click] Create {data.Id} {data.Type} {data.Position}");
             if (ShapeStorage.GetById(data.Id) != null) return null;
             
+
             var shape = CreateShape(data.Type, data.Position);
             //Debug.LogError($"[CreateFromData] {shape != null}");
 

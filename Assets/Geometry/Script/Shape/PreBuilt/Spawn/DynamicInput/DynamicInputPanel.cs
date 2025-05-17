@@ -13,16 +13,27 @@ namespace Manipulator
 
         public void Build(List<FieldDefinition> fields)
         {
-            foreach (Transform child in container)
-                Destroy(child.gameObject);
+            if (!IsInScene(container))
+            {
+                Debug.LogError("DynamicInputPanel: container is not a scene object. Assign a scene instance!");
+                return;
+            }
 
-            inputFields.Clear();
+            Clear(); // 👈 đảm bảo xóa hợp lệ
 
             foreach (var field in fields)
             {
-                var go = Instantiate(fieldPrefab, container);
-                var label = go.transform.Find("Label").GetComponent<TMP_Text>();
-                var input = go.transform.Find("Input").GetComponent<TMP_InputField>();
+                GameObject go = Instantiate(fieldPrefab, container);
+                go.name = $"Field_{field.Name}";
+
+                TMP_Text label = go.transform.Find("Label")?.GetComponent<TMP_Text>();
+                TMP_InputField input = go.transform.Find("Input")?.GetComponent<TMP_InputField>();
+
+                if (label == null || input == null)
+                {
+                    Debug.LogWarning($"Field prefab missing Label or Input for: {field.Name}");
+                    continue;
+                }
 
                 label.text = field.Name;
                 inputFields[field.Name] = input;
@@ -30,6 +41,26 @@ namespace Manipulator
                 if (!field.IsRequired)
                     label.color = Color.gray;
             }
+        }
+
+        public void Clear()
+        {
+            foreach (Transform child in container)
+            {
+                if (child.GetComponent<InputField>() || child.name.StartsWith("Input"))
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                    DestroyImmediate(child.gameObject);
+                else
+#endif
+                    Destroy(child.gameObject);
+            }
+            inputFields.Clear();
+        }
+
+        private bool IsInScene(Transform t)
+        {
+            return t != null && t.gameObject.scene.IsValid();
         }
 
         public Dictionary<string, float> CollectInput()
@@ -47,10 +78,8 @@ namespace Manipulator
         {
             foreach (var kvp in values)
             {
-                if (inputFields.ContainsKey(kvp.Key))
-                {
-                    inputFields[kvp.Key].text = kvp.Value.ToString("F2");
-                }
+                if (inputFields.TryGetValue(kvp.Key, out var input))
+                    input.text = kvp.Value.ToString("F2");
             }
         }
     }
