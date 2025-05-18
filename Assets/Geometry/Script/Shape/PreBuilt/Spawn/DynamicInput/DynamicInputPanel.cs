@@ -15,7 +15,7 @@ namespace Manipulator
         {
             if (!IsInScene(container))
             {
-                Debug.LogError("DynamicInputPanel: container is not a scene object. Assign a scene instance!");
+                //Debug.LogError("DynamicInputPanel: container is not a scene object. Assign a scene instance!");
                 return;
             }
 

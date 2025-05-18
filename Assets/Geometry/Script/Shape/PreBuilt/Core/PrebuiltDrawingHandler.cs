@@ -47,7 +47,7 @@ namespace Manipulator
                 
                 if (isDrawing || ManipulationManager.Instance.IsDrawing) return;
 
-                Debug.LogError($"[prebuilt] {drawer}");
+                //Debug.LogError($"[prebuilt] {drawer}");
 
                 currentDrawer = drawer;
                 isDrawing = true;

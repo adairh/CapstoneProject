@@ -18,12 +18,12 @@ namespace Manipulator
 
         public static Shape CreateShape(string type, Vector3 position)
         {
-            Debug.LogError($"[CreateShape {type}] {position}");
+            //Debug.LogError($"[CreateShape {type}] {position}");
 
             if (creators.TryGetValue(type, out var ctor))
             {
                 var instance = ctor(position);
-                Debug.LogError($"[CreateShape {type}] {instance != null}");
+                //Debug.LogError($"[CreateShape {type}] {instance != null}");
 
                 if (instance != null) return instance;
             }
@@ -84,7 +84,7 @@ namespace Manipulator
         {
             //Debug.LogError($"[CreateFromData] {data.Id}");
 
-            Debug.LogError($"[Click] Create {data.Id} {data.Type} {data.Position}");
+            //Debug.LogError($"[Click] Create {data.Id} {data.Type} {data.Position}");
             if (ShapeStorage.GetById(data.Id) != null) return null;
 
 

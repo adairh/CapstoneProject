@@ -80,6 +80,7 @@ namespace Manipulator
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD }}
             };
 
+            
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
             return null;
         }

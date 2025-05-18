@@ -55,17 +55,17 @@ namespace Manipulator
             var solved = fieldSolver.Solve(rawInputs);
 
             inputPanel.FillCalculatedFields(solved);
-
-            // Kiểm tra có đủ field cần thiết để dựng hình chưa
-            if (solved.ContainsKey("BaseSide") && solved.ContainsKey("Height"))
+ 
+            try
             {
-                currentSpawner.ComputeShape(solved); // đã tự gọi UndoRedoBridge bên trong
-                ResetSpawner();
+                currentSpawner.ComputeShape(solved);
             }
-            else
+            catch (Exception e)
             {
-                Debug.LogWarning("Chưa đủ dữ kiện để dựng hình.");
+                Debug.LogWarning($"Chưa đủ dữ kiện để dựng hình. {e.Message}");
             }
+            ResetSpawner(); 
+            
         }
 
     }
