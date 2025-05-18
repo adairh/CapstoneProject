@@ -6,23 +6,23 @@ namespace Manipulator
 {
     public static class ShapeFactory
     {
-        private static readonly Dictionary<string, Func<Vector3, Shape>> creators = new()
+        private static readonly Dictionary<string, Func<Vector3, string, Shape>> creators = new()
         {
-            { "Point", pos => Create<Point>("Point", pos) },
-            { "Segment", pos => Create<Segment>("Segment", pos) },
-            { "Line", pos => Create<Line>("Line", pos) },
-            { "Ray", pos => Create<RayShape>("Ray", pos) },
-            { "Polygon", pos => Create<Polygon>("Polygon", pos) },
-            { "Plane", pos => Create<PlaneShape>("Plane", pos) }
+            { "Point", (pos, lgcName) => Create<Point>("Point", pos, lgcName) },
+            { "Segment", (pos, lgcName) => Create<Segment>("Segment", pos, lgcName) },
+            { "Line", (pos, lgcName) => Create<Line>("Line", pos, lgcName) },
+            { "Ray", (pos, lgcName) => Create<RayShape>("Ray", pos, lgcName) },
+            { "Polygon", (pos, lgcName) => Create<Polygon>("Polygon", pos, lgcName) },
+            { "Plane", (pos, lgcName) => Create<PlaneShape>("Plane", pos, lgcName) }
         };
 
-        public static Shape CreateShape(string type, Vector3 position)
+        public static Shape CreateShape(string type, Vector3 position, string lgcName = "")
         {
             //Debug.LogError($"[CreateShape {type}] {position}");
 
             if (creators.TryGetValue(type, out var ctor))
             {
-                var instance = ctor(position);
+                var instance = ctor(position, lgcName);
                 //Debug.LogError($"[CreateShape {type}] {instance != null}");
 
                 if (instance != null) return instance;
@@ -33,13 +33,13 @@ namespace Manipulator
         }
 
 
-        public static T Create<T>(string type, Vector3 position) where T : Shape
+        public static T Create<T>(string type, Vector3 position, string lgcName = "") where T : Shape
         {
             var go = new GameObject(type);
             var shape = go.AddComponent<T>();
             Debug.Log($"[CreateShape {type}] Created shape: {shape}, type: {type}, id: {go.GetInstanceID()}");
 
-            shape.InitializeNew(type, position);
+            shape.InitializeNew(type, position, lgcName);
             return shape;
         }
 
@@ -88,7 +88,7 @@ namespace Manipulator
             if (ShapeStorage.GetById(data.Id) != null) return null;
 
 
-            var shape = CreateShape(data.Type, data.Position);
+            var shape = CreateShape(data.Type, data.Position, data.LogicalName);
             //Debug.LogError($"[CreateFromData] {shape != null}");
 
             if (shape == null) return null;

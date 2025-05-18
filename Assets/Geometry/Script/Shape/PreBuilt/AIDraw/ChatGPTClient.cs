@@ -8,15 +8,29 @@ using System.Collections.Generic;
 
 namespace Manipulator
 {
+    [Serializable] 
+    public class CustomPointDef
+    {
+        public string type; // midpoint, split, extend, projection, mirror, intersection...
+        public string[] from; // các điểm hoặc đoạn gốc
+        public float ratio = 0.5f; // tỉ lệ chia đoạn (nếu có)
+        public string axis; // trục phản xạ hoặc dời điểm
+        public float distance; // khoảng cách kéo dài hoặc dịch chuyển
+        public string plane; // tên mặt phẳng tham chiếu (nếu có)
+    }
+
     [Serializable]
     public class AIShapeResult
     {
         public string ShapeType;
         public Dictionary<string, float> KnownFields;
+        public Dictionary<string, CustomPointDef> CustomPoints;
+        public List<string[]> ExtraSegments;
         public string Explanation;
         public string[] Warnings;
         public string[] Suggestions;
     }
+
 
     [Serializable]
     public class ChatGPTMessage

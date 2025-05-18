@@ -52,8 +52,10 @@ namespace Manipulator
 
             currentSpawner = SpawnerRegistry.Get(result.ShapeType);
 
-            currentSpawner.ComputeShape(result.KnownFields);
+            var data = currentSpawner.ComputeShape(result.KnownFields);
             
+            ShapeExtrasProcessor.Process(PointMapHelper.From(data), result.CustomPoints, result.ExtraSegments);
+
             // inputPanel.Build(currentSpawner.GetFieldDefinitions());
             //  
             //
