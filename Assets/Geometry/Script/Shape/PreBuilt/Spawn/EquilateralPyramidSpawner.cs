@@ -1,6 +1,8 @@
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Geometry;
 
 namespace Manipulator
 {
@@ -10,49 +12,91 @@ namespace Manipulator
         {
             return new List<FieldDefinition>
             {
-                new FieldDefinition { Name = "BaseSide", Type = FieldType.Length, IsRequired = true },
-                new FieldDefinition { Name = "Height", Type = FieldType.Height, IsRequired = true },
-                new FieldDefinition {
-                    Name = "BaseArea", Type = FieldType.Area, IsRequired = false,
-                    ComputeFromOthers = inputs =>
-                        inputs.ContainsKey("BaseSide")
-                            ? Mathf.Pow(inputs["BaseSide"], 2) * Mathf.Sqrt(3f) / 4f
-                            : throw new Exception()
+                new FieldDefinition { Name = "Side", Type = FieldType.Length, IsRequired = true },
+                new FieldDefinition
+                {
+                    Name = "Height",
+                    Type = FieldType.Length,
+                    IsRequired = false,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "Side" },
+                            Compute = input =>
+                            {
+                                float a = input["Side"];
+                                return Mathf.Sqrt(a * a - (a * a / 2f));
+                            }
+                        }
+                    }
                 },
-                new FieldDefinition {
-                    Name = "Volume", Type = FieldType.Area, IsRequired = false,
-                    ComputeFromOthers = inputs =>
-                        inputs.ContainsKey("BaseSide") && inputs.ContainsKey("Height")
-                            ? (1f / 3f) * (Mathf.Pow(inputs["BaseSide"], 2) * Mathf.Sqrt(3f) / 4f) * inputs["Height"]
-                            : throw new Exception()
+                new FieldDefinition
+                {
+                    Name = "Volume",
+                    Type = FieldType.Volume,
+                    IsRequired = false,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "Side", "Height" },
+                            Compute = input =>
+                            {
+                                float a = input["Side"];
+                                float h = input["Height"];
+                                return (1f / 3f) * a * a * h;
+                            }
+                        }
+                    }
                 }
             };
         }
 
         public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
-            
-            float side = inputs["BaseSide"];
-            float height = inputs["Height"];
-            IPrebuiltDrawer drawer = new SquareDrawer();
-            Vector3 start = ManipulationManager.Instance.TrackingPoint;
-            Vector3 end = start + new Vector3(side, 0, 0); // mở rộng theo trục X
+            var solver = new FieldSolver(GetFieldDefinitions());
+            var result = solver.Solve(inputs);
 
-            drawer.Begin(start);
-            drawer.Working(end);
-            drawer.End(end);
-            
-            
-            return new ShapeData
+            if (!result.ContainsKey("Side"))
+                throw new Exception("Thiếu độ dài cạnh đáy.");
+
+            float a = result["Side"];
+            float h = result.ContainsKey("Height") ? result["Height"] : Mathf.Sqrt(a * a - (a * a / 2f));
+
+            Vector3 A = ManipulationManager.Instance.TrackingPoint;
+            Vector3 B = A + new Vector3(a, 0, 0);
+            Vector3 C = A + new Vector3(a, 0, a);
+            Vector3 D = A + new Vector3(0, 0, a);
+            Vector3 Apex = A + new Vector3(a / 2f, h, a / 2f);
+
+            string idA = Guid.NewGuid().ToString();
+            string idB = Guid.NewGuid().ToString();
+            string idC = Guid.NewGuid().ToString();
+            string idD = Guid.NewGuid().ToString();
+            string idS = Guid.NewGuid().ToString();
+
+            var data = new List<ShapeData>
             {
-                Type = "EquilateralPyramid",
-                Position = Vector3.zero,
-                Settings = new Dictionary<string, string>
-                {
-                    { "baseSide", inputs["BaseSide"].ToString() },
-                    { "height", inputs["Height"].ToString() }
-                }
+                new() { Id = idA, Type = "Point", Position = A, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() { Id = idB, Type = "Point", Position = B, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() { Id = idC, Type = "Point", Position = C, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() { Id = idD, Type = "Point", Position = D, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() { Id = idS, Type = "Point", Position = Apex, Rotation = Quaternion.identity, Scale = Vector3.one },
+
+                // Base
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB }},
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC }},
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD }},
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idA }},
+
+                // Sides
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idS }},
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idS }},
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idS }},
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idS }}
             };
+
+            UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+            return null;
         }
     }
 }

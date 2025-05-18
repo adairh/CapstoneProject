@@ -50,18 +50,16 @@ namespace Manipulator
         public void OnSubmit()
         {
             var rawInputs = inputPanel.CollectInput();
-            var solved = ShapeSolver.TrySolve(currentSpawner.GetFieldDefinitions(), rawInputs);
+            var fieldDefs = currentSpawner.GetFieldDefinitions();
+            var fieldSolver = new FieldSolver(fieldDefs);
+            var solved = fieldSolver.Solve(rawInputs);
+
             inputPanel.FillCalculatedFields(solved);
 
-            if (solved.Count >= 3) // Tùy vào hình học mà quyết định điều kiện đủ
+            // Kiểm tra có đủ field cần thiết để dựng hình chưa
+            if (solved.ContainsKey("BaseSide") && solved.ContainsKey("Height"))
             {
-                var shape = currentSpawner.ComputeShape(solved);
-
-                // ✅ Ensure Id is generated
-                if (string.IsNullOrEmpty(shape.Id))
-                    shape.Id = Guid.NewGuid().ToString();
-
-                //ShapeFactory.CreateFromData(shape);
+                currentSpawner.ComputeShape(solved); // đã tự gọi UndoRedoBridge bên trong
                 ResetSpawner();
             }
             else
@@ -69,5 +67,6 @@ namespace Manipulator
                 Debug.LogWarning("Chưa đủ dữ kiện để dựng hình.");
             }
         }
+
     }
 }

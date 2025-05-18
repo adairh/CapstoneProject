@@ -1,6 +1,8 @@
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Geometry;
 
 namespace Manipulator
 {
@@ -10,45 +12,97 @@ namespace Manipulator
         {
             return new List<FieldDefinition>
             {
-                new FieldDefinition { Name = "Length", Type = FieldType.Length, IsRequired = true },
-                new FieldDefinition { Name = "Width", Type = FieldType.Width, IsRequired = true },
-                new FieldDefinition {
-                    Name = "Area", Type = FieldType.Area, IsRequired = false,
-                    ComputeFromOthers = inputs =>
-                        inputs.ContainsKey("Length") && inputs.ContainsKey("Width")
-                            ? inputs["Length"] * inputs["Width"] : throw new Exception()
+                new FieldDefinition
+                {
+                    Name = "Width",
+                    Type = FieldType.Length,
+                    IsRequired = true,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "Area", "Height" },
+                            Compute = input => input["Area"] / input["Height"]
+                        }
+                    }
                 },
-                new FieldDefinition {
-                    Name = "Perimeter", Type = FieldType.Perimeter, IsRequired = false,
-                    ComputeFromOthers = inputs =>
-                        inputs.ContainsKey("Length") && inputs.ContainsKey("Width")
-                            ? 2 * (inputs["Length"] + inputs["Width"]) : throw new Exception()
+                new FieldDefinition
+                {
+                    Name = "Height",
+                    Type = FieldType.Length,
+                    IsRequired = true,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "Area", "Width" },
+                            Compute = input => input["Area"] / input["Width"]
+                        }
+                    }
+                },
+                new FieldDefinition
+                {
+                    Name = "Area",
+                    Type = FieldType.Area,
+                    IsRequired = false,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "Width", "Height" },
+                            Compute = input => input["Width"] * input["Height"]
+                        }
+                    }
+                },
+                new FieldDefinition
+                {
+                    Name = "Diagonal",
+                    Type = FieldType.Length,
+                    IsRequired = false,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "Width", "Height" },
+                            Compute = input => Mathf.Sqrt(Mathf.Pow(input["Width"], 2) + Mathf.Pow(input["Height"], 2))
+                        }
+                    }
                 }
             };
         }
 
         public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
-            float side = inputs["Length"];
-            float width = inputs["Width"];
-            IPrebuiltDrawer drawer = new SquareDrawer();
-            Vector3 start = ManipulationManager.Instance.TrackingPoint;
-            Vector3 end = start + new Vector3(side, 0, 0); // mở rộng theo trục X
+            var solver = new FieldSolver(GetFieldDefinitions());
+            var result = solver.Solve(inputs);
+            if (!result.ContainsKey("Width") || !result.ContainsKey("Height"))
+                throw new Exception("Thiếu chiều dài hoặc chiều rộng.");
 
-            drawer.Begin(start);
-            drawer.Working(end);
-            drawer.End(end);
-            
-            return new ShapeData
+            float w = result["Width"];
+            float h = result["Height"];
+            Vector3 basePos = ManipulationManager.Instance.TrackingPoint;
+
+            Vector3 A = basePos;
+            Vector3 B = basePos + new Vector3(w, 0, 0);
+            Vector3 C = basePos + new Vector3(w, 0, h);
+            Vector3 D = basePos + new Vector3(0, 0, h);
+
+            string idA = Guid.NewGuid().ToString();
+            string idB = Guid.NewGuid().ToString();
+            string idC = Guid.NewGuid().ToString();
+            string idD = Guid.NewGuid().ToString();
+
+            var data = new List<ShapeData>
             {
-                Type = "Rectangle",
-                Position = Vector3.zero,
-                Settings = new Dictionary<string, string>
-                {
-                    { "length", inputs["Length"].ToString() },
-                    { "width", inputs["Width"].ToString() }
-                }
+                new() {Id = idA, Type = "Point", Position = A, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() {Id = idB, Type = "Point", Position = B, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() {Id = idC, Type = "Point", Position = C, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() {Id = idD, Type = "Point", Position = D, Rotation = Quaternion.identity, Scale = Vector3.one },
+
+                new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB } },
+                new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC } },
+                new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD } },
+                new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idA } }
             };
+
+            UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+            return null;
         }
     }
 }

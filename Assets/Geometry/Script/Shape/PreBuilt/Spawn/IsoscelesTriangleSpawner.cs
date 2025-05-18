@@ -1,6 +1,8 @@
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Geometry;
 
 namespace Manipulator
 {
@@ -12,47 +14,86 @@ namespace Manipulator
             {
                 new FieldDefinition { Name = "Base", Type = FieldType.Length, IsRequired = true },
                 new FieldDefinition { Name = "Side", Type = FieldType.Length, IsRequired = true },
-                new FieldDefinition {
-                    Name = "Height", Type = FieldType.Height, IsRequired = false,
-                    ComputeFromOthers = inputs =>
-                        inputs.ContainsKey("Side") && inputs.ContainsKey("Base")
-                            ? Mathf.Sqrt(inputs["Side"] * inputs["Side"] - (inputs["Base"] * inputs["Base"]) / 4f)
-                            : throw new Exception()
+
+                new FieldDefinition
+                {
+                    Name = "Height",
+                    Type = FieldType.Length,
+                    IsRequired = false,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "Side", "Base" },
+                            Compute = input => Mathf.Sqrt(Mathf.Pow(input["Side"], 2) - Mathf.Pow(input["Base"] / 2f, 2))
+                        }
+                    }
                 },
-                new FieldDefinition {
-                    Name = "Area", Type = FieldType.Area, IsRequired = false,
-                    ComputeFromOthers = inputs =>
-                        inputs.ContainsKey("Base") && inputs.ContainsKey("Side")
-                            ? 0.5f * inputs["Base"] * Mathf.Sqrt(inputs["Side"] * inputs["Side"] - (inputs["Base"] * inputs["Base"]) / 4f)
-                            : throw new Exception()
+                new FieldDefinition
+                {
+                    Name = "Area",
+                    Type = FieldType.Area,
+                    IsRequired = false,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "Base", "Height" },
+                            Compute = input => 0.5f * input["Base"] * input["Height"]
+                        }
+                    }
+                },
+                new FieldDefinition
+                {
+                    Name = "VertexAngle",
+                    Type = FieldType.Angle,
+                    IsRequired = false,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "Side", "Base" },
+                            Compute = input =>
+                            {
+                                float s = input["Side"], b = input["Base"];
+                                return 2 * Mathf.Acos(b / (2 * s)) * Mathf.Rad2Deg;
+                            }
+                        }
+                    }
                 }
             };
         }
 
         public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
-            
-            float side = inputs["Side"];
-            float basee = inputs["Base"];
-            IPrebuiltDrawer drawer = new SquareDrawer();
-            Vector3 start = ManipulationManager.Instance.TrackingPoint;
-            Vector3 end = start + new Vector3(side, 0, 0); // mở rộng theo trục X
+            var solver = new FieldSolver(GetFieldDefinitions());
+            var result = solver.Solve(inputs);
 
-            drawer.Begin(start);
-            drawer.Working(end);
-            drawer.End(end);
-            
-            
-            return new ShapeData
+            if (!(result.ContainsKey("Base") && result.ContainsKey("Side")))
+                throw new Exception("Thiếu cạnh đáy hoặc cạnh bên.");
+
+            float baseLen = result["Base"];
+            float sideLen = result["Side"];
+            float height = result.ContainsKey("Height") ? result["Height"] : Mathf.Sqrt(sideLen * sideLen - Mathf.Pow(baseLen / 2f, 2));
+
+            Vector3 A = ManipulationManager.Instance.TrackingPoint;
+            Vector3 B = A + new Vector3(baseLen, 0, 0);
+            Vector3 C = A + new Vector3(baseLen / 2f, 0, height);
+
+            string idA = Guid.NewGuid().ToString();
+            string idB = Guid.NewGuid().ToString();
+            string idC = Guid.NewGuid().ToString();
+
+            var data = new List<ShapeData>
             {
-                Type = "IsoscelesTriangle",
-                Position = Vector3.zero,
-                Settings = new Dictionary<string, string>
-                {
-                    { "base", inputs["Base"].ToString() },
-                    { "side", inputs["Side"].ToString() }
-                }
+                new() { Id = idA, Type = "Point", Position = A, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() { Id = idB, Type = "Point", Position = B, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() { Id = idC, Type = "Point", Position = C, Rotation = Quaternion.identity, Scale = Vector3.one },
+
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB }},
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC }},
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idA }}
             };
+
+            UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+            return null;
         }
     }
 }

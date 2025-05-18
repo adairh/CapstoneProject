@@ -1,6 +1,8 @@
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Geometry;
 
 namespace Manipulator
 {
@@ -10,40 +12,65 @@ namespace Manipulator
         {
             return new List<FieldDefinition>
             {
-                new FieldDefinition { Name = "Diagonal1", Type = FieldType.Length, IsRequired = true },
-                new FieldDefinition { Name = "Diagonal2", Type = FieldType.Length, IsRequired = true },
-                new FieldDefinition {
-                    Name = "Area", Type = FieldType.Area, IsRequired = false,
-                    ComputeFromOthers = inputs =>
-                        inputs.ContainsKey("Diagonal1") && inputs.ContainsKey("Diagonal2")
-                            ? 0.5f * inputs["Diagonal1"] * inputs["Diagonal2"] : throw new Exception()
+                new FieldDefinition { Name = "Side", Type = FieldType.Length, IsRequired = true },
+                new FieldDefinition { Name = "Diagonal1", Type = FieldType.Length, IsRequired = false },
+                new FieldDefinition { Name = "Diagonal2", Type = FieldType.Length, IsRequired = false },
+                new FieldDefinition
+                {
+                    Name = "Area",
+                    Type = FieldType.Area,
+                    IsRequired = false,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule
+                        {
+                            InputFields = new List<string>{ "Diagonal1", "Diagonal2" },
+                            Compute = input => 0.5f * input["Diagonal1"] * input["Diagonal2"]
+                        }
+                    }
                 }
             };
         }
 
         public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
-            
-            float side = inputs["Diagonal1"];
-            float side2 = inputs["Diagonal2"];
-            IPrebuiltDrawer drawer = new SquareDrawer();
-            Vector3 start = ManipulationManager.Instance.TrackingPoint;
-            Vector3 end = start + new Vector3(side, 0, 0); // mở rộng theo trục X
+            var solver = new FieldSolver(GetFieldDefinitions());
+            var result = solver.Solve(inputs);
 
-            drawer.Begin(start);
-            drawer.Working(end);
-            drawer.End(end);
-            
-            return new ShapeData
+            if (!result.ContainsKey("Side"))
+                throw new Exception("Thiếu độ dài cạnh.");
+
+            float a = result["Side"];
+            float d1 = result.ContainsKey("Diagonal1") ? result["Diagonal1"] : a * Mathf.Sqrt(2);
+            float d2 = result.ContainsKey("Diagonal2") ? result["Diagonal2"] : a * Mathf.Sqrt(2);
+
+            Vector3 basePos = ManipulationManager.Instance.TrackingPoint;
+
+            Vector3 A = basePos + new Vector3(-d1 / 2, 0, 0);
+            Vector3 C = basePos + new Vector3(d1 / 2, 0, 0);
+            Vector3 B = basePos + new Vector3(0, 0, d2 / 2);
+            Vector3 D = basePos + new Vector3(0, 0, -d2 / 2);
+
+            string idA = Guid.NewGuid().ToString();
+            string idB = Guid.NewGuid().ToString();
+            string idC = Guid.NewGuid().ToString();
+            string idD = Guid.NewGuid().ToString();
+
+            var data = new List<ShapeData>
             {
-                Type = "Rhombus",
-                Position = Vector3.zero,
-                Settings = new Dictionary<string, string>
-                {
-                    { "d1", inputs["Diagonal1"].ToString() },
-                    { "d2", inputs["Diagonal2"].ToString() }
-                }
+                new() {Id = idA, Type = "Point", Position = A, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() {Id = idB, Type = "Point", Position = B, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() {Id = idC, Type = "Point", Position = C, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() {Id = idD, Type = "Point", Position = D, Rotation = Quaternion.identity, Scale = Vector3.one },
+
+                new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB } },
+                new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC } },
+                new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD } },
+                new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idA } }
             };
+
+            UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+            return null;
         }
     }
 }

@@ -8,6 +8,7 @@ namespace Manipulator
         Perimeter,
         Height,
         Width,
-        Radius
+        Radius, 
+        Volume
     }
 }
