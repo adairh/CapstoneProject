@@ -24,6 +24,7 @@ namespace Manipulator
         public ShapeData ComputeShape(Dictionary<string, float> inputs)
         {
             float side = inputs["BaseArea"];
+            float height = inputs["height"];
             IPrebuiltDrawer drawer = new SquareDrawer();
             Vector3 start = ManipulationManager.Instance.TrackingPoint;
             Vector3 end = start + new Vector3(side, 0, 0); // mở rộng theo trục X

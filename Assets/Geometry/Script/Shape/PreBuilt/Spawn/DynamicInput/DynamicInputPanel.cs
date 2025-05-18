@@ -20,7 +20,9 @@ namespace Manipulator
             }
 
             Clear(); // 👈 đảm bảo xóa hợp lệ
-
+            container.gameObject.SetActive(true);
+            
+            
             foreach (var field in fields)
             {
                 var go = Instantiate(fieldPrefab, container);
@@ -46,7 +48,7 @@ namespace Manipulator
         public void Clear()
         {
             foreach (Transform child in container)
-                if (child.GetComponent<InputField>() || child.name.StartsWith("Input"))
+                if (child.GetComponent<InputField>() || child.name.StartsWith("Field_"))
 #if UNITY_EDITOR
                     if (!Application.isPlaying)
                         DestroyImmediate(child.gameObject);

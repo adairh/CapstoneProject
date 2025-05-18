@@ -25,6 +25,8 @@ namespace Manipulator
                 {
                     return;
                 }
+
+                inputPanel.gameObject.SetActive(true);
                 
                 Vector3 startPos;
                 if (PerformDrawing.RaycastMouse(out startPos))
@@ -42,6 +44,7 @@ namespace Manipulator
         {
             currentSpawner = null;
             inputPanel.Clear();
+            inputPanel.gameObject.SetActive(false);
         }
 
         public void OnSubmit()
@@ -58,7 +61,8 @@ namespace Manipulator
                 if (string.IsNullOrEmpty(shape.Id))
                     shape.Id = Guid.NewGuid().ToString();
 
-                ShapeFactory.CreateFromData(shape);
+                //ShapeFactory.CreateFromData(shape);
+                ResetSpawner();
             }
             else
             {

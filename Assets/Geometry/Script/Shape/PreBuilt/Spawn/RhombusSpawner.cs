@@ -25,6 +25,7 @@ namespace Manipulator
         {
             
             float side = inputs["Diagonal1"];
+            float side2 = inputs["Diagonal2"];
             IPrebuiltDrawer drawer = new SquareDrawer();
             Vector3 start = ManipulationManager.Instance.TrackingPoint;
             Vector3 end = start + new Vector3(side, 0, 0); // mở rộng theo trục X
