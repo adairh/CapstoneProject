@@ -61,13 +61,14 @@ namespace Manipulator
 
         public Material DefaultMat { get; set; }
 
-        public virtual void InitializeNew(string type, Vector3 position)
+        public virtual void InitializeNew(string type, Vector3 position, string lgcName = "")
         {
             ShapeId = Guid.NewGuid().ToString();
             shapeType = type;
             Data = new ShapeData
             {
                 Id = ShapeId,
+                LogicalName = lgcName,
                 Type = type,
                 Position = position,
                 Rotation = Quaternion.identity,
@@ -84,13 +85,19 @@ namespace Manipulator
 
             if (this is Point)
             {
+                var s = Data.LogicalName;
+                if (Data.LogicalName == "")
+                    s = LabelGenerator.Next();
+                Data.LogicalName = s;
+                name = s;
+                
                 var label = UIManager.Instance.GetUIComponent("LabelDisplayPrefab");
                 if (label != null)
                 {
                     var go = Instantiate(label, transform);
                     go.transform.localPosition = new Vector3(0, 0.5f, 0);
                     var disp = go.GetComponentInChildren<LabelDisplay>();
-                    var s = LabelGenerator.Next();
+                    
                     disp.SetLabel(s);
                     if (disp != null && s != null)
                         disp.Initialize(s);

@@ -9,7 +9,7 @@ namespace Manipulator
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
 
-        public override void InitializeNew(string type, Vector3 position)
+        public override void InitializeNew(string type, Vector3 position, string lgcName = "")
         {
             base.InitializeNew(type, position);
 

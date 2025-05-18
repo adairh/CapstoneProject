@@ -38,6 +38,7 @@ namespace Manipulator
         {
             return idLookup.TryGetValue(id, out var s) ? s : null;
         }
+ 
 
         public static Shape GetByName(string name)
         {

@@ -10,6 +10,7 @@ namespace Manipulator
     public class ShapeData
     {
         public string Id;
+        public string LogicalName = "";
         public string Type;
         public Vector3 Position;
         public Vector3 Scale;

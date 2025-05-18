@@ -36,7 +36,7 @@ namespace Manipulator
             };
         }
 
-        public ShapeData ComputeShape(Dictionary<string, float> inputs)
+        public List<ShapeData> ComputeShape(Dictionary<string, float> inputs)
         {
             var solver = new FieldSolver(GetFieldDefinitions());
             var result = solver.Solve(inputs);
@@ -74,7 +74,7 @@ namespace Manipulator
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
-            return null;
+            return data;
         }
     }
 }
