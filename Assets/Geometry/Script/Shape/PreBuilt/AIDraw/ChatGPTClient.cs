@@ -1,3 +1,4 @@
+
 using System;
 using System.IO;
 using System.Net.Http;
@@ -8,29 +9,27 @@ using System.Collections.Generic;
 
 namespace Manipulator
 {
-    [Serializable] 
+    [Serializable]
     public class CustomPointDef
     {
-        public string type; // midpoint, split, extend, projection, mirror, intersection...
-        public string[] from; // các điểm hoặc đoạn gốc
-        public float ratio = 0.5f; // tỉ lệ chia đoạn (nếu có)
-        public string axis; // trục phản xạ hoặc dời điểm
-        public float distance; // khoảng cách kéo dài hoặc dịch chuyển
-        public string plane; // tên mặt phẳng tham chiếu (nếu có)
+        public string type;
+        public string[] from;
+        public float ratio = 0.5f;
+        public float distance;
+        public string axis;
+        public string plane;
+        public float[] position;
     }
 
     [Serializable]
     public class AIShapeResult
     {
-        public string ShapeType;
-        public Dictionary<string, float> KnownFields;
         public Dictionary<string, CustomPointDef> CustomPoints;
         public List<string[]> ExtraSegments;
         public string Explanation;
         public string[] Warnings;
         public string[] Suggestions;
     }
-
 
     [Serializable]
     public class ChatGPTMessage
@@ -47,12 +46,6 @@ namespace Manipulator
     }
 
     [Serializable]
-    public class ChatGPTRawResponse
-    {
-        public ChatChoice[] choices;
-    }
-
-    [Serializable]
     public class ChatChoice
     {
         public ChatMessage message;
@@ -64,10 +57,15 @@ namespace Manipulator
         public string content;
     }
 
+    [Serializable]
+    public class ChatGPTRawResponse
+    {
+        public ChatChoice[] choices;
+    }
+
     public static class ChatGPTClient
     {
         private static readonly string apiUrl = "https://api.openai.com/v1/chat/completions";
-
         private static string apiKey;
 
         static ChatGPTClient()
@@ -76,7 +74,7 @@ namespace Manipulator
             {
                 string path = Path.Combine(Directory.GetParent(Application.dataPath).FullName, ".openai");
                 string[] lines = File.ReadAllLines(path);
-                foreach (var line in lines)
+                foreach (string line in lines)
                 {
                     if (line.StartsWith("OPENAI_KEY="))
                     {
@@ -85,9 +83,9 @@ namespace Manipulator
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Debug.LogError($"[ChatGPTClient] Không đọc được API key từ file .openai: {e.Message}");
+                Debug.LogError("[ChatGPTClient] Không thể đọc file .openai: " + ex.Message);
             }
         }
 
@@ -106,17 +104,14 @@ namespace Manipulator
                 model = "gpt-4",
                 messages = new[]
                 {
-                    new ChatGPTMessage
-                    {
-                        role = "system",
-                        content = "Bạn là trợ lý dạy học hình học không gian. Phân tích đề bài và trả kết quả JSON."
-                    },
+                    new ChatGPTMessage { role = "system", content = "Bạn là trợ lý hình học không gian." },
                     new ChatGPTMessage { role = "user", content = prompt }
                 }
             };
 
             string jsonBody = JsonUtility.ToJson(requestBody);
             var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+
             client.DefaultRequestHeaders.Clear();
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
@@ -125,13 +120,18 @@ namespace Manipulator
                 HttpResponseMessage response = await client.PostAsync(apiUrl, content);
                 string result = await response.Content.ReadAsStringAsync();
 
-                // Parse lần đầu để lấy content thực bên trong
                 ChatGPTRawResponse wrapper = JsonUtility.FromJson<ChatGPTRawResponse>(result);
+                if (wrapper?.choices == null || wrapper.choices.Length == 0 || wrapper.choices[0].message == null)
+                {
+                    Debug.LogError("[ChatGPTClient] Response không hợp lệ hoặc thiếu nội dung.");
+                    return null;
+                }
+
                 return wrapper.choices[0].message.content;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Debug.LogError($"[ChatGPTClient] Gửi request thất bại: {e.Message}");
+                Debug.LogError("[ChatGPTClient] Lỗi khi gửi request: " + ex.Message);
                 return null;
             }
         }

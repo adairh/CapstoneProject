@@ -1,105 +1,64 @@
-﻿using System.Collections.Generic;
-using Manipulator;
-using Newtonsoft.Json;
+
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine.UI;
+using Newtonsoft.Json;
 
 namespace Manipulator
 {
     public class AIInputController : MonoBehaviour
     {
-        [SerializeField] private TMP_InputField aiInputField;
-        [SerializeField] private Button askAIButton;
-        [SerializeField] private Button retryButton;
-        [SerializeField] private TMP_Text warningText;
-        [SerializeField] private TMP_Text suggestionText;
-        [SerializeField] private DynamicInputPanel inputPanel;
-
-        private IShapeSpawner currentSpawner;
-        private Dictionary<string, float> lastSubmittedFields;
+        [SerializeField] private TMP_InputField inputField;
+        [SerializeField] private Button submitButton;
+        [SerializeField] private TMP_Text explanationText;
+        [SerializeField] private TMP_Text warningsText;
+        [SerializeField] private TMP_Text suggestionsText;
 
         private void Start()
         {
-            askAIButton.onClick.AddListener(() => SubmitToAI());
-            retryButton.onClick.AddListener(() => ResubmitToAI());
+            submitButton.onClick.AddListener(OnSubmit);
         }
 
-        public async void SubmitToAI()
+        private async void OnSubmit()
         {
-            string userText = aiInputField.text;
-            string prompt = AIHelper.BuildPrompt(userText);
+            string prompt = AIHelper.BuildPrompt(inputField.text);
             string json = await ChatGPTClient.Ask(prompt);
 
-            if (string.IsNullOrWhiteSpace(json)) return;
-
-            var result = JsonConvert.DeserializeObject<AIShapeResult>(json);
-
-            Debug.LogWarning(json);
-
-            Debug.LogWarning(result.ShapeType);
-            Debug.LogWarning(result.Suggestions);
-            Debug.LogWarning(result.Explanation);
-            Debug.LogWarning(result.Warnings);
-            Debug.LogWarning(result.KnownFields);
-            
-            
-            if (result == null || string.IsNullOrEmpty(result.ShapeType))
+            if (string.IsNullOrWhiteSpace(json))
             {
-                Debug.LogError("[AIInputController] JSON không hợp lệ hoặc thiếu ShapeType");
+                Debug.LogWarning("[AIInputController] Empty response from AI.");
                 return;
             }
 
-            currentSpawner = SpawnerRegistry.Get(result.ShapeType);
+            Debug.Log("[AIInputController] Raw AI response:" + json);
 
-            var data = currentSpawner.ComputeShape(result.KnownFields);
-            
-            ShapeExtrasProcessor.Process(PointMapHelper.From(data), result.CustomPoints, result.ExtraSegments);
+            AIShapeResult result;
+            try
+            {
+                result = JsonConvert.DeserializeObject<AIShapeResult>(json);
+            }
+            catch
+            {
+                Debug.LogError("[AIInputController] Failed to parse AI response.");
+                return;
+            }
 
-            // inputPanel.Build(currentSpawner.GetFieldDefinitions());
-            //  
-            //
-            // inputPanel.FillCalculatedFields(result.KnownFields);
-            //
-            // lastSubmittedFields = result.KnownFields;
+            if (result == null)
+            {
+                Debug.LogError("[AIInputController] Parsed AI result is null.");
+                return;
+            }
 
+            ShapeExtrasProcessor.BuildFromAI(result.CustomPoints, result.ExtraSegments);
             ShowExplanation(result);
-        }
-
-        private async void ResubmitToAI()
-        {
-            if (lastSubmittedFields == null || lastSubmittedFields.Count == 0)
-            {
-                Debug.LogWarning("Không có dữ kiện nào để gửi lại AI.");
-                return;
-            }
-
-            string editedText = aiInputField.text;
-            string prompt = AIHelper.BuildPrompt(editedText);
-            string json = await ChatGPTClient.Ask(prompt);
-
-            if (string.IsNullOrWhiteSpace(json)) return;
-
-            AIShapeResult result = JsonUtility.FromJson<AIShapeResult>(json);
-
-            if (result != null && !string.IsNullOrEmpty(result.ShapeType))
-            {
-                currentSpawner = SpawnerRegistry.Get(result.ShapeType);
-                inputPanel.Build(currentSpawner.GetFieldDefinitions());
-                inputPanel.FillCalculatedFields(result.KnownFields);
-                ShowExplanation(result);
-            }
         }
 
         private void ShowExplanation(AIShapeResult result)
         {
-            warningText.text = result.Warnings != null && result.Warnings.Length > 0
-                ? "\u26A0\ufe0f " + string.Join("\n- ", result.Warnings)
-                : "";
-
-            suggestionText.text = result.Suggestions != null && result.Suggestions.Length > 0
-                ? "\ud83e\uddd0 " + string.Join("\n- ", result.Suggestions)
-                : "";
+            explanationText.text = result.Explanation ?? "";
+            warningsText.text = result.Warnings != null ? string.Join("\n- ", result.Warnings) : "";
+            suggestionsText.text = result.Suggestions != null ? string.Join("\n- ", result.Suggestions) : "";
         }
     }
 }
