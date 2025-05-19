@@ -2206,6 +2206,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 367588413}
   m_CullTransparentMesh: 1
+--- !u!114 &376857707 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2778533646011546167, guid: 17cff856a3fb4c94dbb7edbd5061ae80,
+    type: 3}
+  m_PrefabInstance: {fileID: 3492107162109988152}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &386924873 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1222014027992720861, guid: f53f6ce4bbe62784d82a6391b4319d21,
@@ -3409,7 +3421,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 900763652}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99998283
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4198,7 +4210,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00014482619}
+  m_AnchoredPosition: {x: 0, y: -0.000091482616}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &673928327
@@ -12464,6 +12476,18 @@ PrefabInstance:
       propertyPath: darkOverlay
       value: 
       objectReference: {fileID: 200269431}
+    - target: {fileID: 8884748168070051059, guid: 91fb9e0184b71e040879107b37a4d9ce,
+        type: 3}
+      propertyPath: notificationPanel
+      value: 
+      objectReference: {fileID: 7507746046402530110, guid: f9c1a5d3746224641925b66e281b80de,
+        type: 3}
+    - target: {fileID: 8884748168070051059, guid: 91fb9e0184b71e040879107b37a4d9ce,
+        type: 3}
+      propertyPath: notificationPanelPrefab
+      value: 
+      objectReference: {fileID: 7507746046402530110, guid: f9c1a5d3746224641925b66e281b80de,
+        type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -13443,6 +13467,29 @@ PrefabInstance:
       propertyPath: darkOverlay
       value: 
       objectReference: {fileID: 200269431}
+    - target: {fileID: 6414094440668982822, guid: ceacc18f4ed372a4db2880b447f0529b,
+        type: 3}
+      propertyPath: notificationText
+      value: 
+      objectReference: {fileID: 376857707}
+    - target: {fileID: 6414094440668982822, guid: ceacc18f4ed372a4db2880b447f0529b,
+        type: 3}
+      propertyPath: notificationPanel
+      value: 
+      objectReference: {fileID: 7507746046402530110, guid: f9c1a5d3746224641925b66e281b80de,
+        type: 3}
+    - target: {fileID: 6414094440668982822, guid: ceacc18f4ed372a4db2880b447f0529b,
+        type: 3}
+      propertyPath: notificationPopup
+      value: 
+      objectReference: {fileID: 7507746046402530110, guid: f9c1a5d3746224641925b66e281b80de,
+        type: 3}
+    - target: {fileID: 6414094440668982822, guid: ceacc18f4ed372a4db2880b447f0529b,
+        type: 3}
+      propertyPath: notificationPanelPrefab
+      value: 
+      objectReference: {fileID: 7507746046402530110, guid: f9c1a5d3746224641925b66e281b80de,
+        type: 3}
     - target: {fileID: 6817236648492866765, guid: ceacc18f4ed372a4db2880b447f0529b,
         type: 3}
       propertyPath: m_Sprite
