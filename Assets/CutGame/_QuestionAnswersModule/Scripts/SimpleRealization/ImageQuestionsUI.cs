@@ -104,19 +104,25 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
         private void OnAnswerFailed(IAnswer<string> answer)
         {
             Debug.Log("<color=red>You are wrong!</color>");
+            
+            // Get the current question and answer details
+            string questionText = _currentQuestion.QuestName;
+            string correctAnswer = _currentQuestion.GetCorrectAnswer().GetAnswerData();
+            string userAnswer = answer.GetAnswerData();
+
+            // Handle wrong answer in GameManager
+            GameManager.instance.HandleWrongAnswer(questionText, correctAnswer, userAnswer);
+
+            // Close the quiz panel
+            GameManager.instance.Quiz.gameObject.SetActive(false);
         }
 
         private void OnAnswerSuccess(IAnswer<string> answer)
         {
-            
-            
-            //close panel
-            //kill virus
-            GameManager gm = GameManager.instance;
             Debug.Log("<color=green>GOOD JOB!</color>");
-            GoToNextQuestion();
-            gm.Quiz.gameObject.SetActive(false);
-            gm.DeleteVirus();
+            
+            // Handle correct answer in GameManager
+            GameManager.instance.HandleCorrectAnswer();
         }
 
         private void CreateButtonForAnswer(IAnswer<string> answer)

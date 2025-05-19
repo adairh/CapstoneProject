@@ -40,6 +40,7 @@ public class GameManager : MonoBehaviour
     public Canvas Quiz;
     
     private Virus virus = null;
+    private WrongQuestionsManager wrongQuestionsManager;
 
     public void SetVirus(Virus virus)
     {
@@ -63,6 +64,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         instance = this;
+        wrongQuestionsManager = WrongQuestionsManager.Instance;
         InitGame();
         //Debug.Log($"Game has started with {enemiesCount} enemies and {alliesCount} allies.");
     }
@@ -195,6 +197,37 @@ public class GameManager : MonoBehaviour
             
         if (progress)
             levelData.Save();
+    }
+
+    // Add this new method to handle wrong answers
+    public void HandleWrongAnswer(string questionText, string correctAnswer, string userAnswer)
+    {
+        // Deduct a star
+        alliesDestroyed++;
+        UpdateRating();
+        OnAllyKilled();
+
+        // Save the wrong question
+        string levelName = $"Level {LevelLoader.currentLevelIndex + 1}";
+        wrongQuestionsManager.AddWrongQuestion(questionText, correctAnswer, userAnswer, levelName);
+
+        // Check if game should end due to too many wrong answers
+        if (alliesDestroyed > 3)
+        {
+            failed = true;
+            OnTimesUp();
+            hasEnded = true;
+            gameObject.SetActive(false);
+            Quiz.gameObject.SetActive(false);
+        }
+    }
+
+    // Add this method to handle correct answers
+    public void HandleCorrectAnswer()
+    {
+        // Just destroy the virus and continue
+        DeleteVirus();
+        Quiz.gameObject.SetActive(false);
     }
 
     private void OnDestroy()
