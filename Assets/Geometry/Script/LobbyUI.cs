@@ -72,6 +72,11 @@ public class LobbyUI : MonoBehaviour
         createLobbyButton.onClick.AddListener(() =>
         {
             Debug.Log("Create Lobby Button Clicked");
+            if (!CheckNetworkConnection())
+            {
+                return;
+            }
+
             if (createPopupUI == null)
             {
                 Debug.LogError("createPopupUI is null when trying to show popup!");
@@ -96,6 +101,11 @@ public class LobbyUI : MonoBehaviour
         quickJoinButton.onClick.AddListener(() =>
         {
             Debug.Log("Quick Join Button Clicked");
+            if (!CheckNetworkConnection())
+            {
+                return;
+            }
+
             if (joinPopupUI == null)
             {
                 Debug.LogError("joinPopupUI is null when trying to show popup!");
@@ -116,9 +126,59 @@ public class LobbyUI : MonoBehaviour
                 }
             });
         });
-        
+    }
 
-        
+    private bool CheckNetworkConnection()
+    {
+        if (Application.internetReachability == NetworkReachability.NotReachable)
+        {
+            Debug.LogWarning("No internet connection available!");
+            ShowNetworkErrorPopup("No internet connection! Please check your network and try again.");
+            return false;
+        }
+        else if (Application.internetReachability == NetworkReachability.ReachableViaCarrierDataNetwork)
+        {
+            Debug.Log("Internet connection via mobile data");
+            ShowNetworkErrorPopup("You are using mobile data. Some features may be limited.");
+            return true;
+        }
+        else if (Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork)
+        {
+            Debug.Log("Internet connection via WiFi/LAN");
+            return true;
+        }
+
+        return true;
+    }
+
+    private void ShowNetworkErrorPopup(string message)
+    {
+        if (statusPopupPrefab == null || uiCanvas == null)
+        {
+            Debug.LogError("StatusPopupPrefab or uiCanvas is null!");
+            return;
+        }
+
+        GameObject notification = Instantiate(statusPopupPrefab, Vector3.zero, Quaternion.identity);
+        notification.transform.SetParent(uiCanvas.transform, false);
+
+        RectTransform rect = notification.GetComponent<RectTransform>();
+        int activePopups = uiCanvas.transform.childCount - 1;
+        float yOffset = -50 * activePopups;
+        rect.anchoredPosition = new Vector2(0, 50 + yOffset);
+        rect.localScale = Vector3.one;
+
+        StatusPopup popup = notification.GetComponent<StatusPopup>();
+        if (popup != null)
+        {
+            popup.SetStatus(message);
+            StartCoroutine(ResetPopupLockAfterFade(popup));
+        }
+        else
+        {
+            Debug.LogError("StatusPopup component not found!");
+            Destroy(notification);
+        }
     }
 
     private void Start()
