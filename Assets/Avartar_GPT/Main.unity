@@ -297,7 +297,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 157422121}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 8333986422321650957}
+        m_TargetAssemblyTypeName: AIManager, Assembly-CSharp
+        m_MethodName: OnForgetButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &157422121
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1071,7 +1083,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 389053553}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 8333986422321650957}
+        m_TargetAssemblyTypeName: AIManager, Assembly-CSharp
+        m_MethodName: OnAdviceButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &389053553
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9620,7 +9644,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1560624252}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 8333986422321650957}
+        m_TargetAssemblyTypeName: AIManager, Assembly-CSharp
+        m_MethodName: ToggleRecording
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1560624252
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9772,7 +9808,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1643620500}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7447989240439536591}
+        m_TargetAssemblyTypeName: GameLogic, Assembly-CSharp
+        m_MethodName: OnConfigButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1643620500
 MonoBehaviour:
   m_ObjectHideFlags: 0
