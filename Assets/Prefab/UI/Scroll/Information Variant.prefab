@@ -1,0 +1,136 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &3278646128124929634
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1302717229743420, guid: 3799b466693f2274ea286d89dd431724, type: 3}
+      propertyPath: m_Name
+      value: Information Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 114082971081970768, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_Text
+      value: iOS Home Screen
+      objectReference: {fileID: 0}
+    - target: {fileID: 114986767821132932, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_Text
+      value: This example shows how the iOS Home Screen can be replicated using the
+        "Next" Snap Target, in that in order to navigate to the next screen, it is
+        not required that more than half of the next screen is in view.
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.4999999
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 1972.8999
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 163
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -660
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224044044590867852, guid: 3799b466693f2274ea286d89dd431724,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 3799b466693f2274ea286d89dd431724, type: 3}
