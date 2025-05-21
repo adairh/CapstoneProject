@@ -103,7 +103,7 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Std_Skin_Body
-    second: {fileID: 2100000, guid: c77d637bab435ec4bbad533c91ee00b3, type: 2}
+    second: {fileID: 2100000, guid: a82db5e3853d5d34aae32d3b763a9253, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -154,9 +154,7 @@ ModelImporter:
     rigImportErrors: 
     rigImportWarnings: 
     animationImportErrors: 
-    animationImportWarnings: "\nClip 'Calibration' has import animation warnings
-      that might lower retargeting quality:\n\t'CC_Base_NeckTwist02' is inbetween
-      humanoid transforms and has rotation animation that will be discarded.\n"
+    animationImportWarnings: 
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
@@ -177,6 +175,7 @@ ModelImporter:
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
+    importPhysicalCameras: 1
     importVisibility: 1
     importBlendShapes: 1
     importCameras: 1

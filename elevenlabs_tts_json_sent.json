@@ -1,8 +1,8 @@
 {
        
-            "text": "Hey there! How can I help you today?",
+            "text": "Hello there! I'm HIHIHI, your Spartial Geometry Math teacher. What would you like to explore today? Perhaps the relationships between vertices, edges, and faces, or maybe delving into the world of polyhedrons and their properties? Let's dive in!",
        "voice_settings": {
-    "stability": 0.1,
+    "stability": 0.7,
     "similarity_boost": 0.7
   }
 
