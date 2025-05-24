@@ -14,13 +14,22 @@ public class StatusPopup : MonoBehaviour
         if (canvasGroup == null)
         {
             canvasGroup = gameObject.GetComponent<CanvasGroup>();
-            if (canvasGroup == null) canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            if (canvasGroup == null)
+            {
+                canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            }
             canvasGroup.alpha = 1f;
         }
     }
 
     public void SetStatus(string message)
     {
+        // Ensure the GameObject is active before proceeding
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
+
         EnsureCanvasGroupInitialized();
 
         if (statusText != null)
@@ -31,15 +40,21 @@ public class StatusPopup : MonoBehaviour
         else
         {
             Debug.LogError("StatusText is not assigned in StatusPopup!");
+            return;
         }
 
+        // Cancel any existing invoke to prevent multiple fade starts
+        CancelInvoke(nameof(StartFade));
         Invoke(nameof(StartFade), displayTime);
         Debug.Log($"Scheduled fade-out for message: {message} after {displayTime} seconds");
     }
 
     private void StartFade()
     {
-        Debug.Log("Starting fade-out process");
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
         StartCoroutine(FadeOut());
     }
 
@@ -49,16 +64,32 @@ public class StatusPopup : MonoBehaviour
 
         EnsureCanvasGroupInitialized();
 
-        var elapsedTime = 0f;
-        while (elapsedTime < fadeTime)
+        float elapsedTime = 0f;
+        while (elapsedTime < fadeTime && gameObject.activeSelf)
         {
             elapsedTime += Time.deltaTime;
             canvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsedTime / fadeTime);
             yield return null;
         }
 
-        canvasGroup.alpha = 0f;
-        Destroy(gameObject);
-        Debug.Log("Status popup destroyed");
+        // Ensure we're fully faded out
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 0f;
+        }
+
+        // Only destroy if we're still active (in case the object was deactivated during fade)
+        if (gameObject.activeSelf)
+        {
+            Destroy(gameObject);
+            Debug.Log("Status popup destroyed");
+        }
+    }
+
+    private void OnDisable()
+    {
+        // Clean up when the object is disabled
+        CancelInvoke(nameof(StartFade));
+        StopAllCoroutines();
     }
 }
