@@ -119,11 +119,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23bfd89fa339ed548a64ad23825d4100, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _questions:
-  - {fileID: 11400000, guid: deb8950c7d095f543b10573c5b1713c4, type: 2}
-  - {fileID: 11400000, guid: 5a8b92ab389a8cf4e891d73f8422b298, type: 2}
-  - {fileID: 11400000, guid: 01ed19f05a375244587a72d868c05266, type: 2}
-  - {fileID: 11400000, guid: a3af0ce0f87d9534eb6abf79aa758751, type: 2}
   _questionNameText: {fileID: 552587492561659023}
   _questionDescrText: {fileID: 5570079802463520483}
   _questionImage: {fileID: 1514430543679042254}
@@ -1095,7 +1090,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8496278166807841338
 RectTransform:
   m_ObjectHideFlags: 0
