@@ -64,9 +64,9 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.09201479
-  m_Height: 5.6593223
+  m_Height: 3.5281234
   m_Direction: 1
-  m_Center: {x: 0, y: 0.12452483, z: 2.6343646}
+  m_Center: {x: 0, y: -0.029561758, z: 2.6343646}
 --- !u!1 &8915770053731330972
 GameObject:
   m_ObjectHideFlags: 0
@@ -141,7 +141,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 200405d1004cad945bd340e414099453, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4a3fedd33470de44eb886187c35a2703, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
