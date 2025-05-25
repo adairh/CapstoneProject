@@ -10218,7 +10218,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1643620498
 RectTransform:
   m_ObjectHideFlags: 0
@@ -30146,7 +30146,7 @@ MonoBehaviour:
   _visuals: {fileID: 5491958463762617125}
   _dialogText: {fileID: 207741380}
   _statusText: {fileID: 1023179239}
-  _recordButton: {fileID: 7301487517842462}
+  _recordButton: {fileID: 1560624251}
   _friendNameGUI: {fileID: 1880583596729911576}
 --- !u!1 &8337790050716190161
 GameObject:
