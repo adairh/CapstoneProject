@@ -13,6 +13,19 @@ namespace Manipulator
         private Shape target;
         private RelativeTargetType type;
         private bool usePolygonTriangle;
+        
+        public float T
+        {
+            get => t;
+            set
+            {
+                t = Mathf.Clamp01(value);
+                UpdatePosition();
+            }
+        }
+
+        public Segment TargetSegment => target as Segment;
+
 
         public void SetTarget(Shape shape, RelativeTargetType type, float t, float u, float v)
         {

@@ -3,13 +3,11 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    /// <summary>
-    ///     Lưu toàn bộ các shape hiện tại trong scene, tra cứu theo ID hoặc Name.
-    /// </summary>
     public static class ShapeStorage
     {
         private static readonly Dictionary<string, Shape> idLookup = new();
         private static readonly Dictionary<string, Shape> nameLookup = new();
+        private static readonly List<Shape> allShapes = new();
 
         public static void Register(Shape shape)
         {
@@ -20,14 +18,15 @@ namespace Manipulator
 
             idLookup[shape.ShapeId] = shape;
             nameLookup[shape.name] = shape;
+            allShapes.Add(shape);
         }
 
         public static void Unregister(Shape shape)
         {
             idLookup.Remove(shape.ShapeId);
             nameLookup.Remove(shape.name);
+            allShapes.Remove(shape);
         }
-
 
         public static bool Contains(string id)
         {
@@ -38,7 +37,6 @@ namespace Manipulator
         {
             return idLookup.TryGetValue(id, out var s) ? s : null;
         }
- 
 
         public static Shape GetByName(string name)
         {
@@ -54,6 +52,26 @@ namespace Manipulator
         {
             idLookup.Clear();
             nameLookup.Clear();
+            allShapes.Clear();
+        }
+        
+        public static Segment GetMostRecentSegment()
+        {
+            for (int i = allShapes.Count - 1; i >= 0; i--)
+            {
+                if (allShapes[i] is Segment seg)
+                    return seg;
+            }
+            return null;
+        }
+        public static Point GetMostRecentPoint()
+        {
+            for (int i = allShapes.Count - 1; i >= 0; i--)
+            {
+                if (allShapes[i] is Point seg)
+                    return seg;
+            }
+            return null;
         }
     }
 }

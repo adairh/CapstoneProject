@@ -70,7 +70,7 @@ public class DraggableBottomSheet : MonoBehaviour, IBeginDragHandler, IDragHandl
         // handleHeight = handleArea ? handleArea.rect.height : minHandleRaycastHeight;
 
         openedY = -500;
-        closedY = -1000;
+        closedY = -1100;
     }
 
     public void OnBeginDrag(PointerEventData eventData)

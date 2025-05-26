@@ -7,19 +7,33 @@ namespace Manipulator
         protected override void OnButtonClick()
         {
             base.OnButtonClick();
-            StartCoroutine(SelectTwoAndMidpoint());
+            StartCoroutine(SelectSegmentAndCreateMidpoint());
         }
 
-        private IEnumerator SelectTwoAndMidpoint()
+        private IEnumerator SelectSegmentAndCreateMidpoint()
         {
-            yield return ShapePicker.WaitForPoint("Select First Point");
-            var a = ShapePicker.LastPicked as Point;
+            // Check: Are there any segments in the scene?
+            bool anySegment = false;
+            foreach (var shape in ShapeStorage.GetAllShapes())
+                if (shape is Segment) { anySegment = true; break; }
+            if (!anySegment)
+            {
+                UIHint.ShowTemp("No segment in scene!", 2f);
+                yield break;
+            }
 
-            yield return ShapePicker.WaitForPoint("Select Second Point");
-            var b = ShapePicker.LastPicked as Point;
+            yield return ShapePicker.WaitForSegment("Select a segment to find its midpoint (Esc to cancel)");
+            var segment = ShapePicker.LastPicked as Segment;
+            if (segment == null) yield break;
 
-            if (a != null && b != null)
-                MidpointTool.CreateMidpoint(a, b);
+            // Get segment's endpoints
+            var a = segment.StartPoint;
+            var b = segment.EndPoint;
+
+            // Call your midpoint creation tool
+            MidpointTool.CreateMidpoint(a, b);
+
+            // Optionally: flash the new point, select it, etc.
         }
     }
 }

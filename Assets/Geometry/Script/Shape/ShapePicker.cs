@@ -20,6 +20,7 @@ namespace Manipulator
                         {
                             LastPicked = shape;
                             UIHint.Hide();
+                            Debug.LogError($"{shape.ShapeId}");
                             yield break;
                         }
 

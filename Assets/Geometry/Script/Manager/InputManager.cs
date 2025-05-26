@@ -5,17 +5,27 @@ namespace Manipulator
 {
     public enum UserAction
     {
-        LeftClick,
-        RightClick,
-        Drag,
-        Draw,
-        OpenSettings,
+        Down,
+        Up,
+        Delete,
         Select,
         AngleCons,
         Config,
-
-        Delete
-        // … thêm tùy bạn
+        OpenSettings,
+        Draw,
+        RightClick,
+        CameraRotate,
+        CameraPan,
+        CameraZoomIn,
+        CameraZoomOut,
+        CameraReset,
+        CameraMoveForward,
+        CameraMoveBackward,
+        CameraMoveLeft,
+        CameraMoveRight,
+        CameraMoveUp,
+        CameraMoveDown
+        // Other actions...
     }
 
     [DefaultExecutionOrder(-100)]
@@ -26,26 +36,22 @@ namespace Manipulator
         private void Awake()
         {
             if (Instance == null)
-            {
                 Instance = this;
-            }
             else
-            {
                 Destroy(gameObject);
-            }
         }
 
         private void Update()
         {
 #if UNITY_EDITOR || UNITY_STANDALONE
             if (Input.GetMouseButtonDown(0))
-                OnAction?.Invoke(UserAction.LeftClick, Input.mousePosition);
+                OnAction?.Invoke(UserAction.Down, Input.mousePosition);
+
+            if (Input.GetMouseButtonUp(0))
+                OnAction?.Invoke(UserAction.Up, Input.mousePosition);
 
             if (Input.GetMouseButtonDown(1))
                 OnAction?.Invoke(UserAction.Config, Input.mousePosition);
-
-            if (Input.GetMouseButton(0))
-                OnAction?.Invoke(UserAction.Drag, Input.mousePosition);
 
             if (Input.GetMouseButtonDown(1) && Input.GetKeyDown(KeyCode.LeftControl))
                 OnAction?.Invoke(UserAction.Select, Input.mousePosition);
@@ -67,21 +73,38 @@ namespace Manipulator
 
             if (Input.GetKeyDown(KeyCode.Y))
                 UndoRedoNetworkBridge.Instance.RequestRedoServerRpc();
-
+            
+            if (Input.GetMouseButton(1))
+                OnAction?.Invoke(UserAction.CameraRotate, Input.mousePosition);
+            if (Input.GetMouseButton(2))
+                OnAction?.Invoke(UserAction.CameraPan, Input.mousePosition);
+            if (Input.GetAxis("Mouse ScrollWheel") > 0)
+                OnAction?.Invoke(UserAction.CameraZoomIn, Input.mousePosition);
+            if (Input.GetAxis("Mouse ScrollWheel") < 0)
+                OnAction?.Invoke(UserAction.CameraZoomOut, Input.mousePosition);
+            if (Input.GetKeyDown(KeyCode.R))
+                OnAction?.Invoke(UserAction.CameraReset, Input.mousePosition);
+            if (Input.GetKey(KeyCode.W))
+                OnAction?.Invoke(UserAction.CameraMoveForward, Input.mousePosition);
+            if (Input.GetKey(KeyCode.A))
+                OnAction?.Invoke(UserAction.CameraMoveLeft, Input.mousePosition);
+            if (Input.GetKey(KeyCode.S))
+                OnAction?.Invoke(UserAction.CameraMoveBackward, Input.mousePosition);
+            if (Input.GetKey(KeyCode.D))
+                OnAction?.Invoke(UserAction.CameraMoveRight, Input.mousePosition);
 
 #elif UNITY_IOS || UNITY_ANDROID
             if (Input.touchCount > 0)
             {
                 var t = Input.GetTouch(0);
                 if (t.phase == TouchPhase.Began)
-                    OnAction?.Invoke(UserAction.LeftClick, t.position);
-                else if (t.phase == TouchPhase.Moved)
-                    OnAction?.Invoke(UserAction.Drag, t.position);
+                    OnAction?.Invoke(UserAction.Down, t.position);
+                else if (t.phase == TouchPhase.Ended)
+                    OnAction?.Invoke(UserAction.Up, t.position);
             }
 #endif
         }
 
-        // Sự kiện chung, truyền kèm action và vị trí
         public event Action<UserAction, Vector2> OnAction;
     }
 }

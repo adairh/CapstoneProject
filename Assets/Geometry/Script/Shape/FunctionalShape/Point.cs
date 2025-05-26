@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using Unity.Netcode;
+using UnityEditor;
 using UnityEngine;
 
 namespace Manipulator
@@ -101,12 +102,58 @@ namespace Manipulator
 
                 if (Input.GetMouseButtonDown(0))
                 {
-                    if (!PerformDrawing.RaycastMouse(out var pos)) return;
+                    if (!PerformDrawing.RaycastMouse(out var pos, out var hitShape)) return;
 
-                    var id = Guid.NewGuid().ToString();
-                    var data = new ShapeData
+                    // If hit a segment and NOT near any of its endpoints
+                    if (hitShape is Segment segment)
                     {
-                        Id = id,
+                        float minDistToEndpoints = Mathf.Min(
+                            Vector3.Distance(pos, segment.StartPoint.transform.position),
+                            Vector3.Distance(pos, segment.EndPoint.transform.position)
+                        );
+
+                        const float endpointSnapDist = 0.15f; // Your endpoint snap threshold
+
+                        if (minDistToEndpoints > endpointSnapDist)
+                        {
+                            // Place point and remember it should get a constraint!
+                            var id = Guid.NewGuid().ToString();
+                            var data = new ShapeData
+                            {
+                                Id = id,
+                                Type = "Point",
+                                Position = pos,
+                                Rotation = Quaternion.identity,
+                                Scale = Vector3.one,
+                                ConnectedPoints = new List<string>(),
+                                Settings = new Dictionary<string, string>()
+                            };
+                            var v = new CreateShapeAction(data);
+                            UndoRedoNetworkBridge.Instance.DoAndBroadcast(v);
+
+                            // Wait for point creation, then attach constraint
+                            // (In practice: use event/callback or coroutine. Here's a synchronous pattern:)
+                            EditorApplication.delayCall += () =>
+                            {
+                                var pt = ShapeStorage.GetById(id) as Point;
+                                if (pt != null)
+                                {
+                                    // Attach the constraint
+                                    var c = pt.gameObject.AddComponent<RelativePointConstraint>();
+                                    c.Owner = pt;
+                                    c.SetTarget(segment, RelativeTargetType.Segment, FindTOnSegment(segment, pos), 0, 0);
+                                }
+                            };
+                            PerformDrawing.ResetMode();
+                            return;
+                        }
+                    }
+
+                    // Fallback: Normal point creation (not on segment body)
+                    var id2 = Guid.NewGuid().ToString();
+                    var data2 = new ShapeData
+                    {
+                        Id = id2,
                         Type = "Point",
                         Position = pos,
                         Rotation = Quaternion.identity,
@@ -114,13 +161,23 @@ namespace Manipulator
                         ConnectedPoints = new List<string>(),
                         Settings = new Dictionary<string, string>()
                     };
-
-                    var v = new CreateShapeAction(data);
-                    UndoRedoNetworkBridge.Instance.DoAndBroadcast(v);
+                    var v2 = new CreateShapeAction(data2);
+                    UndoRedoNetworkBridge.Instance.DoAndBroadcast(v2);
 
                     PerformDrawing.ResetMode();
                 }
             }
+
+            static float FindTOnSegment(Segment seg, Vector3 pos)
+            {
+                var a = seg.StartPoint.transform.position;
+                var b = seg.EndPoint.transform.position;
+                var ab = b - a;
+                var t = Vector3.Dot(pos - a, ab.normalized) / ab.magnitude;
+                return Mathf.Clamp01(t);
+            }
+
+            
         }
 
         #region MOVE
