@@ -1,4 +1,4 @@
-using Geometry;
+﻿using Geometry;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -23,13 +23,49 @@ public class BackToHomeButton : MonoBehaviour
     [Header("Create Room Inputs")] public TMP_InputField createRoomIDInput;
 
     public TMP_InputField createPasswordInput;
+    /*private void Start()
+    {
+        // Không đụng 
+        //mac dinh hien canvasHome, an canvasPlaygame
+        //overPlayCanvas.SetActive(false);
+        //ConfigureUIBasedOnScene();
+        //canvasHome.SetActive(true);
+        canvasPlaygame.SetActive(false);
+        canvasOnboarding.SetActive(false); // Hide onboarding screen if it's active
+        canvas.SetActive(false); // an canvas chinh khi bat dau
 
+        // dam bao cac popup + overlay duoc an ngay khi lo bat trong editor
+        if (popupJoinRoom != null) popupJoinRoom.SetActive(false);
+        if (popupCreateRoom != null) popupCreateRoom.SetActive(false);
+        if (darkOverlay != null) darkOverlay.SetActive(false);
+        // Configure UI based on the current scene
+    }*/
     public void OnBackToHome()
     {
         // Load MAIN scene fresh
         canvasHome.SetActive(true);
         canvasOnboarding.SetActive(false);
         canvasPlaygame.SetActive(false);
+    }
+    public void OnBackToHomeFrom_DrawingScene()
+    {
+        // Load MAIN scene fresh
+        SceneManager.LoadScene("MAIN");
+        /*canvasHome.SetActive(true);
+        canvasOnboarding.SetActive(false);
+        canvasPlaygame.SetActive(false);*/
+    }
+    public void OnBackFromAI_to_Home()
+    {
+        SceneManager.LoadScene("MAIN");
+        /*canvasHome.SetActive(true);
+        canvasOnboarding.SetActive(false);
+        canvasPlaygame.SetActive(false);*/
+    }
+    public void OnBackToHomeFrom_PlayGame()
+    {
+        CanvasSortOrderManager.setPlayGameCanvasOnTop = true;
+        SceneManager.LoadScene("MAIN");
     }
 
     public void OnLoadAITutor()
