@@ -32,6 +32,11 @@ public class BackToHomeButton : MonoBehaviour
         canvasPlaygame.SetActive(false);
     }
 
+    public void OnLoadAITutor()
+    {
+        SceneManager.LoadScene("AI_Tutor");
+    }
+
     public void OnPlayGamesButton()
     {
         canvasHome.SetActive(false);
@@ -59,6 +64,7 @@ public class BackToHomeButton : MonoBehaviour
         popupJoinRoom.SetActive(false);
         darkOverlay.SetActive(false);
     }
+
 
     public void OnCreateRoomButton()
     {

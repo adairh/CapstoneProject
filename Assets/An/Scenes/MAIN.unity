@@ -5621,7 +5621,7 @@ GameObject:
   - component: {fileID: 1736894421}
   - component: {fileID: 1736894420}
   m_Layer: 5
-  m_Name: Button_draw
+  m_Name: Button_ai_tutor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5693,7 +5693,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1974765765}
         m_TargetAssemblyTypeName: BackToHomeButton, Assembly-CSharp
-        m_MethodName: OnCreateRandomRoomButton
+        m_MethodName: OnLoadAITutor
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -6781,7 +6781,7 @@ GameObject:
   - component: {fileID: 1994534613}
   - component: {fileID: 1994534612}
   m_Layer: 5
-  m_Name: Button_join
+  m_Name: Button_draw_tool
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
