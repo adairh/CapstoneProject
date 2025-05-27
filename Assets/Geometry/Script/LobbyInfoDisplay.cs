@@ -10,6 +10,7 @@ public class LobbyInfoDisplay : MonoBehaviour
     [SerializeField] private TextMeshProUGUI passwordText; // Text field for Password
     [SerializeField] private Button copyButton; // Button to copy to clipboard
     [SerializeField] private Button closeButton; // Button to close the window
+    [SerializeField] private TextMeshProUGUI statusText; // Button to close the window
 
     private GameLobby gameLobby; // Reference to GameLobby
 
@@ -90,5 +91,6 @@ public class LobbyInfoDisplay : MonoBehaviour
         var clipboardText = $"Lobby ID: {lobbyName}\nPassword: {password}";
         GUIUtility.systemCopyBuffer = clipboardText;
         Debug.Log($"Copied to clipboard: {clipboardText}");
+        statusText.text = "Successfully Copied!";
     }
 }

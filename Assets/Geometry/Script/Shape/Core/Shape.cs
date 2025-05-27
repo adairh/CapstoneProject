@@ -8,20 +8,20 @@ namespace Manipulator
     public class Shape : NetworkBehaviour
     {
         [SerializeField] public string ShapeId;
-
         [SerializeField] private string shapeType;
 
         protected readonly List<Point> pivotPoints = new();
-
         protected readonly List<ISetting> settings = new();
         public string ShapeType => shapeType;
-
         public ShapeData Data { get; protected set; }
         public IReadOnlyList<Point> PivotPoints => pivotPoints;
         public IReadOnlyList<ISetting> Settings => settings;
 
         public event Action<Shape> OnChanged;
 
+        // MATERIALS
+        public Material DefaultMat { get; set; }
+        public Material MeshMat { get; set; }
 
         public virtual IEnumerable<Shape> GetDependentShapesForDelete()
         {
@@ -33,12 +33,9 @@ namespace Manipulator
         protected virtual void Awake()
         {
             DefaultMat = new Material(MaterialLibrary.Get(MaterialType.Default));
+            MeshMat = MaterialLibrary.GetPolygonMat(); // default polygon mesh material, can override in child
         }
 
-        /// <summary>
-        ///     Trả về danh sách setting của shape.
-        ///     Mỗi shape con sẽ override nếu có custom.
-        /// </summary>
         public virtual List<ISetting> GetSettings()
         {
             return new List<ISetting>
@@ -49,7 +46,6 @@ namespace Manipulator
             };
         }
 
-
         public virtual void Initialize(ShapeData data)
         {
             ShapeId = data.Id;
@@ -58,8 +54,6 @@ namespace Manipulator
             ApplyDataToTransform(data);
             ShapeStorage.Register(this);
         }
-
-        public Material DefaultMat { get; set; }
 
         public virtual void InitializeNew(string type, Vector3 position, string lgcName = "")
         {
@@ -77,7 +71,6 @@ namespace Manipulator
                 Settings = new Dictionary<string, string>()
             };
 
-
             gameObject.AddComponent<HoverableShape>().SetShape(this);
             gameObject.AddComponent<SelectableShape>().SetShape(this);
             gameObject.AddComponent<ShapeClickHandler>().SetShape(this);
@@ -90,14 +83,13 @@ namespace Manipulator
                     s = LabelGenerator.Next();
                 Data.LogicalName = s;
                 name = s;
-                
+
                 var label = UIManager.Instance.GetUIComponent("LabelDisplayPrefab");
                 if (label != null)
                 {
                     var go = Instantiate(label, transform);
                     go.transform.localPosition = new Vector3(0, 0.5f, 0);
                     var disp = go.GetComponentInChildren<LabelDisplay>();
-                    
                     disp.SetLabel(s);
                     if (disp != null && s != null)
                         disp.Initialize(s);
@@ -117,7 +109,6 @@ namespace Manipulator
         {
             var layer = ignore ? 2 : 0;
             gameObject.layer = layer;
-
             foreach (Transform child in transform)
                 if (child != null)
                     child.gameObject.layer = layer;
@@ -125,22 +116,7 @@ namespace Manipulator
 
         public virtual void Dispose()
         {
-            // 1. Gỡ khỏi storage
             ShapeStorage.Unregister(this);
-
-            /*// 2. Gỡ tất cả pivot listeners (nếu có)
-            foreach (var pivot in pivotPoints)
-            {
-                pivot.OnPositionChanged -= OnPivotChanged;
-            }
-
-            // 3. Cleanup constraints (nếu có)
-            if (this is IConstraint constraint)
-            {
-                ConstraintManager.Instance.RemoveConstraint(constraint);
-            }*/
-
-            // 4. Hủy GameObject
             if (gameObject != null)
                 Destroy(gameObject);
         }
@@ -183,7 +159,6 @@ namespace Manipulator
                 p.OnChanged -= pt => OnPivotChanged(pt);
         }
 
-
         protected virtual void OnPivotChanged(Point pt)
         {
             NotifyChanged();
@@ -208,15 +183,12 @@ namespace Manipulator
                     NotifyChanged();
                     return;
                 }
-
             settings.Add(setting);
             ApplySetting(setting);
             NotifyChanged();
         }
 
-        protected virtual void ApplySetting(ISetting setting)
-        {
-        }
+        protected virtual void ApplySetting(ISetting setting) { }
 
         public void AppendSettings(params ISetting[] newSettings)
         {
@@ -244,13 +216,8 @@ namespace Manipulator
 
         #region MISC
 
-        public virtual void UpdateHitbox()
-        {
-        }
-
-        public virtual void CompleteDraw()
-        {
-        }
+        public virtual void UpdateHitbox() { }
+        public virtual void CompleteDraw() { }
 
         public virtual void NotifyChanged(bool silent = false)
         {

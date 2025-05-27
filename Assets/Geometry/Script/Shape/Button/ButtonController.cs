@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Manipulator;
 using UnityEngine;
 
 public class ButtonController : MonoBehaviour
@@ -35,5 +36,21 @@ public class ButtonController : MonoBehaviour
     public void OnButtonClicked(BaseButton button)
     {
         Debug.Log($"Button Clicked: {button.name}");
+    }
+    
+    
+    public void RequestUndo()
+    {
+        UndoRedoNetworkBridge.Instance.RequestUndoServerRpc();
+    }
+    
+    public void RequestRedo()
+    {
+        UndoRedoNetworkBridge.Instance.RequestRedoServerRpc();
+    }
+
+    public void CameraReset()
+    {
+        CameraController.Instance.ResetCamera();
     }
 }

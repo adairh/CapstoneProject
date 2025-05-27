@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Manipulator
 {
@@ -11,6 +10,7 @@ namespace Manipulator
         private MeshCollider meshCollider;
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
+        private Material _polygonMeshMat;
 
         private GameObject visual;
         public List<Point> Points { get; } = new();
@@ -25,14 +25,13 @@ namespace Manipulator
             meshFilter = visual.AddComponent<MeshFilter>();
             meshRenderer = visual.AddComponent<MeshRenderer>();
             meshCollider = visual.AddComponent<MeshCollider>();
-
-            meshRenderer.material = DefaultMat;
-            meshCollider.convex = true;
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
+            if (_polygonMeshMat != null)
+                Destroy(_polygonMeshMat);
             foreach (var p in Points)
                 if (p != null)
                     p.OnPositionChanged -= OnPivotMoved;
@@ -71,70 +70,61 @@ namespace Manipulator
             mesh.RecalculateBounds();
 
             meshFilter.sharedMesh = mesh;
-            if (Points.Count >= 4)
+
+            if (Points.Count >= 3)
             {
-                try
-                {
-                    if (Points.Count >= 4)
-                    {
-                        meshCollider.sharedMesh = mesh;
+                meshCollider.sharedMesh = mesh;
+                meshCollider.convex = Points.Count >= 4;
 
-                        // Apply colored transparent material
-                        meshRenderer.material = new Material(DefaultMat);
-                        meshRenderer.material.color = new Color(0.4f, 0.8f, 1f, 0.3f); // light blue transparent
-                        meshRenderer.material.SetInt("_Cull", (int)CullMode.Off);
-                        meshRenderer.material.SetFloat("_Mode", 3);
-                        meshRenderer.material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
-                        meshRenderer.material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
-                        meshRenderer.material.SetInt("_ZWrite", 0);
-                        meshRenderer.material.EnableKeyword("_ALPHABLEND_ON");
-                        meshRenderer.material.renderQueue = 3000;
-
-                        meshCollider.convex = true;
-                    }
-                    else
-                    {
-                        meshCollider.sharedMesh = mesh;
-
-                        // Apply colored transparent material
-                        meshRenderer.material = new Material(DefaultMat);
-                        meshRenderer.material.color = new Color(0.4f, 0.8f, 1f, 0.3f); // light blue transparent
-                        meshRenderer.material.SetInt("_Cull", (int)CullMode.Off);
-                        meshRenderer.material.SetFloat("_Mode", 3);
-                        meshRenderer.material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
-                        meshRenderer.material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
-                        meshRenderer.material.SetInt("_ZWrite", 0);
-                        meshRenderer.material.EnableKeyword("_ALPHABLEND_ON");
-                        meshRenderer.material.renderQueue = 3000;
-
-                        meshCollider.convex = false;
-                    }
-                }
-                catch
-                {
-                    Debug.LogWarning("[Polygon] MeshCollider failed. Using non-convex fallback.");
-                    meshCollider.sharedMesh = mesh;
-
-                    // Apply colored transparent material
-                    meshRenderer.material = new Material(DefaultMat);
-                    meshRenderer.material.color = new Color(0.4f, 0.8f, 1f, 0.3f); // light blue transparent
-                    meshRenderer.material.SetInt("_Cull", (int)CullMode.Off);
-                    meshRenderer.material.SetFloat("_Mode", 3);
-                    meshRenderer.material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
-                    meshRenderer.material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
-                    meshRenderer.material.SetInt("_ZWrite", 0);
-                    meshRenderer.material.EnableKeyword("_ALPHABLEND_ON");
-                    meshRenderer.material.renderQueue = 3000;
-
-                    meshCollider.convex = false;
-                }
-
-                meshCollider.convex = true;
+                // Ensure our custom double-sided transparent mat is always applied
+                if (_polygonMeshMat != null)
+                    Destroy(_polygonMeshMat);
+                _polygonMeshMat = CreatePolygonMeshMaterial();
+                meshRenderer.material = _polygonMeshMat;
             }
             else
             {
                 meshCollider.sharedMesh = null;
             }
+        }
+
+        private Material CreatePolygonMeshMaterial()
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Standard"); // fallback
+
+            var mat = new Material(shader);
+
+            Color color = new Color(0.4f, 0.8f, 1f, 0.08f);
+            if (mat.HasProperty("_BaseColor"))
+                mat.SetColor("_BaseColor", color);
+            else
+                mat.color = color;
+
+            // Transparency
+            if (mat.HasProperty("_Surface"))
+                mat.SetFloat("_Surface", 1f);
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            if (mat.HasProperty("_ZWrite"))
+                mat.SetInt("_ZWrite", 0);
+            if (mat.HasProperty("_SrcBlend"))
+                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            if (mat.HasProperty("_DstBlend"))
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+
+            // Double-sided
+            if (mat.HasProperty("_CullMode"))
+                mat.SetInt("_CullMode", 0);
+            if (mat.HasProperty("_Cull"))
+                mat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+            if (mat.HasProperty("_RenderFace"))
+                mat.SetInt("_RenderFace", 0);
+            mat.EnableKeyword("_DOUBLESIDED_ON");
+            mat.doubleSidedGI = true;
+
+            return mat;
         }
 
         private int[] Triangulate(Vector3[] vertices)
@@ -146,7 +136,6 @@ namespace Manipulator
                 indices.Add(i);
                 indices.Add(i + 1);
             }
-
             return indices.ToArray();
         }
 
@@ -186,6 +175,8 @@ namespace Manipulator
                     yield return p;
         }
 
+        // ------------------------ DRAWER LOGIC ------------------------
+
         public static class Drawer
         {
             private const float SnapDistance = 0.2f;
@@ -194,7 +185,6 @@ namespace Manipulator
             private static Point previewPoint;
             private static string pendingPointId;
             private static string pendingPolygonId;
-            private static CreateShapeBatchAction batch;
 
             public static void UpdatePolygonInput()
             {
@@ -214,7 +204,7 @@ namespace Manipulator
                     return;
                 }
 
-                // Tạo point thật
+                // Create real point
                 var newPointId = Guid.NewGuid().ToString();
                 var pointData = new ShapeData
                 {
@@ -234,7 +224,7 @@ namespace Manipulator
                 {
                     if (shape is Point pt && pt.ShapeId == pendingPointId)
                     {
-                        // Spawn segment thật từ điểm trước tới điểm mới
+                        // Spawn segment from last to new point
                         if (points.Count > 0)
                         {
                             var segId = Guid.NewGuid().ToString();
@@ -255,7 +245,7 @@ namespace Manipulator
 
                         points.Add(pt);
 
-                        // Cập nhật hoặc tạo preview segment/point mới
+                        // Create/update preview
                         if (previewPoint == null)
                         {
                             previewPoint = ShapeFactory.CreateShape("Point", pos) as Point;
@@ -291,7 +281,7 @@ namespace Manipulator
             {
                 if (points.Count < 3) return;
 
-                // Tạo đoạn cuối cùng nối từ điểm cuối → điểm đầu
+                // Create last segment from last → first point
                 var lastSegId = Guid.NewGuid().ToString();
                 var finalSegData = new ShapeData
                 {
@@ -307,7 +297,7 @@ namespace Manipulator
                 var segBatch = new CreateShapeBatchAction(new List<ShapeData> { finalSegData });
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(segBatch);
 
-                // Tạo polygon
+                // Create the polygon
                 pendingPolygonId = Guid.NewGuid().ToString();
                 var polyData = new ShapeData
                 {
@@ -323,7 +313,7 @@ namespace Manipulator
                 var polyAction = new CreateShapeBatchAction(new List<ShapeData> { polyData });
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(polyAction);
 
-                // Trước khi cleanup: giữ lại previewPoint như 1 point thật
+                // Before cleanup: turn previewPoint into a real point if necessary
                 if (previewPoint != null)
                 {
                     previewPoint.SetRaycastIgnore(false);
@@ -334,19 +324,17 @@ namespace Manipulator
                 // Cleanup
                 points.Clear();
 
-
-                // Clean up previewPoint
                 if (previewPoint != null)
                 {
                     ShapeStorage.Unregister(previewPoint);
-                    Destroy(previewPoint.gameObject);
+                    UnityEngine.Object.Destroy(previewPoint.gameObject);
                     previewPoint = null;
                 }
 
                 if (previewSegment != null)
                 {
                     ShapeStorage.Unregister(previewSegment);
-                    Destroy(previewSegment.gameObject);
+                    UnityEngine.Object.Destroy(previewSegment.gameObject);
                     previewSegment = null;
                 }
 

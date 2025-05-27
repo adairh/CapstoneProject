@@ -44,6 +44,9 @@ namespace Manipulator
         private Vector3 desiredTargetPos;
         private bool isTransitioningTarget = false;
 
+
+        public static CameraController Instance;
+        
         private void Start()
         {
             cam = GetComponent<Camera>();
@@ -62,6 +65,7 @@ namespace Manipulator
             distance = defaultZoom;
 
             InputManager.Instance.OnAction += HandleCameraInput;
+            Instance = this;
         }
 
         private void OnDestroy()
@@ -160,7 +164,7 @@ namespace Manipulator
             desiredTargetPos = clamped;
         }
 
-        private void ResetCamera()
+        public void ResetCamera()
         {
             pitch = 30f;
             yaw = 0f;

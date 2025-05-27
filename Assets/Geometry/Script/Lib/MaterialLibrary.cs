@@ -1,12 +1,9 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Manipulator
 {
-    /// <summary>
-    ///     Liệt kê các loại Material mà bạn sẽ dùng xuyên suốt:
-    ///     Default, Highlight, Drag, Select, v.v…
-    /// </summary>
     public enum MaterialType
     {
         Default,
@@ -14,11 +11,7 @@ namespace Manipulator
         Drag,
         Select,
         Hover,
-
-        Plane
-        // TODO: thêm nếu cần
-        ,
-
+        Plane,
         Red,
         Green,
         Blue,
@@ -30,39 +23,30 @@ namespace Manipulator
         Gray
     }
 
-    /// <summary>
-    ///     Cung cấp sẵn các Material URP/Lit với BaseColor cấu hình sẵn.
-    /// </summary>
     public static class MaterialLibrary
     {
-        // Map giữ các material đã khởi tạo (lazy)
         private static readonly Dictionary<MaterialType, Material> _materials = new();
 
-        // Màu mặc định cho từng MaterialType (có thể tùy chỉnh)
         private static readonly Dictionary<MaterialType, Color> _colors = new()
         {
             { MaterialType.Default, Color.red },
-            { MaterialType.Highlight, new Color(1f, 0.8f, 0f) }, // vàng nhạt
-            { MaterialType.Drag, new Color(0.2f, 0.6f, 1f) }, // xanh dương
-            { MaterialType.Select, new Color(0f, 0.5f, 0.3f) }, // xanh lá
-            { MaterialType.Hover, new Color(0.8f, 0.5f, 0.3f) }, // xanh lá
-            { MaterialType.Plane, new Color(1f, 1f, 1f, 0.5f) }, // xanh lá
-
+            { MaterialType.Highlight, new Color(1f, 0.8f, 0f) },
+            { MaterialType.Drag, new Color(0.2f, 0.6f, 1f) },
+            { MaterialType.Select, new Color(0f, 0.5f, 0.3f) },
+            { MaterialType.Hover, new Color(0.8f, 0.5f, 0.3f) },
+            { MaterialType.Plane, new Color(1f, 1f, 1f, 0.5f) },
             { MaterialType.Red, Color.red },
-            { MaterialType.Green, Color.green }, // vàng nhạt
-            { MaterialType.Blue, Color.blue }, // xanh dương
-            { MaterialType.Yellow, Color.yellow }, // xanh lá
-            { MaterialType.White, Color.white }, // xanh lá
-            { MaterialType.Black, Color.black }, // xanh lá
-            { MaterialType.Cyan, Color.cyan }, // xanh lá 
-            { MaterialType.Magenta, Color.magenta }, // xanh lá
-            { MaterialType.Gray, Color.gray } // xanh lá
+            { MaterialType.Green, Color.green },
+            { MaterialType.Blue, Color.blue },
+            { MaterialType.Yellow, Color.yellow },
+            { MaterialType.White, Color.white },
+            { MaterialType.Black, Color.black },
+            { MaterialType.Cyan, Color.cyan },
+            { MaterialType.Magenta, Color.magenta },
+            { MaterialType.Gray, Color.gray }
         };
 
-        /// <summary>
-        ///     Lấy Material tương ứng; sẽ tự tạo lần đầu và cache lại.
-        /// </summary>
-        public static Material Get(MaterialType type)
+        public static Material Get(MaterialType type, float alpha = 1f)
         {
             if (!_materials.TryGetValue(type, out var mat))
             {
@@ -71,15 +55,30 @@ namespace Manipulator
                 _materials[type] = mat;
             }
 
+            if (mat == null) return null;
+            var baseColor = mat.HasProperty("_BaseColor") ? mat.GetColor("_BaseColor") : Color.white;
+            baseColor.a = alpha;
+            mat.SetColor("_BaseColor", baseColor);
+
+            // Double-sided
+            mat.SetInt("_CullMode", 0);
+            mat.EnableKeyword("_DOUBLESIDED_ON");
+            mat.doubleSidedGI = true;
+
+            // Transparent mode
+            mat.SetFloat("_Surface", 1f);
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = (int)RenderQueue.Transparent;
+
             return mat;
         }
 
-        /// <summary>
-        ///     Tạo Material URP/Lit và gán Base Color.
-        /// </summary>
         private static Material CreateLitMaterial(Color baseColor)
         {
-            // Shader path của URP Lit
             const string urpLitShader = "Universal Render Pipeline/Lit";
             var shader = Shader.Find(urpLitShader);
             if (shader == null)
@@ -89,8 +88,60 @@ namespace Manipulator
             }
 
             var mat = new Material(shader);
-            // với URP Lit, property chính là _BaseColor
             mat.SetColor("_BaseColor", baseColor);
+            return mat;
+        }
+
+        public static Material MakeDoubleSidedTransparent(Material baseMat, Color color, float alpha = 0.08f)
+        {
+            var mat = new Material(baseMat.shader);
+            mat.CopyPropertiesFromMaterial(baseMat);
+
+            mat.SetColor("_BaseColor", new Color(color.r, color.g, color.b, alpha));
+            mat.SetFloat("_Surface", 1f);
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.SetInt("_CullMode", 0);
+            mat.EnableKeyword("_DOUBLESIDED_ON");
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = (int)RenderQueue.Transparent;
+
+            return mat;
+        }
+
+        public static Material GetPolygonMat(Color? colorOverride = null)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Unlit/Transparent");
+
+            var mat = new Material(shader);
+            Color color = colorOverride ?? new Color(0.4f, 0.8f, 1f, 0.08f);
+
+            if (mat.HasProperty("_BaseColor"))
+                mat.SetColor("_BaseColor", color);
+            else
+                mat.color = color;
+
+            if (mat.HasProperty("_CullMode"))
+                mat.SetInt("_CullMode", 0);
+            if (mat.HasProperty("_Cull"))
+                mat.SetInt("_Cull", (int)CullMode.Off);
+            if (mat.HasProperty("_RenderFace")) mat.SetInt("_RenderFace", 0);
+
+            mat.EnableKeyword("_DOUBLESIDED_ON");
+            mat.doubleSidedGI = true;
+
+            if (mat.HasProperty("_Surface"))
+                mat.SetFloat("_Surface", 1f);
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = (int)RenderQueue.Transparent;
+            if (mat.HasProperty("_ZWrite"))
+                mat.SetInt("_ZWrite", 0);
+            if (mat.HasProperty("_SrcBlend"))
+                mat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            if (mat.HasProperty("_DstBlend"))
+                mat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+
             return mat;
         }
     }

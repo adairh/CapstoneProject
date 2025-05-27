@@ -83,7 +83,7 @@ namespace Manipulator
             mat.renderQueue = 3000;
 
             var color = mat.color;
-            color.a = 0.3f;
+            color.a = 0.1f;
             mat.color = color;
 
             renderer.material = mat;
