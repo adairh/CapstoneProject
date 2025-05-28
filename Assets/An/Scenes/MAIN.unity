@@ -1238,7 +1238,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!224 &219934953
 RectTransform:
@@ -1706,7 +1706,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_TargetDisplay: 0
 --- !u!224 &282696836
 RectTransform:
@@ -5621,7 +5621,7 @@ GameObject:
   - component: {fileID: 1736894421}
   - component: {fileID: 1736894420}
   m_Layer: 5
-  m_Name: Button_draw
+  m_Name: Button_ai_tutor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5693,7 +5693,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1974765765}
         m_TargetAssemblyTypeName: BackToHomeButton, Assembly-CSharp
-        m_MethodName: OnCreateRandomRoomButton
+        m_MethodName: OnLoadAITutor
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5741,6 +5741,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1736894418}
   m_CullTransparentMesh: 1
+--- !u!1 &1746266231
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1746266233}
+  - component: {fileID: 1746266232}
+  m_Layer: 0
+  m_Name: CanvasOrderInitializer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1746266232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1746266231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b73c30b3f278784c9d10d2a5f4625cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canvasPlaygame: {fileID: 1853315382}
+--- !u!4 &1746266233
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1746266231}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 960.32056, y: 1078.2094, z: -12.261207}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1757226018
 GameObject:
   m_ObjectHideFlags: 0
@@ -6781,7 +6826,7 @@ GameObject:
   - component: {fileID: 1994534613}
   - component: {fileID: 1994534612}
   m_Layer: 5
-  m_Name: Button_join
+  m_Name: Button_draw_tool
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6851,9 +6896,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 450864687}
-        m_TargetAssemblyTypeName: HomeScreenController, Assembly-CSharp
-        m_MethodName: OnJoinRoomButton
+      - m_Target: {fileID: 8914808988207697292, guid: 1f70cc37ced19724fb42cd0a74706c25,
+          type: 3}
+        m_TargetAssemblyTypeName: BackToHomeButton, Assembly-CSharp
+        m_MethodName: OnCreateRandomRoomButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -7449,3 +7495,4 @@ SceneRoots:
   - {fileID: 450864688}
   - {fileID: 1853315383}
   - {fileID: 606198999}
+  - {fileID: 1746266233}

@@ -2522,6 +2522,22 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7231977792699623518, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 8914808988207697292, guid: 1f70cc37ced19724fb42cd0a74706c25,
+        type: 3}
+    - target: {fileID: 7231977792699623518, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnBackToHomeFrom_PlayGame
+      objectReference: {fileID: 0}
+    - target: {fileID: 7231977792699623518, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: BackToHomeButton, Assembly-CSharp
+      objectReference: {fileID: 0}
     - target: {fileID: 7330959687765255871, guid: 79faca156d0d70643b36f0910ffd6762,
         type: 3}
       propertyPath: m_FontData.m_Alignment
