@@ -97,35 +97,35 @@ MonoBehaviour:
     QuestionDatas: {fileID: 11400000, guid: 2f9b36f88760c534a8b438819d288c6c, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: 57646545d36299f42b8ce0aa9ae9ad79,
       type: 3}
-    timeLimit: 250
+    timeLimit: 150
     hardmode: 1
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 1e930d6d48fdf034f9d3c86033f61c34, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: cd41eeeb1c66d3e42be93abaf1aa491c,
       type: 3}
-    timeLimit: 250
+    timeLimit: 150
     hardmode: 1
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 1e930d6d48fdf034f9d3c86033f61c34, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: d06a4e25960bc734688cdd24e7a9db31,
       type: 3}
-    timeLimit: 250
+    timeLimit: 150
     hardmode: 1
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 1e930d6d48fdf034f9d3c86033f61c34, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: 70ba22e695ea1d542840931c36b2ff6b,
       type: 3}
-    timeLimit: 250
+    timeLimit: 150
     hardmode: 1
     unlocked: 1
     rating: 0
     QuestionDatas: {fileID: 11400000, guid: 1e930d6d48fdf034f9d3c86033f61c34, type: 2}
   - levelPrefab: {fileID: 5023224552959780717, guid: 2e92419aca24aac48bf4318b00bf4371,
       type: 3}
-    timeLimit: 250
+    timeLimit: 150
     hardmode: 1
     unlocked: 1
     rating: 0
