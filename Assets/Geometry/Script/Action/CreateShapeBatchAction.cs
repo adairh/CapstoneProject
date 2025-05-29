@@ -19,8 +19,15 @@ namespace Manipulator
 
         public CreateShapeBatchAction(List<ShapeData> shapeDataList)
         {
+            foreach (var d in shapeDataList)
+            {
+                // Patch: For each Point, assign LogicalName if needed (host only)
+                if (d.Type == "Point" && string.IsNullOrEmpty(d.LogicalName) && UndoRedoNetworkBridge.Instance.IsHost)
+                    d.LogicalName = LabelGenerator.Next();
+            }
             this.shapeDataList = shapeDataList;
         }
+
 
         public void Redo()
         {

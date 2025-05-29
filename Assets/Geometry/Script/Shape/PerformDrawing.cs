@@ -117,6 +117,9 @@ namespace Manipulator
                 case IShapeButton.ShapeType.SquarePyramidSpawner:
                     ShapeInputController.Instance.SetSpawner(new SquarePyramidSpawner());
                     break;
+                case IShapeButton.ShapeType.SegmentSpawner:
+                    ShapeInputController.Instance.SetSpawner(new SegmentSpawner());
+                    break;
                      
             }
         }

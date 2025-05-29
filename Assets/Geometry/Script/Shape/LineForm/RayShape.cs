@@ -311,7 +311,26 @@ namespace Manipulator
                 if (!PerformDrawing.RaycastMouse(out var pos)) return;
 
                 var snap = FindNearbyPoint(pos, startPoint);
-                endPoint.MoveTo(snap != null ? snap.transform.position : pos, queue: false);
+                
+                var targetPos = pos;
+
+                var currentPos = endPoint.transform.position;
+
+                var lockMode = ManipulationManager.Instance.CurrentAxisLock;
+                switch (lockMode)
+                {
+                    case AxisLockMode.LockY:
+                        targetPos.y = startPoint.transform.position.y;
+                        break;
+                    case AxisLockMode.LockXZ:
+                        targetPos.x = startPoint.transform.position.x;
+                        targetPos.z = startPoint.transform.position.z;
+                        break;
+                    // Extend for custom locking logic
+                }
+
+
+                endPoint.MoveTo(snap != null ? snap.transform.position : targetPos, queue: false);
 
                 // if (snap != null && snap != endPoint)
                 // {

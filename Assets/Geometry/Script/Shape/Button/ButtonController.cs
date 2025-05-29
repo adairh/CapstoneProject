@@ -53,4 +53,11 @@ public class ButtonController : MonoBehaviour
     {
         CameraController.Instance.ResetCamera();
     }
+    
+    public void SetAxisLockMode(int mode)
+    {
+        ManipulationManager.Instance.CurrentAxisLock = (AxisLockMode)mode;
+    }
+
+    
 }
