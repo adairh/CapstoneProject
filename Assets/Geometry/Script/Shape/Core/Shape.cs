@@ -53,6 +53,10 @@ namespace Manipulator
             Data = data;
             ApplyDataToTransform(data);
             ShapeStorage.Register(this);
+
+            // PATCH: Always set name from LogicalName
+            if (!string.IsNullOrEmpty(data.LogicalName))
+                name = data.LogicalName;
         }
 
         public virtual void InitializeNew(string type, Vector3 position, string lgcName = "")
@@ -71,30 +75,14 @@ namespace Manipulator
                 Settings = new Dictionary<string, string>()
             };
 
+            // PATCH: Do not generate label here, it must be provided from the Spawner/Action
+
             gameObject.AddComponent<HoverableShape>().SetShape(this);
             gameObject.AddComponent<SelectableShape>().SetShape(this);
             gameObject.AddComponent<ShapeClickHandler>().SetShape(this);
             gameObject.AddComponent<DraggableShape>().SetShape(this);
 
-            if (this is Point)
-            {
-                var s = Data.LogicalName;
-                if (Data.LogicalName == "")
-                    s = LabelGenerator.Next();
-                Data.LogicalName = s;
-                name = s;
-
-                var label = UIManager.Instance.GetUIComponent("LabelDisplayPrefab");
-                if (label != null)
-                {
-                    var go = Instantiate(label, transform);
-                    go.transform.localPosition = new Vector3(0, 0.5f, 0);
-                    var disp = go.GetComponentInChildren<LabelDisplay>();
-                    disp.SetLabel(s);
-                    if (disp != null && s != null)
-                        disp.Initialize(s);
-                }
-            }
+            // PATCH: Do not generate label here!
 
             ApplyDataToTransform(Data);
             ShapeStorage.Register(this);
@@ -210,6 +198,10 @@ namespace Manipulator
         {
             Data = data;
             ApplyDataToTransform(data);
+
+            // PATCH: Always set name from LogicalName on load
+            if (!string.IsNullOrEmpty(data.LogicalName))
+                name = data.LogicalName;
         }
 
         #endregion

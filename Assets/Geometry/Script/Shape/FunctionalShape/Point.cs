@@ -23,9 +23,7 @@ namespace Manipulator
         {
             base.Awake();
 
-            name = $"Point_{ShapeId}";
-            if (IsHost)
-                label.Value = GenerateNextLabel();
+            // PATCH: Name is set during Initialize/Deserialize, not here
 
             // Add mesh
             var mf = gameObject.AddComponent<MeshFilter>();
@@ -46,8 +44,6 @@ namespace Manipulator
             if (!TryGetComponent(out positionSync))
                 positionSync = gameObject.AddComponent<NetworkPositionSync>();
 
-            // Settings (position)
-            //AppendSettings(new PositionSetting(transform.position, this));
             ShapeStorage.Register(this);
             AutoConstraintManager.TryAutoAttachConstraint(this);
         }
@@ -57,27 +53,10 @@ namespace Manipulator
         public event Action<Point> OnChanged;
         public event Action<Point> OnPositionChanged;
 
-        #region ATTACH
-
-        /*
-        public void AttachProcess()
-        {
-            var mm = ManipulationManager.Instance;
-            var shape = mm.GetPinnedShape();
-
-            if (shape != null && shape != this && !(shape is Point))
-            {
-                constraint.AddDepend(this, shape);
-            }
-        }*/
-
         public FixedPointConstraint GetPointConstraint()
         {
             return constraint;
         }
-
-        #endregion
-
 
         public bool IsOnlyConnectedTo(Shape shape)
         {
@@ -89,10 +68,9 @@ namespace Manipulator
         {
             return new List<ISetting>(base.GetSettings())
             {
-                new LabelSetting(LabelGenerator.Next(), this)
+                new LabelSetting(GetLabel(), this) // PATCH: Use label from data!
             };
         }
-
 
         public static class Drawer
         {
@@ -118,10 +96,15 @@ namespace Manipulator
                         {
                             // Place point and remember it should get a constraint!
                             var id = Guid.NewGuid().ToString();
+
+                            // PATCH: Generate label here ONCE, and store in LogicalName
+                            var label = LabelGenerator.Next();
+
                             var data = new ShapeData
                             {
                                 Id = id,
                                 Type = "Point",
+                                LogicalName = label,
                                 Position = pos,
                                 Rotation = Quaternion.identity,
                                 Scale = Vector3.one,
@@ -132,7 +115,6 @@ namespace Manipulator
                             UndoRedoNetworkBridge.Instance.DoAndBroadcast(v);
 
                             // Wait for point creation, then attach constraint
-                            // (In practice: use event/callback or coroutine. Here's a synchronous pattern:)
                             EditorApplication.delayCall += () =>
                             {
                                 var pt = ShapeStorage.GetById(id) as Point;
@@ -151,10 +133,13 @@ namespace Manipulator
 
                     // Fallback: Normal point creation (not on segment body)
                     var id2 = Guid.NewGuid().ToString();
+                    var label2 = LabelGenerator.Next();
+
                     var data2 = new ShapeData
                     {
                         Id = id2,
                         Type = "Point",
+                        LogicalName = label2,
                         Position = pos,
                         Rotation = Quaternion.identity,
                         Scale = Vector3.one,
@@ -176,8 +161,6 @@ namespace Manipulator
                 var t = Vector3.Dot(pos - a, ab.normalized) / ab.magnitude;
                 return Mathf.Clamp01(t);
             }
-
-            
         }
 
         #region MOVE
@@ -193,21 +176,12 @@ namespace Manipulator
             transform.position = newPosition;
 
             var delta = newPosition - oldPosition;
-// ✅ Apply constraint với delta đúng
-            // constraint.ApplyConstraint(this, delta);
-            // ConstraintManager.Instance.ApplyConstraints(this, delta);
-
-            // Gửi sync vị trí nếu là host
-
-            //Debug.LogError($"[Point Move To] {newPosition}");
 
             OnPositionChanged?.Invoke(this);
-
 
             if (!silent && IsHost && TryGetComponent<NetworkPositionSync>(out var sync))
                 sync.syncedPosition.Value = newPosition;
 
-            // Ghi undo và thông báo thay đổi
             if (!silent)
             {
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(new MoveShapeAction(ShapeId, oldPosition, newPosition),
@@ -216,14 +190,14 @@ namespace Manipulator
             }
         }
 
-
         private readonly NetworkVariable<string> label = new("");
 
         private GameObject labelDisplay;
 
         public string GetLabel()
         {
-            return label.Value;
+            // PATCH: Always return LogicalName
+            return Data != null && !string.IsNullOrEmpty(Data.LogicalName) ? Data.LogicalName : label.Value;
         }
 
         public void SetLabel(string value)
@@ -245,7 +219,7 @@ namespace Manipulator
                 labelDisplay.transform.localPosition = new Vector3(0, 0.4f, 0);
             }
 
-            var text = labelDisplay.GetComponentInChildren<TextMeshPro>();
+            var text = labelDisplay.GetComponentInChildren<TextMeshProUGUI>();
             if (text != null)
                 text.text = value;
         }
@@ -254,29 +228,23 @@ namespace Manipulator
         {
             base.OnNetworkSpawn();
             label.OnValueChanged += (oldVal, newVal) => { UpdateLabelDisplay(newVal); };
+
+            // PATCH: Here, ensure the label is synced after the object is network-registered
+            if (!string.IsNullOrEmpty(Data?.LogicalName))
+            {
+                if (IsServer)
+                    label.Value = Data.LogicalName; // triggers UI update for everyone
+                else
+                    UpdateLabelDisplay(Data.LogicalName); // for the local user until RPC syncs
+            }
         }
+
 
         [ServerRpc(RequireOwnership = false)]
         private void SubmitLabelRequestServerRpc(string newLabel)
         {
             label.Value = newLabel;
         }
-
-        private static int labelCounter;
-
-        private string GenerateNextLabel()
-        {
-            var n = labelCounter++;
-            var label = "";
-            do
-            {
-                label = (char)('A' + n % 26) + label;
-                n = n / 26 - 1;
-            } while (n >= 0);
-
-            return label;
-        }
-
 
         public Vector3 GetCurrentPosition()
         {
@@ -291,13 +259,27 @@ namespace Manipulator
         {
             var data = base.Serialize();
             data.Type = "Point";
+            // PATCH: Always keep LogicalName!
+            data.LogicalName = Data.LogicalName;
             return data;
         }
 
         public override void Deserialize(ShapeData data)
         {
             base.Deserialize(data);
+
+            // PATCH: DO NOT call SetLabel() here. Instead, set local state only.
+            if (!string.IsNullOrEmpty(data.LogicalName))
+            {
+                // Set internal label variable; do not call ServerRpc yet!
+                if (IsServer)
+                    label.Value = data.LogicalName;
+                // Always update UI locally for the spawned object
+                name = data.LogicalName;
+                UpdateLabelDisplay(data.LogicalName);
+            }
         }
+
 
         #endregion
 

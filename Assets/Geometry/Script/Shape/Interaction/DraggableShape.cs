@@ -53,16 +53,19 @@ namespace Manipulator
             Vector3 currentPos = shape.transform.position;
             Vector3 target = currentPos + worldDelta;
 
-            // Axis locking
-            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+            var lockMode = ManipulationManager.Instance.CurrentAxisLock;
+            switch (lockMode)
             {
-                target.y = currentPos.y; // Lock Y
+                case AxisLockMode.LockY:
+                    target.y = currentPos.y; // Lock Y
+                    break;
+                case AxisLockMode.LockXZ:
+                    target.x = currentPos.x;
+                    target.z = currentPos.z; // Lock XZ
+                    break;
+                // Add more as needed
             }
-            else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-            {
-                target.x = currentPos.x;
-                target.z = currentPos.z; // Lock XZ
-            }
+
 
             shape.MoveTo(target, queue: false);
         }

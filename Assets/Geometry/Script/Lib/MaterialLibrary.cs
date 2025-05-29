@@ -108,6 +108,14 @@ namespace Manipulator
             return mat;
         }
 
+        
+        public static Color GetColorForType(MaterialType type)
+        {
+            return _colors.TryGetValue(type, out var c) ? c : Color.white;
+        }
+
+        
+
         public static Material GetPolygonMat(Color? colorOverride = null)
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");
@@ -144,5 +152,38 @@ namespace Manipulator
 
             return mat;
         }
+        
+        
+        public static Material GetPolygonMeshMaterial(Color color, float alpha = 0.08f)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Standard");
+
+            var mat = new Material(shader);
+
+            Color finalColor = color;
+            finalColor.a = alpha;
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", finalColor);
+            else mat.color = finalColor;
+
+            // Set transparent rendering
+            if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", 1f);
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            if (mat.HasProperty("_ZWrite")) mat.SetInt("_ZWrite", 0);
+            if (mat.HasProperty("_SrcBlend")) mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            if (mat.HasProperty("_DstBlend")) mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+
+            // Double-sided settings
+            if (mat.HasProperty("_CullMode")) mat.SetInt("_CullMode", (int)UnityEngine.Rendering.CullMode.Off);
+            if (mat.HasProperty("_Cull")) mat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+            if (mat.HasProperty("_RenderFace")) mat.SetInt("_RenderFace", 0); // Both
+            mat.EnableKeyword("_DOUBLESIDED_ON");
+            mat.doubleSidedGI = true;
+
+            return mat;
+        }
+
     }
 }

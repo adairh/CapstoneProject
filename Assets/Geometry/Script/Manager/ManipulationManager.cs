@@ -3,10 +3,13 @@ using UnityEngine;
 
 namespace Manipulator
 {
+    public enum AxisLockMode { None, LockY, LockXZ }
     public class ManipulationManager : MonoBehaviour
     {
         public static ManipulationManager Instance { get; private set; }
 
+        public AxisLockMode CurrentAxisLock = AxisLockMode.None;
+        
         public bool IsDrawing { get; set; }
         public Vector3 TrackingPoint { get; set; }
 

@@ -33,8 +33,8 @@ namespace Manipulator
 
         [Header("Debug")] public bool showDebugInfo = false;
 
-        private float yaw;
-        private float pitch = 30f;
+        public float yaw;
+        public float pitch = 30f;
         private float distance;
 
         private Vector3 lastMousePos;
@@ -134,7 +134,7 @@ namespace Manipulator
             lastMousePos = Input.mousePosition;
         }
 
-        private void UpdateCameraPosition()
+        public void UpdateCameraPosition()
         {
             if (isTransitioningTarget)
             {

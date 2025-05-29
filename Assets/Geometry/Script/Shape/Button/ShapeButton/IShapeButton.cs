@@ -13,6 +13,10 @@ namespace Manipulator
             RayShape,
             Polygon,
 
+            
+            SegmentSpawner,
+            
+            
             Triangle,
             EquilateralPyramid,
             EquilateralTriangle,

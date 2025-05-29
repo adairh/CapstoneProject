@@ -90,42 +90,14 @@ namespace Manipulator
 
         private Material CreatePolygonMeshMaterial()
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard"); // fallback
+            // Pick color from user option, settings, or default
+            Color polygonColor = new Color(0.4f, 0.8f, 1f); // Or read from setting
+            float alpha = 0.08f; // Or read from setting/UI
 
-            var mat = new Material(shader);
-
-            Color color = new Color(0.4f, 0.8f, 1f, 0.08f);
-            if (mat.HasProperty("_BaseColor"))
-                mat.SetColor("_BaseColor", color);
-            else
-                mat.color = color;
-
-            // Transparency
-            if (mat.HasProperty("_Surface"))
-                mat.SetFloat("_Surface", 1f);
-            mat.SetOverrideTag("RenderType", "Transparent");
-            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-            if (mat.HasProperty("_ZWrite"))
-                mat.SetInt("_ZWrite", 0);
-            if (mat.HasProperty("_SrcBlend"))
-                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            if (mat.HasProperty("_DstBlend"))
-                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-
-            // Double-sided
-            if (mat.HasProperty("_CullMode"))
-                mat.SetInt("_CullMode", 0);
-            if (mat.HasProperty("_Cull"))
-                mat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-            if (mat.HasProperty("_RenderFace"))
-                mat.SetInt("_RenderFace", 0);
-            mat.EnableKeyword("_DOUBLESIDED_ON");
-            mat.doubleSidedGI = true;
-
-            return mat;
+            // Now get from MaterialLibrary
+            return MaterialLibrary.GetPolygonMeshMaterial(polygonColor, alpha);
         }
+
 
         private int[] Triangulate(Vector3[] vertices)
         {

@@ -311,28 +311,22 @@ namespace Manipulator
 
                 var currentPos = endPoint.transform.position;
 
-                // Giữ E: khoá X
-                if (Input.GetKey(KeyCode.E))
+                var lockMode = ManipulationManager.Instance.CurrentAxisLock;
+                switch (lockMode)
                 {
-                    targetPos.x = startPoint.transform.position.x;
-                    targetPos.y = startPoint.transform.position.y;
+                    case AxisLockMode.LockY:
+                        targetPos.y = startPoint.transform.position.y;
+                        break;
+                    case AxisLockMode.LockXZ:
+                        targetPos.x = startPoint.transform.position.x;
+                        targetPos.z = startPoint.transform.position.z;
+                        break;
+                    // Extend for custom locking logic
                 }
 
-                // Giữ R: khoá Y
-                if (Input.GetKey(KeyCode.R))
-                {
-                    targetPos.y = startPoint.transform.position.y;
-                    targetPos.z = startPoint.transform.position.z;
-                }
-
-                // Giữ T: khoá Z
-                if (Input.GetKey(KeyCode.T))
-                {
-                    targetPos.z = startPoint.transform.position.z;
-                    targetPos.x = startPoint.transform.position.x;
-                }
 
                 endPoint.MoveTo(snap != null ? snap.transform.position : targetPos, queue: false);
+                
             }
 
 
@@ -470,6 +464,52 @@ namespace Manipulator
                 preview.SetRaycastIgnore(true);
             }
 
+            public static void StartSegmentFromPanel(Vector3 start, float length, float angle = 0)
+            {
+                var mm = ManipulationManager.Instance;
+                if (mm.IsDrawing) return;
+                mm.IsDrawing = true;
+
+                // Direction from angle (degrees)
+                Vector3 dir = Quaternion.Euler(0, angle, 0) * Vector3.right;
+                Vector3 end = start + dir * length;
+
+                // Simulate snap? (You can add this logic as needed)
+
+                // Generate unique IDs
+                string startId = Guid.NewGuid().ToString();
+                string endId = Guid.NewGuid().ToString();
+                string segId = Guid.NewGuid().ToString();
+
+                // Build data
+                var datas = new List<ShapeData>
+                {
+                    new() { Id = startId, Type = "Point", Position = start, Rotation = Quaternion.identity, Scale = Vector3.one },
+                    new() { Id = endId, Type = "Point", Position = end, Rotation = Quaternion.identity, Scale = Vector3.one },
+                    new() { Id = segId, Type = "Segment", Position = (start+end)/2, Rotation = Quaternion.identity, Scale = Vector3.one,
+                        ConnectedPoints = new List<string>{ startId, endId } }
+                };
+
+                // Use your networked batch spawn logic:
+                var batch = new CreateShapeBatchAction(datas);
+                batch.OnShapeSpawned = shape =>
+                {
+                    if (shape is Point pt)
+                    {
+                        if (pt.ShapeId == startId || pt.ShapeId == endId)
+                            OnStartPointReady(pt);
+                    }
+                    else if (shape is Segment s && s.ShapeId == segId)
+                    {
+                        OnSegmentReady(s);
+                    }
+                };
+                UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
+
+                // Now in a "preview" state if you wish, or immediately finalize.
+            }
+
+            
             private static Point FindNearbyPoint(Vector3 pos, Point exclude = null)
             {
                 foreach (var shape in ShapeStorage.GetAllShapes())

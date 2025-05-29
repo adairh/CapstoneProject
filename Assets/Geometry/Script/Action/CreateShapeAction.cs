@@ -10,6 +10,9 @@ namespace Manipulator
 
         public CreateShapeAction(ShapeData shapeData)
         {
+            // Patch: If this is a Point, and no label yet, assign one (host only)
+            if (shapeData.Type == "Point" && string.IsNullOrEmpty(shapeData.LogicalName) && UndoRedoNetworkBridge.Instance.IsHost)
+                shapeData.LogicalName = LabelGenerator.Next();
             data = shapeData;
         }
 
