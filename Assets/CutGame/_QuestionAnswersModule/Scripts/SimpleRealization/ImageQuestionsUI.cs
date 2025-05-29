@@ -110,6 +110,19 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
             string correctAnswer = _currentQuestion.GetCorrectAnswer().GetAnswerData();
             string userAnswer = answer.GetAnswerData();
 
+            GameManager gm = GameManager.instance;
+            
+            GoToNextQuestion(true);
+            
+            gm.Quiz.gameObject.SetActive(false);
+            
+            if (gm.enemiesCount - gm.enemiesDestroyed <= 1)
+            {
+                gm.failed = true;
+            }
+            
+            gm.DeleteVirus();
+            
             // Handle wrong answer in GameManager
             GameManager.instance.HandleWrongAnswer(questionText, correctAnswer, userAnswer);
 

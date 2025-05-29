@@ -9,7 +9,7 @@ public class GameManager : MonoBehaviour
 
     private Level level = null;
 
-    private int alliesCount = 0, alliesDestroyed = 0,
+    public int alliesCount = 0, alliesDestroyed = 0,
                 enemiesCount = 0, enemiesDestroyed = 0;
 
     public GameUI gameUI;

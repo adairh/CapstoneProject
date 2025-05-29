@@ -7,6 +7,9 @@ TagManager:
   - ChatUI
   - Shape
   - Child
+  - Virus
+  - Fat
+  - Onboarding
   layers:
   - Default
   - TransparentFX
@@ -18,7 +21,7 @@ TagManager:
   - Shape
   - Child
   - UIEffects
-  - 
+  - Anim
   - 
   - 
   - 

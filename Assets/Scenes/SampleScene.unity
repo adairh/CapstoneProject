@@ -853,6 +853,8 @@ MonoBehaviour:
   defaultTarget: {fileID: 0}
   defaultZoom: 10
   showDebugInfo: 0
+  yaw: 0
+  pitch: 30
 --- !u!114 &963194230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -926,6 +928,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa47a68b1ce101446af9d95fe24fdc84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cameraController: {fileID: 0}
+  mainCamera: {fileID: 0}
+  sceneLight: {fileID: 0}
+  skyboxPresets: []
+  postProcessVolume: {fileID: 0}
 --- !u!4 &1001807317
 Transform:
   m_ObjectHideFlags: 0
@@ -1016,6 +1023,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0642ab912fa05a043a444da1028672f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  CurrentAxisLock: 0
 --- !u!114 &1045046960
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3378,6 +3386,16 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 578.16
       objectReference: {fileID: 0}
+    - target: {fileID: 4678157547510992793, guid: ba9bcba0e0991194fbe0d482c5981778,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1805098921}
+    - target: {fileID: 4678157547510992793, guid: ba9bcba0e0991194fbe0d482c5981778,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnBackToHomeFrom_DrawingScene
+      objectReference: {fileID: 0}
     - target: {fileID: 4683382429574611993, guid: ba9bcba0e0991194fbe0d482c5981778,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -4970,7 +4988,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8674517573666159248 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6054282085999512124, guid: ba9bcba0e0991194fbe0d482c5981778,

@@ -1,67 +1,79 @@
-﻿using Geometry;
+﻿using System;
+using Geometry;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class BackToHomeButton : MonoBehaviour
 {
-    [Header("Main Canvases")] public GameObject canvasHome;
-
+    [Header("Main Canvases")]
+    public GameObject canvasHome;
     public GameObject canvasPlaygame;
     public GameObject canvasOnboarding;
     public GameObject canvas;
 
-    [Header("Popups")] public GameObject popupJoinRoom;
-
+    [Header("Popups")]
+    public GameObject popupJoinRoom;
     public GameObject popupCreateRoom;
     public GameObject darkOverlay;
 
-    [Header("Join Room Inputs")] public TMP_InputField joinRoomIDInput;
-
+    [Header("Join Room Inputs")]
+    public TMP_InputField joinRoomIDInput;
     public TMP_InputField joinPasswordInput;
 
-    [Header("Create Room Inputs")] public TMP_InputField createRoomIDInput;
-
+    [Header("Create Room Inputs")]
+    public TMP_InputField createRoomIDInput;
     public TMP_InputField createPasswordInput;
-    /*private void Start()
-    {
-        // Không đụng 
-        //mac dinh hien canvasHome, an canvasPlaygame
-        //overPlayCanvas.SetActive(false);
-        //ConfigureUIBasedOnScene();
-        //canvasHome.SetActive(true);
-        canvasPlaygame.SetActive(false);
-        canvasOnboarding.SetActive(false); // Hide onboarding screen if it's active
-        canvas.SetActive(false); // an canvas chinh khi bat dau
 
-        // dam bao cac popup + overlay duoc an ngay khi lo bat trong editor
-        if (popupJoinRoom != null) popupJoinRoom.SetActive(false);
-        if (popupCreateRoom != null) popupCreateRoom.SetActive(false);
-        if (darkOverlay != null) darkOverlay.SetActive(false);
-        // Configure UI based on the current scene
-    }*/
+    // --- Handle scene change and hide onboarding ---
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Find the "Onboarding" object by tag in the new scene and hide it
+        GameObject onboardingObj = GameObject.FindGameObjectWithTag("Onboarding");
+        if (onboardingObj != null)
+        {
+            Debug.Log("Found Onboarding object in scene '" + scene.name + "': " + onboardingObj.name);
+            onboardingObj.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("No object with tag 'Onboarding' found in scene '" + scene.name + "'.");
+        }
+    }
+
+    // --- UI Logic ---
     public void OnBackToHome()
     {
-        // Load MAIN scene fresh
         canvasHome.SetActive(true);
         canvasOnboarding.SetActive(false);
         canvasPlaygame.SetActive(false);
     }
+    private void Awake()
+    {
+        DontDestroyOnLoad(this.gameObject);
+    }
+
     public void OnBackToHomeFrom_DrawingScene()
     {
-        // Load MAIN scene fresh
         SceneManager.LoadScene("MAIN");
-        /*canvasHome.SetActive(true);
-        canvasOnboarding.SetActive(false);
-        canvasPlaygame.SetActive(false);*/
     }
+
     public void OnBackFromAI_to_Home()
     {
+        // Optionally: can still check or do logic here before loading scene
         SceneManager.LoadScene("MAIN");
-        /*canvasHome.SetActive(true);
-        canvasOnboarding.SetActive(false);
-        canvasPlaygame.SetActive(false);*/
     }
+
     public void OnBackToHomeFrom_PlayGame()
     {
         CanvasSortOrderManager.setPlayGameCanvasOnTop = true;
@@ -100,7 +112,6 @@ public class BackToHomeButton : MonoBehaviour
         popupJoinRoom.SetActive(false);
         darkOverlay.SetActive(false);
     }
-
 
     public void OnCreateRoomButton()
     {
