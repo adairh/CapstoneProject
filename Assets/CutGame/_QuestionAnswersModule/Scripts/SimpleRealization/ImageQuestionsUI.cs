@@ -123,7 +123,7 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
             
             GameManager gm = GameManager.instance;
             
-            GoToNextQuestion();
+            GoToNextQuestion(true);
             gm.Quiz.gameObject.SetActive(false);
             gm.DeleteVirus();
             
