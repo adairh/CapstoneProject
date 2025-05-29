@@ -1665,6 +1665,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: Canvas_Home
       objectReference: {fileID: 0}
+    - target: {fileID: 1613570143433145464, guid: 2a41e858792091b46b83b9e03e766aaa,
+        type: 3}
+      propertyPath: notificationPanelPrefab
+      value: 
+      objectReference: {fileID: 47175628510378312}
+    - target: {fileID: 2619297361798865962, guid: 2a41e858792091b46b83b9e03e766aaa,
+        type: 3}
+      propertyPath: notificationPanelPrefab
+      value: 
+      objectReference: {fileID: 47175628510378312}
     - target: {fileID: 3368498511949200824, guid: 2a41e858792091b46b83b9e03e766aaa,
         type: 3}
       propertyPath: m_Pivot.x
@@ -4647,6 +4657,12 @@ PrefabInstance:
       addedObject: {fileID: 6704810229915208706}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ba9bcba0e0991194fbe0d482c5981778, type: 3}
+--- !u!1 &47175628510378312 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4715002374021284313, guid: ba9bcba0e0991194fbe0d482c5981778,
+    type: 3}
+  m_PrefabInstance: {fileID: 47175628510378311}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &347557160712212014 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 347557160568264449, guid: 2a41e858792091b46b83b9e03e766aaa,
