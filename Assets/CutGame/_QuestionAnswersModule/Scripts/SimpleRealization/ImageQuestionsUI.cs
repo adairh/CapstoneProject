@@ -121,8 +121,14 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
         {
             Debug.Log("<color=green>GOOD JOB!</color>");
             
+            GameManager gm = GameManager.instance;
+            
+            GoToNextQuestion();
+            gm.Quiz.gameObject.SetActive(false);
+            gm.DeleteVirus();
+            
             // Handle correct answer in GameManager
-            GameManager.instance.HandleCorrectAnswer();
+            gm.HandleCorrectAnswer();
         }
 
         private void CreateButtonForAnswer(IAnswer<string> answer)
