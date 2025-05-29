@@ -12,6 +12,7 @@ public class GameUI : MonoBehaviour
 
     public GameObject complete;
 
+
     [Space] public LevelLoader levelLoader;
 
     public Button nextLevel;

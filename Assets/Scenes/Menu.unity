@@ -1875,6 +1875,16 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: 80e80957135a43a4295d06dcf00faf65,
         type: 3}
+    - target: {fileID: 551267662661471305, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 1712147267}
+    - target: {fileID: 551267662661471305, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_RenderMode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 585295977948107353, guid: 79faca156d0d70643b36f0910ffd6762,
         type: 3}
       propertyPath: m_Sprite
@@ -1989,6 +1999,21 @@ PrefabInstance:
     - target: {fileID: 901934460259250272, guid: 79faca156d0d70643b36f0910ffd6762,
         type: 3}
       propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 901934460259250272, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 901934460259250272, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 901934460259250272, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_LocalScale.z
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 901934460259250272, guid: 79faca156d0d70643b36f0910ffd6762,
@@ -2127,6 +2152,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: feb89e3f31df58d46a2fbe6e9e06ef3b,
         type: 3}
+    - target: {fileID: 1708671059186496864, guid: 79faca156d0d70643b36f0910ffd6762,
+        type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1929592269273913634, guid: 79faca156d0d70643b36f0910ffd6762,
         type: 3}
       propertyPath: m_SizeDelta.x
