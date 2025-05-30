@@ -37,12 +37,14 @@ namespace Manipulator
                 btn.transform.SetParent(container, false);
 
                 var img = btn.GetComponent<Image>();
-                img.color = MaterialLibrary.Get(matType).GetColor("_BaseColor");
+                img.color = MaterialLibrary.GetColorForType(matType);
 
                 var button = btn.GetComponent<Button>();
+                // IMPORTANT: Capture variable for closure
+                var capturedMatType = matType;
                 button.onClick.AddListener(() =>
                 {
-                    Value = matType;
+                    Value = capturedMatType;
                     Apply();
                 });
 
@@ -57,15 +59,18 @@ namespace Manipulator
 
         public override void Apply()
         {
+            // Store the chosen color for refresh logic if needed
+            targetShape.DefaultMat = Value; // <- add this field to Shape for re-apply on refresh if you wish
+
             foreach (var s in targetShape.GetDependentShapesForDelete())
             {
-                var newMat = new Material(MaterialLibrary.Get(Value));
-                s.DefaultMat = newMat;
-
-                foreach (var r in s.GetComponentsInChildren<Renderer>()) r.material = newMat;
+                foreach (var r in s.GetComponentsInChildren<Renderer>())
+                {
+                    MaterialLibrary.Apply(r, Value); // This MUST use PropertyBlock and never swap material
+                }
             }
 
-            // Force SelectableShape to refresh its material
+            // Optionally force SelectableShape to refresh highlight/selection if that's needed
             var selectable = targetShape.GetComponent<SelectableShape>();
             if (selectable != null)
             {
@@ -83,7 +88,7 @@ namespace Manipulator
 
         public override void Update()
         {
-            // Optional: dựa vào renderer.material == X để gán Value tương ứng nếu cần
+            // (Optional) Set UI highlight/indicator for current color, if you want
         }
     }
 }

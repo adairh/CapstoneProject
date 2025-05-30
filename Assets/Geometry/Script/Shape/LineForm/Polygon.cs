@@ -7,11 +7,10 @@ namespace Manipulator
 {
     public class Polygon : Shape
     {
+
         private MeshCollider meshCollider;
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
-        private Material _polygonMeshMat;
-
         private GameObject visual;
         public List<Point> Points { get; } = new();
 
@@ -25,13 +24,15 @@ namespace Manipulator
             meshFilter = visual.AddComponent<MeshFilter>();
             meshRenderer = visual.AddComponent<MeshRenderer>();
             meshCollider = visual.AddComponent<MeshCollider>();
+
+            // Shadow settings (adjust as needed)
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; // Change to .On if you want casting
+            meshRenderer.receiveShadows = true;
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            if (_polygonMeshMat != null)
-                Destroy(_polygonMeshMat);
             foreach (var p in Points)
                 if (p != null)
                     p.OnPositionChanged -= OnPivotMoved;
@@ -76,26 +77,27 @@ namespace Manipulator
                 meshCollider.sharedMesh = mesh;
                 meshCollider.convex = Points.Count >= 4;
 
-                // Ensure our custom double-sided transparent mat is always applied
-                if (_polygonMeshMat != null)
-                    Destroy(_polygonMeshMat);
-                _polygonMeshMat = CreatePolygonMeshMaterial();
-                meshRenderer.material = _polygonMeshMat;
+                // Only assign the mesh material ONCE
+                if (meshRenderer.sharedMaterial != MeshMat)
+                    meshRenderer.sharedMaterial = MeshMat;
+
+                // Only change color via PropertyBlock
+                var block = new MaterialPropertyBlock();
+                block.SetColor("_BaseColor", Color.red); // customize as needed
+                meshRenderer.SetPropertyBlock(block);
             }
             else
             {
                 meshCollider.sharedMesh = null;
             }
         }
-
-        private Material CreatePolygonMeshMaterial()
+        
+        public void SetMeshHighlightColor(Color color)
         {
-            // Pick color from user option, settings, or default
-            Color polygonColor = new Color(0.4f, 0.8f, 1f); // Or read from setting
-            float alpha = 0.08f; // Or read from setting/UI
-
-            // Now get from MaterialLibrary
-            return MaterialLibrary.GetPolygonMeshMaterial(polygonColor, alpha);
+            var block = new MaterialPropertyBlock();
+            meshRenderer.GetPropertyBlock(block); // preserve other properties
+            block.SetColor("_BaseColor", color);
+            meshRenderer.SetPropertyBlock(block);
         }
 
 
@@ -146,9 +148,7 @@ namespace Manipulator
                 if (p != null && p.IsOnlyConnectedTo(this))
                     yield return p;
         }
-
-        // ------------------------ DRAWER LOGIC ------------------------
-
+        
         public static class Drawer
         {
             private const float SnapDistance = 0.2f;
@@ -158,10 +158,13 @@ namespace Manipulator
             private static string pendingPointId;
             private static string pendingPolygonId;
 
+            // Main entry to call per-frame
             public static void UpdatePolygonInput()
             {
-                if (Input.GetMouseButtonDown(0)) Click();
-                else UpdatePreview();
+                if (Input.GetMouseButtonDown(0))
+                    Click();
+                else
+                    UpdatePreview();
             }
 
             private static void Click()
@@ -176,7 +179,7 @@ namespace Manipulator
                     return;
                 }
 
-                // Create real point
+                // Create new point (prefab uses Inspector material)
                 var newPointId = Guid.NewGuid().ToString();
                 var pointData = new ShapeData
                 {
@@ -196,7 +199,7 @@ namespace Manipulator
                 {
                     if (shape is Point pt && pt.ShapeId == pendingPointId)
                     {
-                        // Spawn segment from last to new point
+                        // Draw a segment from last point to this point (if not first)
                         if (points.Count > 0)
                         {
                             var segId = Guid.NewGuid().ToString();
@@ -210,28 +213,25 @@ namespace Manipulator
                                 ConnectedPoints = new List<string> { points.Last().ShapeId, pt.ShapeId },
                                 Settings = new Dictionary<string, string>()
                             };
-
                             var segBatch = new CreateShapeBatchAction(new List<ShapeData> { segData });
                             UndoRedoNetworkBridge.Instance.DoAndBroadcast(segBatch);
                         }
 
                         points.Add(pt);
 
-                        // Create/update preview
+                        // Create/update preview objects
                         if (previewPoint == null)
                         {
                             previewPoint = ShapeFactory.CreateShape("Point", pos) as Point;
-                            ShapeStorage.Unregister(previewPoint);
-                            previewPoint.SetRaycastIgnore(true);
+                            ShapeStorage.Unregister(previewPoint); // Hide from global selection
+                            previewPoint.SetRaycastIgnore(true);   // Ignore raycasts
                         }
-
                         if (previewSegment == null)
                         {
                             previewSegment = ShapeFactory.CreateShape("Segment", pos) as Segment;
                             previewSegment.MarkAsPreview();
                             previewSegment.SetRaycastIgnore(true);
                         }
-
                         previewSegment.SetStartPoint(pt);
                         previewSegment.SetEndPoint(previewPoint);
                     }
@@ -253,7 +253,7 @@ namespace Manipulator
             {
                 if (points.Count < 3) return;
 
-                // Create last segment from last → first point
+                // Final segment from last point to first
                 var lastSegId = Guid.NewGuid().ToString();
                 var finalSegData = new ShapeData
                 {
@@ -265,11 +265,10 @@ namespace Manipulator
                     ConnectedPoints = new List<string> { points.Last().ShapeId, points[0].ShapeId },
                     Settings = new Dictionary<string, string>()
                 };
-
                 var segBatch = new CreateShapeBatchAction(new List<ShapeData> { finalSegData });
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(segBatch);
 
-                // Create the polygon
+                // Create the polygon shape
                 pendingPolygonId = Guid.NewGuid().ToString();
                 var polyData = new ShapeData
                 {
@@ -281,19 +280,10 @@ namespace Manipulator
                     ConnectedPoints = points.Select(p => p.ShapeId).ToList(),
                     Settings = new Dictionary<string, string>()
                 };
-
                 var polyAction = new CreateShapeBatchAction(new List<ShapeData> { polyData });
                 UndoRedoNetworkBridge.Instance.DoAndBroadcast(polyAction);
 
-                // Before cleanup: turn previewPoint into a real point if necessary
-                if (previewPoint != null)
-                {
-                    previewPoint.SetRaycastIgnore(false);
-                    ShapeStorage.Register(previewPoint);
-                    points.Add(previewPoint);
-                }
-
-                // Cleanup
+                // Cleanup preview objects
                 points.Clear();
 
                 if (previewPoint != null)
@@ -302,18 +292,12 @@ namespace Manipulator
                     UnityEngine.Object.Destroy(previewPoint.gameObject);
                     previewPoint = null;
                 }
-
                 if (previewSegment != null)
                 {
                     ShapeStorage.Unregister(previewSegment);
                     UnityEngine.Object.Destroy(previewSegment.gameObject);
                     previewSegment = null;
                 }
-
-                previewPoint?.DestroyShape();
-                previewSegment?.DestroyShape();
-                previewPoint = null;
-                previewSegment = null;
 
                 PerformDrawing.ResetMode();
             }

@@ -21,7 +21,11 @@ namespace Manipulator
 
         // MATERIALS
         public Material DefaultMat { get; set; }
-        public Material MeshMat { get; set; }
+        public Material MeshMat { get; set; } 
+        
+        public MaterialType CurrentColorType = MaterialType.Default;
+
+
 
         public virtual IEnumerable<Shape> GetDependentShapesForDelete()
         {
@@ -33,7 +37,8 @@ namespace Manipulator
         protected virtual void Awake()
         {
             DefaultMat = new Material(MaterialLibrary.Get(MaterialType.Default));
-            MeshMat = MaterialLibrary.GetPolygonMat(); // default polygon mesh material, can override in child
+            
+            //MeshMat = MaterialLibrary.GetPolygonMat(); // default polygon mesh material, can override in child
         }
 
         public virtual List<ISetting> GetSettings()
