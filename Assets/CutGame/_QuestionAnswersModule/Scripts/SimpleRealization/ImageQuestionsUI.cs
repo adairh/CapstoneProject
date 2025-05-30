@@ -114,14 +114,14 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
             
             GoToNextQuestion(true);
             
-            gm.Quiz.gameObject.SetActive(false);
-            
-            if (gm.enemiesCount - gm.enemiesDestroyed <= 1)
-            {
-                gm.failed = true;
-            }
-            
-            gm.DeleteVirus();
+            // gm.Quiz.gameObject.SetActive(false);
+            //
+            // if (gm.enemiesCount - gm.enemiesDestroyed <= 1)
+            // {
+            //     gm.failed = true;
+            // }
+            //
+            // gm.DeleteVirus();
             
             // Handle wrong answer in GameManager
             GameManager.instance.HandleWrongAnswer(questionText, correctAnswer, userAnswer);
