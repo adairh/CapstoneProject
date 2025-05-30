@@ -12,13 +12,54 @@ namespace Manipulator
     [Serializable]
     public class CustomPointDef
     {
+        // Basic type
         public string type;
+
+        // For fields that may be array or string, provide both and use the getter below
         public string[] from;
+        public string from_single;
+
         public float ratio = 0.5f;
         public float distance;
         public string axis;
         public string plane;
         public float[] position;
+
+        public string[] segment;
+        public string segment_single;
+
+        public string[] direction;
+        public string direction_single;
+
+        // Add extra fields here as your AI output evolves
+
+        // ----- Getter helpers -----
+        public string[] GetFrom()
+        {
+            if (from != null && from.Length > 0)
+                return from;
+            if (!string.IsNullOrEmpty(from_single))
+                return new[] { from_single };
+            return null;
+        }
+
+        public string[] GetSegment()
+        {
+            if (segment != null && segment.Length > 0)
+                return segment;
+            if (!string.IsNullOrEmpty(segment_single))
+                return new[] { segment_single };
+            return null;
+        }
+
+        public string[] GetDirection()
+        {
+            if (direction != null && direction.Length > 0)
+                return direction;
+            if (!string.IsNullOrEmpty(direction_single))
+                return new[] { direction_single };
+            return null;
+        }
     }
 
     [Serializable]

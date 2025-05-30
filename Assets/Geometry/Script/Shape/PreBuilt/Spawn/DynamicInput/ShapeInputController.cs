@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -45,6 +46,7 @@ namespace Manipulator
             currentSpawner = null;
             inputPanel.Clear();
             inputPanel.gameObject.SetActive(false);
+            PerformDrawing.ResetMode();
         }
 
         public void OnSubmit()
@@ -67,6 +69,10 @@ namespace Manipulator
             ResetSpawner(); 
             
         }
+        
+        
+
+        
 
     }
 }

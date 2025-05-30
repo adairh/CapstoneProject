@@ -19,9 +19,9 @@ namespace Manipulator
         [SerializeField] private Button btnStartPlacement;
 
         [Header("Open/Close Panel")]
-        [SerializeField] private GameObject panelContent; // Usually this.gameObject, or a child panel
-        [SerializeField] private Button btnOpenAI;        // Button to open panel (visible when closed)
-        [SerializeField] private Button btnCloseAI;       // Button to close panel (visible when open)
+        [SerializeField] private GameObject panelContent;
+        [SerializeField] private Button btnOpenAI;
+        [SerializeField] private Button btnCloseAI;
 
         private AIShapeResult pendingShapeResult;
         private bool waitingForPlacement = false;
@@ -43,7 +43,6 @@ namespace Manipulator
             if (btnCloseAI != null)
                 btnCloseAI.onClick.AddListener(ClosePanel);
 
-            // Initial state: panel open, open button hidden
             SetPanelOpen(false);
         }
 
@@ -58,6 +57,7 @@ namespace Manipulator
 
             string prompt = AIHelper.BuildPrompt(inputField.text);
             string json = await ChatGPTClient.Ask(prompt);
+            json = json.Replace("```", "").Replace("json", "").Trim();
 
             if (string.IsNullOrWhiteSpace(json))
             {
@@ -68,22 +68,12 @@ namespace Manipulator
 
             Debug.Log("[AIInputController] Raw AI response:" + json);
 
-            AIShapeResult result;
-            try
-            {
-                result = JsonConvert.DeserializeObject<AIShapeResult>(json);
-            }
-            catch
-            {
-                UIHint.ShowTemp("Lỗi phân tích kết quả AI.", 2);
-                Debug.LogError("[AIInputController] Failed to parse AI response.: " + json);
-                return;
-            }
+            AIShapeResult result = TryParseWithFallback(json);
 
             if (result == null)
             {
                 UIHint.ShowTemp("Kết quả AI trả về không hợp lệ.", 2);
-                Debug.LogError("[AIInputController] Parsed AI result is null.");
+                Debug.LogError("[AIInputController] Failed to parse AI response.: " + json);
                 return;
             }
 
@@ -95,6 +85,33 @@ namespace Manipulator
             UIHint.Show("Đã sẵn sàng đặt hình. Nhấn nút 'Bắt đầu đặt hình', sau đó click vào không gian để đặt.");
             btnStartPlacement?.gameObject.SetActive(true);
         }
+
+        private AIShapeResult TryParseWithFallback(string json)
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<AIShapeResult>(json);
+            }
+            catch (JsonException)
+            {
+                int firstBrace = json.IndexOf('{');
+                int lastBrace = json.LastIndexOf('}');
+                if (firstBrace >= 0 && lastBrace > firstBrace)
+                {
+                    string trimmedJson = json.Substring(firstBrace, lastBrace - firstBrace + 1);
+                    try
+                    {
+                        return JsonConvert.DeserializeObject<AIShapeResult>(trimmedJson);
+                    }
+                    catch (JsonException e)
+                    {
+                        Debug.LogError("[AIInputController] Trimmed parse failed: " + e.Message);
+                    }
+                }
+                return null;
+            }
+        }
+        
 
         private void ShowExplanation(AIShapeResult result)
         {
@@ -123,8 +140,8 @@ namespace Manipulator
                         Vector3 placementPoint = hit.point;
 
                         ShapeExtrasProcessor.BuildFromAIWithOffset(
-                            pendingShapeResult.CustomPoints, 
-                            pendingShapeResult.ExtraSegments, 
+                            pendingShapeResult.CustomPoints,
+                            pendingShapeResult.ExtraSegments,
                             placementPoint
                         );
 
@@ -138,16 +155,8 @@ namespace Manipulator
             }
         }
 
-        // Panel open/close logic
-        public void OpenPanel()
-        {
-            SetPanelOpen(true);
-        }
-
-        public void ClosePanel()
-        {
-            SetPanelOpen(false);
-        }
+        public void OpenPanel() => SetPanelOpen(true);
+        public void ClosePanel() => SetPanelOpen(false);
 
         private void SetPanelOpen(bool isOpen)
         {
@@ -160,7 +169,6 @@ namespace Manipulator
             if (btnCloseAI != null)
                 btnCloseAI.gameObject.SetActive(isOpen);
 
-            // Optional: hide placement button if panel is closed
             if (btnStartPlacement != null && !isOpen)
                 btnStartPlacement.gameObject.SetActive(false);
         }
