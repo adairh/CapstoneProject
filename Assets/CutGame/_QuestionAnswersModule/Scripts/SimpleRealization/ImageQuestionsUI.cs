@@ -114,7 +114,7 @@ namespace _QuestionAnswersModule.Scripts.SimpleRealization
             
             GoToNextQuestion(true);
             
-            // gm.Quiz.gameObject.SetActive(false);
+            gm.Quiz.gameObject.SetActive(false);
             //
             // if (gm.enemiesCount - gm.enemiesDestroyed <= 1)
             // {
