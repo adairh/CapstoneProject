@@ -76,7 +76,7 @@ public class BackToHomeButton : MonoBehaviour
 
     public void OnBackToHomeFrom_PlayGame()
     {
-        CanvasSortOrderManager.setPlayGameCanvasOnTop = true;
+        //CanvasSortOrderManager.setPlayGameCanvasOnTop = true;
         SceneManager.LoadScene("MAIN");
     }
 

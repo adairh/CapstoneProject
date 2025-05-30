@@ -123,7 +123,7 @@ namespace Manipulator
                 ChatGPTRawResponse wrapper = JsonUtility.FromJson<ChatGPTRawResponse>(result);
                 if (wrapper?.choices == null || wrapper.choices.Length == 0 || wrapper.choices[0].message == null)
                 {
-                    Debug.LogError("[ChatGPTClient] Response không hợp lệ hoặc thiếu nội dung.");
+                    Debug.LogError("[ChatGPTClient] Response không hợp lệ hoặc thiếu nội dung: " + result);
                     return null;
                 }
 

@@ -92,6 +92,15 @@ namespace Manipulator
                 OnAction?.Invoke(UserAction.CameraMoveBackward, Input.mousePosition);
             if (Input.GetKey(KeyCode.D))
                 OnAction?.Invoke(UserAction.CameraMoveRight, Input.mousePosition);
+            
+            
+            
+            if (Input.GetKeyDown(KeyCode.U)) 
+                ButtonController.Instance.SetAxisLockMode(0);
+            if (Input.GetKeyDown(KeyCode.I)) 
+                ButtonController.Instance.SetAxisLockMode(1);
+            if (Input.GetKeyDown(KeyCode.O)) 
+                ButtonController.Instance.SetAxisLockMode(2);
 
 #elif UNITY_IOS || UNITY_ANDROID
             if (Input.touchCount > 0)

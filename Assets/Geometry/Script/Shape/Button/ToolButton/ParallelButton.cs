@@ -133,6 +133,9 @@ namespace Manipulator
 
             // Exit drawing mode
             ManipulationManager.Instance.IsDrawing = false;
+            
+            
+            PerformDrawing.ResetMode();
         }
 
         /// <summary> Spawns a ghost line object with a LineRenderer to preview the new line. </summary>
