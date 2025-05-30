@@ -35,6 +35,7 @@ namespace Manipulator
 
             DivideSegmentTool.CreateDividedPoint(a, b, 2f); // Default divides at 1:2 ratio
 
+            PerformDrawing.ResetMode();
             // Optionally: auto-select or highlight the new point
         }
     }

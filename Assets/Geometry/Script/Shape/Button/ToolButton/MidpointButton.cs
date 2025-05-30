@@ -33,6 +33,7 @@ namespace Manipulator
             // Call your midpoint creation tool
             MidpointTool.CreateMidpoint(a, b);
 
+            PerformDrawing.ResetMode();
             // Optionally: flash the new point, select it, etc.
         }
     }

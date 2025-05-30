@@ -5,7 +5,7 @@ namespace Manipulator
 {
     public class GridAndAxisSystem : MonoBehaviour
     {
-        [Header("Grid Settings")] public int gridSize = 10;
+        [Header("Grid Settings")] public int gridSize = 30;
         public float gridSpacing = 1f;
         public Material planeMaterial;
         public Material axisMaterial;
@@ -69,10 +69,9 @@ namespace Manipulator
             filter.mesh = mesh;
 
             // Set double-sided material
-            var mat = new Material(planeMaterial);
-            mat.SetInt("_Cull", (int)CullMode.Off); // hiển thị 2 mặt
-
-// Làm trong suốt
+            var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            mat.CopyPropertiesFromMaterial(planeMaterial);
+// Apply your transparency/double-sided setup as before
             mat.SetFloat("_Mode", 3);
             mat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
             mat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);

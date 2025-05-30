@@ -35,11 +35,11 @@ namespace Manipulator
             if (ManipulationManager.Instance.IsDrawing) return;
             isSelected = selected;
             if (rend != null)
-            {
-                rend.material = isSelected ? selectedMat : shape.DefaultMat;
-                OnSelectedChanged?.Invoke(this);
-            }
+                MaterialLibrary.Apply(rend, isSelected ? MaterialType.Select : MaterialType.Default);
+            OnSelectedChanged?.Invoke(this);
         }
+
+
 
         public bool IsSelected()
         {

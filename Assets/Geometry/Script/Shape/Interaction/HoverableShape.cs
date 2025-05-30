@@ -18,24 +18,17 @@ namespace Manipulator
         {
             if (ManipulationManager.Instance.IsDrawing) return;
             var ss = shape.GetComponent<SelectableShape>();
-            if (ss != null)
-                if (ss.IsSelected())
-                    return;
-            if (rend != null) rend.material = hoverMat;
+            if (ss != null && ss.IsSelected()) return;
+            if (rend != null) MaterialLibrary.Apply(rend, MaterialType.Hover);
         }
 
         private void OnMouseExit()
         {
             if (ManipulationManager.Instance.IsDrawing) return;
-            if (rend != null)
-            {
-                var ss = shape.GetComponent<SelectableShape>();
-                if (ss != null)
-                    if (ss.IsSelected())
-                        //MaterialLibrary.Get(MaterialType.Select);
-                        return;
-                rend.material = shape.DefaultMat;
-            }
+            var ss = shape.GetComponent<SelectableShape>();
+            if (ss != null && ss.IsSelected()) return;
+            if (rend != null) MaterialLibrary.Apply(rend, MaterialType.Default);
         }
+
     }
 }

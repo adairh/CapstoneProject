@@ -26,6 +26,8 @@ namespace Manipulator
                 label.PointA = a;
                 label.PointB = b;
             }
+            
+            PerformDrawing.ResetMode();
         }
     }
 }

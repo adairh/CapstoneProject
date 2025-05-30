@@ -1,5 +1,5 @@
 
-﻿using System;
+ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -163,5 +163,53 @@ namespace Manipulator
             }
             return null;
         }
+        
+        public static void BuildFromAIWithOffset(
+            Dictionary<string, CustomPointDef> customPoints,
+            List<string[]> extraSegments,
+            Vector3 offset)
+        {
+            // Compute original centroid (or use A as origin)
+            Vector3 originalOrigin = Vector3.zero;
+            if (customPoints.Count > 0)
+            {
+                var first = customPoints.Values.GetEnumerator();
+                first.MoveNext();
+                var def = first.Current;
+                if (def.position != null && def.position.Length == 3)
+                    originalOrigin = new Vector3(def.position[0], def.position[1], def.position[2]);
+            }
+            Vector3 translation = offset - originalOrigin;
+
+            // Make a deep copy and apply offset to all absolute points
+            var shiftedPoints = new Dictionary<string, CustomPointDef>();
+            foreach (var kvp in customPoints)
+            {
+                var def = kvp.Value;
+                var defCopy = new CustomPointDef
+                {
+                    type = def.type,
+                    from = def.from,
+                    ratio = def.ratio,
+                    distance = def.distance,
+                    axis = def.axis,
+                    plane = def.plane,
+                    position = def.position != null ? (float[])def.position.Clone() : null
+                };
+
+                if (defCopy.type == "absolute" && defCopy.position != null && defCopy.position.Length == 3)
+                {
+                    defCopy.position[0] += translation.x;
+                    defCopy.position[1] += translation.y;
+                    defCopy.position[2] += translation.z;
+                }
+
+                shiftedPoints[kvp.Key] = defCopy;
+            }
+
+            // Now call the original function with the shifted points
+            BuildFromAI(shiftedPoints, extraSegments);
+        }
+
     }
 }

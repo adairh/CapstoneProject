@@ -112,6 +112,8 @@ public class PerpendicularButton : BaseButton
             }
 
             ManipulationManager.Instance.IsDrawing = false;
+            
+            PerformDrawing.ResetMode();
         }
 
         private void SpawnGhostLine(Vector3 direction)

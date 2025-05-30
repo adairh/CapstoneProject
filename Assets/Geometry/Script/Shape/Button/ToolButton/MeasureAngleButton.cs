@@ -30,6 +30,8 @@ namespace Manipulator
                 label.PointB = b;
                 label.PointC = c;
             }
+            
+            PerformDrawing.ResetMode();
         }
     }
 }

@@ -6,6 +6,11 @@ namespace Manipulator
     public enum AxisLockMode { None, LockY, LockXZ }
     public class ManipulationManager : MonoBehaviour
     {
+        
+        
+        [Header("Materials")]
+        public Material universalMat;
+        
         public static ManipulationManager Instance { get; private set; }
 
         public AxisLockMode CurrentAxisLock = AxisLockMode.None;
