@@ -121,7 +121,7 @@ public class DraggableBottomSheet : MonoBehaviour, IBeginDragHandler, IDragHandl
     public void SetClosedImmediate()
     {
         LayoutRebuild();
-        panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, closedY);
+        //panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, closedY);
         isClosed = true;
     }
 
