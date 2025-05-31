@@ -68,6 +68,7 @@ namespace Manipulator
                 }
 
                 TryConnect();
+                TryConnectMesh();
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
@@ -131,6 +132,50 @@ namespace Manipulator
                     meshDisplay.Initialize(new List<Point> { a, b, c, d });
                 }
             }
+        }
+        
+        private GameObject meshHolder;
+        private MeshFilter meshFilter;
+        private MeshRenderer meshRenderer;
+        private MeshCollider meshCollider;
+
+        public void TryConnectMesh()
+        {
+            if (a == null || b == null || c == null || d == null || ab == null) return;
+
+            if (meshHolder == null)
+            {
+                meshHolder = new GameObject("RectangleMesh");
+                meshHolder.transform.SetParent(ab.transform, false);
+                meshFilter = meshHolder.AddComponent<MeshFilter>();
+                meshRenderer = meshHolder.AddComponent<MeshRenderer>();
+                meshCollider = meshHolder.AddComponent<MeshCollider>();
+                meshRenderer.sharedMaterial = ab.GetComponent<MeshRenderer>()?.sharedMaterial;
+            }
+
+            a.OnPositionChanged -= UpdateMesh;
+            b.OnPositionChanged -= UpdateMesh;
+            c.OnPositionChanged -= UpdateMesh;
+            d.OnPositionChanged -= UpdateMesh;
+            a.OnPositionChanged += UpdateMesh;
+            b.OnPositionChanged += UpdateMesh;
+            c.OnPositionChanged += UpdateMesh;
+            d.OnPositionChanged += UpdateMesh;
+
+            UpdateMesh();
+        }
+
+        private void UpdateMesh(Point pt = null)
+        {
+            if (a == null || b == null || c == null || d == null || meshFilter == null) return;
+            var verts = new Vector3[] { a.transform.position, b.transform.position, c.transform.position, d.transform.position };
+            var mesh = new Mesh();
+            mesh.vertices = verts;
+            mesh.triangles = new[] { 0, 1, 2, 0, 2, 3 };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            meshFilter.sharedMesh = mesh;
+            meshCollider.sharedMesh = mesh;
         }
     }
 }

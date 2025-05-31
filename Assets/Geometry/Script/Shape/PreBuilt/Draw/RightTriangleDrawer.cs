@@ -58,6 +58,7 @@ namespace Manipulator
                 }
 
                 TryConnect();
+                TryConnectMesh();
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(batch);
@@ -117,5 +118,48 @@ namespace Manipulator
                 }
             }
         }
+        
+        private GameObject meshHolder;
+        private MeshFilter meshFilter;
+        private MeshRenderer meshRenderer;
+        private MeshCollider meshCollider;
+
+        public void TryConnectMesh()
+        {
+            if (a == null || b == null || c == null || ab == null) return;
+
+            if (meshHolder == null)
+            {
+                meshHolder = new GameObject("RightTriangleMesh");
+                meshHolder.transform.SetParent(ab.transform, false);
+                meshFilter = meshHolder.AddComponent<MeshFilter>();
+                meshRenderer = meshHolder.AddComponent<MeshRenderer>();
+                meshCollider = meshHolder.AddComponent<MeshCollider>();
+                meshRenderer.sharedMaterial = MaterialLibrary.Get();
+            }
+
+            a.OnPositionChanged -= UpdateMesh;
+            b.OnPositionChanged -= UpdateMesh;
+            c.OnPositionChanged -= UpdateMesh;
+            a.OnPositionChanged += UpdateMesh;
+            b.OnPositionChanged += UpdateMesh;
+            c.OnPositionChanged += UpdateMesh;
+
+            UpdateMesh();
+        }
+
+        private void UpdateMesh(Point pt = null)
+        {
+            if (a == null || b == null || c == null || meshFilter == null) return;
+            var verts = new Vector3[] { a.transform.position, b.transform.position, c.transform.position };
+            var mesh = new Mesh();
+            mesh.vertices = verts;
+            mesh.triangles = new[] { 0, 1, 2 };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            meshFilter.sharedMesh = mesh;
+            meshCollider.sharedMesh = mesh;
+        }
+        
     }
 }

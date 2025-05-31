@@ -46,7 +46,9 @@ namespace Manipulator
             sb.AppendLine("🛑 QUY TẮC NGHIÊM NGẶT:");
             sb.AppendLine("- Các trường như \"from\", \"to\", \"segment\", \"on_segment\" PHẢI luôn là MẢNG (dù chỉ có 1 phần tử). Ví dụ: [\"A\"]");
             sb.AppendLine("- Tất cả toạ độ trong \"position\" phải là số thực. KHÔNG dùng biểu thức như Math.sqrt.");
-            sb.AppendLine("- KHÔNG thêm mô tả nào ngoài JSON. KHÔNG bọc JSON trong markdown hoặc ```json```.");
+            sb.AppendLine("- KHÔNG thêm mô tả nào ngoài JSON. KHÔNG bọc JSON trong markdown hoặc ```json```."); 
+            
+            sb.AppendLine("- MẶT PHẲNG ĐÁY LÀ OXY, LUÔN LUÔN DỰNG TỌA ĐỘ TÍNH TỪ OXY");
 
             sb.AppendLine();
             sb.AppendLine("⚠️ ABSOLUTELY DO NOT USE any math expressions (e.g. sqrt, /, *, +, -) inside JSON arrays.");

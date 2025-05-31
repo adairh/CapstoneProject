@@ -8,12 +8,12 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    [RequireComponent(typeof(SphereCollider))]
+    [RequireComponent(typeof(BoxCollider))]
     public class Point : Shape
     {
-        private const float Radius = 0.1f;
+        private const float Side = 0.1f; // Adjusted to roughly match original sphere's volume
 
-        private SphereCollider collider;
+        private BoxCollider collider;
         private FixedPointConstraint constraint;
         private NetworkPositionSync positionSync;
 
@@ -23,17 +23,15 @@ namespace Manipulator
         {
             base.Awake();
 
-            // PATCH: Name is set during Initialize/Deserialize, not here
-
-            // Add mesh
+            // Add mesh (Cube instead of Sphere)
             var mf = gameObject.AddComponent<MeshFilter>();
             var mr = gameObject.AddComponent<MeshRenderer>();
-            mf.mesh = MeshGenerator.CreateSphere(Radius);
+            mf.mesh = MeshGenerator.CreateCube(Side); // You need to have a method to create a cube mesh
             mr.material = DefaultMat;
 
-            // Collider
-            collider = GetComponent<SphereCollider>();
-            collider.radius = Radius;
+            // Collider (Box)
+            collider = GetComponent<BoxCollider>();
+            collider.size = Vector3.one * Side;
             collider.center = Vector3.zero;
 
             // Constraint
@@ -90,14 +88,11 @@ namespace Manipulator
                             Vector3.Distance(pos, segment.EndPoint.transform.position)
                         );
 
-                        const float endpointSnapDist = 0.15f; // Your endpoint snap threshold
+                        const float endpointSnapDist = 0.15f;
 
                         if (minDistToEndpoints > endpointSnapDist)
                         {
-                            // Place point and remember it should get a constraint!
                             var id = Guid.NewGuid().ToString();
-
-                            // PATCH: Generate label here ONCE, and store in LogicalName
                             var label = LabelGenerator.Next();
 
                             var data = new ShapeData
@@ -114,13 +109,11 @@ namespace Manipulator
                             var v = new CreateShapeAction(data);
                             UndoRedoNetworkBridge.Instance.DoAndBroadcast(v);
 
-                            // Wait for point creation, then attach constraint
                             EditorApplication.delayCall += () =>
                             {
                                 var pt = ShapeStorage.GetById(id) as Point;
                                 if (pt != null)
                                 {
-                                    // Attach the constraint
                                     var c = pt.gameObject.AddComponent<RelativePointConstraint>();
                                     c.Owner = pt;
                                     c.SetTarget(segment, RelativeTargetType.Segment, FindTOnSegment(segment, pos), 0, 0);
@@ -131,7 +124,7 @@ namespace Manipulator
                         }
                     }
 
-                    // Fallback: Normal point creation (not on segment body)
+                    // Fallback: Normal point creation
                     var id2 = Guid.NewGuid().ToString();
                     var label2 = LabelGenerator.Next();
 
@@ -165,9 +158,6 @@ namespace Manipulator
 
         #region MOVE
 
-        /// <summary>
-        ///     Di chuyển point đến vị trí mới. Nếu silent = true, không gửi sự kiện NotifyChanged.
-        /// </summary>
         public override void MoveTo(Vector3 newPosition, bool silent = false, bool queue = true)
         {
             if (transform.position == newPosition) return;
@@ -196,7 +186,6 @@ namespace Manipulator
 
         public string GetLabel()
         {
-            // PATCH: Always return LogicalName
             return Data != null && !string.IsNullOrEmpty(Data.LogicalName) ? Data.LogicalName : label.Value;
         }
 
@@ -216,7 +205,7 @@ namespace Manipulator
             {
                 var prefab = UIManager.Instance.GetUIComponent("LabelDisplayPrefab");
                 labelDisplay = Instantiate(prefab, transform);
-                labelDisplay.transform.localPosition = new Vector3(0, 0.4f, 0);
+                labelDisplay.transform.localPosition = new Vector3(0, Side * 0.7f, 0); // Slightly above the cube
             }
 
             var text = labelDisplay.GetComponentInChildren<TextMeshProUGUI>();
@@ -229,16 +218,14 @@ namespace Manipulator
             base.OnNetworkSpawn();
             label.OnValueChanged += (oldVal, newVal) => { UpdateLabelDisplay(newVal); };
 
-            // PATCH: Here, ensure the label is synced after the object is network-registered
             if (!string.IsNullOrEmpty(Data?.LogicalName))
             {
                 if (IsServer)
-                    label.Value = Data.LogicalName; // triggers UI update for everyone
+                    label.Value = Data.LogicalName;
                 else
-                    UpdateLabelDisplay(Data.LogicalName); // for the local user until RPC syncs
+                    UpdateLabelDisplay(Data.LogicalName);
             }
         }
-
 
         [ServerRpc(RequireOwnership = false)]
         private void SubmitLabelRequestServerRpc(string newLabel)
@@ -259,7 +246,6 @@ namespace Manipulator
         {
             var data = base.Serialize();
             data.Type = "Point";
-            // PATCH: Always keep LogicalName!
             data.LogicalName = Data.LogicalName;
             return data;
         }
@@ -268,18 +254,14 @@ namespace Manipulator
         {
             base.Deserialize(data);
 
-            // PATCH: DO NOT call SetLabel() here. Instead, set local state only.
             if (!string.IsNullOrEmpty(data.LogicalName))
             {
-                // Set internal label variable; do not call ServerRpc yet!
                 if (IsServer)
                     label.Value = data.LogicalName;
-                // Always update UI locally for the spawned object
                 name = data.LogicalName;
                 UpdateLabelDisplay(data.LogicalName);
             }
         }
-
 
         #endregion
 
@@ -294,7 +276,7 @@ namespace Manipulator
         public override void UpdateHitbox()
         {
             if (collider == null)
-                collider = GetComponent<SphereCollider>();
+                collider = GetComponent<BoxCollider>();
         }
 
         public override void NotifyChanged(bool silent = false)

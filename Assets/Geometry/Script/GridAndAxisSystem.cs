@@ -24,8 +24,8 @@ namespace Manipulator
             CreateAxisWithMarkers(Vector3.forward, zColor, "Z-Axis");
 
             CreatePlane(Vector3.right, Vector3.forward, "Plane_OXY");
-            CreatePlane(Vector3.up, Vector3.forward, "Plane_OYZ");
-            CreatePlane(Vector3.right, Vector3.up, "Plane_OXZ");
+            //CreatePlane(Vector3.up, Vector3.forward, "Plane_OYZ");
+            //CreatePlane(Vector3.right, Vector3.up, "Plane_OXZ");
         }
 
         private void CreateAxisWithMarkers(Vector3 direction, Color color, string name)
@@ -82,7 +82,7 @@ namespace Manipulator
             mat.renderQueue = 3000;
 
             var color = mat.color;
-            color.a = 0.1f;
+            color.a = 0.3f;
             mat.color = color;
 
             renderer.material = mat;

@@ -49,6 +49,20 @@ namespace Manipulator
             scaledMesh.RecalculateBounds();
             return scaledMesh;
         }
+        public static Mesh CreateCube(float radius, int segments = 16, int rings = 16)
+        {
+            var temp = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var mesh = temp.GetComponent<MeshFilter>().sharedMesh;
+            Object.DestroyImmediate(temp);
+
+            var scaledMesh = Object.Instantiate(mesh);
+            var vertices = scaledMesh.vertices;
+            for (var i = 0; i < vertices.Length; i++)
+                vertices[i] *= radius;
+            scaledMesh.vertices = vertices;
+            scaledMesh.RecalculateBounds();
+            return scaledMesh;
+        }
 
         public static Mesh CreateCylinder(float height, float radius, int segments = 20)
         {

@@ -60,7 +60,7 @@ namespace Manipulator
         public override void Apply()
         {
             // Store the chosen color for refresh logic if needed
-            targetShape.DefaultMat = Value; // <- add this field to Shape for re-apply on refresh if you wish
+            //targetShape.DefaultMat = Value; // <- add this field to Shape for re-apply on refresh if you wish
 
             foreach (var s in targetShape.GetDependentShapesForDelete())
             {

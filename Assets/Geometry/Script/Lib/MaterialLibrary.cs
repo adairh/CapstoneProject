@@ -52,7 +52,7 @@ namespace Manipulator
         // Optionally, keep your color map:
         private static readonly System.Collections.Generic.Dictionary<MaterialType, Color> _colors = new()
         {
-            { MaterialType.Default, new Color(0.1f, 0.3f, 3f, 0.8f) },
+            { MaterialType.Default, new Color(0.1f, 0.3f, 3f, 1f) },
             { MaterialType.Highlight, new Color(1f, 0.8f, 0f, 1f) },
             { MaterialType.Drag, new Color(0.2f, 0.6f, 1f, 1f) },
             { MaterialType.Select, new Color(0f, 0.5f, 0.3f, 1f) },
