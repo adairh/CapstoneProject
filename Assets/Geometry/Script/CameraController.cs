@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Manipulator
 {
@@ -44,26 +45,41 @@ namespace Manipulator
         [Header("Debug")]
         public bool showDebugInfo = false;
 
+        [Header("Projection/FOV Presets")]
+        public float[] fovPresets = { 60f, 45f, 75f };
+        public Color[] bgColorPresets;
+        public List<Material> skyboxPresets;
+
+        public int fovState = 0;
+        public int bgColorState = 0;
+        public int skyboxState = 0;
+
         public float yaw;
         public float pitch = 30f;
         private float distance;
-
-        private Vector3 lastMousePos;
         private Camera cam;
 
+        private Vector3 lastMousePos;
         private Vector3 targetVelocity;
         private Vector3 desiredTargetPos;
         private bool isTransitioningTarget = false;
+        private bool isDragging = false;
 
         // Smooth transition
         private Coroutine zoneTransitionRoutine;
 
         public static CameraController Instance;
 
-        private void Start()
+        void Awake()
         {
             cam = GetComponent<Camera>();
+            if (cam == null)
+                cam = Camera.main;
+            Instance = this;
+        }
 
+        private void Start()
+        {
             if (target == null && defaultTarget != null)
                 target = Instantiate(defaultTarget);
 
@@ -77,20 +93,12 @@ namespace Manipulator
             desiredTargetPos = target.position;
             distance = defaultZoom;
 
-            if (InputManager.Instance != null)
-                InputManager.Instance.OnAction += HandleCameraInput;
-
-            Instance = this;
-        }
-
-        private void OnDestroy()
-        {
-            if (InputManager.Instance != null)
-                InputManager.Instance.OnAction -= HandleCameraInput;
+            UpdateCameraPosition();
         }
 
         private void LateUpdate()
         {
+            HandleInput();
             UpdateCameraPosition();
             if (useBounds)
                 ClampTargetToBounds();
@@ -98,55 +106,55 @@ namespace Manipulator
                 DebugDraw();
         }
 
-        private void HandleCameraInput(UserAction action, Vector2 screenPos)
+        private void HandleInput()
         {
-            switch (action)
+            // --- Orbit with right mouse ---
+            if (Input.GetMouseButtonDown(1))
             {
-                case UserAction.CameraRotate:
-                    Vector3 delta = Input.mousePosition - lastMousePos;
-                    yaw += delta.x * rotationSpeed * Time.deltaTime;
-                    pitch += (invertY ? delta.y : -delta.y) * rotationSpeed * Time.deltaTime;
-                    pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
-                    break;
+                isDragging = true;
+                lastMousePos = Input.mousePosition;
+            }
+            if (Input.GetMouseButtonUp(1))
+                isDragging = false;
 
-                case UserAction.CameraPan:
-                    Vector3 panDelta = Input.mousePosition - lastMousePos;
-                    Vector3 move = -transform.right * panDelta.x - transform.up * panDelta.y;
-                    desiredTargetPos += move * panSpeed * Time.deltaTime;
-                    break;
-
-                case UserAction.CameraZoomIn:
-                    distance -= zoomSpeed * Time.deltaTime;
-                    distance = Mathf.Clamp(distance, minZoom, maxZoom);
-                    break;
-
-                case UserAction.CameraZoomOut:
-                    distance += zoomSpeed * Time.deltaTime;
-                    distance = Mathf.Clamp(distance, minZoom, maxZoom);
-                    break;
-
-                case UserAction.CameraReset:
-                    ResetCamera();
-                    break;
-
-                case UserAction.CameraMoveForward:
-                    desiredTargetPos += transform.forward * keyboardPanSpeed * Time.deltaTime;
-                    break;
-
-                case UserAction.CameraMoveBackward:
-                    desiredTargetPos -= transform.forward * keyboardPanSpeed * Time.deltaTime;
-                    break;
-
-                case UserAction.CameraMoveLeft:
-                    desiredTargetPos -= transform.right * keyboardPanSpeed * Time.deltaTime;
-                    break;
-
-                case UserAction.CameraMoveRight:
-                    desiredTargetPos += transform.right * keyboardPanSpeed * Time.deltaTime;
-                    break;
+            if (isDragging)
+            {
+                Vector3 delta = Input.mousePosition - lastMousePos;
+                yaw += delta.x * rotationSpeed * 0.1f;
+                pitch += (invertY ? delta.y : -delta.y) * rotationSpeed * 0.1f;
+                pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+                lastMousePos = Input.mousePosition;
             }
 
-            lastMousePos = Input.mousePosition;
+            // --- Zoom with scroll wheel ---
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            if (Mathf.Abs(scroll) > 0.01f)
+            {
+                cam.orthographic = false;
+                distance -= scroll * zoomSpeed;
+                distance = Mathf.Clamp(distance, minZoom, maxZoom);
+            }
+
+            // --- Pan with middle mouse ---
+            if (Input.GetMouseButtonDown(2))
+            {
+                lastMousePos = Input.mousePosition;
+            }
+            if (Input.GetMouseButton(2))
+            {
+                Vector3 delta = Input.mousePosition - lastMousePos;
+                Vector3 move = -transform.right * delta.x - transform.up * delta.y;
+                desiredTargetPos += move * panSpeed * 0.01f;
+                lastMousePos = Input.mousePosition;
+            }
+
+            // --- Pan with keyboard ---
+            float panH = Input.GetAxis("Horizontal");
+            float panV = Input.GetAxis("Vertical");
+            if (Mathf.Abs(panH) > 0.01f || Mathf.Abs(panV) > 0.01f)
+            {
+                desiredTargetPos += (transform.right * panH + transform.up * panV) * keyboardPanSpeed * Time.deltaTime;
+            }
         }
 
         public void UpdateCameraPosition()
@@ -173,12 +181,10 @@ namespace Manipulator
                 Vector3 dir = (desiredCamPos - target.position).normalized;
                 float maxDist = Vector3.Distance(target.position, desiredCamPos);
 
-                // SphereCast from target towards the desired camera position
                 if (Physics.SphereCast(target.position, cameraCollisionRadius, dir, out RaycastHit hit, maxDist, zoneBoundaryLayerMask))
                 {
-                    // Move camera as close as possible to the hit point (minus offset)
                     float hitDist = hit.distance - cameraMinDistanceToBoundary;
-                    hitDist = Mathf.Clamp(hitDist, minZoom, maxDist); // Prevent going inside target or negative!
+                    hitDist = Mathf.Clamp(hitDist, minZoom, maxDist);
                     finalCamPos = target.position + dir * hitDist;
                 }
             }
@@ -186,7 +192,6 @@ namespace Manipulator
             transform.position = finalCamPos;
             transform.rotation = rotation;
         }
-
 
         private void ClampTargetToBounds()
         {
@@ -205,6 +210,7 @@ namespace Manipulator
             distance = defaultZoom;
             desiredTargetPos = defaultTarget != null ? defaultTarget.position : Vector3.zero;
             isTransitioningTarget = true;
+            lastMousePos = Input.mousePosition; // Reset after snap
         }
 
         public void FocusOnTarget(Transform newTarget)
@@ -212,9 +218,74 @@ namespace Manipulator
             target = newTarget;
             desiredTargetPos = newTarget.position;
             isTransitioningTarget = true;
+            lastMousePos = Input.mousePosition;
         }
 
-        // --- NEW: Smooth zone transitions ---
+        // --- CAMERA PROJECTION SNAPS ---
+
+        public void SnapToFront()
+        {
+            pitch = 0f;
+            yaw = 0f;
+            cam.orthographic = true;
+            UpdateCameraPosition();
+            lastMousePos = Input.mousePosition;
+        }
+
+        public void SnapToTop()
+        {
+            pitch = 90f;
+            yaw = 0f;
+            cam.orthographic = true;
+            UpdateCameraPosition();
+            lastMousePos = Input.mousePosition;
+        }
+
+        public void SnapToSide()
+        {
+            pitch = 0f;
+            yaw = 90f;
+            cam.orthographic = true;
+            UpdateCameraPosition();
+            lastMousePos = Input.mousePosition;
+        }
+
+        public void SnapToIso()
+        {
+            pitch = 30f;
+            yaw = 45f;
+            cam.orthographic = false;
+            UpdateCameraPosition();
+            lastMousePos = Input.mousePosition;
+        }
+
+        // --- CAMERA VISUAL CONTROLS ---
+
+        public void CycleCameraFOV()
+        {
+            fovState = (fovState + 1) % fovPresets.Length;
+            if (cam != null) cam.fieldOfView = fovPresets[fovState];
+        }
+
+        public void TogglePerspective()
+        {
+            if (cam != null) cam.orthographic = !cam.orthographic;
+        }
+
+        public void CycleBackgroundColor()
+        {
+            bgColorState = (bgColorState + 1) % bgColorPresets.Length;
+            if (cam != null) cam.backgroundColor = bgColorPresets[bgColorState];
+        }
+
+        public void CycleSkybox()
+        {
+            if (skyboxPresets == null || skyboxPresets.Count == 0) return;
+            skyboxState = (skyboxState + 1) % skyboxPresets.Count;
+            RenderSettings.skybox = skyboxPresets[skyboxState];
+        }
+// --- SMOOTH ZONE TRANSITION ---
+
         public void MoveToZoneSmooth(Vector3 zoneCenter, float duration = 1.0f)
         {
             if (zoneTransitionRoutine != null)
@@ -227,7 +298,7 @@ namespace Manipulator
             Vector3 startTargetPos = target.position;
             float startDistance = distance;
             float elapsed = 0f;
-            float targetDistance = defaultZoom; // Or keep previous zoom if preferred
+            float targetDistance = defaultZoom;
 
             while (elapsed < duration)
             {
@@ -249,5 +320,7 @@ namespace Manipulator
             Debug.DrawLine(transform.position, target.position, Color.yellow);
             Debug.DrawRay(transform.position, transform.forward * 5, Color.cyan);
         }
+
+        // You can add your light, ambient, fog, post-processing, etc controls here as needed!
     }
 }

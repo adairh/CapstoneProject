@@ -158,6 +158,7 @@ namespace Manipulator
         public static void ResetMode()
         {
             ShapeButtonManager.SetActiveShape(IShapeButton.ShapeType.None);
+            ManipulationManager.Instance.IsDrawing = false;
         }
 
 

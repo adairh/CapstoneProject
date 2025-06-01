@@ -31,7 +31,7 @@ namespace Manipulator
 
             // Collider (Box)
             collider = GetComponent<BoxCollider>();
-            collider.size = Vector3.one * Side;
+            collider.size = Vector3.one * Side * 5;
             collider.center = Vector3.zero;
 
             // Constraint

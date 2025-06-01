@@ -52,8 +52,9 @@ namespace Manipulator
             {
                 bloom = profile.Add<Bloom>(true);
             }
-            bloom.intensity.value = 1f;      // Set intensity (adjust for your look)
-            bloom.threshold.value = 5.0f;      // Threshold (lower = more glow)
+            bloom.intensity.value = 10f;      // Set intensity (adjust for your look)
+            bloom.threshold.value = 4.5f;      // Threshold (lower = more glow)
+            bloom.tint.value = new Color(0,5f, 1f, 0f);      
             bloom.active = true;
 
             // (Optional: tweak other bloom settings, e.g., scatter, clamp, etc.)

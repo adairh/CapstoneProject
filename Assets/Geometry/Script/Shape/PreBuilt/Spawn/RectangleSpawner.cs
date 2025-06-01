@@ -82,7 +82,7 @@ namespace Manipulator
             Transform lookingPoint = CameraController.Instance.target;
 
 
-            Vector3 A = lookingPoint.position - new Vector3(w/2, 0, h/2);
+            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(w/2, 0, h/2);
             Vector3 B = A + new Vector3(w, 0, 0);
             Vector3 C = A + new Vector3(w, 0, h);
             Vector3 D = A + new Vector3(0, 0, h);

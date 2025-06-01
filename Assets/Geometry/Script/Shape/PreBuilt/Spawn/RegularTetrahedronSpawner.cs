@@ -54,7 +54,7 @@ namespace Manipulator
             Transform lookingPoint = CameraController.Instance.target;
 
 
-            Vector3 A = lookingPoint.position - new Vector3(a/2, 0, a/2);
+            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(a/2, 0, a/2);
             Vector3 B = A + new Vector3(a, 0, 0);
             Vector3 C = A + new Vector3(a / 2f, 0, Mathf.Sqrt(3f) / 2f * a);
             float height = Mathf.Sqrt(6f) / 3f * a;

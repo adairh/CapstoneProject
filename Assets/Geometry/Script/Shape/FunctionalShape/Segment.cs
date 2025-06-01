@@ -26,10 +26,11 @@ namespace Manipulator
             var meshCollider = gameObject.AddComponent<MeshCollider>();
 
 // Create a cylinder mesh with height = 1
-            var mesh = MeshGenerator.CreateCylinder(1f, 0.05f);
-            meshFilter.sharedMesh = mesh;
-            meshCollider.sharedMesh = mesh;
+            meshFilter.sharedMesh = MeshGenerator.CreateCylinder(1f, 0.05f); // Visual mesh
+            var colliderMesh = MeshGenerator.CreateCylinder(1f, 0.1f);     // Fatter mesh for collider
+            meshCollider.sharedMesh = colliderMesh;
             meshCollider.convex = true;
+
 
             meshRenderer.material = DefaultMat;
 
@@ -216,7 +217,7 @@ namespace Manipulator
 
         public static class Drawer
         {
-            private const float SnapDistance = 0.3f;
+            private const float SnapDistance = 0.5f;
             private static Point startPoint;
             private static Point endPoint;
             private static Segment preview;

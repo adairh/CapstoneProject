@@ -68,124 +68,18 @@ namespace Manipulator {
         }
         
 
-        // --- CAMERA VISUAL CONTROLS ---
+        public void OnFrontViewButton() => cameraController.SnapToFront();
+        public void OnTopViewButton() => cameraController.SnapToTop();
+        public void OnSideViewButton() => cameraController.SnapToSide();
+        public void OnIsoViewButton() => cameraController.SnapToIso();
 
-        public void CycleCameraFOV()
-        {
-            fovState = (fovState + 1) % fovPresets.Length;
-            if (mainCamera != null) mainCamera.fieldOfView = fovPresets[fovState];
-        }
+        public void OnTogglePerspective() => cameraController.TogglePerspective();
+        public void OnCycleFOV() => cameraController.CycleCameraFOV();
+        public void OnCycleBackground() => cameraController.CycleBackgroundColor();
+        public void OnCycleSkybox() => cameraController.CycleSkybox();
+// ...and so on for your other controls!
 
-        public void TogglePerspective()
-        {
-            if (mainCamera != null) mainCamera.orthographic = !mainCamera.orthographic;
-        }
-
-        public void CycleBackgroundColor()
-        {
-            bgColorState = (bgColorState + 1) % bgColorPresets.Length;
-            if (mainCamera != null) mainCamera.backgroundColor = bgColorPresets[bgColorState];
-        }
-
-        public void CycleSkybox()
-        {
-            if (skyboxPresets == null || skyboxPresets.Count == 0) return;
-            skyboxState = (skyboxState + 1) % skyboxPresets.Count;
-            RenderSettings.skybox = skyboxPresets[skyboxState];
-        }
-
-        public void SnapCameraToTop()
-        {
-            if (cameraController != null)
-            {
-                cameraController.pitch = 90f;
-                cameraController.yaw = 0f;
-                cameraController.UpdateCameraPosition();
-            }
-        }
-        public void SnapCameraToFront()
-        {
-            if (cameraController != null)
-            {
-                cameraController.pitch = 0f;
-                cameraController.yaw = 0f;
-                cameraController.UpdateCameraPosition();
-            }
-        }
-        public void SnapCameraToSide()
-        {
-            if (cameraController != null)
-            {
-                cameraController.pitch = 0f;
-                cameraController.yaw = 90f;
-                cameraController.UpdateCameraPosition();
-            }
-        }
-        public void SnapCameraToIso()
-        {
-            if (cameraController != null)
-            {
-                cameraController.pitch = 30f;
-                cameraController.yaw = 45f;
-                cameraController.UpdateCameraPosition();
-            }
-        }
-
-        // --- LIGHT CONTROLS ---
-
-        public void CycleLightIntensity()
-        {
-            if (sceneLight == null) return;
-            lightIntensityState = (lightIntensityState + 1) % lightIntensityPresets.Length;
-            sceneLight.intensity = lightIntensityPresets[lightIntensityState];
-        }
-
-        public void CycleLightColor()
-        {
-            if (sceneLight == null) return;
-            lightColorState = (lightColorState + 1) % lightColorPresets.Length;
-            sceneLight.color = lightColorPresets[lightColorState];
-        }
-
-        public void ToggleSceneLight()
-        {
-            if (sceneLight != null)
-                sceneLight.enabled = !sceneLight.enabled;
-        }
-
-        public void ToggleLightShadows()
-        {
-            if (sceneLight != null)
-                sceneLight.shadows = (sceneLight.shadows == LightShadows.None) ? LightShadows.Soft : LightShadows.None;
-        }
-
-        // --- POSTPROCESSING ---
-
-        public void TogglePostProcessing()
-        {
-            if (postProcessVolume != null)
-                postProcessVolume.enabled = !postProcessVolume.enabled;
-        }
-
-        // --- FOG CONTROLS ---
-
-        public void ToggleFog()
-        {
-            RenderSettings.fog = !RenderSettings.fog;
-        }
-
-        public void CycleFogDensity()
-        {
-            fogDensityState = (fogDensityState + 1) % fogDensityPresets.Length;
-            RenderSettings.fogDensity = fogDensityPresets[fogDensityState];
-        }
-
-        // --- AMBIENT CONTROLS ---
-
-        public void SetAmbientLightWhite() => RenderSettings.ambientLight = Color.white;
-        public void SetAmbientLightWarm() => RenderSettings.ambientLight = new Color(1f, 0.95f, 0.8f);
-        public void SetAmbientLightCool() => RenderSettings.ambientLight = new Color(0.7f, 0.85f, 1f);
-
+        
         // --- EXISTING BUTTONS (Undo, Redo, etc.) ---
 
         public void RequestUndo()

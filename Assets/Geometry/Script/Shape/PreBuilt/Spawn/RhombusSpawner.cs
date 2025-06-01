@@ -47,10 +47,10 @@ namespace Manipulator
             Transform lookingPoint = CameraController.Instance.target;
 
 
-            Vector3 A = lookingPoint.position + new Vector3(-d1 / 2, 0, 0);
-            Vector3 C = lookingPoint.position + new Vector3(d1 / 2, 0, 0);
-            Vector3 B = lookingPoint.position + new Vector3(0, 0, d2 / 2);
-            Vector3 D = lookingPoint.position + new Vector3(0, 0, -d2 / 2);
+            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) + new Vector3(-d1 / 2, 0, 0);
+            Vector3 C = (lookingPoint.position + new Vector3(0, 0.5f, 0)) + new Vector3(d1 / 2, 0, 0);
+            Vector3 B = (lookingPoint.position + new Vector3(0, 0.5f, 0)) + new Vector3(0, 0, d2 / 2);
+            Vector3 D = (lookingPoint.position + new Vector3(0, 0.5f, 0)) + new Vector3(0, 0, -d2 / 2);
 
             string idA = Guid.NewGuid().ToString();
             string idB = Guid.NewGuid().ToString();
