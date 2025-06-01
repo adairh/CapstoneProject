@@ -82,9 +82,9 @@ namespace Manipulator
                     meshRenderer.sharedMaterial = MeshMat;
 
                 // Only change color via PropertyBlock
-                var block = new MaterialPropertyBlock();
+                /*var block = new MaterialPropertyBlock();
                 block.SetColor("_BaseColor", Color.red); // customize as needed
-                meshRenderer.SetPropertyBlock(block);
+                meshRenderer.SetPropertyBlock(block);*/
             }
             else
             {

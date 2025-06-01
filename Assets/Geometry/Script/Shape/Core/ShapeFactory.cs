@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace Manipulator
 {
@@ -36,6 +38,29 @@ namespace Manipulator
         public static T Create<T>(string type, Vector3 position, string lgcName = "") where T : Shape
         {
             var go = new GameObject(type);
+            
+            Volume volume = go.AddComponent<Volume>();
+            volume.isGlobal = true; // Global Volume
+            volume.priority = 100;  // High priority
+
+            // Create a new Volume Profile
+            VolumeProfile profile = ScriptableObject.CreateInstance<VolumeProfile>();
+
+            // Add Bloom effect
+            Bloom bloom;
+            if (!profile.TryGet(out bloom))
+            {
+                bloom = profile.Add<Bloom>(true);
+            }
+            bloom.intensity.value = 1f;      // Set intensity (adjust for your look)
+            bloom.threshold.value = 5.0f;      // Threshold (lower = more glow)
+            bloom.active = true;
+
+            // (Optional: tweak other bloom settings, e.g., scatter, clamp, etc.)
+
+            // Assign profile to the volume
+            volume.profile = profile;
+            
             var shape = go.AddComponent<T>();
             Debug.Log($"[CreateShape {type}] Created shape: {shape}, type: {type}, id: {go.GetInstanceID()}");
 

@@ -7,6 +7,8 @@ namespace Manipulator
     public enum MaterialType
     {
         Default,
+        Mesh,
+        
         Highlight,
         Drag,
         Select,
@@ -28,24 +30,31 @@ namespace Manipulator
         /// <summary>
         /// Gets the universal (singleton) material for all mesh rendering.
         /// </summary>
-        public static Material Get(MaterialType type = MaterialType.Default)
+        public static Material Get(MaterialType type)
         {
             return ManipulationManager.Instance != null
-                ? ManipulationManager.Instance.universalMat
+                ? 
+                (type == MaterialType.Mesh ? ManipulationManager.Instance.meshMat : ManipulationManager.Instance.universalMat)
                 : null;
         }
 
         public static void Apply(Renderer renderer, MaterialType type, float? alphaOverride = null)
         {
-            var mat = Get();
+
+            if (renderer.gameObject.name.EndsWith("Mesh"))
+            {
+                if (type == MaterialType.Default) type = MaterialType.Mesh;
+            }
+            
+            var mat = Get(type);
             if (mat == null) { Debug.LogError("Universal Material not assigned!"); return; }
             renderer.sharedMaterial = mat;
 
-            var color = GetColorForType(type);
+            /*var color = GetColorForType(type);
             if (alphaOverride.HasValue) color.a = alphaOverride.Value;
             var block = new MaterialPropertyBlock();
             block.SetColor("_BaseColor", color);
-            renderer.SetPropertyBlock(block);
+            renderer.SetPropertyBlock(block);*/
         }
  
 

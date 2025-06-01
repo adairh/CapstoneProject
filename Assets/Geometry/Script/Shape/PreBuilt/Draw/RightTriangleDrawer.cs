@@ -135,7 +135,7 @@ namespace Manipulator
                 meshFilter = meshHolder.AddComponent<MeshFilter>();
                 meshRenderer = meshHolder.AddComponent<MeshRenderer>();
                 meshCollider = meshHolder.AddComponent<MeshCollider>();
-                meshRenderer.sharedMaterial = MaterialLibrary.Get();
+                meshRenderer.sharedMaterial = MaterialLibrary.Get(MaterialType.Mesh);
             }
 
             a.OnPositionChanged -= UpdateMesh;

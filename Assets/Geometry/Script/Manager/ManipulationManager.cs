@@ -10,6 +10,7 @@ namespace Manipulator
         
         [Header("Materials")]
         public Material universalMat;
+        public Material meshMat;
         
         public static ManipulationManager Instance { get; private set; }
 

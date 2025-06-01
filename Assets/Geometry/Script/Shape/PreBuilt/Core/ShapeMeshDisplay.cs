@@ -33,7 +33,7 @@ namespace Manipulator
             meshFilter = gameObject.GetComponent<MeshFilter>() ?? gameObject.AddComponent<MeshFilter>();
             meshRenderer = gameObject.GetComponent<MeshRenderer>() ?? gameObject.AddComponent<MeshRenderer>();
 
-            var fallback = MaterialLibrary.Get(MaterialType.Default);
+            var fallback = MaterialLibrary.Get(MaterialType.Mesh);
             if (fallback == null)
             {
                 Debug.LogWarning(
