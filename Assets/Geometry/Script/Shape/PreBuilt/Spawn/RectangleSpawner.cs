@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Geometry;
+using UnityEditor;
 
 namespace Manipulator
 {
@@ -67,6 +68,8 @@ namespace Manipulator
             };
         }
 
+        
+        
         public List<ShapeData> ComputeShape(Dictionary<string, float> inputs)
         {
             var solver = new FieldSolver(GetFieldDefinitions());
@@ -76,12 +79,13 @@ namespace Manipulator
 
             float w = result["Width"];
             float h = result["Height"];
-            Vector3 basePos = ManipulationManager.Instance.TrackingPoint;
+            Transform lookingPoint = CameraController.Instance.target;
 
-            Vector3 A = basePos;
-            Vector3 B = basePos + new Vector3(w, 0, 0);
-            Vector3 C = basePos + new Vector3(w, 0, h);
-            Vector3 D = basePos + new Vector3(0, 0, h);
+
+            Vector3 A = lookingPoint.position - new Vector3(w/2, 0, h/2);
+            Vector3 B = A + new Vector3(w, 0, 0);
+            Vector3 C = A + new Vector3(w, 0, h);
+            Vector3 D = A + new Vector3(0, 0, h);
 
             string idA = Guid.NewGuid().ToString();
             string idB = Guid.NewGuid().ToString();
@@ -101,7 +105,16 @@ namespace Manipulator
                 new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idA } }
             };
 
+            
+            
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+            MeshGenerator.MeshCompute(new []{A, B, C, D}, new []{0, 1, 2, 0, 2, 3 }, new []
+            {
+                ShapeStorage.GetById(idA).gameObject.transform, 
+                ShapeStorage.GetById(idB).gameObject.transform, 
+                ShapeStorage.GetById(idC).gameObject.transform, 
+                ShapeStorage.GetById(idD).gameObject.transform,  
+            });
             return data;
         }
     }

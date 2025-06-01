@@ -13,7 +13,8 @@ namespace Manipulator
         {
             base.OnButtonClick();
             Debug.Log("EquilateralTriangle Button Clicked!");
-            ShapeButtonManager.SetActiveShape(GetShapeType());
+            //ShapeButtonManager.SetActiveShape(GetShapeType());
+            ShapeInputController.Instance.SetSpawner(new EquilateralTriangleSpawner());
         }
     }
 }

@@ -81,7 +81,7 @@ namespace Manipulator
                     PrebuiltDrawingHandler.Instance.StartDrawing(new SquarePyramidDrawer());
                     break;
                 
-                case IShapeButton.ShapeType.EquilateralTriangleSpawner:
+                /*case IShapeButton.ShapeType.EquilateralTriangleSpawner:
                     ShapeInputController.Instance.SetSpawner(new EquilateralTriangleSpawner());
                     break;
                 case IShapeButton.ShapeType.EquilateralPyramidSpawner:
@@ -119,7 +119,7 @@ namespace Manipulator
                     break;
                 case IShapeButton.ShapeType.SegmentSpawner:
                     ShapeInputController.Instance.SetSpawner(new SegmentSpawner());
-                    break;
+                    break;*/
                      
             }
         }

@@ -146,7 +146,7 @@ namespace Manipulator
             if (meshHolder == null)
             {
                 meshHolder = new GameObject("RectangleMesh");
-                meshHolder.transform.SetParent(ab.transform, false);
+                //meshHolder.transform.SetParent(ab.transform, false);
                 meshFilter = meshHolder.AddComponent<MeshFilter>();
                 meshRenderer = meshHolder.AddComponent<MeshRenderer>();
                 meshCollider = meshHolder.AddComponent<MeshCollider>();

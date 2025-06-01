@@ -73,7 +73,10 @@ namespace Manipulator
             float sideLen = result["Side"];
             float height = result.ContainsKey("Height") ? result["Height"] : Mathf.Sqrt(sideLen * sideLen - Mathf.Pow(baseLen / 2f, 2));
 
-            Vector3 A = ManipulationManager.Instance.TrackingPoint;
+            
+            Transform lookingPoint = CameraController.Instance.target;
+
+            Vector3 A = lookingPoint.position - new Vector3(baseLen / 2, 0, sideLen / 2);
             Vector3 B = A + new Vector3(baseLen, 0, 0);
             Vector3 C = A + new Vector3(baseLen / 2f, 0, height);
 
@@ -91,8 +94,17 @@ namespace Manipulator
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idA }}
             };
-
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+
+            MeshGenerator.MeshCompute(new []{A, B, C},
+                new []{
+                    0, 1, 2
+                }, new []
+                {
+                    ShapeStorage.GetById(idA).gameObject.transform, 
+                    ShapeStorage.GetById(idB).gameObject.transform, 
+                    ShapeStorage.GetById(idC).gameObject.transform,  
+                });
             return data;
         }
     }

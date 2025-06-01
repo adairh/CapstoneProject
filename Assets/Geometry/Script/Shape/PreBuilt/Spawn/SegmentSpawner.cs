@@ -42,7 +42,9 @@ namespace Manipulator
                 angle = solvedInputs["Angle"];
 
             // 2. Get the position where the user clicked on the canvas
-            Vector3 start = ManipulationManager.Instance.TrackingPoint;
+            Transform lookingPoint = CameraController.Instance.target;
+
+            Vector3 start = lookingPoint.position;
 
             // 3. Use the standard Segment drawer method to ensure correct logic/network/undo/redo
             Segment.Drawer.StartSegmentFromPanel(start, length, angle);

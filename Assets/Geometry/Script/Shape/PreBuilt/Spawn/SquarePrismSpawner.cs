@@ -58,7 +58,9 @@ namespace Manipulator
             float a = result["Side"];
             float h = result["Height"];
 
-            Vector3 A = ManipulationManager.Instance.TrackingPoint;
+            Transform lookingPoint = CameraController.Instance.target;
+
+            Vector3 A = lookingPoint.position - new Vector3(a / 2, 0, a / 2);
             Vector3 B = A + new Vector3(a, 0, 0);
             Vector3 C = A + new Vector3(a, 0, a);
             Vector3 D = A + new Vector3(0, 0, a);
@@ -106,8 +108,40 @@ namespace Manipulator
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idC2 }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idD2 }}
             };
-
+            
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+
+            MeshGenerator.MeshCompute(new []{A, B, C, D}, 
+                new []
+                {
+                    0, 1, 2, 
+                    0, 2, 3,
+                    
+                    0, 3, 7,
+                    0, 4, 7,
+                    
+                    0, 4, 5,
+                    0, 1, 5,
+                    
+                    1, 5, 6,
+                    1, 2, 6,
+                    
+                    3, 2, 7,
+                    3, 2, 1,
+                    
+                    4, 5, 6,
+                    4, 6, 7
+                }, new []
+                {
+                    ShapeStorage.GetById(idA).gameObject.transform, 
+                    ShapeStorage.GetById(idB).gameObject.transform, 
+                    ShapeStorage.GetById(idC).gameObject.transform, 
+                    ShapeStorage.GetById(idD).gameObject.transform,  
+                    ShapeStorage.GetById(idA2).gameObject.transform, 
+                    ShapeStorage.GetById(idB2).gameObject.transform, 
+                    ShapeStorage.GetById(idC2).gameObject.transform, 
+                    ShapeStorage.GetById(idD2).gameObject.transform,  
+                });
             return data;
         }
     }

@@ -48,7 +48,9 @@ namespace Manipulator
             float baseHeight = result["BaseHeight"];
             float apexHeight = result["ApexHeight"];
 
-            Vector3 A = ManipulationManager.Instance.TrackingPoint;
+            Transform lookingPoint = CameraController.Instance.target;
+
+            Vector3 A = lookingPoint.position - new Vector3(baseSide / 2, 0, baseHeight / 2);
             Vector3 B = A + new Vector3(baseSide, 0, 0);
             Vector3 C = A + new Vector3(baseSide / 2f, 0, baseHeight);
             Vector3 D = A + new Vector3(baseSide / 2f, apexHeight, baseHeight / 3f);
@@ -74,6 +76,20 @@ namespace Manipulator
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+            MeshGenerator.MeshCompute(new []{A, B, C, D}, 
+                new []
+                {
+                    0, 1, 2, 
+                    0, 2, 3,
+                    0, 1, 3,
+                    1, 2, 3,
+                }, new []
+                {
+                    ShapeStorage.GetById(idA).gameObject.transform, 
+                    ShapeStorage.GetById(idB).gameObject.transform, 
+                    ShapeStorage.GetById(idC).gameObject.transform, 
+                    ShapeStorage.GetById(idD).gameObject.transform,  
+                });
             return data;
         }
     }

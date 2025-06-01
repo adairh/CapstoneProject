@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Canvas (Environment)
+  m_text: Prefab Mode in Context
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6f6d77ef7d3da7b46bf2cfa993263459, type: 2}
   m_sharedMaterial: {fileID: 8222845477020888971, guid: 6f6d77ef7d3da7b46bf2cfa993263459,
@@ -75,8 +75,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4290573823
+  m_fontColor: {r: 1, g: 0.959889, b: 0.7377358, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -93,7 +93,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 30
+  m_fontSize: 20
   m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -169,8 +169,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 1.3691, y: -17.099976}
-  m_SizeDelta: {x: 86.363, y: 86.363}
+  m_AnchoredPosition: {x: 0.0000033826, y: -21.7}
+  m_SizeDelta: {x: 83.3047, y: 77.486}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &2803651594961005760
 CanvasRenderer:

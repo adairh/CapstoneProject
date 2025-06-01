@@ -19,26 +19,12 @@ namespace Manipulator
 
         public void SetSpawner(IShapeSpawner spawner)
         {
+            inputPanel.gameObject.SetActive(true);
+             
+            if (currentSpawner == spawner || spawner == null) return;
 
-            if (Input.GetMouseButtonDown(0))
-            {
-                if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-                {
-                    return;
-                }
-
-                inputPanel.gameObject.SetActive(true);
-                
-                Vector3 startPos;
-                if (PerformDrawing.RaycastMouse(out startPos))
-                {
-                    ManipulationManager.Instance.TrackingPoint = startPos;
-                    if (currentSpawner == spawner || spawner == null) return;
-
-                    currentSpawner = spawner;
-                    inputPanel.Build(spawner.GetFieldDefinitions());
-                }
-            }
+            currentSpawner = spawner;
+            inputPanel.Build(spawner.GetFieldDefinitions());
         }
 
         public void ResetSpawner()

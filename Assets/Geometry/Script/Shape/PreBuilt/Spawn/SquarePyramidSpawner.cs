@@ -65,14 +65,16 @@ namespace Manipulator
                 throw new Exception("Không thể suy luận đủ dữ kiện để dựng hình chóp.");
 
             float a = result["BaseSide"];
-            float h = result["Height"];
-            Vector3 click = ManipulationManager.Instance.TrackingPoint;
+            float h = result["Height"]; 
+            Transform lookingPoint = CameraController.Instance.target;
 
-            Vector3 A = new Vector3(-a / 2, 0, -a / 2) + click;
-            Vector3 B = new Vector3(a / 2, 0, -a / 2) + click;
-            Vector3 C = new Vector3(a / 2, 0, a / 2) + click;
-            Vector3 D = new Vector3(-a / 2, 0, a / 2) + click;
-            Vector3 S = new Vector3(0, h, 0) + click;
+
+            var position = lookingPoint.position;
+            Vector3 A = new Vector3(-a / 2, 0, -a / 2) + position;
+            Vector3 B = new Vector3(a / 2, 0, -a / 2) + position;
+            Vector3 C = new Vector3(a / 2, 0, a / 2) + position;
+            Vector3 D = new Vector3(-a / 2, 0, a / 2) + position;
+            Vector3 S = new Vector3(0, h, 0) + position;
 
             idA = Guid.NewGuid().ToString();
             idB = Guid.NewGuid().ToString();
@@ -106,8 +108,27 @@ namespace Manipulator
                 new() { Id = idCApex, Type = "Segment", ConnectedPoints = new List<string> { idC, idApex } },
                 new() { Id = idDApex, Type = "Segment", ConnectedPoints = new List<string> { idD, idApex } }
             };
-
+            
+            
+            
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(shapes));
+            
+            MeshGenerator.MeshCompute(new []{A, B, C, D, S},
+                new []{
+                    0, 1, 2, 
+                    0, 2, 3,
+                    0, 1, 4,
+                    0, 3, 4,
+                    1, 2, 4,
+                    2, 3, 4
+                }, new []
+                {
+                    ShapeStorage.GetById(idA).gameObject.transform, 
+                    ShapeStorage.GetById(idB).gameObject.transform, 
+                    ShapeStorage.GetById(idC).gameObject.transform, 
+                    ShapeStorage.GetById(idD).gameObject.transform, 
+                    ShapeStorage.GetById(idApex).gameObject.transform, 
+                });
             return shapes;
         }
     }

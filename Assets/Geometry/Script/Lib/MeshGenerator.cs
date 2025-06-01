@@ -158,5 +158,40 @@ namespace Manipulator
         }
 
         // TODO: Add CreateTorus() or custom meshes as needed
+        
+        
+        
+        
+
+        public static void MeshCompute(Vector3[] verts, int[] triangles, Transform[] trans)
+        {
+            
+            GameObject meshHolder;
+            MeshFilter meshFilter;
+            MeshRenderer meshRenderer;
+            MeshCollider meshCollider;
+             
+            meshHolder = new GameObject("ShapeMesh");
+            //meshHolder.transform.SetParent(MaterialLibrary.transform, false);
+            meshFilter = meshHolder.AddComponent<MeshFilter>();
+            meshRenderer = meshHolder.AddComponent<MeshRenderer>();
+            meshCollider = meshHolder.AddComponent<MeshCollider>();
+            meshRenderer.sharedMaterial = MaterialLibrary.Get(MaterialType.Mesh);
+            
+             
+            var mesh = new Mesh();
+            
+            mesh.vertices = verts;
+            mesh.triangles = triangles;
+            
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            meshFilter.sharedMesh = mesh;
+            meshCollider.sharedMesh = mesh;
+            
+            var updater = meshHolder.AddComponent<MeshRuntimeUpdater>();
+            updater.points = trans;
+            updater.triangles = triangles;
+        }
     }
 }

@@ -44,12 +44,13 @@ namespace Manipulator
             float d1 = result.ContainsKey("Diagonal1") ? result["Diagonal1"] : a * Mathf.Sqrt(2);
             float d2 = result.ContainsKey("Diagonal2") ? result["Diagonal2"] : a * Mathf.Sqrt(2);
 
-            Vector3 basePos = ManipulationManager.Instance.TrackingPoint;
+            Transform lookingPoint = CameraController.Instance.target;
 
-            Vector3 A = basePos + new Vector3(-d1 / 2, 0, 0);
-            Vector3 C = basePos + new Vector3(d1 / 2, 0, 0);
-            Vector3 B = basePos + new Vector3(0, 0, d2 / 2);
-            Vector3 D = basePos + new Vector3(0, 0, -d2 / 2);
+
+            Vector3 A = lookingPoint.position + new Vector3(-d1 / 2, 0, 0);
+            Vector3 C = lookingPoint.position + new Vector3(d1 / 2, 0, 0);
+            Vector3 B = lookingPoint.position + new Vector3(0, 0, d2 / 2);
+            Vector3 D = lookingPoint.position + new Vector3(0, 0, -d2 / 2);
 
             string idA = Guid.NewGuid().ToString();
             string idB = Guid.NewGuid().ToString();
@@ -70,6 +71,13 @@ namespace Manipulator
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+            MeshGenerator.MeshCompute(new []{A, B, C, D}, new []{0, 1, 2, 0, 2, 3 }, new []
+            {
+                ShapeStorage.GetById(idA).gameObject.transform, 
+                ShapeStorage.GetById(idB).gameObject.transform, 
+                ShapeStorage.GetById(idC).gameObject.transform, 
+                ShapeStorage.GetById(idD).gameObject.transform,  
+            });
             return data;
         }
     }

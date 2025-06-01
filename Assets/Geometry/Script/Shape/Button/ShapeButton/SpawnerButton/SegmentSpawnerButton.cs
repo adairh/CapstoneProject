@@ -13,7 +13,8 @@ namespace Manipulator
         {
             base.OnButtonClick();
             Debug.Log("Segment Button Clicked!");
-            ShapeButtonManager.SetActiveShape(GetShapeType());
+            //ShapeButtonManager.SetActiveShape(GetShapeType());
+            ShapeInputController.Instance.SetSpawner(new SegmentSpawner());
         }
     }
 }
