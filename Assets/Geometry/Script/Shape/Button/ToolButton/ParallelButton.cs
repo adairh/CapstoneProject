@@ -21,7 +21,7 @@ namespace Manipulator
             if (!anySegment)
             {
                 UIHint.ShowTemp("No segment available in scene!", 2f);
-                return; // Cancel tool activation
+                return; // canceledncel tool activation
             }
             
             

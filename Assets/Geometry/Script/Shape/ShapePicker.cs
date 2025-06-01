@@ -36,16 +36,30 @@ namespace Manipulator
             while (true)
             {
                 if (Input.GetMouseButtonDown(0))
+                {
                     if (PerformDrawing.RaycastMouse(out var pos, out var shape))
+                    {
+                        Debug.Log($"Raycast hit: {shape} ({(shape != null ? shape.GetType().Name : "null")})");
                         if (shape is Segment)
                         {
                             LastPicked = shape;
                             UIHint.Hide();
+                            Debug.Log($"Segment picked: {shape.ShapeId}");
                             yield break;
                         }
-
+                        else
+                        {
+                            Debug.Log("Hit is not a Segment!");
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("RaycastMouse did not hit a shape.");
+                    }
+                }
                 yield return null;
             }
         }
+
     }
 }
