@@ -5,7 +5,7 @@ using System;
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Core.PathCore;
 using DG.Tweening.Plugins.Options;
-using UnityEditor;
+//using UnityEditor;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -43,13 +43,13 @@ namespace DG.Tweening
             _initialized = true;
             DOTweenExternalCommand.SetOrientationOnPath += Physics.SetOrientationOnPath;
 
-#if UNITY_EDITOR
+/*#if UNITY_EDITOR
 #if UNITY_4_3 || UNITY_4_4 || UNITY_4_5 || UNITY_4_6 || UNITY_5 || UNITY_2017_1
             UnityEditor.EditorApplication.playmodeStateChanged += PlaymodeStateChanged;
 #else
             EditorApplication.playModeStateChanged += PlaymodeStateChanged;
 #endif
-#endif
+#endif*/
         }
 
 #if UNITY_2018_1_OR_NEWER
@@ -66,7 +66,7 @@ namespace DG.Tweening
 
         #endregion
 
-#if UNITY_EDITOR
+/*#if UNITY_EDITOR
         // Fires OnApplicationPause in DOTweenComponent even when Editor is paused (otherwise it's only fired at runtime)
 #if UNITY_4_3 || UNITY_4_4 || UNITY_4_5 || UNITY_4_6 || UNITY_5 || UNITY_2017_1
         static void PlaymodeStateChanged()
@@ -77,7 +77,7 @@ namespace DG.Tweening
             if (DOTween.instance == null) return;
             DOTween.instance.OnApplicationPause(EditorApplication.isPaused);
         }
-#endif
+#endif*/
 
         // █████████████████████████████████████████████████████████████████████████████████████████████████████████████████████
         // ███ INTERNAL CLASSES ████████████████████████████████████████████████████████████████████████████████████████████████

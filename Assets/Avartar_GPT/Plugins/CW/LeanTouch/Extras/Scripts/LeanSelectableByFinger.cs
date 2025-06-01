@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Lean.Common;
-using Lean.Common.Editor;
-using UnityEditor;
+using Lean.Common;  
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -269,45 +267,45 @@ namespace Lean.Touch
         }
     }
 }
-
-#if UNITY_EDITOR
-namespace Lean.Touch.Editor
-{
-    using TARGET = LeanSelectableByFinger;
-
-    [CanEditMultipleObjects]
-    [CustomEditor(typeof(TARGET))]
-    public class LeanSelectableByFinger_Editor : LeanSelectable_Editor
-    {
-        [NonSerialized] private TARGET tgt;
-        [NonSerialized] private TARGET[] tgts;
-
-        protected override void OnInspector()
-        {
-            GetTargets(out tgt, out tgts);
-
-            Draw("use",
-                "This allows you to control which fingers will be used by components that require this selectable.");
-
-            base.OnInspector();
-        }
-
-        protected override void DrawEvents(bool showUnusedEvents)
-        {
-            base.DrawEvents(showUnusedEvents);
-
-            if (showUnusedEvents || Any(tgts, t => t.OnSelectedFinger.GetPersistentEventCount() > 0))
-                Draw("onSelectedFinger");
-
-            if (showUnusedEvents || Any(tgts, t => t.OnSelectedFingerUp.GetPersistentEventCount() > 0))
-                Draw("onSelectedFingerUp");
-
-            if (showUnusedEvents || Any(tgts, t => t.OnSelectedSelectFinger.GetPersistentEventCount() > 0))
-                Draw("onSelectedSelectFinger");
-
-            if (showUnusedEvents || Any(tgts, t => t.OnSelectedSelectFingerUp.GetPersistentEventCount() > 0))
-                Draw("onSelectedSelectFingerUp");
-        }
-    }
-}
-#endif
+//
+// #if UNITY_EDITOR
+// namespace Lean.Touch.Editor
+// {
+//     using TARGET = LeanSelectableByFinger;
+//
+//     [CanEditMultipleObjects]
+//     [CustomEditor(typeof(TARGET))]
+//     public class LeanSelectableByFinger_Editor : LeanSelectable_Editor
+//     {
+//         [NonSerialized] private TARGET tgt;
+//         [NonSerialized] private TARGET[] tgts;
+//
+//         protected override void OnInspector()
+//         {
+//             GetTargets(out tgt, out tgts);
+//
+//             Draw("use",
+//                 "This allows you to control which fingers will be used by components that require this selectable.");
+//
+//             base.OnInspector();
+//         }
+//
+//         protected override void DrawEvents(bool showUnusedEvents)
+//         {
+//             base.DrawEvents(showUnusedEvents);
+//
+//             if (showUnusedEvents || Any(tgts, t => t.OnSelectedFinger.GetPersistentEventCount() > 0))
+//                 Draw("onSelectedFinger");
+//
+//             if (showUnusedEvents || Any(tgts, t => t.OnSelectedFingerUp.GetPersistentEventCount() > 0))
+//                 Draw("onSelectedFingerUp");
+//
+//             if (showUnusedEvents || Any(tgts, t => t.OnSelectedSelectFinger.GetPersistentEventCount() > 0))
+//                 Draw("onSelectedSelectFinger");
+//
+//             if (showUnusedEvents || Any(tgts, t => t.OnSelectedSelectFingerUp.GetPersistentEventCount() > 0))
+//                 Draw("onSelectedSelectFingerUp");
+//         }
+//     }
+// }
+// #endif

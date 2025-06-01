@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Lean.Common;
-using Lean.Common.Editor;
-using UnityEditor;
+using Lean.Common; 
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -183,37 +181,37 @@ namespace Lean.Touch
         }
     }
 }
-
-#if UNITY_EDITOR
-namespace Lean.Touch.Editor
-{
-    using TARGET = LeanSelectByFinger;
-
-    [CanEditMultipleObjects]
-    [CustomEditor(typeof(TARGET))]
-    public class LeanSelectByFinger_Editor : LeanSelect_Editor
-    {
-        [NonSerialized] private TARGET tgt;
-        [NonSerialized] private TARGET[] tgts;
-
-        protected override void OnInspector()
-        {
-            GetTargets(out tgt, out tgts);
-
-            Draw("ScreenQuery");
-            Draw("deselectWithFingers",
-                "If you enable this then any selected object will automatically be deselected if the finger used to select it is no longer touching the screen.");
-
-            base.OnInspector();
-        }
-
-        protected override void DrawEvents(bool showUnusedEvents)
-        {
-            base.DrawEvents(showUnusedEvents);
-
-            if (Any(tgts, t => t.OnSelectedFinger.GetPersistentEventCount() > 0) || showUnusedEvents)
-                Draw("onSelectedFinger");
-        }
-    }
-}
-#endif
+//
+// #if UNITY_EDITOR
+// namespace Lean.Touch.Editor
+// {
+//     using TARGET = LeanSelectByFinger;
+//
+//     [CanEditMultipleObjects]
+//     [CustomEditor(typeof(TARGET))]
+//     public class LeanSelectByFinger_Editor : LeanSelect_Editor
+//     {
+//         [NonSerialized] private TARGET tgt;
+//         [NonSerialized] private TARGET[] tgts;
+//
+//         protected override void OnInspector()
+//         {
+//             GetTargets(out tgt, out tgts);
+//
+//             Draw("ScreenQuery");
+//             Draw("deselectWithFingers",
+//                 "If you enable this then any selected object will automatically be deselected if the finger used to select it is no longer touching the screen.");
+//
+//             base.OnInspector();
+//         }
+//
+//         protected override void DrawEvents(bool showUnusedEvents)
+//         {
+//             base.DrawEvents(showUnusedEvents);
+//
+//             if (Any(tgts, t => t.OnSelectedFinger.GetPersistentEventCount() > 0) || showUnusedEvents)
+//                 Draw("onSelectedFinger");
+//         }
+//     }
+// }
+// #endif

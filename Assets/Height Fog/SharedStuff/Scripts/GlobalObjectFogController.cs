@@ -1,8 +1,8 @@
 ﻿// SKGames vertical fog global object controller. Copyright (c) 2018 Sergey Klimenko. 18.05.2018
 using System.Collections.Generic;
-#if UNITY_EDITOR
+/*#if UNITY_EDITOR
 using UnityEditor;
-#endif
+#endif*/
 using UnityEngine;
 
 [AddComponentMenu("SKGames/Global Fog Controller")]
@@ -66,9 +66,9 @@ public class GlobalObjectFogController: MonoBehaviour
         if (GlobalObjectFogController.Exists && GlobalObjectFogController.instance != this)
         {
             DestroyImmediate(this);
-#if UNITY_EDITOR
+/*#if UNITY_EDITOR
             EditorUtility.DisplayDialog("Can't add manager.", "Only one manager allowed on scene! (Manager exists on: " + GameObject.FindObjectOfType<GlobalObjectFogController>().name + ")", "Ok", "");
-#endif
+#endif*/
         }
         if (instance == null)
         {

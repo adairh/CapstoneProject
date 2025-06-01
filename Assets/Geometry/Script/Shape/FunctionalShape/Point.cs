@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using Unity.Netcode;
-using UnityEditor;
 using UnityEngine;
 
 namespace Manipulator
@@ -109,8 +108,8 @@ namespace Manipulator
                             var v = new CreateShapeAction(data);
                             UndoRedoNetworkBridge.Instance.DoAndBroadcast(v);
 
-                            EditorApplication.delayCall += () =>
-                            {
+                            /*EditorApplication.delayCall += () =>
+                            {*/
                                 var pt = ShapeStorage.GetById(id) as Point;
                                 if (pt != null)
                                 {
@@ -118,7 +117,7 @@ namespace Manipulator
                                     c.Owner = pt;
                                     c.SetTarget(segment, RelativeTargetType.Segment, FindTOnSegment(segment, pos), 0, 0);
                                 }
-                            };
+                            /*};*/
                             PerformDrawing.ResetMode();
                             return;
                         }

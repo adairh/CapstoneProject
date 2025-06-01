@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using TMPro;
-using UnityEditor;
+// UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -300,11 +300,11 @@ namespace SlimUI.ModernMenu
 
         public void QuitGame()
         {
-#if UNITY_EDITOR
+/*#if UNITY_EDITOR
             EditorApplication.isPlaying = false;
 #else
-				Application.Quit();
-#endif
+				
+#endif*/Application.Quit();
         }
 
         // Load Bar synching animation
