@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8423eb9b4854e5c851f945a0be0cbdd, type: 3}
+  m_Name: L10Q02
+  m_EditorClassIdentifier: 
+  _questName: L10 - Q02
+  _questDescription: "Khi \u0111\u1EC1 b\xE0i y\xEAu c\u1EA7u t\xEDnh g\xF3c gi\u1EEFa
+    c\u1EA1nh b\xEAn v\xE0 m\u1EB7t \u0111\xE1y, nh\u01B0ng kh\xF4ng c\xF3 h\xECnh
+    minh h\u1ECDa, h\u1ECDc sinh g\u1EB7p kh\xF3 kh\u0103n v\xEC:\r\nA. Thi\u1EBFu
+    h\xECnh v\xE0 \u0111\u1ECBnh ngh\u0129a v\u1EC1 g\xF3c trong kh\xF4ng gian\r\nB.
+    Kh\xF4ng nh\u1EDB c\xF4ng th\u1EE9c t\xEDnh g\xF3c\r\nC. Kh\xF4ng bi\u1EBFt \xE1p
+    d\u1EE5ng m\xE1y t\xEDnh\r\nD. \u0110\u1EC1 kh\xF4ng c\xF3 th\xF4ng s\u1ED1"
+  _questSprite: {fileID: 0}
+  _correctAnswer: {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  _answers:
+  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  - {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  - {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _isShuffleAnswers: 0

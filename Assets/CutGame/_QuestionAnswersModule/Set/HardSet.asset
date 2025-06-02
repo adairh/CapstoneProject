@@ -15,18 +15,6 @@ MonoBehaviour:
   _setName: HardSet
   _setDescription: HardSet
   _list:
-  - {fileID: 11400000, guid: 1460ffa5514b08540a361606e3ad9058, type: 2}
-  - {fileID: 11400000, guid: 94b6de5134370a54c82f95a501be6c21, type: 2}
-  - {fileID: 11400000, guid: 7a9407972b695a84d9b56a513642a495, type: 2}
-  - {fileID: 11400000, guid: 03544bcff36995e42b9ab1bce4e4b342, type: 2}
-  - {fileID: 11400000, guid: 4aa61f5e74c149948a04bdbadbfc1811, type: 2}
-  - {fileID: 11400000, guid: c57f0e6da31f5af408f9694a3f7906b7, type: 2}
-  - {fileID: 11400000, guid: f898379309b860b4d86974e95980f341, type: 2}
-  - {fileID: 11400000, guid: 7b4c3ed275e249149bc34fe1fcb5caeb, type: 2}
-  - {fileID: 11400000, guid: e921e8f9b3aa1e3418cc8c4180d5ede5, type: 2}
-  - {fileID: 11400000, guid: 5dad7be3191291446976f7f9ef6548b6, type: 2}
-  - {fileID: 11400000, guid: 227ed5bc529847649a8f3f62f0ff4522, type: 2}
-  - {fileID: 11400000, guid: 1757c4b790a2a9b4ab4d1feed2697081, type: 2}
   - {fileID: 11400000, guid: 3142a7b1add06d242b615522e8004eca, type: 2}
   - {fileID: 11400000, guid: 456a5dcb7706d23468b9462807d974c4, type: 2}
   - {fileID: 11400000, guid: d89539e960412a34ba7afc5baff6c727, type: 2}

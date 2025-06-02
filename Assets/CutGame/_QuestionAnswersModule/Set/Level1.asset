@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d109aa13484cffb8d870b8edcfb89b, type: 3}
+  m_Name: Level1
+  m_EditorClassIdentifier: 
+  _setName: Level1
+  _setDescription: Level1
+  _list:
+  - {fileID: 11400000, guid: 85035e2f37533f2478b4b585f8dbfbcd, type: 2}
+  - {fileID: 11400000, guid: 433d5f15445a783419fdccd21bd973a2, type: 2}
+  - {fileID: 11400000, guid: 5930b9700fde83640bb5469d6670675f, type: 2}
+  - {fileID: 11400000, guid: 0f383cd8d183c8745a8136174cc972d2, type: 2}
+  - {fileID: 11400000, guid: 6422d49df2f88a34f8d537cc8267ca58, type: 2}
+  - {fileID: 11400000, guid: 858f29a77eb415b438fe2e31fb1b14e8, type: 2}
+  _isShuffleQuest: 1

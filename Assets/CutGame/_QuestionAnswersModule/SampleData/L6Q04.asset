@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8423eb9b4854e5c851f945a0be0cbdd, type: 3}
+  m_Name: L6Q04
+  m_EditorClassIdentifier: 
+  _questName: L6 - Q04
+  _questDescription: "H\xECnh ch\xF3p \u0111\u1EC1u c\xF3 \u0111\xE1y l\xE0 h\xECnh
+    vu\xF4ng, chi\u1EC1u cao t\u1EEB \u0111\u1EC9nh xu\u1ED1ng \u0111\xE1y l\xE0
+    h, c\u1EA1nh \u0111\xE1y l\xE0 a. Khi \u0111\xF3 thi\u1EBFt di\u1EC7n qua \u0111\u1EC9nh
+    v\xE0 trung \u0111i\u1EC3m c\u1EA1nh \u0111\xE1y l\xE0:\nA. Tam gi\xE1c\nB. H\xECnh
+    b\xECnh h\xE0nh\nC. H\xECnh thang\nD. H\xECnh vu\xF4ng"
+  _questSprite: {fileID: 0}
+  _correctAnswer: {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  _answers:
+  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  - {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  - {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _isShuffleAnswers: 0

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8423eb9b4854e5c851f945a0be0cbdd, type: 3}
+  m_Name: L6Q06
+  m_EditorClassIdentifier: 
+  _questName: L6 - Q06
+  _questDescription: "M\u1ED9t h\xECnh ch\xF3p \u0111\u1EC1u c\xF3 c\xE1c c\u1EA1nh
+    b\xEAn d\xE0i a, c\xE1c c\u1EA1nh \u0111\xE1y d\xE0i a. G\xF3c gi\u1EEFa c\u1EA1nh
+    b\xEAn v\xE0 m\u1EB7t \u0111\xE1y:\r\nA. B\u1EB1ng 60\xB0\r\nB. B\u1EB1ng 45\xB0\r\nC.
+    Ph\u1EE5 thu\u1ED9c v\xE0o chi\u1EC1u cao c\u1EE7a h\xECnh ch\xF3p\r\nD. Kh\xF4ng
+    \u0111\u1EE7 d\u1EEF ki\u1EC7n \u0111\u1EC3 x\xE1c \u0111\u1ECBnh"
+  _questSprite: {fileID: 0}
+  _correctAnswer: {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _answers:
+  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  - {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  - {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _isShuffleAnswers: 0
