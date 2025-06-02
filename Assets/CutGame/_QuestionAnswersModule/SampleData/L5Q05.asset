@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8423eb9b4854e5c851f945a0be0cbdd, type: 3}
+  m_Name: L5Q05
+  m_EditorClassIdentifier: 
+  _questName: L5 - Q05
+  _questDescription: "M\u1ED9t h\xECnh ch\xF3p c\xF3 \u0111\xE1y l\xE0 tam gi\xE1c
+    vu\xF4ng c\u1EA1nh g\xF3c vu\xF4ng 6cm v\xE0 4cm, chi\u1EC1u cao l\xE0 5cm. Th\u1EC3
+    t\xEDch l\xE0?\r\nA. 15\u2003\r\nB. 30\u2003\r\nC. 20\u2003\r\nD. 45"
+  _questSprite: {fileID: 0}
+  _correctAnswer: {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  _answers:
+  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  - {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  - {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _isShuffleAnswers: 0

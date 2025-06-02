@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8423eb9b4854e5c851f945a0be0cbdd, type: 3}
+  m_Name: L10Q03
+  m_EditorClassIdentifier: 
+  _questName: L10 - Q03
+  _questDescription: "M\u1EB7t ph\u1EB3ng (P) \u0111\u01B0\u1EE3c m\xF4 t\u1EA3 l\xE0
+    vu\xF4ng g\xF3c v\u1EDBi m\u1EB7t \u0111\xE1y c\u1EE7a h\xECnh ch\xF3p. Ph\xE1t
+    bi\u1EC3u n\xE0o sau \u0111\xE2y sai?\r\nA. M\u1ECDi c\u1EA1nh b\xEAn \u0111\u1EC1u
+    vu\xF4ng g\xF3c v\u1EDBi \u0111\xE1y\r\nB. (P) c\xF3 th\u1EC3 t\u1EA1o thi\u1EBFt
+    di\u1EC7n l\xE0 tam gi\xE1c\r\nC. G\xF3c gi\u1EEFa (P) v\xE0 m\u1EB7t \u0111\xE1y
+    l\xE0 90\xB0\r\nD. G\xF3c gi\u1EEFa m\u1EB7t b\xEAn v\xE0 m\u1EB7t \u0111\xE1y
+    c\xF3 th\u1EC3 l\xE0 90\xB0"
+  _questSprite: {fileID: 0}
+  _correctAnswer: {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  _answers:
+  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  - {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  - {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _isShuffleAnswers: 0

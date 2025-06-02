@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8423eb9b4854e5c851f945a0be0cbdd, type: 3}
+  m_Name: L6Q01
+  m_EditorClassIdentifier: 
+  _questName: L6 - Q01
+  _questDescription: "Trong h\xECnh h\u1ED9p ch\u1EEF nh\u1EADt b\u1EA5t k\u1EF3,
+    ba \u0111\u01B0\u1EDDng ch\xE9o kh\xF4ng gian xu\u1EA5t ph\xE1t t\u1EEB c\xF9ng
+    m\u1ED9t \u0111\u1EC9nh s\u1EBD:\r\nA. B\u1EB1ng nhau v\xE0 \u0111\u1ED3ng ph\u1EB3ng\r\nB.
+    Kh\xF4ng \u0111\u1ED3ng ph\u1EB3ng v\xE0 c\xF3 th\u1EC3 kh\xE1c \u0111\u1ED9
+    d\xE0i\r\nC. C\u1EAFt nhau t\u1EA1i trung \u0111i\u1EC3m c\u1EE7a h\xECnh\r\nD.
+    Vu\xF4ng g\xF3c v\u1EDBi nhau"
+  _questSprite: {fileID: 0}
+  _correctAnswer: {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  _answers:
+  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  - {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  - {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _isShuffleAnswers: 0

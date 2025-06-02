@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8423eb9b4854e5c851f945a0be0cbdd, type: 3}
+  m_Name: L6Q02
+  m_EditorClassIdentifier: 
+  _questName: L6 - Q02
+  _questDescription: "M\u1ED9t h\xECnh h\u1ED9p ch\u1EEF nh\u1EADt c\xF3 3 k\xEDch
+    th\u01B0\u1EDBc l\xE0 2cm, 3cm, 6cm. G\xF3c gi\u1EEFa \u0111\u01B0\u1EDDng ch\xE9o
+    c\u1EE7a h\xECnh h\u1ED9p v\xE0 \u0111\xE1y l\xE0:\r\nA. 45\xB0\r\nB. G\xF3c
+    nh\u1ECDn\r\nC. Kh\xF4ng x\xE1c \u0111\u1ECBnh n\u1EBFu kh\xF4ng bi\u1EBFt chi\u1EC1u
+    cao\r\nD. G\xF3c t\xF9"
+  _questSprite: {fileID: 0}
+  _correctAnswer: {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  _answers:
+  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  - {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  - {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _isShuffleAnswers: 0

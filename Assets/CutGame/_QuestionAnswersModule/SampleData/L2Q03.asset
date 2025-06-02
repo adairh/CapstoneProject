@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8423eb9b4854e5c851f945a0be0cbdd, type: 3}
+  m_Name: L2Q03
+  m_EditorClassIdentifier: 
+  _questName: L2 - Q03
+  _questDescription: "Trong c\xE1c h\xECnh sau, h\xECnh n\xE0o c\xF3 t\u1EA5t c\u1EA3
+    c\xE1c c\u1EA1nh v\xE0 g\xF3c b\u1EB1ng nhau? \r\nA. H\xECnh h\u1ED9p ch\u1EEF
+    nh\u1EADt \r\nB. H\xECnh l\u1EADp ph\u01B0\u01A1ng \r\nC. H\xECnh ch\xF3p \u0111\u1EC1u
+    \r\nD. H\xECnh l\u0103ng tr\u1EE5"
+  _questSprite: {fileID: 0}
+  _correctAnswer: {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  _answers:
+  - {fileID: 11400000, guid: c6e38ff0cdc96234f8b3965e97bb143a, type: 2}
+  - {fileID: 11400000, guid: 620dd3624676bcf48a737267888c6030, type: 2}
+  - {fileID: 11400000, guid: 3b5b1a8dca7a1dc46bd8d17162ca4cf3, type: 2}
+  - {fileID: 11400000, guid: 4cf064e428f1f074bafa2554fdbe241b, type: 2}
+  _isShuffleAnswers: 0
