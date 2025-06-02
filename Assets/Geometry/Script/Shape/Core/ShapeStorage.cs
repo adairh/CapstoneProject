@@ -35,6 +35,7 @@ namespace Manipulator
 
         public static Shape GetById(string id)
         {
+            Debug.LogError("WE GETTING " + id);
             return idLookup.TryGetValue(id, out var s) ? s : null;
         }
 

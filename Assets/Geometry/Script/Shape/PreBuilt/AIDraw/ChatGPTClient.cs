@@ -142,7 +142,7 @@ namespace Manipulator
 
             var requestBody = new ChatGPTRequest
             {
-                model = "gpt-4",
+                model = "gpt-4o",
                 messages = new[]
                 {
                     new ChatGPTMessage { role = "system", content = "Bạn là trợ lý hình học không gian." },

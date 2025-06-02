@@ -83,6 +83,9 @@ namespace Manipulator
             waitingForPlacement = true;
 
             UIHint.Show("Đã sẵn sàng đặt hình. Nhấn nút 'Bắt đầu đặt hình', sau đó click vào không gian để đặt.");
+            
+            Debug.LogError("[WE GETTING] " + json);
+            
             btnStartPlacement?.gameObject.SetActive(true);
         }
 
@@ -122,10 +125,18 @@ namespace Manipulator
 
         private void BeginPlacementMode()
         {
-            btnStartPlacement?.gameObject.SetActive(false);
+            /*btnStartPlacement?.gameObject.SetActive(false);
             UIHint.Show("Click vào không gian để đặt hình.");
             ManipulationManager.Instance.IsDrawing = true;
-            waitingForPlacement = true;
+            waitingForPlacement = true;*/
+            
+            //ZoneManager.Init.GoToNextZone();
+            
+            ShapeExtrasProcessor.BuildFromAIWithOffset(
+                pendingShapeResult.CustomPoints,
+                pendingShapeResult.ExtraSegments,
+                CameraController.Instance.target.position
+            );
         }
 
         private void Update()

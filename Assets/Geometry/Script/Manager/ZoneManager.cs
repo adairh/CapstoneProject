@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +8,9 @@ namespace Manipulator
 
     public class ZoneManager : MonoBehaviour
     {
+
+        public static ZoneManager Init;
+        
         [Header("Prefabs for Foundations")]
         public GameObject gridPrefab;
         public GameObject axisPrefab;
@@ -14,6 +18,11 @@ namespace Manipulator
 
         public float zoneSize = 20f;
         public int currentZoneIndex = 0;
+
+        private void Awake()
+        {
+            Init = this;
+        }
 
         private Dictionary<int, List<GameObject>> zoneFoundations = new();
 

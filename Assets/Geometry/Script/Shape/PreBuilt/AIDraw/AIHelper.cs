@@ -11,6 +11,24 @@ namespace Manipulator
             sb.AppendLine("Bạn là trợ lý AI cho ứng dụng học hình học không gian.");
             sb.AppendLine("Hãy đọc kỹ đề bài sau và trả lời DUY NHẤT bằng một JSON theo cấu trúc dưới đây, KHÔNG giải thích gì thêm bên ngoài JSON.");
             sb.AppendLine();
+            sb.AppendLine(
+                "ĐẶC BIỆT LƯU Ý: Không phân tích trên input gốc , cần phải paraphrase phân tích lại trước khi tính toán:");
+            sb.AppendLine("- Đây là hình gì");
+            sb.AppendLine("- Cần bao nhiêu điểm");
+            sb.AppendLine("- Các cạnh là gì");
+            sb.AppendLine();
+            sb.AppendLine("Rồi từ đó, tính toán tọa độ chính xác của từng điểm dựa trên dữ kiện đề bài");
+            sb.AppendLine(
+                "Nếu đề không có số đo chính xác như 1, 2, 3,... mà là các ví dụ như \" Độ dài a \" thì mặc định a = 5 ");
+                
+                
+                
+                
+            sb.AppendLine("Các đề cần phải phân tích cách giải nếu đề có câu hỏi. trong phân tích nếu có cần vẽ thêm thì bao gồm vào nội dung điểm và đường để vẽ luôn ");
+            
+            
+            
+            
 
             sb.AppendLine("⚠️ Chỉ sử dụng các kiểu điểm hợp lệ:");
             sb.AppendLine("- absolute: chỉ định toạ độ");
@@ -41,7 +59,8 @@ namespace Manipulator
             sb.AppendLine("  \"Warnings\": [\"string cảnh báo\"],");
             sb.AppendLine("  \"Suggestions\": [\"string gợi ý\"]");
             sb.AppendLine("}");
-
+            
+            sb.AppendLine(" ExtraSegments là bao gồm mọi đường có trong hình, kể cả các đường nối của shape hình cơ bản, nên cần phải đầy đủ tuyệt đối");
             sb.AppendLine();
             sb.AppendLine("🛑 QUY TẮC NGHIÊM NGẶT:");
             sb.AppendLine("- Các trường như \"from\", \"to\", \"segment\", \"on_segment\" PHẢI luôn là MẢNG (dù chỉ có 1 phần tử). Ví dụ: [\"A\"]");
