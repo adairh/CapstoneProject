@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -59,6 +58,7 @@ namespace Manipulator
             string idB = Guid.NewGuid().ToString();
             string idC = Guid.NewGuid().ToString();
             string idD = Guid.NewGuid().ToString();
+            string idTetra = Guid.NewGuid().ToString();
 
             var data = new List<ShapeData>
             {
@@ -67,29 +67,28 @@ namespace Manipulator
                 new() { Id = idC, Type = "Point", Position = C, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idD, Type = "Point", Position = D, Rotation = Quaternion.identity, Scale = Vector3.one },
 
+                // base
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idA }},
+                // sides
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idD }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idD }},
-                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD }}
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD }},
+
+                // Controller
+                new()
+                {
+                    Id = idTetra,
+                    Type = "Tetrahedron",
+                    Position = (A + B + C + D) / 4f,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new List<string> { idA, idB, idC, idD }
+                }
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
-            MeshGenerator.MeshCompute(new []{A, B, C, D}, 
-                new []
-                {
-                    0, 1, 2, 
-                    0, 2, 3,
-                    0, 1, 3,
-                    1, 2, 3,
-                }, new []
-                {
-                    ShapeStorage.GetById(idA).gameObject.transform, 
-                    ShapeStorage.GetById(idB).gameObject.transform, 
-                    ShapeStorage.GetById(idC).gameObject.transform, 
-                    ShapeStorage.GetById(idD).gameObject.transform,  
-                });
             return data;
         }
     }

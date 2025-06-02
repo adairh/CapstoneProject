@@ -18,7 +18,9 @@ namespace Manipulator
             yield return ShapePicker.WaitForPoint();
             var a = ShapePicker.LastPicked as Point;
             if (a == null) yield break;
-
+ 
+            yield return new WaitUntil(() => !Input.GetMouseButton(0)); 
+            
             UIHint.Show("Tap second point");
             yield return ShapePicker.WaitForPoint();
             var b = ShapePicker.LastPicked as Point;

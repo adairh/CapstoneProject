@@ -1,15 +1,12 @@
-
 using System;
 using System.Collections.Generic;
-using UnityEngine; 
+using UnityEngine;
+using Geometry;
 
 namespace Manipulator
 {
     public class SquarePyramidSpawner : IShapeSpawner
     {
-        private string idA, idB, idC, idD, idApex;
-        private string idAB, idBC, idCD, idDA, idAApex, idBApex, idCApex, idDApex;
-
         public List<FieldDefinition> GetFieldDefinitions()
         {
             return new List<FieldDefinition>
@@ -22,8 +19,8 @@ namespace Manipulator
                     ComputeRules = new List<ComputeRule>
                     {
                         new ComputeRule {
-                            InputFields = new List<string> { "Volume", "Height" },
-                            Compute = input => Mathf.Sqrt((3f * input["Volume"]) / input["Height"])
+                            InputFields = new List<string>{ "BaseArea" },
+                            Compute = input => Mathf.Sqrt(input["BaseArea"])
                         }
                     }
                 },
@@ -35,8 +32,36 @@ namespace Manipulator
                     ComputeRules = new List<ComputeRule>
                     {
                         new ComputeRule {
-                            InputFields = new List<string> { "Volume", "BaseSide" },
-                            Compute = input => (3f * input["Volume"]) / Mathf.Pow(input["BaseSide"], 2)
+                            InputFields = new List<string>{ "BaseSide", "SlantHeight" },
+                            Compute = input =>
+                                Mathf.Sqrt(input["SlantHeight"] * input["SlantHeight"] - (input["BaseSide"] / 2f) * (input["BaseSide"] / 2f))
+                        }
+                    }
+                },
+                new FieldDefinition
+                {
+                    Name = "SlantHeight",
+                    Type = FieldType.Length,
+                    IsRequired = false,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "Height", "BaseSide" },
+                            Compute = input =>
+                                Mathf.Sqrt(input["Height"] * input["Height"] + (input["BaseSide"] / 2f) * (input["BaseSide"] / 2f))
+                        }
+                    }
+                },
+                new FieldDefinition
+                {
+                    Name = "BaseArea",
+                    Type = FieldType.Area,
+                    IsRequired = false,
+                    ComputeRules = new List<ComputeRule>
+                    {
+                        new ComputeRule {
+                            InputFields = new List<string>{ "BaseSide" },
+                            Compute = input => input["BaseSide"] * input["BaseSide"]
                         }
                     }
                 },
@@ -48,8 +73,8 @@ namespace Manipulator
                     ComputeRules = new List<ComputeRule>
                     {
                         new ComputeRule {
-                            InputFields = new List<string> { "BaseSide", "Height" },
-                            Compute = input => (1f / 3f) * Mathf.Pow(input["BaseSide"], 2) * input["Height"]
+                            InputFields = new List<string>{ "BaseSide", "Height" },
+                            Compute = input => (input["BaseSide"] * input["BaseSide"] * input["Height"]) / 3f
                         }
                     }
                 }
@@ -58,78 +83,70 @@ namespace Manipulator
 
         public List<ShapeData> ComputeShape(Dictionary<string, float> inputs)
         {
-            var fieldSolver = new FieldSolver(GetFieldDefinitions());
-            var result = fieldSolver.Solve(inputs);
+            var solver = new FieldSolver(GetFieldDefinitions());
+            var result = solver.Solve(inputs);
 
-            if (!result.ContainsKey("BaseSide") || !result.ContainsKey("Height"))
-                throw new Exception("Không thể suy luận đủ dữ kiện để dựng hình chóp.");
+            if (!(result.ContainsKey("BaseSide") && result.ContainsKey("Height")))
+                throw new Exception("Thiếu cạnh đáy hoặc chiều cao.");
 
             float a = result["BaseSide"];
-            float h = result["Height"]; 
+            float h = result["Height"];
             Transform lookingPoint = CameraController.Instance.target;
 
+            // Center of base
+            Vector3 center = lookingPoint.position + new Vector3(0, 0.5f, 0);
 
-            var position = lookingPoint.position;
-            Vector3 A = new Vector3(-a / 2, 0, -a / 2) + position;
-            Vector3 B = new Vector3(a / 2, 0, -a / 2) + position;
-            Vector3 C = new Vector3(a / 2, 0, a / 2) + position;
-            Vector3 D = new Vector3(-a / 2, 0, a / 2) + position;
-            Vector3 S = new Vector3(0, h, 0) + position;
+            // 4 base corners
+            Vector3 A = center + new Vector3(-a / 2, 0, -a / 2);
+            Vector3 B = center + new Vector3(a / 2, 0, -a / 2);
+            Vector3 C = center + new Vector3(a / 2, 0, a / 2);
+            Vector3 D = center + new Vector3(-a / 2, 0, a / 2);
 
-            idA = Guid.NewGuid().ToString();
-            idB = Guid.NewGuid().ToString();
-            idC = Guid.NewGuid().ToString();
-            idD = Guid.NewGuid().ToString();
-            idApex = Guid.NewGuid().ToString();
-            idAB = Guid.NewGuid().ToString();
-            idBC = Guid.NewGuid().ToString();
-            idCD = Guid.NewGuid().ToString();
-            idDA = Guid.NewGuid().ToString();
-            idAApex = Guid.NewGuid().ToString();
-            idBApex = Guid.NewGuid().ToString();
-            idCApex = Guid.NewGuid().ToString();
-            idDApex = Guid.NewGuid().ToString();
+            // Apex above base center
+            Vector3 S = center + new Vector3(0, h, 0);
 
-            var shapes = new List<ShapeData>
+            string idA = Guid.NewGuid().ToString();
+            string idB = Guid.NewGuid().ToString();
+            string idC = Guid.NewGuid().ToString();
+            string idD = Guid.NewGuid().ToString();
+            string idS = Guid.NewGuid().ToString();
+            string idPyramid = Guid.NewGuid().ToString();
+
+            var data = new List<ShapeData>
             {
+                // Points
                 new() { Id = idA, Type = "Point", Position = A, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idB, Type = "Point", Position = B, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idC, Type = "Point", Position = C, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idD, Type = "Point", Position = D, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new() { Id = idApex, Type = "Point", Position = S, Rotation = Quaternion.identity, Scale = Vector3.one },
+                new() { Id = idS, Type = "Point", Position = S, Rotation = Quaternion.identity, Scale = Vector3.one },
 
-                new() { Id = idAB, Type = "Segment", ConnectedPoints = new List<string> { idA, idB } },
-                new() { Id = idBC, Type = "Segment", ConnectedPoints = new List<string> { idB, idC } },
-                new() { Id = idCD, Type = "Segment", ConnectedPoints = new List<string> { idC, idD } },
-                new() { Id = idDA, Type = "Segment", ConnectedPoints = new List<string> { idD, idA } },
+                // Base edges
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB } },
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC } },
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD } },
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idA } },
 
-                new() { Id = idAApex, Type = "Segment", ConnectedPoints = new List<string> { idA, idApex } },
-                new() { Id = idBApex, Type = "Segment", ConnectedPoints = new List<string> { idB, idApex } },
-                new() { Id = idCApex, Type = "Segment", ConnectedPoints = new List<string> { idC, idApex } },
-                new() { Id = idDApex, Type = "Segment", ConnectedPoints = new List<string> { idD, idApex } }
-            };
-            
-            
-            
-            UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(shapes));
-            
-            MeshGenerator.MeshCompute(new []{A, B, C, D, S},
-                new []{
-                    0, 1, 2, 
-                    0, 2, 3,
-                    0, 1, 4,
-                    0, 3, 4,
-                    1, 2, 4,
-                    2, 3, 4
-                }, new []
+                // Sides to apex
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idS } },
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idS } },
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idS } },
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idS } },
+
+                // Controller shape (for mesh, always-live)
+                new()
                 {
-                    ShapeStorage.GetById(idA).gameObject.transform, 
-                    ShapeStorage.GetById(idB).gameObject.transform, 
-                    ShapeStorage.GetById(idC).gameObject.transform, 
-                    ShapeStorage.GetById(idD).gameObject.transform, 
-                    ShapeStorage.GetById(idApex).gameObject.transform, 
-                });
-            return shapes;
+                    Id = idPyramid,
+                    Type = "SquarePyramid",
+                    Position = (A + B + C + D + S) / 5f,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new List<string> { idA, idB, idC, idD, idS }
+                }
+            };
+
+            UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+            return data;
         }
     }
 }

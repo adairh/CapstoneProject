@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Manipulator
 {
-    public class Polygon : Shape
+    public class Polygon : Shape, ShapeMesh
     {
 
         private MeshCollider meshCollider;

@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -53,7 +52,6 @@ namespace Manipulator
             float a = result["Side"];
             Transform lookingPoint = CameraController.Instance.target;
 
-
             Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(a/2, 0, a/2);
             Vector3 B = A + new Vector3(a, 0, 0);
             Vector3 C = A + new Vector3(a / 2f, 0, Mathf.Sqrt(3f) / 2f * a);
@@ -64,6 +62,7 @@ namespace Manipulator
             string idB = Guid.NewGuid().ToString();
             string idC = Guid.NewGuid().ToString();
             string idD = Guid.NewGuid().ToString();
+            string idTetra = Guid.NewGuid().ToString();
 
             var data = new List<ShapeData>
             {
@@ -78,24 +77,21 @@ namespace Manipulator
 
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idD }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idD }},
-                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD }}
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD }},
+
+                // Controller for runtime mesh/shape
+                new()
+                {
+                    Id = idTetra,
+                    Type = "RegularTetrahedron",
+                    Position = (A + B + C + D) / 4f,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new List<string> { idA, idB, idC, idD }
+                }
             };
-            
+
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
-            MeshGenerator.MeshCompute(new []{A, B, C, D}, 
-                new []
-                {
-                    0, 1, 2, 
-                    0, 2, 3,
-                    0, 1, 3,
-                    1, 2, 3,
-                }, new []
-                {
-                    ShapeStorage.GetById(idA).gameObject.transform, 
-                    ShapeStorage.GetById(idB).gameObject.transform, 
-                    ShapeStorage.GetById(idC).gameObject.transform, 
-                    ShapeStorage.GetById(idD).gameObject.transform,  
-                });
             return data;
         }
     }

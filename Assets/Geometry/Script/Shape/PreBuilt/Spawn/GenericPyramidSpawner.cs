@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -56,11 +55,10 @@ namespace Manipulator
             float l = result["BaseLength"];
             float w = result["BaseWidth"];
             float h = result["Height"];
-             
-            
+
             Transform lookingPoint = CameraController.Instance.target;
-            
-            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(l/2, 0, w/2);
+
+            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(l / 2, 0, w / 2);
             Vector3 B = A + new Vector3(l, 0, 0);
             Vector3 C = B + new Vector3(0, 0, w);
             Vector3 D = A + new Vector3(0, 0, w);
@@ -71,6 +69,7 @@ namespace Manipulator
             string idC = Guid.NewGuid().ToString();
             string idD = Guid.NewGuid().ToString();
             string idS = Guid.NewGuid().ToString();
+            string idPyramid = Guid.NewGuid().ToString();
 
             var data = new List<ShapeData>
             {
@@ -80,33 +79,30 @@ namespace Manipulator
                 new() { Id = idD, Type = "Point", Position = D, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idS, Type = "Point", Position = S, Rotation = Quaternion.identity, Scale = Vector3.one },
 
+                // Base
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idA }},
 
+                // Sides
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idS, idA }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idS, idB }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idS, idC }},
-                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idS, idD }}
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idS, idD }},
+
+                // Controller (for runtime mesh)
+                new()
+                {
+                    Id = idPyramid,
+                    Type = "GenericPyramid",
+                    Position = (A + B + C + D + S) / 5f,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new List<string> { idA, idB, idC, idD, idS }
+                }
             };
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
-            MeshGenerator.MeshCompute(new []{A, B, C, D, S},
-                new []{
-                    0, 1, 2, 
-                    0, 2, 3,
-                    0, 1, 4,
-                    0, 3, 4,
-                    1, 2, 4,
-                    2, 3, 4
-                }, new []
-                {
-                    ShapeStorage.GetById(idA).gameObject.transform, 
-                    ShapeStorage.GetById(idB).gameObject.transform, 
-                    ShapeStorage.GetById(idC).gameObject.transform, 
-                    ShapeStorage.GetById(idD).gameObject.transform, 
-                    ShapeStorage.GetById(idS).gameObject.transform, 
-                });
             return data;
         }
     }

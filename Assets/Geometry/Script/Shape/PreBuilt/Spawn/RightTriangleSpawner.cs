@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,7 +13,6 @@ namespace Manipulator
             {
                 new FieldDefinition { Name = "Base", Type = FieldType.Length, IsRequired = true },
                 new FieldDefinition { Name = "Height", Type = FieldType.Length, IsRequired = true },
-
                 new FieldDefinition
                 {
                     Name = "Area",
@@ -96,13 +94,14 @@ namespace Manipulator
 
             Transform lookingPoint = CameraController.Instance.target;
 
-            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(b/2, 0, h/2);
+            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(b / 2, 0, h / 2);
             Vector3 B = A + new Vector3(b, 0, 0);
             Vector3 C = A + new Vector3(0, 0, h);
 
             string idA = Guid.NewGuid().ToString();
             string idB = Guid.NewGuid().ToString();
             string idC = Guid.NewGuid().ToString();
+            string idTriangle = Guid.NewGuid().ToString();
 
             var data = new List<ShapeData>
             {
@@ -112,20 +111,20 @@ namespace Manipulator
 
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC }},
-                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idA }}
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idA }},
+
+                // Controller shape
+                new() {
+                    Id = idTriangle,
+                    Type = "RightTriangle",
+                    Position = (A + B + C) / 3f,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new List<string> { idA, idB, idC }
+                }
             };
-            
+
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
-            
-            MeshGenerator.MeshCompute(new []{A, B, C},
-                new []{
-                    0, 1, 2
-                }, new []
-                {
-                    ShapeStorage.GetById(idA).gameObject.transform, 
-                    ShapeStorage.GetById(idB).gameObject.transform, 
-                    ShapeStorage.GetById(idC).gameObject.transform,  
-                });
             return data;
         }
     }

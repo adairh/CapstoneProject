@@ -7,22 +7,10 @@ namespace Manipulator
     {
         private bool isSelected;
         private Renderer rend;
-        private Material selectedMat;
 
-        private void Start()
+        private void Awake()
         {
             rend = GetComponentInChildren<Renderer>();
-            selectedMat = MaterialLibrary.Get(MaterialType.Select);
-            //SetSelected(false);
-        }
-
-        private void Update()
-        {
-            foreach (var s in shape.GetDependentShapesForDelete())
-            {
-                var select = s.GetComponent<SelectableShape>();
-                if (select != null) select.SetSelected(shape.GetComponent<SelectableShape>().IsSelected());
-            }
         }
 
         public override void SetShape(Shape s)
@@ -33,18 +21,24 @@ namespace Manipulator
         public void SetSelected(bool selected)
         {
             if (ManipulationManager.Instance.IsDrawing) return;
+            if (isSelected == selected) return; // Don't spam
+
             isSelected = selected;
             if (rend != null)
-                MaterialLibrary.Apply(rend, isSelected ? MaterialType.Select : MaterialType.Default);
+                MaterialLibrary.Apply(rend, isSelected ? MaterialType.Select : shape is ShapeMesh ? MaterialType.Mesh : MaterialType.Default);
+
             OnSelectedChanged?.Invoke(this);
+
+            // If selection changed, propagate to dependents just once
+            foreach (var s in shape.GetDependentShapesForDelete())
+            {
+                var select = s.GetComponent<SelectableShape>();
+                if (select != null)
+                    select.SetSelected(selected);
+            }
         }
 
-
-
-        public bool IsSelected()
-        {
-            return isSelected;
-        }
+        public bool IsSelected() => isSelected;
 
         public event Action<SelectableShape> OnSelectedChanged;
     }

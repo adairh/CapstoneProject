@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -63,10 +62,8 @@ namespace Manipulator
             float h = result.ContainsKey("Height") ? result["Height"] : Mathf.Sqrt(a * a - (a * a / 2f));
 
             Transform lookingPoint = CameraController.Instance.target;
-            
-            
-            
-            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(a/2, 0, a/2);
+
+            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(a / 2, 0, a / 2);
             Vector3 B = A + new Vector3(a, 0, 0);
             Vector3 C = A + new Vector3(a, 0, a);
             Vector3 D = A + new Vector3(0, 0, a);
@@ -77,16 +74,18 @@ namespace Manipulator
             string idC = Guid.NewGuid().ToString();
             string idD = Guid.NewGuid().ToString();
             string idS = Guid.NewGuid().ToString();
+            string idPyramid = Guid.NewGuid().ToString();
 
             var data = new List<ShapeData>
             {
+                // Points
                 new() { Id = idA, Type = "Point", Position = A, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idB, Type = "Point", Position = B, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idC, Type = "Point", Position = C, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idD, Type = "Point", Position = D, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idS, Type = "Point", Position = Apex, Rotation = Quaternion.identity, Scale = Vector3.one },
 
-                // Base
+                // Base segments
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD }},
@@ -96,30 +95,21 @@ namespace Manipulator
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idS }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idS }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idS }},
-                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idS }}
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idS }},
+
+                // Controller for runtime mesh
+                new()
+                {
+                    Id = idPyramid,
+                    Type = "EquilateralPyramid",
+                    Position = (A + B + C + D + Apex) / 5f,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new List<string> { idA, idB, idC, idD, idS }
+                }
             };
-            
-            
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
-            
-            MeshGenerator.MeshCompute(new []{A, B, C, D, Apex},
-                new []{
-                    0, 1, 2, 
-                    0, 2, 3,
-                    0, 1, 4,
-                    0, 3, 4,
-                    1, 2, 4,
-                    2, 3, 4
-                }, new []
-                {
-                    ShapeStorage.GetById(idA).gameObject.transform, 
-                    ShapeStorage.GetById(idB).gameObject.transform, 
-                    ShapeStorage.GetById(idC).gameObject.transform, 
-                    ShapeStorage.GetById(idD).gameObject.transform, 
-                    ShapeStorage.GetById(idS).gameObject.transform, 
-                }
-            );
             return data;
         }
     }

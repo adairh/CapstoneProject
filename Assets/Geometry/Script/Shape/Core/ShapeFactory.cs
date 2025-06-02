@@ -15,7 +15,20 @@ namespace Manipulator
             { "Line", (pos, lgcName) => Create<Line>("Line", pos, lgcName) },
             { "Ray", (pos, lgcName) => Create<RayShape>("Ray", pos, lgcName) },
             { "Polygon", (pos, lgcName) => Create<Polygon>("Polygon", pos, lgcName) },
-            { "Plane", (pos, lgcName) => Create<PlaneShape>("Plane", pos, lgcName) }
+            { "Plane", (pos, lgcName) => Create<PlaneShape>("Plane", pos, lgcName) }, 
+            { "EquilateralTriangle", (pos, lgcName) => Create<EquilateralTriangle>("EquilateralTriangle", pos, lgcName) },
+            { "Rectangle", (pos, lgcName) => Create<Rectangle>("Rectangle", pos, lgcName) },
+            { "IsoscelesTriangle", (pos, lgcName) => Create<IsoscelesTriangle>("IsoscelesTriangle", pos, lgcName) },
+            { "Rhombus", (pos, lgcName) => Create<Rhombus>("Rhombus", pos, lgcName) },
+            { "RightTriangle", (pos, lgcName) => Create<RightTriangle>("RightTriangle", pos, lgcName) },
+            { "Square", (pos, lgcName) => Create<Square>("Square", pos, lgcName) },
+            { "SquarePyramid", (pos, lgcName) => Create<SquarePyramid>("SquarePyramid", pos, lgcName) },
+            { "EquilateralPyramid", (pos, lgcName) => Create<EquilateralPyramid>("EquilateralPyramid", pos, lgcName) },
+            { "Tetrahedron", (pos, lgcName) => Create<Tetrahedron>("Tetrahedron", pos, lgcName) },
+            { "GenericPyramid", (pos, lgcName) => Create<GenericPyramid>("GenericPyramid", pos, lgcName) },
+            { "SquarePrism", (pos, lgcName) => Create<SquarePrism>("SquarePrism", pos, lgcName) },
+            { "RegularTetrahedron", (pos, lgcName) => Create<RegularTetrahedron>("RegularTetrahedron", pos, lgcName) },
+
         };
 
         public static Shape CreateShape(string type, Vector3 position, string lgcName = "")

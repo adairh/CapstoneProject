@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,8 +11,10 @@ namespace Manipulator
         {
             return new List<FieldDefinition>
             {
-                new FieldDefinition { Name = "Side", Type = FieldType.Length, IsRequired = true },
+                new FieldDefinition { Name = "Width", Type = FieldType.Length, IsRequired = true },
+                new FieldDefinition { Name = "Depth", Type = FieldType.Length, IsRequired = true },
                 new FieldDefinition { Name = "Height", Type = FieldType.Length, IsRequired = true },
+
                 new FieldDefinition
                 {
                     Name = "Volume",
@@ -22,26 +23,8 @@ namespace Manipulator
                     ComputeRules = new List<ComputeRule>
                     {
                         new ComputeRule {
-                            InputFields = new List<string>{ "Side", "Height" },
-                            Compute = input => input["Side"] * input["Side"] * input["Height"]
-                        }
-                    }
-                },
-                new FieldDefinition
-                {
-                    Name = "SurfaceArea",
-                    Type = FieldType.Area,
-                    IsRequired = false,
-                    ComputeRules = new List<ComputeRule>
-                    {
-                        new ComputeRule {
-                            InputFields = new List<string>{ "Side", "Height" },
-                            Compute = input =>
-                            {
-                                float a = input["Side"];
-                                float h = input["Height"];
-                                return 2 * a * a + 4 * a * h;
-                            }
+                            InputFields = new List<string>{"Width", "Depth", "Height"},
+                            Compute = input => input["Width"] * input["Depth"] * input["Height"]
                         }
                     }
                 }
@@ -52,24 +35,29 @@ namespace Manipulator
         {
             var solver = new FieldSolver(GetFieldDefinitions());
             var result = solver.Solve(inputs);
-            if (!result.ContainsKey("Side") || !result.ContainsKey("Height"))
-                throw new Exception("Thiếu cạnh đáy hoặc chiều cao.");
 
-            float a = result["Side"];
+            if (!(result.ContainsKey("Width") && result.ContainsKey("Depth") && result.ContainsKey("Height")))
+                throw new Exception("Thiếu kích thước khối.");
+
+            float w = result["Width"];
+            float d = result["Depth"];
             float h = result["Height"];
 
             Transform lookingPoint = CameraController.Instance.target;
 
-            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(a / 2, 0, a / 2);
-            Vector3 B = A + new Vector3(a, 0, 0);
-            Vector3 C = A + new Vector3(a, 0, a);
-            Vector3 D = A + new Vector3(0, 0, a);
+            // Bottom face (A B C D, counterclockwise)
+            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(w / 2, 0, d / 2);
+            Vector3 B = A + new Vector3(w, 0, 0);
+            Vector3 C = B + new Vector3(0, 0, d);
+            Vector3 D = A + new Vector3(0, 0, d);
 
+            // Top face
             Vector3 A2 = A + new Vector3(0, h, 0);
             Vector3 B2 = B + new Vector3(0, h, 0);
             Vector3 C2 = C + new Vector3(0, h, 0);
             Vector3 D2 = D + new Vector3(0, h, 0);
 
+            // Generate unique ids
             string idA = Guid.NewGuid().ToString();
             string idB = Guid.NewGuid().ToString();
             string idC = Guid.NewGuid().ToString();
@@ -78,9 +66,11 @@ namespace Manipulator
             string idB2 = Guid.NewGuid().ToString();
             string idC2 = Guid.NewGuid().ToString();
             string idD2 = Guid.NewGuid().ToString();
+            string idPrism = Guid.NewGuid().ToString();
 
             var data = new List<ShapeData>
             {
+                // Points
                 new() { Id = idA, Type = "Point", Position = A, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idB, Type = "Point", Position = B, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idC, Type = "Point", Position = C, Rotation = Quaternion.identity, Scale = Vector3.one },
@@ -90,58 +80,37 @@ namespace Manipulator
                 new() { Id = idC2, Type = "Point", Position = C2, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() { Id = idD2, Type = "Point", Position = D2, Rotation = Quaternion.identity, Scale = Vector3.one },
 
-                // Bottom base
+                // Segments (bottom)
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idA }},
 
-                // Top base
+                // Segments (top)
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA2, idB2 }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB2, idC2 }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC2, idD2 }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD2, idA2 }},
 
-                // Vertical edges
+                // Segments (vertical)
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idA2 }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idB2 }},
                 new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idC2 }},
-                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idD2 }}
-            };
-            
-            UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
+                new() { Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idD2 }},
 
-            MeshGenerator.MeshCompute(new []{A, B, C, D}, 
-                new []
+                // Controller
+                new()
                 {
-                    0, 1, 2, 
-                    0, 2, 3,
-                    
-                    0, 3, 7,
-                    0, 4, 7,
-                    
-                    0, 4, 5,
-                    0, 1, 5,
-                    
-                    1, 5, 6,
-                    1, 2, 6,
-                    
-                    3, 2, 7,
-                    3, 2, 1,
-                    
-                    4, 5, 6,
-                    4, 6, 7
-                }, new []
-                {
-                    ShapeStorage.GetById(idA).gameObject.transform, 
-                    ShapeStorage.GetById(idB).gameObject.transform, 
-                    ShapeStorage.GetById(idC).gameObject.transform, 
-                    ShapeStorage.GetById(idD).gameObject.transform,  
-                    ShapeStorage.GetById(idA2).gameObject.transform, 
-                    ShapeStorage.GetById(idB2).gameObject.transform, 
-                    ShapeStorage.GetById(idC2).gameObject.transform, 
-                    ShapeStorage.GetById(idD2).gameObject.transform,  
-                });
+                    Id = idPrism,
+                    Type = "SquarePrism",
+                    Position = (A + B + C + D + A2 + B2 + C2 + D2) / 8f,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new List<string> { idA, idB, idC, idD, idA2, idB2, idC2, idD2 }
+                }
+            };
+
+            UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
             return data;
         }
     }

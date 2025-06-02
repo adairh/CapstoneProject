@@ -1,14 +1,12 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class Square : Shape, ShapeMesh
+    public class Tetrahedron : Shape, ShapeMesh
     {
-        public Point A, B, C, D;
-        public Segment AB, BC, CD, DA;
-
+        public Point A, B, C, D; // Base: A,B,C. Apex: D
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private bool eventsRegistered = false;
@@ -21,11 +19,9 @@ namespace Manipulator
             meshRenderer.material = MeshMat;
         }
 
-        public void Initialize(Point a, Point b, Point c, Point d, Segment ab, Segment bc, Segment cd, Segment da)
+        public void Initialize(Point a, Point b, Point c, Point d)
         {
             A = a; B = b; C = c; D = d;
-            AB = ab; BC = bc; CD = cd; DA = da;
-
             AddPivot(A); AddPivot(B); AddPivot(C); AddPivot(D);
             RegisterPointEvents();
             UpdateMesh();
@@ -85,31 +81,32 @@ namespace Manipulator
         private void UpdateMesh()
         {
             if (meshFilter == null || A == null || B == null || C == null || D == null) return;
-
-            Vector3[] vertices = new[]
-            {
-                A.transform.position,
-                B.transform.position,
-                C.transform.position,
-                D.transform.position
-            };
-
-            Vector3 center = (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4f;
-            for (int i = 0; i < vertices.Length; i++)
-                vertices[i] -= center;
-            transform.position = center;
-
             var mesh = new Mesh();
-            mesh.vertices = vertices;
-            mesh.triangles = new[] { 0, 1, 2, 0, 2, 3 }; // Two triangles
+            var center = (A.transform.position + B.transform.position + C.transform.position + D.transform.position) / 4f;
+            var verts = new[]
+            {
+                A.transform.position - center,
+                B.transform.position - center,
+                C.transform.position - center,
+                D.transform.position - center
+            };
+            mesh.vertices = verts;
+            mesh.triangles = new[]
+            {
+                0, 1, 2, // Base
+                0, 1, 3,
+                1, 2, 3,
+                2, 0, 3
+            };
             mesh.RecalculateNormals();
             meshFilter.sharedMesh = mesh;
+            transform.position = center;
         }
 
         public override ShapeData Serialize()
         {
             var data = base.Serialize();
-            data.Type = "Square";
+            data.Type = "Tetrahedron";
             data.ConnectedPoints = new List<string> { A.ShapeId, B.ShapeId, C.ShapeId, D.ShapeId };
             return data;
         }
@@ -127,10 +124,5 @@ namespace Manipulator
                 D.MoveTo(D.transform.position + delta, silent, queue);
             }
         }
-
-        // Optional measurements
-        public float Side => (A && B) ? Vector3.Distance(A.transform.position, B.transform.position) : 0f;
-        public float Area => Side * Side;
-        public float Diagonal => (A && C) ? Vector3.Distance(A.transform.position, C.transform.position) : 0f;
     }
 }

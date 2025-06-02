@@ -1,8 +1,7 @@
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Geometry; 
+using Geometry;
 
 namespace Manipulator
 {
@@ -60,11 +59,10 @@ namespace Manipulator
             var result = solver.Solve(inputs);
             if (!result.ContainsKey("Side")) throw new Exception("Thiếu độ dài cạnh.");
 
-            float a = result["Side"]; 
+            float a = result["Side"];
             Transform lookingPoint = CameraController.Instance.target;
 
-
-            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(a/2, 0, a/2);
+            Vector3 A = (lookingPoint.position + new Vector3(0, 0.5f, 0)) - new Vector3(a / 2, 0, a / 2);
             Vector3 B = A + new Vector3(a, 0, 0);
             Vector3 C = A + new Vector3(a, 0, a);
             Vector3 D = A + new Vector3(0, 0, a);
@@ -73,28 +71,31 @@ namespace Manipulator
             string idB = Guid.NewGuid().ToString();
             string idC = Guid.NewGuid().ToString();
             string idD = Guid.NewGuid().ToString();
+            string idSquare = Guid.NewGuid().ToString();
 
             var data = new List<ShapeData>
             {
                 new() {Id = idA, Type = "Point", Position = A, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() {Id = idB, Type = "Point", Position = B, Rotation = Quaternion.identity, Scale = Vector3.one },
                 new() {Id = idC, Type = "Point", Position = C, Rotation = Quaternion.identity, Scale = Vector3.one },
-                new() {Id = idD, Type = "Point", Position = D, Rotation = Quaternion.identity, Scale = Vector3.one }, 
+                new() {Id = idD, Type = "Point", Position = D, Rotation = Quaternion.identity, Scale = Vector3.one },
 
                 new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idA, idB } },
                 new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idB, idC } },
                 new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idC, idD } },
-                new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idA } }
+                new() {Id = Guid.NewGuid().ToString(), Type = "Segment", ConnectedPoints = new List<string>{ idD, idA } },
+
+                new() {
+                    Id = idSquare,
+                    Type = "Square",
+                    Position = (A + B + C + D) / 4f,
+                    Rotation = Quaternion.identity,
+                    Scale = Vector3.one,
+                    ConnectedPoints = new List<string> { idA, idB, idC, idD }
+                }
             };
 
             UndoRedoNetworkBridge.Instance.DoAndBroadcast(new CreateShapeBatchAction(data));
-            MeshGenerator.MeshCompute(new []{A, B, C, D}, new []{0, 1, 2, 0, 2, 3 }, new []
-            {
-                ShapeStorage.GetById(idA).gameObject.transform, 
-                ShapeStorage.GetById(idB).gameObject.transform, 
-                ShapeStorage.GetById(idC).gameObject.transform, 
-                ShapeStorage.GetById(idD).gameObject.transform,  
-            });
             return data;
         }
     }

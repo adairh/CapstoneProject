@@ -8,59 +8,98 @@ namespace Manipulator
         protected override void OnButtonClick()
         {
             base.OnButtonClick();
-            StartCoroutine(MeasureRoutine());
+            StartCoroutine(MeasureAndEditAngle());
         }
 
-        private IEnumerator MeasureRoutine()
+        private IEnumerator MeasureAndEditAngle()
         {
-            PerformDrawing.ResetMode();
-            UIHint.Show("Tap point A");
-            yield return ShapePicker.WaitForPoint();
-            var a = ShapePicker.LastPicked as Point;
-            if (a == null) yield break;
+            ManipulationManager.Instance.IsDrawing = true;
+            UIHint.Show("Tap the first segment");
+            yield return ShapePicker.WaitForSegment();
+            yield return new WaitUntil(() => !Input.GetMouseButton(0));
 
-            UIHint.Show("Tap vertex point B");
-            yield return ShapePicker.WaitForPoint();
-            var b = ShapePicker.LastPicked as Point;
-            if (b == null) yield break;
+            Segment segA = ShapePicker.LastPicked as Segment;
+            if (segA == null)
+            {
+                UIHint.ShowTemp("Invalid segment!", 1.5f);
+                ManipulationManager.Instance.IsDrawing = false;
+                yield break;
+            }
 
-            UIHint.Show("Tap point C");
-            yield return ShapePicker.WaitForPoint();
+            UIHint.Show("Tap the second segment (must share a point)");
+            yield return ShapePicker.WaitForSegment();
+            yield return new WaitUntil(() => !Input.GetMouseButton(0));
             UIHint.Hide();
-            var c = ShapePicker.LastPicked as Point;
-            if (c == null || b == a || b == c || a == c) yield break;
 
-            ShowAngle(a, b, c);
-        }
+            Segment segB = ShapePicker.LastPicked as Segment;
+            if (segB == null || segB == segA)
+            {
+                UIHint.ShowTemp("Invalid second segment!", 1.5f);
+                ManipulationManager.Instance.IsDrawing = false;
+                yield break;
+            }
 
-        private void ShowAngle(Point a, Point b, Point c)
-        {
-            float angle = Vector3.Angle(a.transform.position - b.transform.position, c.transform.position - b.transform.position);
+            // Find shared point and the two endpoints
+            Point shared = null, endA = null, endB = null;
+            if (segA.StartPoint == segB.StartPoint) shared = segA.StartPoint;
+            else if (segA.StartPoint == segB.EndPoint) shared = segA.StartPoint;
+            else if (segA.EndPoint == segB.StartPoint) shared = segA.EndPoint;
+            else if (segA.EndPoint == segB.EndPoint) shared = segA.EndPoint;
 
-            MeasureInfoBar.Instance.Show(
-                $"Angle at B: {angle:F1}°",
-                () => EditDialog.Instance.Show(angle, val => EditAngle(a, b, c, val))
-            );
-        }
+            if (shared == null)
+            {
+                UIHint.ShowTemp("Segments do not connect!", 1.5f);
+                ManipulationManager.Instance.IsDrawing = false;
+                yield break;
+            }
+            endA = (segA.StartPoint == shared) ? segA.EndPoint : segA.StartPoint;
+            endB = (segB.StartPoint == shared) ? segB.EndPoint : segB.StartPoint;
 
-        // Move C so angle at B is 'newAngle' (keep A, B fixed, rotate C about B)
-        private void EditAngle(Point a, Point b, Point c, float newAngle)
-        {
-            // Fix lengths, only move C around B so angle ABC = newAngle
-            Vector3 ba = (a.transform.position - b.transform.position).normalized;
-            float bcDist = (c.transform.position - b.transform.position).magnitude;
+            Vector3 vA = (endA.transform.position - shared.transform.position).normalized;
+            Vector3 vB = (endB.transform.position - shared.transform.position).normalized;
+            float currentAngle = Vector3.Angle(vA, vB);
 
-            // Calculate new direction for BC such that angle ABC = newAngle
-            Quaternion rot = Quaternion.AngleAxis(newAngle, Vector3.up); // Or choose plane normal
-            Vector3 newBC = rot * ba * bcDist;
-            Vector3 newC = b.transform.position + newBC;
+            // Show angle info bar
+            bool editing = false;
+            MeasureInfoBar.Instance.Show($"Angle: {currentAngle:0.###}°", () =>
+            {
+                if (editing) return;
+                editing = true;
+                EditDialog.Instance.Show(currentAngle, newAngle =>
+                {
+                    editing = false;
+                    MeasureInfoBar.Instance.Hide();
 
-            // Undo/redo support if needed:
-            UndoRedoNetworkBridge.Instance.DoAndBroadcast(
-               new MoveShapeAction(c.ShapeId, c.transform.position, newC));
+                    if (Mathf.Approximately(newAngle, currentAngle) || newAngle <= 0 || newAngle >= 180)
+                    {
+                        ManipulationManager.Instance.IsDrawing = false;
+                        PerformDrawing.ResetMode();
+                        return;
+                    }
 
-            c.MoveTo(newC, silent: false, queue: false);
-            ShowAngle(a, b, c); // Update info bar with new value
+                    // Rotate endB to new angle, keep segA fixed
+                    float angleDelta = newAngle - currentAngle;
+                    // Pick rotation axis: try to keep it on the same plane (Y up for now)
+                    Vector3 axis = Vector3.up; // Optionally: Vector3.Cross(vA, vB).normalized;
+                    Quaternion rot = Quaternion.AngleAxis(angleDelta, axis);
+                    Vector3 newEndB = shared.transform.position + rot * (endB.transform.position - shared.transform.position);
+
+                    UndoRedoNetworkBridge.Instance.DoAndBroadcast(
+                        new MultiMoveShapeAction(new System.Collections.Generic.List<(string, Vector3, Vector3)> {
+                            (endB.ShapeId, endB.transform.position, newEndB)
+                        })
+                    );
+                    endB.MoveTo(newEndB, silent: false, queue: false);
+
+                    UIHint.ShowTemp($"Angle updated to {newAngle:0.###}°", 1.5f);
+                    ManipulationManager.Instance.IsDrawing = false;
+                    PerformDrawing.ResetMode();
+                });
+            });
+
+            // Wait until user finishes (either hide or edit completes)
+            while (MeasureInfoBar.Instance.gameObject.activeSelf)
+                yield return null;
         }
     }
 }

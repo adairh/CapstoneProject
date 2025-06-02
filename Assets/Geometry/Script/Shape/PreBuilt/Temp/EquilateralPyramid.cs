@@ -1,14 +1,12 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Manipulator
 {
-    public class Square : Shape, ShapeMesh
+    public class EquilateralPyramid : Shape, ShapeMesh
     {
-        public Point A, B, C, D;
-        public Segment AB, BC, CD, DA;
-
+        public Point A, B, C, D, S; // base (A-D), apex (S)
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private bool eventsRegistered = false;
@@ -21,12 +19,10 @@ namespace Manipulator
             meshRenderer.material = MeshMat;
         }
 
-        public void Initialize(Point a, Point b, Point c, Point d, Segment ab, Segment bc, Segment cd, Segment da)
+        public void Initialize(Point a, Point b, Point c, Point d, Point s)
         {
-            A = a; B = b; C = c; D = d;
-            AB = ab; BC = bc; CD = cd; DA = da;
-
-            AddPivot(A); AddPivot(B); AddPivot(C); AddPivot(D);
+            A = a; B = b; C = c; D = d; S = s;
+            AddPivot(A); AddPivot(B); AddPivot(C); AddPivot(D); AddPivot(S);
             RegisterPointEvents();
             UpdateMesh();
         }
@@ -34,7 +30,7 @@ namespace Manipulator
         public override void Deserialize(ShapeData data)
         {
             base.Deserialize(data);
-            if (data.ConnectedPoints.Count == 4)
+            if (data.ConnectedPoints.Count == 5)
                 StartCoroutine(WaitAndReconnect(data.ConnectedPoints));
         }
 
@@ -43,15 +39,17 @@ namespace Manipulator
             while (ShapeStorage.GetById(pointIds[0]) == null ||
                    ShapeStorage.GetById(pointIds[1]) == null ||
                    ShapeStorage.GetById(pointIds[2]) == null ||
-                   ShapeStorage.GetById(pointIds[3]) == null)
+                   ShapeStorage.GetById(pointIds[3]) == null ||
+                   ShapeStorage.GetById(pointIds[4]) == null)
                 yield return null;
 
             A = ShapeStorage.GetById(pointIds[0]) as Point;
             B = ShapeStorage.GetById(pointIds[1]) as Point;
             C = ShapeStorage.GetById(pointIds[2]) as Point;
             D = ShapeStorage.GetById(pointIds[3]) as Point;
+            S = ShapeStorage.GetById(pointIds[4]) as Point;
 
-            AddPivot(A); AddPivot(B); AddPivot(C); AddPivot(D);
+            AddPivot(A); AddPivot(B); AddPivot(C); AddPivot(D); AddPivot(S);
             RegisterPointEvents();
             UpdateMesh();
         }
@@ -63,6 +61,7 @@ namespace Manipulator
             if (B) B.OnPositionChanged += OnAnyPointMoved;
             if (C) C.OnPositionChanged += OnAnyPointMoved;
             if (D) D.OnPositionChanged += OnAnyPointMoved;
+            if (S) S.OnPositionChanged += OnAnyPointMoved;
             eventsRegistered = true;
         }
         private void UnregisterPointEvents()
@@ -72,6 +71,7 @@ namespace Manipulator
             if (B) B.OnPositionChanged -= OnAnyPointMoved;
             if (C) C.OnPositionChanged -= OnAnyPointMoved;
             if (D) D.OnPositionChanged -= OnAnyPointMoved;
+            if (S) S.OnPositionChanged -= OnAnyPointMoved;
             eventsRegistered = false;
         }
         private void OnAnyPointMoved(Point p) => UpdateMesh();
@@ -84,53 +84,50 @@ namespace Manipulator
 
         private void UpdateMesh()
         {
-            if (meshFilter == null || A == null || B == null || C == null || D == null) return;
-
-            Vector3[] vertices = new[]
-            {
-                A.transform.position,
-                B.transform.position,
-                C.transform.position,
-                D.transform.position
-            };
-
-            Vector3 center = (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4f;
-            for (int i = 0; i < vertices.Length; i++)
-                vertices[i] -= center;
-            transform.position = center;
-
+            if (meshFilter == null || A == null || B == null || C == null || D == null || S == null) return;
             var mesh = new Mesh();
-            mesh.vertices = vertices;
-            mesh.triangles = new[] { 0, 1, 2, 0, 2, 3 }; // Two triangles
+            var center = (A.transform.position + B.transform.position + C.transform.position + D.transform.position + S.transform.position) / 5f;
+            var verts = new[]
+            {
+                A.transform.position - center,
+                B.transform.position - center,
+                C.transform.position - center,
+                D.transform.position - center,
+                S.transform.position - center
+            };
+            mesh.vertices = verts;
+            mesh.triangles = new[]
+            {
+                0, 1, 2,  0, 2, 3,        // Base square
+                0, 1, 4,  1, 2, 4,        // Sides
+                2, 3, 4,  3, 0, 4
+            };
             mesh.RecalculateNormals();
             meshFilter.sharedMesh = mesh;
+            transform.position = center;
         }
 
         public override ShapeData Serialize()
         {
             var data = base.Serialize();
-            data.Type = "Square";
-            data.ConnectedPoints = new List<string> { A.ShapeId, B.ShapeId, C.ShapeId, D.ShapeId };
+            data.Type = "EquilateralPyramid";
+            data.ConnectedPoints = new List<string> { A.ShapeId, B.ShapeId, C.ShapeId, D.ShapeId, S.ShapeId };
             return data;
         }
 
         public override void UpdateHitbox() { }
         public override void MoveTo(Vector3 newPosition, bool silent = false, bool queue = true)
         {
-            if (A && B && C && D)
+            if (A && B && C && D && S)
             {
-                Vector3 centroid = (A.transform.position + B.transform.position + C.transform.position + D.transform.position) / 4f;
+                Vector3 centroid = (A.transform.position + B.transform.position + C.transform.position + D.transform.position + S.transform.position) / 5f;
                 Vector3 delta = newPosition - centroid;
                 A.MoveTo(A.transform.position + delta, silent, queue);
                 B.MoveTo(B.transform.position + delta, silent, queue);
                 C.MoveTo(C.transform.position + delta, silent, queue);
                 D.MoveTo(D.transform.position + delta, silent, queue);
+                S.MoveTo(S.transform.position + delta, silent, queue);
             }
         }
-
-        // Optional measurements
-        public float Side => (A && B) ? Vector3.Distance(A.transform.position, B.transform.position) : 0f;
-        public float Area => Side * Side;
-        public float Diagonal => (A && C) ? Vector3.Distance(A.transform.position, C.transform.position) : 0f;
     }
 }
