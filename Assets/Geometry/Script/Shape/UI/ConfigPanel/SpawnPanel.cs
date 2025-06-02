@@ -90,7 +90,11 @@ namespace Manipulator
             {
                 Debug.Log($"[SpawnPanel] Built settingsPanel: {settingsPanel.name}");
                 settingsPanel.transform.SetParent(CurrentPanel.transform, false);
-
+                CurrentPanel.transform.SetParent(UIManager.Instance.InspectorContent, false);
+                UIManager.Instance.InspectorRoot.SetActive(true);
+                //UIManager.Instance.InspectorRoot.SetActive(true);
+                MeasureInfoBar.Instance.panelInside.SetActive(false);
+                
                 var rt = settingsPanel.GetComponent<RectTransform>();
                 if (rt != null)
                 {
@@ -117,8 +121,8 @@ namespace Manipulator
         private void AdjustPanelSize(RectTransform panelRect, List<ISetting> settings)
         {
             var pixelRect = canvas.pixelRect;
-            var panelWidth = Mathf.Min(pixelRect.width * 0.7f, 400f); // Max width of 400 pixels
-            var panelHeight = Mathf.Min(pixelRect.height * 0.8f, 600f); // Max height of 600 pixels
+            var panelWidth = Mathf.Min(pixelRect.width * 0.7f, 300f); // Max width of 400 pixels
+            var panelHeight = Mathf.Min(pixelRect.height * 0.8f, 450f); // Max height of 600 pixels
 
             // Set the panel size
             panelRect.sizeDelta = new Vector2(panelWidth, panelHeight);

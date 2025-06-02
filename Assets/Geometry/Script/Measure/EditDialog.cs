@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using TMPro;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Manipulator
@@ -40,6 +41,21 @@ namespace Manipulator
         public void Hide()
         {
             dialogRoot.SetActive(false);
+        }
+        
+        private void Update()
+        {
+
+            if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2))
+                if (!IsPointerOverUIElement())
+                { 
+                    dialogRoot.SetActive(false);
+                }
+        }
+        
+        private bool IsPointerOverUIElement()
+        {
+            return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
         }
     }
 }

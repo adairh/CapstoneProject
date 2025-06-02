@@ -6,6 +6,9 @@ namespace Manipulator
     public class UIManager : MonoBehaviour
     {
         [Header("Canvas")] [SerializeField] private Transform canvas;
+        [Header("Inspector")] 
+        [SerializeField] public GameObject InspectorRoot;
+        [SerializeField] public Transform InspectorContent;
 
         public Canvas CanvasSetting;
 

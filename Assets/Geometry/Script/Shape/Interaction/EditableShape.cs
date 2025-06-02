@@ -11,7 +11,7 @@ namespace Manipulator
             ISetting[] defaultSetting =
             {
                 //new ColorSetting(Color.red, shape),
-                new NameSetting(ToString())
+                //new NameSetting(ToString())
             };
 
 

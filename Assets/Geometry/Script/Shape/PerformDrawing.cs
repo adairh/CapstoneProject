@@ -159,6 +159,7 @@ namespace Manipulator
         {
             ShapeButtonManager.SetActiveShape(IShapeButton.ShapeType.None);
             ManipulationManager.Instance.IsDrawing = false;
+            ButtonController.Instance.ResetAllToggles();
         }
 
 

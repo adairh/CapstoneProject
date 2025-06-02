@@ -23,6 +23,8 @@ namespace Manipulator
                     // Use the public method to clear the panel reference
                     if (gameObject == SpawnPanel.CurrentPanel) SpawnPanel.ClearCurrentPanel();
                     Destroy(gameObject);
+                    UIManager.Instance.InspectorRoot.SetActive(false);
+
                 }
         }
 

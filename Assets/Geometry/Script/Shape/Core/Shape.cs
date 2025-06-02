@@ -36,7 +36,7 @@ namespace Manipulator
 
         protected virtual void Awake()
         {
-            DefaultMat = new Material(MaterialLibrary.Get(MaterialType.Mesh));
+            DefaultMat = new Material(MaterialLibrary.Get(MaterialType.Default));
             MeshMat = new Material(MaterialLibrary.Get(MaterialType.Mesh));
             
             //MeshMat = MaterialLibrary.GetPolygonMat(); // default polygon mesh material, can override in child
@@ -46,9 +46,9 @@ namespace Manipulator
         {
             return new List<ISetting>
             {
-                new PositionSetting(transform.position, this),
+                //new PositionSetting(transform.position, this),
                 new ColorSetting(MaterialType.Default, this),
-                new VisibilitySetting(true, this)
+                //new VisibilitySetting(true, this)
             };
         }
 

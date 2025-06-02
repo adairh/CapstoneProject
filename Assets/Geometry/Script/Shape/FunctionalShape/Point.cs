@@ -65,7 +65,7 @@ namespace Manipulator
         {
             return new List<ISetting>(base.GetSettings())
             {
-                new LabelSetting(GetLabel(), this) // PATCH: Use label from data!
+                //new LabelSetting(GetLabel(), this) // PATCH: Use label from data!
             };
         }
 

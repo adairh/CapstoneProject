@@ -14,14 +14,14 @@ namespace Manipulator
             var panel = new GameObject("SettingsPanel", typeof(RectTransform), typeof(Image));
             var panelRect = panel.GetComponent<RectTransform>();
             panel.AddComponent<CanvasRenderer>();
-            panel.GetComponent<Image>().color = new Color(0.2f, 0.2f, 0.2f, 0.95f);
+            panel.GetComponent<Image>().color = new Color(0.2f, 0.2f, 0.2f, 0f);
             panelRect.sizeDelta = new Vector2(300, 400); // Fixed size
             panelRect.anchorMin = new Vector2(0.5f, 0.5f); // Center
             panelRect.anchorMax = new Vector2(0.5f, 0.5f); // Center
             panelRect.pivot = new Vector2(0.5f, 0.5f); // Center
             //panelRect.anchoredPosition = Vector2.zero; // Center position
 
-            // ScrollRect
+            /*// ScrollRect
             var scrollRect = panel.AddComponent<ScrollRect>();
             scrollRect.vertical = true;
             scrollRect.horizontal = false;
@@ -56,19 +56,20 @@ namespace Manipulator
             contentRect.sizeDelta = new Vector2(0, 0);
 
             scrollRect.content = contentRect;
-            scrollRect.verticalNormalizedPosition = 1f;
+            scrollRect.verticalNormalizedPosition = 1f;*/
 
             // Add layout components
-            var layout = content.AddComponent<VerticalLayoutGroup>();
+            var layout = panel.AddComponent<VerticalLayoutGroup>();
             layout.childControlHeight = true;
             layout.childControlWidth = true;
+            layout.childScaleHeight = true;
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
             layout.spacing = 5f;
             layout.padding = new RectOffset(5, 5, 60, 5);
             layout.childAlignment = TextAnchor.UpperCenter;
 
-            var sizeFitter = content.AddComponent<ContentSizeFitter>();
+            var sizeFitter = panel.AddComponent<ContentSizeFitter>();
             sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             sizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -79,7 +80,7 @@ namespace Manipulator
                 var settingUI = setting.GetUI();
                 if (settingUI != null)
                 {
-                    settingUI.transform.SetParent(content.transform, false);
+                    settingUI.transform.SetParent(panel.transform, false);
 
                     var le = settingUI.GetComponent<LayoutElement>();
                     if (le == null)

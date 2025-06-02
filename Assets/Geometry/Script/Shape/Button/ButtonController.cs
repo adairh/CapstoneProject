@@ -67,6 +67,15 @@ namespace Manipulator {
             Debug.Log($"Button Clicked: {button.name}");
         }
         
+        // Add this function!
+        public void ResetAllToggles()
+        {
+            foreach (var btn in buttons)
+            {
+                if (btn != null && btn.IsToggleButton)
+                    btn.ResetButton();
+            }
+        }
 
         public void OnFrontViewButton() => cameraController.SnapToFront();
         public void OnTopViewButton() => cameraController.SnapToTop();

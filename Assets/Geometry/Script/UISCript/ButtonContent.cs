@@ -17,6 +17,17 @@ public class ButtonContent : MonoBehaviour
         if (text.text != richText)
             text.text = richText;
         
+        //transform.parent.GetComponent<Image>().enabled = false;
+        /*transform.parent.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+        image.enabled = true;
         image.sprite = sprite;
+        transform.parent.localScale = new Vector3(1f, 1f, 1f); */
+        /*
+        transform.parent.GetComponent<Image>().enabled = true;
+        transform.parent.GetComponent<Image>().sprite = sprite;
+        transform.parent.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.8f);
+        transform.parent.localScale = new Vector3(0.5f, 0.5f, 0.5f); 
+        image.enabled = false;*/
+        
     } 
 }
